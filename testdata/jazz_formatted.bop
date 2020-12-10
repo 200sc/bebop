@@ -1,0 +1,21 @@
+enum Instrument {
+	Sax = 0;
+	Trumpet = 1;
+	Clarinet = 2;
+}
+
+readonly struct Musician {
+	string name;
+	Instrument plays;
+}
+
+message Song {
+	1 -> string title;
+	2 -> uint16 year;
+	3 -> Musician[] performers;
+}
+
+struct Library {
+	map[guid, Song] songs;
+}
+
