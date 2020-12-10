@@ -28,7 +28,7 @@ func ReadFile(r io.Reader) (File, error) {
 			switch string(tk.concrete) {
 			case "enum":
 				if nextRecordOpCode != 0 {
-					return f, fmt.Sprintf("enums may not have attached op codes")
+					return f, fmt.Errorf("enums may not have attached op codes")
 				}
 				en, err := readEnum(tr)
 				if err != nil {
@@ -63,7 +63,7 @@ func ReadFile(r io.Reader) (File, error) {
 				nextRecordOpCode = 0
 			}
 		case tokenKindBlockComment:
-			nextRecordComment = string(tk.concrete[2:len(tk.concrete-2)])
+			nextRecordComment = string(tk.concrete[2 : len(tk.concrete)-2])
 		case tokenKindLineComment:
 			nextRecordComment = string(tk.concrete[2:])
 		case tokenKindOpenSquare:
@@ -113,8 +113,12 @@ func ReadFile(r io.Reader) (File, error) {
 	return f, nil
 }
 
+func expectBreak(tr *tokenReader) error {
+	return expectNext(tr, tokenKindNewline, tokenKindSemicolon)
+}
+
 func expectNext(tr *tokenReader, kinds ...tokenKind) error {
-	hasNext := !tr.Next()
+	hasNext := tr.Next()
 	if tr.Err() != nil {
 		return tr.Err()
 	}
@@ -129,10 +133,6 @@ func expectNext(tr *tokenReader, kinds ...tokenKind) error {
 		}
 	}
 	if !found {
-		// transparently skip newlines and comments even if they aren't expected
-		if tk.kind == tokenKindNewline || tk.kind == tokenKindBlockComment || tk.kind == tokenKindLineComment {
-			return expectNext(tr, kinds...)
-		}
 		return fmt.Errorf("expected (%v) got %s", kinds, tk.kind)
 	}
 	return nil
@@ -147,10 +147,14 @@ func readEnum(tr *tokenReader) (Enum, error) {
 	if err := expectNext(tr, tokenKindOpenCurly); err != nil {
 		return en, err
 	}
+	tr.Next()
+	// optional newline
+	if tr.Token().kind != tokenKindNewline {
+		tr.UnNext()
+	}
 	nextComment := ""
 	nextDeprecatedMessage := ""
 	nextIsDeprecated := false
-	tr.Next()
 	for tr.Token().kind != tokenKindCloseCurly {
 		if !tr.Next() {
 			return en, fmt.Errorf("enum definition ended early")
@@ -165,15 +169,35 @@ func readEnum(tr *tokenReader) (Enum, error) {
 			if err := expectNext(tr, tokenKindInteger); err != nil {
 				return en, err
 			}
-			optInteger := strconv.ParseInt(string(tr.Token().concrete), 10, 32)
+			optInteger, err := strconv.ParseInt(string(tr.Token().concrete), 10, 32)
+			if err != nil {
+				return en, err
+			}
+			if err := expectNext(tr, tokenKindNewline, tokenKindSemicolon, tokenKindCloseCurly); err != nil {
+				return en, err
+			}
+			en.Options = append(en.Options, EnumOption{
+				Name:              optName,
+				Value:             int32(optInteger),
+				DeprecatedMessage: nextDeprecatedMessage,
+				Deprecated:        nextIsDeprecated,
+				Comment:           nextComment,
+			})
+			nextDeprecatedMessage = ""
+			nextIsDeprecated = false
+			nextComment = ""
+
 		case tokenKindOpenSquare:
+			if nextIsDeprecated {
+				return en, fmt.Errorf("expected enum option following deprecated annotation")
+			}
 			// deprecated note
 			if err := expectNext(tr, tokenKindIdent); err != nil {
 				return en, err
 			}
 			tk = tr.Token()
 			if string(tk.concrete) != "deprecated" {
-				return fmt.Errorf("invalid ident after leading '[', got %s, wanted %v", string(tk.concrete), "deprecated")
+				return en, fmt.Errorf("invalid ident after leading '[', got %s, wanted %v", string(tk.concrete), "deprecated")
 			}
 			if err := expectNext(tr, tokenKindOpenParen); err != nil {
 				return en, err
@@ -194,8 +218,11 @@ func readEnum(tr *tokenReader) (Enum, error) {
 			if err := expectNext(tr, tokenKindCloseSquare); err != nil {
 				return en, err
 			}
+			if err := expectNext(tr, tokenKindNewline); err != nil {
+				return en, err
+			}
 		case tokenKindBlockComment:
-			nextComment = string(tk.concrete[2:len(tk.concrete-2)])
+			nextComment = string(tk.concrete[2 : len(tk.concrete)-2])
 		case tokenKindLineComment:
 			nextComment = string(tk.concrete[2:])
 		}
@@ -234,9 +261,9 @@ type Field struct {
 	Comment   string
 	// DeprecatedMessage is only provided if Deprecated is true.
 	DeprecatedMessage string
+	Deprecated        bool
 	Repeated          bool
 	Map               bool
-	Deprecated        bool
 }
 
 type Enum struct {
@@ -249,4 +276,7 @@ type EnumOption struct {
 	Name    string
 	Comment string
 	Value   int32
+	// DeprecatedMessage is only provided if Deprecated is true.
+	DeprecatedMessage string
+	Deprecated        bool
 }

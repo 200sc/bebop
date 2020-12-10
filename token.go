@@ -61,9 +61,10 @@ func (tk tokenKind) String() string {
 }
 
 type tokenReader struct {
-	r         *bufio.Reader
-	nextToken token
-	err       error
+	r             *bufio.Reader
+	nextToken     token
+	err           error
+	keepNextToken bool
 }
 
 func newTokenReader(r io.Reader) *tokenReader {
@@ -103,6 +104,11 @@ func (tk token) determineKind() tokenKind {
 	}
 }
 
+// UnNext tells the next Next call to not update the returned token
+func (tr *tokenReader) UnNext() {
+	tr.keepNextToken = true
+}
+
 // Next attempts to read the next token in the reader.
 // If a token cannot be found, it returns false. If there
 // are no tokens because EOF was reached, Err() will return
@@ -111,6 +117,10 @@ func (tk token) determineKind() tokenKind {
 // The read token, if this returns true, can be obtained via
 // Token().
 func (tr *tokenReader) Next() bool {
+	if tr.keepNextToken {
+		tr.keepNextToken = false
+		return true
+	}
 	// read until we get whitespace
 	for {
 		b, err := tr.r.ReadByte()
