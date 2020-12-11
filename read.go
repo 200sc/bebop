@@ -111,10 +111,6 @@ func ReadFile(r io.Reader) (File, error) {
 	return f, nil
 }
 
-func expectBreak(tr *tokenReader) error {
-	return expectNext(tr, tokenKindNewline, tokenKindSemicolon)
-}
-
 func expectNext(tr *tokenReader, kinds ...tokenKind) error {
 	hasNext := tr.Next()
 	if tr.Err() != nil {
@@ -171,7 +167,7 @@ func readEnum(tr *tokenReader) (Enum, error) {
 			if err != nil {
 				return en, err
 			}
-			if err := expectNext(tr, tokenKindNewline, tokenKindSemicolon, tokenKindCloseCurly); err != nil {
+			if err := expectNext(tr, tokenKindSemicolon); err != nil {
 				return en, err
 			}
 			en.Options = append(en.Options, EnumOption{
@@ -436,7 +432,6 @@ func readMessage(tr *tokenReader) (Message, error) {
 			if err := expectNext(tr, tokenKindSemicolon); err != nil {
 				return msg, err
 			}
-			// todo: map types
 			msg.Fields[int32(fdInteger)] = Field{
 				Name:              fdName,
 				FieldType:         fdType,

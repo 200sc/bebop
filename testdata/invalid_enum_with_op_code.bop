@@ -1,0 +1,4 @@
+[opcode("test")]
+enum EnumsCantHaveOpCodes {
+    One = 1;
+}

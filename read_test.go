@@ -998,3 +998,65 @@ func TestReadFile(t *testing.T) {
 		})
 	}
 }
+
+func TestReadFileError(t *testing.T) {
+	type testCase struct {
+		file       string
+		errMessage string
+	}
+	tcs := []testCase{
+		{file: "invalid_enum_with_op_code", errMessage: "enums may not have attached op codes"},
+		{file: "invalid_op_code_1", errMessage: "expected ([Ident]) got Close Square"},
+		{file: "invalid_op_code_2", errMessage: "invalid ident after leading '[', got opcod, wanted opcode"},
+		{file: "invalid_op_code_3", errMessage: "opcode string 12345 exceeds 4 ascii characters"},
+		{file: "invalid_op_code_4", errMessage: "expected ([Open Paren]) got Open Square"},
+		{file: "invalid_op_code_5", errMessage: "strconv.ParseInt: parsing \"1111111111111111111111111111111111111111111111111111111111111111111111111\": value out of range"},
+		{file: "invalid_op_code_6", errMessage: "expected ([Close Paren]) got Close Square"},
+		{file: "invalid_op_code_7", errMessage: "expected ([Close Square]) got Equals"},
+		{file: "invalid_op_code_8", errMessage: "expected ([Integer String Literal]) got Ident"},
+		{file: "invalid_enum_bad_deprecated", errMessage: "expected ([String Literal]) got Equals"},
+		{file: "invalid_enum_double_deprecated", errMessage: "expected enum option following deprecated annotation"},
+		{file: "invalid_enum_hex_int", errMessage: "strconv.ParseInt: parsing \"0x1\": invalid syntax"},
+		{file: "invalid_enum_no_close", errMessage: "enum definition ended early"},
+		{file: "invalid_enum_no_curly", errMessage: "expected ([Open Curly]) got Newline"},
+		{file: "invalid_enum_no_eq", errMessage: "expected ([Equals]) got Integer"},
+		{file: "invalid_enum_no_int", errMessage: "expected ([Integer]) got Semicolon"},
+		{file: "invalid_enum_no_name", errMessage: "expected ([Ident]) got Open Curly"},
+		{file: "invalid_enum_no_semi", errMessage: "expected ([Semicolon]) got Newline"},
+		{file: "invalid_struct_bad_deprecated", errMessage: "expected ([String Literal]) got Ident"},
+		{file: "invalid_struct_bad_type", errMessage: "expected ([Ident]) got Open Square"},
+		{file: "invalid_struct_double_deprecated", errMessage: "expected field following deprecated annotation"},
+		{file: "invalid_struct_no_close", errMessage: "struct definition ended early"},
+		{file: "invalid_struct_no_curly", errMessage: "expected ([Open Curly]) got Newline"},
+		{file: "invalid_struct_no_field_name", errMessage: "expected ([Ident]) got Semicolon"},
+		{file: "invalid_struct_no_name", errMessage: "expected ([Ident]) got Open Curly"},
+		{file: "invalid_struct_no_semi", errMessage: "expected ([Semicolon]) got Newline"},
+		{file: "invalid_message_bad_deprecated", errMessage: "expected ([String Literal]) got Arrow"},
+		{file: "invalid_message_bad_type", errMessage: "expected ([Ident]) got Open Square"},
+		{file: "invalid_message_double_deprecated", errMessage: "expected field following deprecated annotation"},
+		{file: "invalid_message_hex_int", errMessage: "strconv.ParseInt: parsing \"0x1\": invalid syntax"},
+		{file: "invalid_message_no_arrow", errMessage: "expected ([Arrow]) got Ident"},
+		{file: "invalid_message_no_close", errMessage: "message definition ended early"},
+		{file: "invalid_message_no_curly", errMessage: "expected ([Open Curly]) got Newline"},
+		{file: "invalid_message_no_field_name", errMessage: "expected ([Ident]) got Semicolon"},
+		{file: "invalid_message_no_name", errMessage: "expected ([Ident]) got Open Curly"},
+		{file: "invalid_message_no_semi", errMessage: "expected ([Semicolon]) got Newline"},
+	}
+	for _, tc := range tcs {
+		tc := tc
+		t.Run(tc.file, func(t *testing.T) {
+			f, err := os.Open(filepath.Join("testdata", tc.file+".bop"))
+			if err != nil {
+				t.Fatalf("failed to open test file %s: %v", tc.file+".bop", err)
+			}
+			defer f.Close()
+			_, err = ReadFile(f)
+			if err == nil {
+				t.Fatalf("read file should have errored")
+			}
+			if err.Error() != tc.errMessage {
+				t.Fatalf("read file had wrong error: got %q, expected %q", err.Error(), tc.errMessage)
+			}
+		})
+	}
+}
