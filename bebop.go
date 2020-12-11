@@ -1,275 +1,146 @@
 package bebop
 
-import (
-	"fmt"
-	"io"
-	"strconv"
-	"strings"
-)
-
 type File struct {
 	Structs  []Struct
 	Messages []Message
 	Enums    []Enum
 }
 
-func ReadFile(r io.Reader) (File, error) {
-	f := File{}
-	tr := newTokenReader(r)
-	nextRecordComment := ""
-	nextRecordOpCode := int32(0)
-	for tr.Next() {
-		tk := tr.Token()
-		switch tk.kind {
-		case tokenKindNewline:
-			continue
-		// top level:
-		case tokenKindIdent:
-			switch string(tk.concrete) {
-			case "enum":
-				if nextRecordOpCode != 0 {
-					return f, fmt.Errorf("enums may not have attached op codes")
-				}
-				en, err := readEnum(tr)
-				if err != nil {
-					return f, err
-				}
-				en.Comment = nextRecordComment
-				f.Enums = append(f.Enums, en)
-
-				nextRecordComment = ""
-				nextRecordOpCode = 0
-			case "struct":
-				st, err := readStruct(tr)
-				if err != nil {
-					return f, err
-				}
-				st.Comment = nextRecordComment
-				st.OpCode = nextRecordOpCode
-				f.Structs = append(f.Structs, st)
-
-				nextRecordComment = ""
-				nextRecordOpCode = 0
-			case "message":
-				msg, err := readMessage(tr)
-				if err != nil {
-					return f, err
-				}
-				msg.Comment = nextRecordComment
-				msg.OpCode = nextRecordOpCode
-				f.Messages = append(f.Messages, msg)
-
-				nextRecordComment = ""
-				nextRecordOpCode = 0
-			}
-		case tokenKindBlockComment:
-			nextRecordComment = string(tk.concrete[2 : len(tk.concrete)-2])
-		case tokenKindLineComment:
-			nextRecordComment = string(tk.concrete[2:])
-		case tokenKindOpenSquare:
-			if err := expectNext(tr, tokenKindIdent); err != nil {
-				return f, err
-			}
-			tk = tr.Token()
-			if string(tk.concrete) != "opcode" {
-				return f, fmt.Errorf("invalid ident after leading '[', got %s, wanted %v", string(tk.concrete), "opcode")
-			}
-			if err := expectNext(tr, tokenKindOpenParen); err != nil {
-				return f, err
-			}
-			if err := expectNext(tr, tokenKindInteger, tokenKindStringLiteral); err != nil {
-				return f, err
-			}
-			tk = tr.Token()
-			if tk.kind == tokenKindInteger {
-				content := string(tk.concrete)
-				base := 10
-				if strings.HasPrefix(content, "0x") {
-					base = 16
-				}
-				opCode, err := strconv.ParseInt(content, base, 32)
-				if err != nil {
-					return f, err
-				}
-				nextRecordOpCode = int32(opCode)
-			} else if tk.kind == tokenKindStringLiteral {
-				if len(tk.concrete) > 4 {
-					return f, fmt.Errorf("opcode string %s exceeds 4 ascii characters", string(tk.concrete))
-				}
-				for _, b := range tk.concrete {
-					nextRecordOpCode <<= 8
-					nextRecordOpCode |= int32(b)
-				}
-
-			}
-			if err := expectNext(tr, tokenKindCloseParen); err != nil {
-				return f, err
-			}
-			if err := expectNext(tr, tokenKindCloseSquare); err != nil {
-				return f, err
-			}
+func (f File) Equals(f2 File) bool {
+	if len(f.Structs) != len(f2.Structs) {
+		return false
+	}
+	for i, st := range f.Structs {
+		if !st.Equals(f2.Structs[i]) {
+			return false
 		}
 	}
-	return f, nil
-}
-
-func expectBreak(tr *tokenReader) error {
-	return expectNext(tr, tokenKindNewline, tokenKindSemicolon)
-}
-
-func expectNext(tr *tokenReader, kinds ...tokenKind) error {
-	hasNext := tr.Next()
-	if tr.Err() != nil {
-		return tr.Err()
+	if len(f.Messages) != len(f2.Messages) {
+		return false
 	}
-	if !hasNext {
-		return fmt.Errorf("expected (%v), got no token", kinds)
-	}
-	tk := tr.Token()
-	found := false
-	for _, k := range kinds {
-		if tk.kind == k {
-			found = true
+	for i, msg := range f.Messages {
+		if !msg.Equals(f2.Messages[i]) {
+			return false
 		}
 	}
-	if !found {
-		return fmt.Errorf("expected (%v) got %s", kinds, tk.kind)
+	if len(f.Enums) != len(f2.Enums) {
+		return false
 	}
-	return nil
-}
-
-func readEnum(tr *tokenReader) (Enum, error) {
-	en := Enum{}
-	if err := expectNext(tr, tokenKindIdent); err != nil {
-		return en, err
-	}
-	en.Name = string(tr.Token().concrete)
-	if err := expectNext(tr, tokenKindOpenCurly); err != nil {
-		return en, err
-	}
-	tr.Next()
-	// optional newline
-	if tr.Token().kind != tokenKindNewline {
-		tr.UnNext()
-	}
-	nextComment := ""
-	nextDeprecatedMessage := ""
-	nextIsDeprecated := false
-	for tr.Token().kind != tokenKindCloseCurly {
-		if !tr.Next() {
-			return en, fmt.Errorf("enum definition ended early")
-		}
-		tk := tr.Token()
-		switch tk.kind {
-		case tokenKindIdent:
-			optName := string(tk.concrete)
-			if err := expectNext(tr, tokenKindEquals); err != nil {
-				return en, err
-			}
-			if err := expectNext(tr, tokenKindInteger); err != nil {
-				return en, err
-			}
-			optInteger, err := strconv.ParseInt(string(tr.Token().concrete), 10, 32)
-			if err != nil {
-				return en, err
-			}
-			if err := expectNext(tr, tokenKindNewline, tokenKindSemicolon, tokenKindCloseCurly); err != nil {
-				return en, err
-			}
-			en.Options = append(en.Options, EnumOption{
-				Name:              optName,
-				Value:             int32(optInteger),
-				DeprecatedMessage: nextDeprecatedMessage,
-				Deprecated:        nextIsDeprecated,
-				Comment:           nextComment,
-			})
-			nextDeprecatedMessage = ""
-			nextIsDeprecated = false
-			nextComment = ""
-
-		case tokenKindOpenSquare:
-			if nextIsDeprecated {
-				return en, fmt.Errorf("expected enum option following deprecated annotation")
-			}
-			// deprecated note
-			if err := expectNext(tr, tokenKindIdent); err != nil {
-				return en, err
-			}
-			tk = tr.Token()
-			if string(tk.concrete) != "deprecated" {
-				return en, fmt.Errorf("invalid ident after leading '[', got %s, wanted %v", string(tk.concrete), "deprecated")
-			}
-			if err := expectNext(tr, tokenKindOpenParen); err != nil {
-				return en, err
-			}
-			if err := expectNext(tr, tokenKindStringLiteral); err != nil {
-				return en, err
-			}
-			tk = tr.Token()
-			nextIsDeprecated = true
-			var err error
-			nextDeprecatedMessage, err = strconv.Unquote(string(tk.concrete))
-			if err != nil {
-				return en, err
-			}
-			if err := expectNext(tr, tokenKindCloseParen); err != nil {
-				return en, err
-			}
-			if err := expectNext(tr, tokenKindCloseSquare); err != nil {
-				return en, err
-			}
-			if err := expectNext(tr, tokenKindNewline); err != nil {
-				return en, err
-			}
-		case tokenKindBlockComment:
-			nextComment = string(tk.concrete[2 : len(tk.concrete)-2])
-		case tokenKindLineComment:
-			nextComment = string(tk.concrete[2:])
+	for i, en := range f.Enums {
+		if !en.Equals(f2.Enums[i]) {
+			return false
 		}
 	}
-
-	return en, nil
-}
-
-func readStruct(tr *tokenReader) (Struct, error) {
-	return Struct{}, nil
-}
-
-func readMessage(tr *tokenReader) (Message, error) {
-	return Message{}, nil
+	return true
 }
 
 type Struct struct {
-	Name    string
-	Comment string
-	OpCode  int32
-	Fields  []Field
+	Name     string
+	Comment  string
+	OpCode   int32
+	Fields   []Field
+	ReadOnly bool
 }
 
-type Message struct {
-	Name    string
-	Comment string
-	OpCode  int32
-	Fields  map[int32]Field
+func (s Struct) Equals(s2 Struct) bool {
+	if s.Name != s2.Name {
+		return false
+	}
+	if s.Comment != s2.Comment {
+		return false
+	}
+	if s.OpCode != s2.OpCode {
+		return false
+	}
+	if len(s.Fields) != len(s2.Fields) {
+		return false
+	}
+	for i, fd := range s.Fields {
+		if !fd.Equals(s2.Fields[i]) {
+			return false
+		}
+	}
+	return true
 }
 
 type Field struct {
-	// KeyType is only provided if Map is true.
-	KeyType   string
-	ValueType string
-	Name      string
-	Comment   string
+	FieldType
+	Name    string
+	Comment string
 	// DeprecatedMessage is only provided if Deprecated is true.
 	DeprecatedMessage string
 	Deprecated        bool
-	Repeated          bool
-	Map               bool
+}
+
+func (f Field) Equals(f2 Field) bool {
+	if f.Name != f2.Name {
+		return false
+	}
+	if f.Comment != f2.Comment {
+		return false
+	}
+	if f.DeprecatedMessage != f2.DeprecatedMessage {
+		return false
+	}
+	if f.Deprecated != f2.Deprecated {
+		return false
+	}
+	return f.FieldType.Equals(f2.FieldType)
+}
+
+type Message struct {
+	Name     string
+	Comment  string
+	OpCode   int32
+	Fields   map[int32]Field
+	ReadOnly bool
+}
+
+func (m Message) Equals(m2 Message) bool {
+	if m.Name != m2.Name {
+		return false
+	}
+	if m.Comment != m2.Comment {
+		return false
+	}
+	if len(m.Fields) != len(m2.Fields) {
+		return false
+	}
+	for key, fd := range m.Fields {
+		if !fd.Equals(m2.Fields[key]) {
+			return false
+		}
+	}
+	for key, fd := range m2.Fields {
+		if !fd.Equals(m.Fields[key]) {
+			return false
+		}
+	}
+	return true
 }
 
 type Enum struct {
 	Name    string
 	Comment string
 	Options []EnumOption
+}
+
+func (e Enum) Equals(e2 Enum) bool {
+	if e.Name != e2.Name {
+		return false
+	}
+	if e.Comment != e2.Comment {
+		return false
+	}
+	if len(e.Options) != len(e2.Options) {
+		return false
+	}
+	for i, o := range e.Options {
+		if !o.Equals(e2.Options[i]) {
+			return false
+		}
+	}
+	return true
 }
 
 type EnumOption struct {
@@ -279,4 +150,65 @@ type EnumOption struct {
 	// DeprecatedMessage is only provided if Deprecated is true.
 	DeprecatedMessage string
 	Deprecated        bool
+}
+
+func (eo EnumOption) Equals(eo2 EnumOption) bool {
+	return eo == eo2
+}
+
+type FieldType struct {
+	Simple string
+	Map    *MapType
+	Array  *FieldType
+	// TODO: fight
+	// remove the array[t] alias
+	// it's added complexity and hurts
+}
+
+func (ft FieldType) Equals(ft2 FieldType) bool {
+	if ft.Simple != ft2.Simple {
+		return false
+	}
+	if (ft.Map == nil) != (ft2.Map == nil) {
+		return false
+	}
+	if ft.Map != nil && !ft.Map.Equals(*ft2.Map) {
+		return false
+	}
+	if (ft.Array == nil) != (ft2.Array == nil) {
+		return false
+	}
+	if ft.Array != nil && !ft.Array.Equals(*ft2.Array) {
+		return false
+	}
+	return true
+}
+
+func (ft FieldType) IsMap() bool {
+	return ft.Map != nil
+}
+
+func (ft FieldType) IsArray() bool {
+	return ft.Array != nil
+}
+
+type ArrayType struct {
+	Value FieldType
+}
+
+func (at ArrayType) Equals(at2 ArrayType) bool {
+	return at.Value.Equals(at2.Value)
+}
+
+type MapType struct {
+	// Keys may only be named types
+	Key   string
+	Value FieldType
+}
+
+func (mt MapType) Equals(mt2 MapType) bool {
+	if mt.Key != mt2.Key {
+		return false
+	}
+	return mt.Value.Equals(mt2.Value)
 }

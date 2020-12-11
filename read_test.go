@@ -1,0 +1,1000 @@
+package bebop
+
+import (
+	"os"
+	"path/filepath"
+	"testing"
+
+	"github.com/davecgh/go-spew/spew"
+)
+
+func TestReadFile(t *testing.T) {
+	type testCase struct {
+		file     string
+		expected File
+	}
+	tcs := []testCase{
+		{
+			file: "array_of_strings",
+			expected: File{
+				Structs: []Struct{
+					{
+						Name: "ArrayOfStrings",
+						Fields: []Field{
+							{
+								Name: "strings",
+								FieldType: FieldType{
+									Array: &FieldType{Simple: "string"},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			file: "basic_arrays",
+			expected: File{
+				Structs: []Struct{
+					{
+						Name: "BasicArrays",
+						Fields: []Field{
+							{
+								FieldType: FieldType{Array: &FieldType{Simple: "bool"}},
+								Name:      "a_bool",
+							}, {
+								FieldType: FieldType{Array: &FieldType{Simple: "byte"}},
+								Name:      "a_byte",
+							}, {
+								FieldType: FieldType{Array: &FieldType{Simple: "int16"}},
+								Name:      "a_int16",
+							}, {
+								FieldType: FieldType{Array: &FieldType{Simple: "uint16"}},
+								Name:      "a_uint16",
+							}, {
+								FieldType: FieldType{Array: &FieldType{Simple: "int32"}},
+								Name:      "a_int32",
+							}, {
+								FieldType: FieldType{Array: &FieldType{Simple: "uint32"}},
+								Name:      "a_uint32",
+							}, {
+								FieldType: FieldType{Array: &FieldType{Simple: "int64"}},
+								Name:      "a_int64",
+							}, {
+								FieldType: FieldType{Array: &FieldType{Simple: "uint64"}},
+								Name:      "a_uint64",
+							}, {
+								FieldType: FieldType{Array: &FieldType{Simple: "float32"}},
+								Name:      "a_float32",
+							}, {
+								FieldType: FieldType{Array: &FieldType{Simple: "float64"}},
+								Name:      "a_float64",
+							}, {
+								FieldType: FieldType{Array: &FieldType{Simple: "string"}},
+								Name:      "a_string",
+							}, {
+								FieldType: FieldType{Array: &FieldType{Simple: "guid"}},
+								Name:      "a_guid",
+							},
+						},
+					}, {
+						Name: "TestInt32Array",
+						Fields: []Field{
+							{
+								FieldType: FieldType{Array: &FieldType{Simple: "int32"}},
+								Name:      "a",
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			file: "basic_types",
+			expected: File{
+				Structs: []Struct{
+					{
+						Name: "BasicTypes",
+						Fields: []Field{
+							{
+								FieldType: FieldType{Simple: "bool"},
+								Name:      "a_bool",
+							}, {
+								FieldType: FieldType{Simple: "byte"},
+								Name:      "a_byte",
+							}, {
+								FieldType: FieldType{Simple: "int16"},
+								Name:      "a_int16",
+							}, {
+								FieldType: FieldType{Simple: "uint16"},
+								Name:      "a_uint16",
+							}, {
+								FieldType: FieldType{Simple: "int32"},
+								Name:      "a_int32",
+							}, {
+								FieldType: FieldType{Simple: "uint32"},
+								Name:      "a_uint32",
+							}, {
+								FieldType: FieldType{Simple: "int64"},
+								Name:      "a_int64",
+							}, {
+								FieldType: FieldType{Simple: "uint64"},
+								Name:      "a_uint64",
+							}, {
+								FieldType: FieldType{Simple: "float32"},
+								Name:      "a_float32",
+							}, {
+								FieldType: FieldType{Simple: "float64"},
+								Name:      "a_float64",
+							}, {
+								FieldType: FieldType{Simple: "string"},
+								Name:      "a_string",
+							}, {
+								FieldType: FieldType{Simple: "guid"},
+								Name:      "a_guid",
+							}, {
+								FieldType: FieldType{Simple: "date"},
+								Name:      "a_date",
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			file: "documentation",
+			expected: File{
+				Messages: []Message{
+					{
+						Name: "DepM",
+						Fields: map[int32]Field{
+							1: {
+								Name:              "x",
+								Deprecated:        true,
+								DeprecatedMessage: "x in DepM",
+								FieldType: FieldType{
+									Simple: "int32",
+								},
+							},
+						},
+					}, {
+						Name:    "DocM",
+						Comment: " Documented message ",
+						Fields: map[int32]Field{
+							1: {
+								Name:    "x",
+								Comment: " Documented field ",
+								FieldType: FieldType{
+									Simple: "int32",
+								},
+							},
+							2: {
+								Name:              "y",
+								Deprecated:        true,
+								DeprecatedMessage: "y in DocM",
+								FieldType: FieldType{
+									Simple: "int32",
+								},
+							},
+							3: {
+								Name:              "z",
+								Comment:           " Deprecated, documented field ",
+								Deprecated:        true,
+								DeprecatedMessage: "z in DocM",
+								FieldType: FieldType{
+									Simple: "int32",
+								},
+							},
+						},
+					},
+				},
+				Structs: []Struct{
+					{
+						Name:    "DocS",
+						Comment: " Documented struct ",
+						Fields: []Field{
+							{
+								Comment: " Documented field ",
+								Name:    "x",
+								FieldType: FieldType{
+									Simple: "int32",
+								},
+							},
+						},
+					},
+				},
+				Enums: []Enum{
+					{
+						Name: "DepE",
+						Options: []EnumOption{
+							{
+								Name:              "X",
+								Value:             1,
+								Deprecated:        true,
+								DeprecatedMessage: "X in DepE",
+							},
+						},
+					}, {
+						Name:    "DocE",
+						Comment: " Documented enum ",
+						Options: []EnumOption{
+							{
+								Name:    "X",
+								Value:   1,
+								Comment: " Documented constant ",
+							}, {
+								Name:              "Y",
+								Value:             2,
+								Deprecated:        true,
+								DeprecatedMessage: "Y in DocE",
+							}, {
+								Name:              "Z",
+								Value:             3,
+								Comment:           " Deprecated, documented constant ",
+								Deprecated:        true,
+								DeprecatedMessage: "Z in DocE",
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			file: "enums",
+			expected: File{
+				Enums: []Enum{
+					{
+						Name: "Test",
+						Options: []EnumOption{
+							{
+								Name:  "Start",
+								Value: 1,
+							}, {
+								Name:  "End",
+								Value: 2,
+							}, {
+								Name:  "Middle",
+								Value: 3,
+							}, {
+								Name:              "Beginning",
+								Value:             4,
+								DeprecatedMessage: "who knows",
+								Deprecated:        true,
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			file: "foo",
+			expected: File{
+				Structs: []Struct{
+					{
+						Name: "Foo",
+						Fields: []Field{
+							{
+								Name: "bar",
+								FieldType: FieldType{
+									Simple: "Bar",
+								},
+							},
+						},
+					},
+				},
+				Messages: []Message{
+					{
+						Name: "Bar",
+						Fields: map[int32]Field{
+							1: {
+								Name: "x",
+								FieldType: FieldType{
+									Simple: "float64",
+								},
+							},
+							2: {
+								Name: "y",
+								FieldType: FieldType{
+									Simple: "float64",
+								},
+							},
+							3: {
+								Name: "z",
+								FieldType: FieldType{
+									Simple: "float64",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			file: "jazz",
+			expected: File{
+				Enums: []Enum{
+					{
+						Name: "Instrument",
+						Options: []EnumOption{
+							{
+								Name:  "Sax",
+								Value: 0,
+							},
+							{
+								Name:  "Trumpet",
+								Value: 1,
+							},
+							{
+								Name:  "Clarinet",
+								Value: 2,
+							},
+						},
+					},
+				},
+				Structs: []Struct{
+					{
+						Name:     "Musician",
+						ReadOnly: true,
+						Fields: []Field{
+							{
+								Name: "name",
+								FieldType: FieldType{
+									Simple: "string",
+								},
+							},
+							{
+								Name: "plays",
+								FieldType: FieldType{
+									Simple: "Instrument",
+								},
+							},
+						},
+					},
+					{
+						Name: "Library",
+						Fields: []Field{
+							{
+								Name: "songs",
+								FieldType: FieldType{
+									Map: &MapType{
+										Key: "guid",
+										Value: FieldType{
+											Simple: "Song",
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				Messages: []Message{
+					{
+						Name: "Song",
+						Fields: map[int32]Field{
+							1: {
+								Name: "title",
+								FieldType: FieldType{
+									Simple: "string",
+								},
+							},
+							2: {
+								Name: "year",
+								FieldType: FieldType{
+									Simple: "uint16",
+								},
+							},
+							3: {
+								Name: "performers",
+								FieldType: FieldType{
+									Array: &FieldType{
+										Simple: "Musician",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			file: "lab",
+			expected: File{
+				Enums: []Enum{
+					{
+						Name: "VideoCodec",
+						Options: []EnumOption{
+							{
+								Name:  "H264",
+								Value: 0,
+							},
+							{
+								Name:  "H265",
+								Value: 1,
+							},
+						},
+					},
+				},
+				Structs: []Struct{
+					{
+						Name: "Int32s",
+						Fields: []Field{
+							{
+								Name: "a",
+								FieldType: FieldType{
+									Array: &FieldType{
+										Simple: "int32",
+									},
+								},
+							},
+						},
+					},
+					{
+						Name: "Uint32s",
+						Fields: []Field{
+							{
+								Name: "a",
+								FieldType: FieldType{
+									Array: &FieldType{
+										Simple: "uint32",
+									},
+								},
+							},
+						},
+					},
+					{
+						Name: "Float32s",
+						Fields: []Field{
+							{
+								Name: "a",
+								FieldType: FieldType{
+									Array: &FieldType{
+										Simple: "float32",
+									},
+								},
+							},
+						},
+					},
+					{
+						Name: "Int64s",
+						Fields: []Field{
+							{
+								Name: "a",
+								FieldType: FieldType{
+									Array: &FieldType{
+										Simple: "int64",
+									},
+								},
+							},
+						},
+					},
+					{
+						Name: "Uint64s",
+						Fields: []Field{
+							{
+								Name: "a",
+								FieldType: FieldType{
+									Array: &FieldType{
+										Simple: "uint64",
+									},
+								},
+							},
+						},
+					},
+					{
+						Name: "Float64s",
+						Fields: []Field{
+							{
+								Name: "a",
+								FieldType: FieldType{
+									Array: &FieldType{
+										Simple: "float64",
+									},
+								},
+							},
+						},
+					},
+					{
+						Name: "VideoData",
+						Fields: []Field{
+							{
+								Name: "time",
+								FieldType: FieldType{
+									Simple: "float64",
+								},
+							},
+							{
+								Name: "width",
+								FieldType: FieldType{
+									Simple: "uint32",
+								},
+							},
+							{
+								Name: "height",
+								FieldType: FieldType{
+									Simple: "uint32",
+								},
+							},
+							{
+								Name: "fragment",
+								FieldType: FieldType{
+									Array: &FieldType{
+										Simple: "byte",
+									},
+								},
+							},
+						},
+					},
+				},
+				Messages: []Message{
+					{
+						Name: "MediaMessage",
+						Fields: map[int32]Field{
+							1: {
+								Name: "codec",
+								FieldType: FieldType{
+									Simple: "VideoCodec",
+								},
+							},
+							2: {
+								Name: "data",
+								FieldType: FieldType{
+									Simple: "VideoData",
+								},
+							},
+						},
+					},
+					{
+						Name:    "SkipTestOld",
+						Comment: " Should be able to decode a \"SkipTestNewContainer\" as a \"SkipTestOldContainer\".",
+						Fields: map[int32]Field{
+							1: {
+								Name: "x",
+								FieldType: FieldType{
+									Simple: "int32",
+								},
+							},
+							2: {
+								Name: "y",
+								FieldType: FieldType{
+									Simple: "int32",
+								},
+							},
+						},
+					},
+					{
+						Name: "SkipTestNew",
+						Fields: map[int32]Field{
+							1: {
+								Name: "x",
+								FieldType: FieldType{
+									Simple: "int32",
+								},
+							},
+							2: {
+								Name: "y",
+								FieldType: FieldType{
+									Simple: "int32",
+								},
+							},
+							3: {
+								Name: "z",
+								FieldType: FieldType{
+									Simple: "int32",
+								},
+							},
+						},
+					},
+					{
+						Name: "SkipTestOldContainer",
+						Fields: map[int32]Field{
+							1: {
+								Name: "s",
+								FieldType: FieldType{
+									Simple: "SkipTestOld",
+								},
+							},
+							2: {
+								Name: "after",
+								FieldType: FieldType{
+									Simple: "int32",
+								},
+							},
+						},
+					},
+					{
+						Name: "SkipTestNewContainer",
+						Fields: map[int32]Field{
+							1: {
+								Name: "s",
+								FieldType: FieldType{
+									Simple: "SkipTestNew",
+								},
+							},
+							2: {
+								Name: "after",
+								FieldType: FieldType{
+									Simple: "int32",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			file: "map_types",
+			expected: File{
+				Structs: []Struct{
+					{
+						Name:     "S",
+						ReadOnly: true,
+						Fields: []Field{
+							{
+								Name: "x",
+								FieldType: FieldType{
+									Simple: "int32",
+								},
+							},
+							{
+								Name: "y",
+								FieldType: FieldType{
+									Simple: "int32",
+								},
+							},
+						},
+					},
+					{
+						Name: "SomeMaps",
+						Fields: []Field{
+							{
+								Name: "m1",
+								FieldType: FieldType{
+									Map: &MapType{
+										Key: "bool",
+										Value: FieldType{
+											Simple: "bool",
+										},
+									},
+								},
+							},
+							{
+								Name: "m2",
+								FieldType: FieldType{
+									Map: &MapType{
+										Key: "string",
+										Value: FieldType{
+											Map: &MapType{
+												Key: "string",
+												Value: FieldType{
+													Simple: "string",
+												},
+											},
+										},
+									},
+								},
+							},
+							{
+								Name: "m3",
+								FieldType: FieldType{
+									Array: &FieldType{
+										Map: &MapType{
+											Key: "int32",
+											Value: FieldType{
+												Array: &FieldType{
+													Map: &MapType{
+														Key: "bool",
+														Value: FieldType{
+															Simple: "S",
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+							{
+								Name: "m4",
+								FieldType: FieldType{
+									Array: &FieldType{
+										Map: &MapType{
+											Key: "string",
+											Value: FieldType{
+												Array: &FieldType{
+													Simple: "float32",
+												},
+											},
+										},
+									},
+								},
+							},
+							{
+								Name: "m5",
+								FieldType: FieldType{
+									Map: &MapType{
+										Key: "guid",
+										Value: FieldType{
+											Simple: "M",
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				Messages: []Message{
+					{
+						Name: "M",
+						Fields: map[int32]Field{
+							1: {
+								Name: "a",
+								FieldType: FieldType{
+									Simple: "float32",
+								},
+							},
+							2: {
+								Name: "b",
+								FieldType: FieldType{
+									Simple: "float64",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			file: "msgpack_comparison",
+			expected: File{
+				Structs: []Struct{
+					{
+						Name: "MsgpackComparison",
+						// todo: concat multiple line comments in sequence
+						Comment: " key names in JSON to be the same length while not coinciding with Bebop keywords.",
+						Fields: []Field{
+							{
+								Name: "iNT0",
+								FieldType: FieldType{
+									Simple: "uint8",
+								},
+							},
+							{
+								Name: "iNT1",
+								FieldType: FieldType{
+									Simple: "uint8",
+								},
+							},
+							{
+								Name: "iNT1_",
+								FieldType: FieldType{
+									Simple: "int16",
+								},
+							},
+							{
+								Name: "iNT8",
+								FieldType: FieldType{
+									Simple: "uint8",
+								},
+							},
+							{
+								Name: "iNT8_",
+								FieldType: FieldType{
+									Simple: "int16",
+								},
+							},
+							{
+								Name: "iNT16",
+								FieldType: FieldType{
+									Simple: "int16",
+								},
+							},
+							{
+								Name: "iNT16_",
+								FieldType: FieldType{
+									Simple: "int16",
+								},
+							},
+							{
+								Name: "iNT32",
+								FieldType: FieldType{
+									Simple: "int32",
+								},
+							},
+							{
+								Name: "iNT32_",
+								FieldType: FieldType{
+									Simple: "int32",
+								},
+							},
+							{
+								Name:    "tRUE",
+								Comment: " int8 nIL; // \"nil\": null,",
+								FieldType: FieldType{
+									Simple: "bool",
+								},
+							},
+							{
+								Name: "fALSE",
+								FieldType: FieldType{
+									Simple: "bool",
+								},
+							},
+							{
+								Name: "fLOAT",
+								FieldType: FieldType{
+									Simple: "float64",
+								},
+							},
+							{
+								Name: "fLOAT_",
+								FieldType: FieldType{
+									Simple: "float64",
+								},
+							},
+							{
+								Name: "sTRING0",
+								FieldType: FieldType{
+									Simple: "string",
+								},
+							},
+							{
+								Name: "sTRING1",
+								FieldType: FieldType{
+									Simple: "string",
+								},
+							},
+							{
+								Name: "sTRING4",
+								FieldType: FieldType{
+									Simple: "string",
+								},
+							},
+							{
+								Name: "sTRING8",
+								FieldType: FieldType{
+									Simple: "string",
+								},
+							},
+							{
+								Name: "sTRING16",
+								FieldType: FieldType{
+									Simple: "string",
+								},
+							},
+							{
+								Name: "aRRAY0",
+								FieldType: FieldType{
+									Array: &FieldType{
+										Simple: "int32",
+									},
+								},
+							},
+							{
+								Name: "aRRAY1",
+								FieldType: FieldType{
+									Array: &FieldType{
+										Simple: "string",
+									},
+								},
+							},
+							{
+								Name: "aRRAY8",
+								FieldType: FieldType{
+									Array: &FieldType{
+										Simple: "int32",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			file: "request",
+			expected: File{
+				Enums: []Enum{
+					{
+						Name: "FurnitureFamily",
+						Options: []EnumOption{
+							{
+								Name:  "Bed",
+								Value: 0,
+							},
+							{
+								Name:  "Table",
+								Value: 1,
+							},
+							{
+								Name:  "Shoe",
+								Value: 2,
+							},
+						},
+					},
+				},
+				Structs: []Struct{
+					{
+						Name:     "Furniture",
+						ReadOnly: true,
+						Fields: []Field{
+							{
+								Name: "name",
+								FieldType: FieldType{
+									Simple: "string",
+								},
+							},
+							{
+								Name: "price",
+								FieldType: FieldType{
+									Simple: "uint32",
+								},
+							},
+							{
+								Name: "family",
+								FieldType: FieldType{
+									Simple: "FurnitureFamily",
+								},
+							},
+						},
+					},
+					{
+						Name:     "RequestResponse",
+						ReadOnly: true,
+						OpCode:   0x31323334,
+						Fields: []Field{
+							{
+								Name: "availableFurniture",
+								FieldType: FieldType{
+									Array: &FieldType{
+										Simple: "Furniture",
+									},
+								},
+							},
+						},
+					},
+				},
+				Messages: []Message{
+					{
+						Name:   "RequestCatalog",
+						OpCode: bytesToOpCode([]byte("IKEA")),
+						Fields: map[int32]Field{
+							1: {
+								Name: "family",
+								FieldType: FieldType{
+									Simple: "FurnitureFamily",
+								},
+							},
+							2: {
+								Name:              "secretTunnel",
+								Deprecated:        true,
+								DeprecatedMessage: "Nobody react to what I'm about to say...",
+								FieldType: FieldType{
+									Simple: "string",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+	for _, tc := range tcs {
+		tc := tc
+		t.Run(tc.file, func(t *testing.T) {
+			f, err := os.Open(filepath.Join("testdata", tc.file+".bop"))
+			if err != nil {
+				t.Fatalf("failed to open test file %s: %v", tc.file+".bop", err)
+			}
+			defer f.Close()
+			bf, err := ReadFile(f)
+			if err != nil {
+				t.Fatalf("read file errored: %v", err)
+			}
+			if !bf.Equals(tc.expected) {
+				spew.Dump(bf)
+				spew.Dump(tc.expected)
+				t.Fatal("parsed file did not match expected")
+			}
+		})
+	}
+}
