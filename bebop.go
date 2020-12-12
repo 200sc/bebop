@@ -92,7 +92,7 @@ type Message struct {
 	Name     string
 	Comment  string
 	OpCode   int32
-	Fields   map[int32]Field
+	Fields   map[uint8]Field
 	ReadOnly bool
 }
 
@@ -231,38 +231,4 @@ func (mt MapType) Equals(mt2 MapType) bool {
 		return false
 	}
 	return mt.Value.Equals(mt2.Value)
-}
-
-func (f File) hasDateType() bool {
-	for _, st := range f.Structs {
-		for _, fd := range st.Fields {
-			if fd.FieldType.hasDateType() {
-				return true
-			}
-		}
-	}
-	for _, msg := range f.Messages {
-		for _, fd := range msg.Fields {
-			if fd.FieldType.hasDateType() {
-				return true
-			}
-		}
-	}
-	return false
-}
-
-func (ft FieldType) hasDateType() bool {
-	if ft.Simple == "date" {
-		return true
-	}
-	if ft.Array != nil {
-		return ft.Array.hasDateType()
-	}
-	if ft.Map != nil {
-		if ft.Map.Key == "date" {
-			return true
-		}
-		return ft.Map.Value.hasDateType()
-	}
-	return false
 }

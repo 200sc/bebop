@@ -388,7 +388,7 @@ func readFieldType(tr *tokenReader) (FieldType, error) {
 
 func readMessage(tr *tokenReader) (Message, error) {
 	msg := Message{
-		Fields: make(map[int32]Field),
+		Fields: make(map[uint8]Field),
 	}
 	if err := expectNext(tr, tokenKindIdent); err != nil {
 		return msg, err
@@ -413,7 +413,7 @@ func readMessage(tr *tokenReader) (Message, error) {
 		tk := tr.Token()
 		switch tk.kind {
 		case tokenKindInteger:
-			fdInteger, err := strconv.ParseInt(string(tr.Token().concrete), 10, 32)
+			fdInteger, err := strconv.ParseInt(string(tr.Token().concrete), 10, 8)
 			if err != nil {
 				return msg, err
 			}
@@ -432,7 +432,7 @@ func readMessage(tr *tokenReader) (Message, error) {
 			if err := expectNext(tr, tokenKindSemicolon); err != nil {
 				return msg, err
 			}
-			msg.Fields[int32(fdInteger)] = Field{
+			msg.Fields[uint8(fdInteger)] = Field{
 				Name:              fdName,
 				FieldType:         fdType,
 				DeprecatedMessage: nextDeprecatedMessage,
