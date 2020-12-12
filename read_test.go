@@ -4,8 +4,6 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
-
-	"github.com/davecgh/go-spew/spew"
 )
 
 func TestReadFile(t *testing.T) {
@@ -991,8 +989,6 @@ func TestReadFile(t *testing.T) {
 				t.Fatalf("read file errored: %v", err)
 			}
 			if !bf.Equals(tc.expected) {
-				spew.Dump(bf)
-				spew.Dump(tc.expected)
 				t.Fatal("parsed file did not match expected")
 			}
 		})

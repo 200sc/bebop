@@ -32,14 +32,18 @@ func TestGenerateToFile(t *testing.T) {
 			if err != nil {
 				t.Fatalf("failed to read file %s: %v", filename+".bop", err)
 			}
-			out, err := os.Create(filepath.Join("testdata", filename+".go"))
+			outFile := filepath.Join("testdata", "generated", filename+".go")
+			out, err := os.Create(outFile)
 			if err != nil {
-				t.Fatalf("failed to open out file %s: %v", filename+"_formatted.bop", err)
+				t.Fatalf("failed to open out file %s: %v", outFile, err)
 			}
 			defer out.Close()
-			bopf.Generate(out, GenerateSettings{
-				PackageName: "testdata",
+			err = bopf.Generate(out, GenerateSettings{
+				PackageName: "generated",
 			})
+			if err != nil {
+				t.Fatalf("generation failed: %v", err)
+			}
 		})
 	}
 }
