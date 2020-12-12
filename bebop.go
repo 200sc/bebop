@@ -165,6 +165,26 @@ type FieldType struct {
 	// it's added complexity and hurts
 }
 
+func (ft FieldType) GoString() string {
+	if ft.Map != nil {
+		return "map[" + simpleGoString(ft.Map.Key) + "]" + ft.Map.Value.GoString()
+	}
+	if ft.Array != nil {
+		return "[]" + ft.Array.GoString()
+	}
+	return simpleGoString(ft.Simple)
+}
+
+func simpleGoString(simple string) string {
+	if simple == "guid" {
+		return "[16]byte"
+	}
+	if simple == "date" {
+		return "time.Time"
+	}
+	return simple
+}
+
 func (ft FieldType) Equals(ft2 FieldType) bool {
 	if ft.Simple != ft2.Simple {
 		return false
@@ -211,4 +231,38 @@ func (mt MapType) Equals(mt2 MapType) bool {
 		return false
 	}
 	return mt.Value.Equals(mt2.Value)
+}
+
+func (f File) hasDateType() bool {
+	for _, st := range f.Structs {
+		for _, fd := range st.Fields {
+			if fd.FieldType.hasDateType() {
+				return true
+			}
+		}
+	}
+	for _, msg := range f.Messages {
+		for _, fd := range msg.Fields {
+			if fd.FieldType.hasDateType() {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func (ft FieldType) hasDateType() bool {
+	if ft.Simple == "date" {
+		return true
+	}
+	if ft.Array != nil {
+		return ft.Array.hasDateType()
+	}
+	if ft.Map != nil {
+		if ft.Map.Key == "date" {
+			return true
+		}
+		return ft.Map.Value.hasDateType()
+	}
+	return false
 }
