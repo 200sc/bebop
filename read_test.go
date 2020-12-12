@@ -147,7 +147,7 @@ func TestReadFile(t *testing.T) {
 				Messages: []Message{
 					{
 						Name: "DepM",
-						Fields: map[int32]Field{
+						Fields: map[uint8]Field{
 							1: {
 								Name:              "x",
 								Deprecated:        true,
@@ -160,7 +160,7 @@ func TestReadFile(t *testing.T) {
 					}, {
 						Name:    "DocM",
 						Comment: " Documented message ",
-						Fields: map[int32]Field{
+						Fields: map[uint8]Field{
 							1: {
 								Name:    "x",
 								Comment: " Documented field ",
@@ -285,7 +285,7 @@ func TestReadFile(t *testing.T) {
 				Messages: []Message{
 					{
 						Name: "Bar",
-						Fields: map[int32]Field{
+						Fields: map[uint8]Field{
 							1: {
 								Name: "x",
 								FieldType: FieldType{
@@ -370,7 +370,7 @@ func TestReadFile(t *testing.T) {
 				Messages: []Message{
 					{
 						Name: "Song",
-						Fields: map[int32]Field{
+						Fields: map[uint8]Field{
 							1: {
 								Name: "title",
 								FieldType: FieldType{
@@ -528,7 +528,7 @@ func TestReadFile(t *testing.T) {
 				Messages: []Message{
 					{
 						Name: "MediaMessage",
-						Fields: map[int32]Field{
+						Fields: map[uint8]Field{
 							1: {
 								Name: "codec",
 								FieldType: FieldType{
@@ -546,7 +546,7 @@ func TestReadFile(t *testing.T) {
 					{
 						Name:    "SkipTestOld",
 						Comment: " Should be able to decode a \"SkipTestNewContainer\" as a \"SkipTestOldContainer\".",
-						Fields: map[int32]Field{
+						Fields: map[uint8]Field{
 							1: {
 								Name: "x",
 								FieldType: FieldType{
@@ -563,7 +563,7 @@ func TestReadFile(t *testing.T) {
 					},
 					{
 						Name: "SkipTestNew",
-						Fields: map[int32]Field{
+						Fields: map[uint8]Field{
 							1: {
 								Name: "x",
 								FieldType: FieldType{
@@ -586,7 +586,7 @@ func TestReadFile(t *testing.T) {
 					},
 					{
 						Name: "SkipTestOldContainer",
-						Fields: map[int32]Field{
+						Fields: map[uint8]Field{
 							1: {
 								Name: "s",
 								FieldType: FieldType{
@@ -603,7 +603,7 @@ func TestReadFile(t *testing.T) {
 					},
 					{
 						Name: "SkipTestNewContainer",
-						Fields: map[int32]Field{
+						Fields: map[uint8]Field{
 							1: {
 								Name: "s",
 								FieldType: FieldType{
@@ -725,7 +725,7 @@ func TestReadFile(t *testing.T) {
 				Messages: []Message{
 					{
 						Name: "M",
-						Fields: map[int32]Field{
+						Fields: map[uint8]Field{
 							1: {
 								Name: "a",
 								FieldType: FieldType{
@@ -957,7 +957,7 @@ func TestReadFile(t *testing.T) {
 					{
 						Name:   "RequestCatalog",
 						OpCode: bytesToOpCode([]byte("IKEA")),
-						Fields: map[int32]Field{
+						Fields: map[uint8]Field{
 							1: {
 								Name: "family",
 								FieldType: FieldType{
