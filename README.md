@@ -11,14 +11,14 @@ import (
 
 func main() {
     f, _ := os.Open("mybebop.bop")
-	defer f.Close()
-	bopf, _ := bebop.ReadFile(f)
+    defer f.Close()
+    bopf, _ := bebop.ReadFile(f)
     out, _ := os.Create("mybebop.go")
-	defer out.Close()
-	settings := bebop.GenerateSettings{
-		PackageName: "mybebop",
-	}
-	bopf.Generate(out, settings)
+    defer out.Close()
+    settings := bebop.GenerateSettings{
+        PackageName: "mybebop",
+    }
+    bopf.Generate(out, settings)
 }
 ```
 
