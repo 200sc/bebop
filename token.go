@@ -75,35 +75,6 @@ func newTokenReader(r io.Reader) *tokenReader {
 	return &tokenReader{r: bufferedReader}
 }
 
-func (tr *tokenReader) setNextToken(tk token, breakChar byte, breakKind tokenKind) {
-	if len(tk.concrete) == 0 {
-		tk.concrete = []byte{breakChar}
-		tk.kind = breakKind
-	} else {
-		// unread the breakChar
-		tr.r.UnreadByte()
-		// determine if we are an ident or number
-		// <= 9 && >= 0
-		tk.kind = tk.determineKind()
-	}
-	tr.nextToken = tk
-}
-
-func (tk token) determineKind() tokenKind {
-	if len(tk.concrete) == 0 {
-		return tokenKindInvalid
-	}
-	if len(tk.concrete) == 1 {
-
-	}
-	if tk.concrete[0] <= 0x39 && tk.concrete[0] >= 0x30 {
-		return tokenKindInteger
-	} else {
-		// we assume that all non-valid ident characters have been caught before this
-		return tokenKindIdent
-	}
-}
-
 // UnNext tells the next Next call to not update the returned token
 func (tr *tokenReader) UnNext() {
 	tr.keepNextToken = true

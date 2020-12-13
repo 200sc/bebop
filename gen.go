@@ -13,11 +13,10 @@ import (
 type GenerateSettings struct {
 	PackageName string
 
-	typeMarshallers          map[string]string
-	typeUnmarshallers        map[string]string
-	messageTypeUnmarshallers map[string]string
-	typeLengthers            map[string]string
-	customRecordTypes        map[string]struct{}
+	typeMarshallers   map[string]string
+	typeUnmarshallers map[string]string
+	typeLengthers     map[string]string
+	customRecordTypes map[string]struct{}
 }
 
 func (f File) Validate() error {
@@ -360,13 +359,13 @@ func writeStructFieldUnmarshaller(name string, typ FieldType, w io.Writer, setti
 		writeLineWithTabs(w, "%[3]s = make("+typ.Map.GoString()+")", depth, name)
 		writeLineWithTabs(w, "for i := uint32(0); i < ln; i++ {", depth, name)
 		writeLineWithTabs(w, "k := new("+simpleGoString(typ.Map.Key)+")", depth+1, name)
-		writeLineWithTabs(w, settings.messageTypeUnmarshaller(typ.Map.Key), depth+1, "k")
+		writeLineWithTabs(w, settings.typeUnmarshallers[typ.Map.Key], depth+1, "k")
 		writeLineWithTabs(w, elemName+" := new(%[2]s)", depth+1, typ.Map.Value.GoString())
 		writeStructFieldUnmarshaller(elemName, typ.Map.Value, w, settings, depth+1)
 		writeLineWithTabs(w, "(%[3]s)[*k] = *"+elemName, depth+1, name)
 		writeLineWithTabs(w, "}", depth)
 	} else {
-		writeLineWithTabs(w, settings.messageTypeUnmarshaller(typ.Simple), depth, name)
+		writeLineWithTabs(w, settings.typeUnmarshallers[typ.Simple], depth, name)
 	}
 }
 
@@ -385,13 +384,6 @@ func writeMessageFieldMarshaller(name string, typ FieldType, w io.Writer, settin
 	} else {
 		writeLineWithTabs(w, settings.typeMarshallers[typ.Simple], depth, name)
 	}
-}
-
-func (s GenerateSettings) messageTypeUnmarshaller(typ string) string {
-	if v, ok := s.messageTypeUnmarshallers[typ]; ok {
-		return v
-	}
-	return s.typeUnmarshallers[typ]
 }
 
 func typeNeedsElem(typ string, settings GenerateSettings) bool {
@@ -480,12 +472,6 @@ func unexposeName(name string) string {
 		return strings.ToLower(string(name[0]))
 	}
 	return ""
-}
-
-func (f File) messageTypeUnmarshallers() map[string]string {
-	out := make(map[string]string)
-	out["guid"] = "%[3]s = bebop.ReadGUID(r)"
-	return out
 }
 
 func (f File) typeUnmarshallers() map[string]string {
