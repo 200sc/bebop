@@ -8,6 +8,7 @@ import (
 	"io"
 
 	"github.com/200sc/bebop"
+	"github.com/200sc/bebop/iohelp"
 )
 
 var _ bebop.Record = &S{}
@@ -104,7 +105,7 @@ func(bbp SomeMaps) EncodeBebop(w io.Writer) (err error) {
 	}
 	binary.Write(w, binary.LittleEndian, uint32(len(bbp.M5)))
 	for k, v := range bbp.M5 {
-		w.Write(k[:])
+		iohelp.WriteGUID(w, k)
 		err = (v).EncodeBebop(w)
 		if err != nil {
 			return err
@@ -130,16 +131,16 @@ func(bbp *SomeMaps) DecodeBebop(r io.Reader) (err error) {
 	bbp.M2 = make(map[string]map[string]string)
 	for i := uint32(0); i < ln; i++ {
 		k := new(string)
-		*k = bebop.ReadString(r)
+		*k = iohelp.ReadString(r)
 		elem1 := new(map[string]string)
 		ln = uint32(0)
 		binary.Read(r, binary.LittleEndian, &ln)
 		*elem1 = make(map[string]string)
 		for i := uint32(0); i < ln; i++ {
 			k := new(string)
-			*k = bebop.ReadString(r)
+			*k = iohelp.ReadString(r)
 			elem2 := new(string)
-			*elem2 = bebop.ReadString(r)
+			*elem2 = iohelp.ReadString(r)
 			(*elem1)[*k] = *elem2
 		}
 		(bbp.M2)[*k] = *elem1
@@ -187,7 +188,7 @@ func(bbp *SomeMaps) DecodeBebop(r io.Reader) (err error) {
 		*elem1 = make(map[string][]float32)
 		for i := uint32(0); i < ln; i++ {
 			k := new(string)
-			*k = bebop.ReadString(r)
+			*k = iohelp.ReadString(r)
 			elem2 := new([]float32)
 			ln = uint32(0)
 			binary.Read(r, binary.LittleEndian, &ln)
@@ -205,7 +206,7 @@ func(bbp *SomeMaps) DecodeBebop(r io.Reader) (err error) {
 	bbp.M5 = make(map[[16]byte]M)
 	for i := uint32(0); i < ln; i++ {
 		k := new([16]byte)
-		*k = bebop.ReadGUID(r)
+		*k = iohelp.ReadGUID(r)
 		elem1 := new(M)
 		err = (elem1).DecodeBebop(r)
 		if err != nil {

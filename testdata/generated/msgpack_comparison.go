@@ -7,6 +7,7 @@ import (
 	"io"
 
 	"github.com/200sc/bebop"
+	"github.com/200sc/bebop/iohelp"
 )
 
 //  key names in JSON to be the same length while not coinciding with Bebop keywords.
@@ -92,11 +93,11 @@ func(bbp *MsgpackComparison) DecodeBebop(r io.Reader) (err error) {
 	binary.Read(r, binary.LittleEndian, &bbp.FALSE)
 	binary.Read(r, binary.LittleEndian, &bbp.FLOAT)
 	binary.Read(r, binary.LittleEndian, &bbp.FLOAT_)
-	bbp.STRING0 = bebop.ReadString(r)
-	bbp.STRING1 = bebop.ReadString(r)
-	bbp.STRING4 = bebop.ReadString(r)
-	bbp.STRING8 = bebop.ReadString(r)
-	bbp.STRING16 = bebop.ReadString(r)
+	bbp.STRING0 = iohelp.ReadString(r)
+	bbp.STRING1 = iohelp.ReadString(r)
+	bbp.STRING4 = iohelp.ReadString(r)
+	bbp.STRING8 = iohelp.ReadString(r)
+	bbp.STRING16 = iohelp.ReadString(r)
 	ln = uint32(0)
 	binary.Read(r, binary.LittleEndian, &ln)
 	for i := uint32(0); i < ln; i++ {
@@ -108,7 +109,7 @@ func(bbp *MsgpackComparison) DecodeBebop(r io.Reader) (err error) {
 	binary.Read(r, binary.LittleEndian, &ln)
 	for i := uint32(0); i < ln; i++ {
 		elem1 := new(string)
-		*elem1 = bebop.ReadString(r)
+		*elem1 = iohelp.ReadString(r)
 		bbp.ARRAY1 = append(bbp.ARRAY1, *elem1)
 	}
 	ln = uint32(0)

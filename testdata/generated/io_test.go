@@ -140,7 +140,7 @@ func TestMarshalCycleRecords(t *testing.T) {
 		name: "Library",
 		record: &generated.Library{
 			Songs: map[[16]byte]generated.Song{
-				[16]byte{2: 4}: generated.Song{
+				[16]byte{0x35, 0x91, 0x8b, 0xc9, 0x19, 0x6d, 0x40, 0xea, 0x97, 0x79, 0x88, 0x9d, 0x79, 0xb7, 0x53, 0xf0}: generated.Song{
 					Title: stringp("song-title"),
 					Year:  uint16p(2034),
 				},

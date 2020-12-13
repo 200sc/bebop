@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/200sc/bebop"
+	"github.com/200sc/bebop/iohelp"
 )
 
 var _ bebop.Record = &BasicTypes{}
@@ -41,7 +42,7 @@ func(bbp BasicTypes) EncodeBebop(w io.Writer) (err error) {
 	binary.Write(w, binary.LittleEndian, bbp.A_float64)
 	binary.Write(w, binary.LittleEndian, uint32(len(bbp.A_string)))
 	w.Write([]byte(bbp.A_string))
-	w.Write(bbp.A_guid[:])
+	iohelp.WriteGUID(w, bbp.A_guid)
 	if bbp.A_date != (time.Time{}) {
 		binary.Write(w, binary.LittleEndian, (bbp.A_date.UnixNano()/100))
 	} else {
@@ -61,9 +62,9 @@ func(bbp *BasicTypes) DecodeBebop(r io.Reader) (err error) {
 	binary.Read(r, binary.LittleEndian, &bbp.A_uint64)
 	binary.Read(r, binary.LittleEndian, &bbp.A_float32)
 	binary.Read(r, binary.LittleEndian, &bbp.A_float64)
-	bbp.A_string = bebop.ReadString(r)
-	bbp.A_guid = bebop.ReadGUID(r)
-	bbp.A_date = bebop.ReadTime(r)
+	bbp.A_string = iohelp.ReadString(r)
+	bbp.A_guid = iohelp.ReadGUID(r)
+	bbp.A_date = iohelp.ReadTime(r)
 	return nil
 }
 

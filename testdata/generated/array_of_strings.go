@@ -7,6 +7,7 @@ import (
 	"io"
 
 	"github.com/200sc/bebop"
+	"github.com/200sc/bebop/iohelp"
 )
 
 var _ bebop.Record = &ArrayOfStrings{}
@@ -30,7 +31,7 @@ func(bbp *ArrayOfStrings) DecodeBebop(r io.Reader) (err error) {
 	binary.Read(r, binary.LittleEndian, &ln)
 	for i := uint32(0); i < ln; i++ {
 		elem1 := new(string)
-		*elem1 = bebop.ReadString(r)
+		*elem1 = iohelp.ReadString(r)
 		bbp.Strings = append(bbp.Strings, *elem1)
 	}
 	return nil

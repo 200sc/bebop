@@ -7,6 +7,7 @@ import (
 	"io"
 
 	"github.com/200sc/bebop"
+	"github.com/200sc/bebop/iohelp"
 )
 
 var _ bebop.Record = &BasicArrays{}
@@ -74,7 +75,7 @@ func(bbp BasicArrays) EncodeBebop(w io.Writer) (err error) {
 	}
 	binary.Write(w, binary.LittleEndian, uint32(len(bbp.A_guid)))
 	for _, elem := range bbp.A_guid {
-		w.Write(elem[:])
+		iohelp.WriteGUID(w, elem)
 	}
 	return nil
 }
@@ -155,14 +156,14 @@ func(bbp *BasicArrays) DecodeBebop(r io.Reader) (err error) {
 	binary.Read(r, binary.LittleEndian, &ln)
 	for i := uint32(0); i < ln; i++ {
 		elem1 := new(string)
-		*elem1 = bebop.ReadString(r)
+		*elem1 = iohelp.ReadString(r)
 		bbp.A_string = append(bbp.A_string, *elem1)
 	}
 	ln = uint32(0)
 	binary.Read(r, binary.LittleEndian, &ln)
 	for i := uint32(0); i < ln; i++ {
 		elem1 := new([16]byte)
-		*elem1 = bebop.ReadGUID(r)
+		*elem1 = iohelp.ReadGUID(r)
 		bbp.A_guid = append(bbp.A_guid, *elem1)
 	}
 	return nil

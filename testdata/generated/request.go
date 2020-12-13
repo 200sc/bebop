@@ -8,6 +8,7 @@ import (
 	"io"
 
 	"github.com/200sc/bebop"
+	"github.com/200sc/bebop/iohelp"
 )
 
 type FurnitureFamily uint32
@@ -35,7 +36,7 @@ func(bbp Furniture) EncodeBebop(w io.Writer) (err error) {
 }
 
 func(bbp *Furniture) DecodeBebop(r io.Reader) (err error) {
-	bbp.name = bebop.ReadString(r)
+	bbp.name = iohelp.ReadString(r)
 	binary.Read(r, binary.LittleEndian, &bbp.price)
 	binary.Read(r, binary.LittleEndian, &bbp.family)
 	return nil
@@ -151,7 +152,7 @@ func(bbp *RequestCatalog) DecodeBebop(ior io.Reader) (err error) {
 			binary.Read(r, binary.LittleEndian, bbp.Family)
 		case 2:
 			bbp.SecretTunnel = new(string)
-			*bbp.SecretTunnel = bebop.ReadString(r)
+			*bbp.SecretTunnel = iohelp.ReadString(r)
 		default:
 			return nil
 		}

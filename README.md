@@ -60,8 +60,6 @@ little more sophisticated version of the first example in this document.
 The following is a list of known issues with the current version of the project, ordered by approximate priority for addressing them.
 
 
-Our binary representation of GUIDs (naive byte order) differs from original bebop's (.NET, little-endian-by-group encoding or something like that).
-
 Only the final line of multiline comments are currently taken from .bop files and translated to .go comments.
 
 Tokenization and parsing errors do not currently report locations (line number, character position / column of the error's source).

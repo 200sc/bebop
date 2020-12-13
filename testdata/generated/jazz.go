@@ -8,6 +8,7 @@ import (
 	"io"
 
 	"github.com/200sc/bebop"
+	"github.com/200sc/bebop/iohelp"
 )
 
 type Instrument uint32
@@ -33,7 +34,7 @@ func(bbp Musician) EncodeBebop(w io.Writer) (err error) {
 }
 
 func(bbp *Musician) DecodeBebop(r io.Reader) (err error) {
-	bbp.name = bebop.ReadString(r)
+	bbp.name = iohelp.ReadString(r)
 	binary.Read(r, binary.LittleEndian, &bbp.plays)
 	return nil
 }
@@ -63,7 +64,7 @@ type Library struct {
 func(bbp Library) EncodeBebop(w io.Writer) (err error) {
 	binary.Write(w, binary.LittleEndian, uint32(len(bbp.Songs)))
 	for k, v := range bbp.Songs {
-		w.Write(k[:])
+		iohelp.WriteGUID(w, k)
 		err = (v).EncodeBebop(w)
 		if err != nil {
 			return err
@@ -79,7 +80,7 @@ func(bbp *Library) DecodeBebop(r io.Reader) (err error) {
 	bbp.Songs = make(map[[16]byte]Song)
 	for i := uint32(0); i < ln; i++ {
 		k := new([16]byte)
-		*k = bebop.ReadGUID(r)
+		*k = iohelp.ReadGUID(r)
 		elem1 := new(Song)
 		err = (elem1).DecodeBebop(r)
 		if err != nil {
@@ -146,7 +147,7 @@ func(bbp *Song) DecodeBebop(ior io.Reader) (err error) {
 		switch fieldNum {
 		case 1:
 			bbp.Title = new(string)
-			*bbp.Title = bebop.ReadString(r)
+			*bbp.Title = iohelp.ReadString(r)
 		case 2:
 			bbp.Year = new(uint16)
 			binary.Read(r, binary.LittleEndian, bbp.Year)
