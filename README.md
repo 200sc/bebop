@@ -5,6 +5,8 @@ bebop is a bebop parser written in Go, for generating Go code.
 bebop can read .bop files and output .go files representing them:
 
 ```go
+package main
+
 import (
     "github.com/200sc/bebop"
 )
