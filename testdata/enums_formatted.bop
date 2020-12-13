@@ -1,0 +1,8 @@
+enum Test {
+	Start = 1;
+	End = 2;
+	Middle = 3;
+	[deprecated("who knows")]
+	Beginning = 4;
+}
+

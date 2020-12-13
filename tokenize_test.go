@@ -11,6 +11,8 @@ var testFiles = []string{
 	"basic_arrays",
 	"basic_types",
 	"documentation",
+	"enums",
+	"enums_doc",
 	"foo",
 	"invalid_map_keys",
 	"invalid_syntax",

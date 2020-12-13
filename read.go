@@ -250,6 +250,22 @@ func readDeprecated(tr *tokenReader) (string, error) {
 	return msg, nil
 }
 
+func skipEndOfLineComments(tr *tokenReader) {
+	for tr.Next() {
+		nextTk := tr.Token()
+		// comments at the end of lines after fields are -not- field comments for the next field
+		if nextTk.kind == tokenKindLineComment {
+			break
+		}
+		if nextTk.kind == tokenKindBlockComment {
+			// there could be multiple block comments here
+			continue
+		}
+		tr.UnNext()
+		break
+	}
+}
+
 func readStruct(tr *tokenReader) (Struct, error) {
 	st := Struct{}
 	if err := expectNext(tr, tokenKindIdent); err != nil {
@@ -300,19 +316,7 @@ func readStruct(tr *tokenReader) (Struct, error) {
 			nextIsDeprecated = false
 			nextCommentLines = []string{}
 
-			for tr.Next() {
-				nextTk := tr.Token()
-				// comments at the end of lines after fields are -not- field comments for the next field
-				if nextTk.kind == tokenKindLineComment {
-					break
-				}
-				if nextTk.kind == tokenKindBlockComment {
-					// there could be multiple block comments here
-					continue
-				}
-				tr.UnNext()
-				break
-			}
+			skipEndOfLineComments(tr)
 
 		case tokenKindOpenSquare:
 			if nextIsDeprecated {
@@ -465,6 +469,8 @@ func readMessage(tr *tokenReader) (Message, error) {
 			nextDeprecatedMessage = ""
 			nextIsDeprecated = false
 			nextCommentLines = []string{}
+
+			skipEndOfLineComments(tr)
 
 		case tokenKindOpenSquare:
 			if nextIsDeprecated {

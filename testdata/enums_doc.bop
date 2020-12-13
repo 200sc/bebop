@@ -1,0 +1,9 @@
+// test 2 has a line comment
+enum Test2 {
+    Start = 1;
+    // end has a line comment too
+    End = 2;
+    Middle = 3;
+    [deprecated("who knows")]
+    Beginning = 4;
+}

@@ -140,6 +140,44 @@ func TestReadFile(t *testing.T) {
 			},
 		},
 		{
+			file: "block_comments",
+			expected: File{
+				Enums: []Enum{
+					{
+						Name:    "BlockComments",
+						Comment: " block \n line",
+						Options: []EnumOption{
+							{
+								Value:   1,
+								Name:    "Block",
+								Comment: " block \n line",
+							},
+						},
+					},
+				},
+				Structs: []Struct{
+					{
+						Name: "BlockComments2",
+						Fields: []Field{
+							{
+								FieldType: FieldType{
+									Simple: "int16",
+								},
+								Comment: " block \n line",
+								Name:    "f",
+							},
+						},
+					},
+				},
+				Messages: []Message{
+					{
+						Name:   "BlockComments3",
+						Fields: map[uint8]Field{},
+					},
+				},
+			},
+		},
+		{
 			file: "documentation",
 			expected: File{
 				Messages: []Message{
@@ -250,6 +288,35 @@ func TestReadFile(t *testing.T) {
 							}, {
 								Name:  "End",
 								Value: 2,
+							}, {
+								Name:  "Middle",
+								Value: 3,
+							}, {
+								Name:              "Beginning",
+								Value:             4,
+								DeprecatedMessage: "who knows",
+								Deprecated:        true,
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			file: "enums_doc",
+			expected: File{
+				Enums: []Enum{
+					{
+						Name:    "Test2",
+						Comment: " test 2 has a line comment",
+						Options: []EnumOption{
+							{
+								Name:  "Start",
+								Value: 1,
+							}, {
+								Name:    "End",
+								Comment: " end has a line comment too",
+								Value:   2,
 							}, {
 								Name:  "Middle",
 								Value: 3,
