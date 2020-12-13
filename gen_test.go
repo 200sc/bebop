@@ -15,6 +15,39 @@ func TestValidateError(t *testing.T) {
 	tcs := []testCase{{
 		file: "recursive_struct",
 		err:  "recursively includes itself as a required field",
+	}, {
+		file: "invalid_enum_primitive",
+		err:  "enum shares primitive type name uint8",
+	}, {
+		file: "invalid_struct_primitive",
+		err:  "struct shares primitive type name string",
+	}, {
+		file: "invalid_message_primitive",
+		err:  "message shares primitive type name guid",
+	}, {
+		file: "invalid_enum_reserved",
+		err:  "enum shares reserved word name struct",
+	}, {
+		file: "invalid_struct_reserved",
+		err:  "struct shares reserved word name array",
+	}, {
+		file: "invalid_message_reserved",
+		err:  "message shares reserved word name map",
+	}, {
+		file: "invalid_enum_duplicate",
+		err:  "enum has duplicated name myEnum",
+	}, {
+		file: "invalid_struct_duplicate",
+		err:  "struct has duplicated name mystruct",
+	}, {
+		file: "invalid_message_duplicate",
+		err:  "message has duplicated name mymessage",
+	}, {
+		file: "invalid_struct_unknown",
+		err:  "type whereisthistype undefined",
+	}, {
+		file: "invalid_message_unknown",
+		err:  "type whereisthistype undefined",
 	}}
 	for _, tc := range tcs {
 		tc := tc

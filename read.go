@@ -359,7 +359,7 @@ func readFieldType(tr *tokenReader) (FieldType, error) {
 			return ft, fmt.Errorf("map must begin with simple type")
 		}
 		if !isPrimitiveType(keyType.Simple) {
-			return ft, fmt.Errorf("map must being with simple type")
+			return ft, fmt.Errorf("map must begin with simple type")
 		}
 		if err := expectNext(tr, tokenKindComma); err != nil {
 			return ft, err
