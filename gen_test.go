@@ -17,6 +17,7 @@ var genTestFiles = []string{
 	"lab",
 	"map_types",
 	"msgpack_comparison",
+	"quoted_string",
 	"request",
 }
 

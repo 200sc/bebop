@@ -92,7 +92,6 @@ func (tr *tokenReader) Next() bool {
 		tr.keepNextToken = false
 		return true
 	}
-	// read until we get whitespace
 	for {
 		b, err := tr.r.ReadByte()
 		if err == io.EOF {
@@ -295,6 +294,7 @@ func (tr *tokenReader) nextStringLiteral(firstByte byte) bool {
 		concrete: []byte{firstByte},
 		kind:     tokenKindStringLiteral,
 	}
+	var lastByte byte
 	for {
 		b, err := tr.r.ReadByte()
 		if err == io.EOF {
@@ -305,12 +305,12 @@ func (tr *tokenReader) nextStringLiteral(firstByte byte) bool {
 			tr.err = err
 			return false
 		}
-		// Todo: escaped quotes in strings
 		tk.concrete = append(tk.concrete, b)
-		if b == '"' {
+		if b == '"' && lastByte != '\\' {
 			tr.nextToken = tk
 			return true
 		}
+		lastByte = b
 	}
 }
 
@@ -330,7 +330,6 @@ func (tr *tokenReader) nextBlockComment(b1, b2 byte) bool {
 			tr.err = err
 			return false
 		}
-		// Todo: escaped quotes in strings
 		tk.concrete = append(tk.concrete, b)
 		if lastByte == '*' && b == '/' {
 			tr.nextToken = tk

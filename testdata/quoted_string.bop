@@ -1,0 +1,4 @@
+struct QuotedString {
+    [deprecated("\"deprecated\"")]
+    int32 X; 
+}
