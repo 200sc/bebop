@@ -8,6 +8,7 @@ import (
 	"strings"
 )
 
+// ReadFile reads out a bebop file.
 func ReadFile(r io.Reader) (File, error) {
 	f := File{}
 	tr := newTokenReader(r)
@@ -490,28 +491,6 @@ func readMessage(tr *tokenReader) (Message, error) {
 	}
 
 	return msg, nil
-}
-
-func isPrimitiveType(simpleType string) bool {
-	_, ok := primitiveTypes[simpleType]
-	return ok
-}
-
-var primitiveTypes = map[string]struct{}{
-	"bool":    {},
-	"byte":    {},
-	"uint8":   {},
-	"uint16":  {},
-	"int16":   {},
-	"uint32":  {},
-	"int32":   {},
-	"uint64":  {},
-	"int64":   {},
-	"float32": {},
-	"float64": {},
-	"string":  {},
-	"guid":    {},
-	"date":    {},
 }
 
 func bytesToOpCode(data []byte) int32 {

@@ -594,20 +594,13 @@ func unexposeName(name string) string {
 	return ""
 }
 
+var fixedSizeTypes = []string{"bool", "byte", "uint8", "uint16", "int16", "uint32", "int32", "uint64", "int64", "float32", "float64"}
+
 func (f File) typeUnmarshallers() map[string]string {
 	out := make(map[string]string)
-	out["bool"] = "binary.Read(r, binary.LittleEndian, %[2]s)"
-	out["byte"] = "binary.Read(r, binary.LittleEndian, %[2]s)"
-	out["uint8"] = out["byte"]
-	out["uint16"] = "binary.Read(r, binary.LittleEndian, %[2]s)"
-	out["int16"] = "binary.Read(r, binary.LittleEndian, %[2]s)"
-	out["uint32"] = "binary.Read(r, binary.LittleEndian, %[2]s)"
-	out["int32"] = "binary.Read(r, binary.LittleEndian, %[2]s)"
-	out["uint64"] = "binary.Read(r, binary.LittleEndian, %[2]s)"
-	out["int64"] = "binary.Read(r, binary.LittleEndian, %[2]s)"
-	// TODO: check floats
-	out["float32"] = "binary.Read(r, binary.LittleEndian, %[2]s)"
-	out["float64"] = "binary.Read(r, binary.LittleEndian, %[2]s)"
+	for _, typ := range fixedSizeTypes {
+		out[typ] = "binary.Read(r, binary.LittleEndian, %[2]s)"
+	}
 	out["string"] = "%[3]s = iohelp.ReadString(r)"
 	out["guid"] = "%[3]s = iohelp.ReadGUID(r)"
 	out["date"] = "%[3]s = iohelp.ReadTime(r)"
@@ -633,17 +626,9 @@ func (f File) typeUnmarshallers() map[string]string {
 
 func (f File) typeMarshallers() map[string]string {
 	out := make(map[string]string)
-	out["bool"] = "binary.Write(w, binary.LittleEndian, %[2]s)"
-	out["byte"] = "binary.Write(w, binary.LittleEndian, %[2]s)"
-	out["uint8"] = out["byte"]
-	out["uint16"] = "binary.Write(w, binary.LittleEndian, %[2]s)"
-	out["int16"] = "binary.Write(w, binary.LittleEndian, %[2]s)"
-	out["uint32"] = "binary.Write(w, binary.LittleEndian, %[2]s)"
-	out["int32"] = "binary.Write(w, binary.LittleEndian, %[2]s)"
-	out["uint64"] = "binary.Write(w, binary.LittleEndian, %[2]s)"
-	out["int64"] = "binary.Write(w, binary.LittleEndian, %[2]s)"
-	out["float32"] = "binary.Write(w, binary.LittleEndian, %[2]s)"
-	out["float64"] = "binary.Write(w, binary.LittleEndian, %[2]s)"
+	for _, typ := range fixedSizeTypes {
+		out[typ] = "binary.Write(w, binary.LittleEndian, %[2]s)"
+	}
 	out["string"] = "binary.Write(w, binary.LittleEndian, uint32(len(%[2]s)))\n" +
 		"w.Write([]byte(%[2]s))"
 	out["guid"] = "iohelp.WriteGUID(w, %[2]s)"
