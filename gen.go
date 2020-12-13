@@ -8,6 +8,7 @@ import (
 	"strings"
 )
 
+// GenerateSettings holds customization options for what Generate should do.
 type GenerateSettings struct {
 	PackageName string
 
@@ -26,6 +27,7 @@ var reservedWords = map[string]struct{}{
 	"readonly": {},
 }
 
+// Validate verifies a File can be successfully generated.
 func (f File) Validate() error {
 	customTypes := map[string]struct{}{}
 	structTypeUsage := map[string]map[string]bool{}
@@ -139,6 +141,7 @@ func typeDefined(ft FieldType, allTypes map[string]struct{}) error {
 	return nil
 }
 
+// Generate writes a .go file out to w.
 func (f File) Generate(w io.Writer, settings GenerateSettings) error {
 	if err := f.Validate(); err != nil {
 		return fmt.Errorf("cannot generate file: %w", err)
@@ -230,6 +233,7 @@ func writeComment(w io.Writer, depth int, comment string) {
 	}
 }
 
+// Generate writes a .go enum definition out to w.
 func (en Enum) Generate(w io.Writer, settings GenerateSettings) {
 	exposedName := exposeName(en.Name)
 	writeComment(w, 0, en.Comment)
@@ -247,6 +251,7 @@ func (en Enum) Generate(w io.Writer, settings GenerateSettings) {
 	writeLine(w, "")
 }
 
+// Generate writes a .go struct definition out to w.
 func (st Struct) Generate(w io.Writer, settings GenerateSettings) {
 	exposedName := exposeName(st.Name)
 	if st.OpCode != 0 {
@@ -258,12 +263,12 @@ func (st Struct) Generate(w io.Writer, settings GenerateSettings) {
 	writeComment(w, 0, st.Comment)
 	writeLine(w, "type %s struct {", exposedName)
 	for _, fd := range st.Fields {
-		writeFieldDefinition(fd, w, settings, st.ReadOnly, false)
+		writeFieldDefinition(fd, w, st.ReadOnly, false)
 	}
 	writeLine(w, "}")
 	writeLine(w, "")
 	writeLine(w, "func (bbp %s) EncodeBebop(iow io.Writer) (err error) {", exposedName)
-	writeLine(w, "\tw := iohelp.ErrorWriter{Writer:iow}")
+	writeLine(w, "\tw := iohelp.ErrorWriter{Writer: iow}")
 	if st.OpCode != 0 {
 		writeLine(w, "\tbinary.Write(w, binary.LittleEndian, uint32(%sOpCode))", exposedName)
 	}
@@ -278,7 +283,7 @@ func (st Struct) Generate(w io.Writer, settings GenerateSettings) {
 	writeLine(w, "}")
 	writeLine(w, "")
 	writeLine(w, "func (bbp *%s) DecodeBebop(ior io.Reader) (err error) {", exposedName)
-	writeLine(w, "\tr := iohelp.ErrorReader{Reader:ior}")
+	writeLine(w, "\tr := iohelp.ErrorReader{Reader: ior}")
 	if st.hasLengthedType() {
 		writeLine(w, "\tvar ln uint32")
 	}
@@ -295,7 +300,7 @@ func (st Struct) Generate(w io.Writer, settings GenerateSettings) {
 	writeLine(w, "\treturn r.Err")
 	writeLine(w, "}")
 	writeLine(w, "")
-	writeLine(w, "func (bbp *%s) bodyLen() (uint32) {", exposedName)
+	writeLine(w, "func (bbp *%s) bodyLen() uint32 {", exposedName)
 	writeLine(w, "\tbodyLen := uint32(0)")
 	for _, fd := range st.Fields {
 		name := exposeName(fd.Name)
@@ -320,11 +325,12 @@ func (st Struct) Generate(w io.Writer, settings GenerateSettings) {
 	}
 }
 
-type FieldWithNumber struct {
+type fieldWithNumber struct {
 	Field
 	num uint8
 }
 
+// Generate writes a .go message definition out to w.
 func (msg Message) Generate(w io.Writer, settings GenerateSettings) {
 	exposedName := exposeName(msg.Name)
 	if msg.OpCode != 0 {
@@ -335,9 +341,9 @@ func (msg Message) Generate(w io.Writer, settings GenerateSettings) {
 	writeLine(w, "")
 	writeComment(w, 0, msg.Comment)
 	writeLine(w, "type %s struct {", exposedName)
-	fields := make([]FieldWithNumber, 0, len(msg.Fields))
+	fields := make([]fieldWithNumber, 0, len(msg.Fields))
 	for i, fd := range msg.Fields {
-		fields = append(fields, FieldWithNumber{
+		fields = append(fields, fieldWithNumber{
 			Field: fd,
 			num:   i,
 		})
@@ -346,12 +352,12 @@ func (msg Message) Generate(w io.Writer, settings GenerateSettings) {
 		return fields[i].num < fields[j].num
 	})
 	for _, fd := range fields {
-		writeFieldDefinition(fd.Field, w, settings, msg.ReadOnly, true)
+		writeFieldDefinition(fd.Field, w, msg.ReadOnly, true)
 	}
 	writeLine(w, "}")
 	writeLine(w, "")
 	writeLine(w, "func (bbp %s) EncodeBebop(iow io.Writer) (err error) {", exposedName)
-	writeLine(w, "\tw := iohelp.ErrorWriter{Writer:iow}")
+	writeLine(w, "\tw := iohelp.ErrorWriter{Writer: iow}")
 	writeLine(w, "\tbinary.Write(w, binary.LittleEndian, bbp.bodyLen())")
 	for _, fd := range fields {
 		name := exposeName(fd.Name)
@@ -375,7 +381,7 @@ func (msg Message) Generate(w io.Writer, settings GenerateSettings) {
 	}
 	writeLine(w, "\tvar bodyLen uint32")
 	writeLine(w, "\tvar fieldNum byte")
-	writeLine(w, "\ter := iohelp.ErrorReader{Reader:ior}")
+	writeLine(w, "\ter := iohelp.ErrorReader{Reader: ior}")
 	writeLine(w, "\tbinary.Read(er, binary.LittleEndian, &bodyLen)")
 	writeLine(w, "\tbody := make([]byte, bodyLen)")
 	writeLine(w, "\ter.Read(body)")
@@ -402,7 +408,7 @@ func (msg Message) Generate(w io.Writer, settings GenerateSettings) {
 	writeLine(w, "\treturn er.Err")
 	writeLine(w, "}")
 	writeLine(w, "")
-	writeLine(w, "func (bbp *%s) bodyLen() (uint32) {", exposedName)
+	writeLine(w, "func (bbp *%s) bodyLen() uint32 {", exposedName)
 	writeLine(w, "\tbodyLen := uint32(1)")
 	for _, fd := range fields {
 		name := exposeName(fd.Name)
@@ -429,7 +435,7 @@ func (msg Message) Generate(w io.Writer, settings GenerateSettings) {
 	}
 }
 
-func writeFieldDefinition(fd Field, w io.Writer, settings GenerateSettings, readOnly bool, message bool) {
+func writeFieldDefinition(fd Field, w io.Writer, readOnly bool, message bool) {
 	writeComment(w, 1, fd.Comment)
 	if fd.Deprecated {
 		writeLine(w, "\t// Deprecated: %s", fd.DeprecatedMessage)
@@ -526,7 +532,7 @@ func writeMessageFieldBodyCount(name string, typ FieldType, w io.Writer, setting
 		if typeNeedsElem(typ.Array.Simple, settings) {
 			writeLineWithTabs(w, "for _, elem := range %[2]s {", depth, name)
 		} else {
-			writeLineWithTabs(w, "for _ = range %[2]s {", depth, name)
+			writeLineWithTabs(w, "for range %[2]s {", depth, name)
 		}
 		writeMessageFieldBodyCount("elem", *typ.Array, w, settings, depth+1)
 		writeLineWithTabs(w, "}", depth)
@@ -541,7 +547,7 @@ func writeMessageFieldBodyCount(name string, typ FieldType, w io.Writer, setting
 		} else if useK {
 			writeLineWithTabs(w, "for k := range %[2]s {", depth, name)
 		} else {
-			writeLineWithTabs(w, "for _ = range %[2]s {", depth, name)
+			writeLineWithTabs(w, "for range %[2]s {", depth, name)
 		}
 		writeLineWithTabs(w, settings.typeLengthers[typ.Map.Key], depth+1, "k")
 		writeMessageFieldBodyCount("v", typ.Map.Value, w, settings, depth+1)

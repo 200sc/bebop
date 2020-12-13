@@ -27,7 +27,7 @@ type Musician struct {
 }
 
 func (bbp Musician) EncodeBebop(iow io.Writer) (err error) {
-	w := iohelp.ErrorWriter{Writer:iow}
+	w := iohelp.ErrorWriter{Writer: iow}
 	binary.Write(w, binary.LittleEndian, uint32(len(bbp.name)))
 	w.Write([]byte(bbp.name))
 	binary.Write(w, binary.LittleEndian, uint32(bbp.plays))
@@ -35,13 +35,13 @@ func (bbp Musician) EncodeBebop(iow io.Writer) (err error) {
 }
 
 func (bbp *Musician) DecodeBebop(ior io.Reader) (err error) {
-	r := iohelp.ErrorReader{Reader:ior}
+	r := iohelp.ErrorReader{Reader: ior}
 	bbp.name = iohelp.ReadString(r)
 	binary.Read(r, binary.LittleEndian, &bbp.plays)
 	return r.Err
 }
 
-func (bbp *Musician) bodyLen() (uint32) {
+func (bbp *Musician) bodyLen() uint32 {
 	bodyLen := uint32(0)
 	bodyLen += 4
 	bodyLen += uint32(len(bbp.name))
@@ -64,7 +64,7 @@ type Library struct {
 }
 
 func (bbp Library) EncodeBebop(iow io.Writer) (err error) {
-	w := iohelp.ErrorWriter{Writer:iow}
+	w := iohelp.ErrorWriter{Writer: iow}
 	binary.Write(w, binary.LittleEndian, uint32(len(bbp.Songs)))
 	for k, v := range bbp.Songs {
 		iohelp.WriteGUID(w, k)
@@ -77,7 +77,7 @@ func (bbp Library) EncodeBebop(iow io.Writer) (err error) {
 }
 
 func (bbp *Library) DecodeBebop(ior io.Reader) (err error) {
-	r := iohelp.ErrorReader{Reader:ior}
+	r := iohelp.ErrorReader{Reader: ior}
 	var ln uint32
 	ln = uint32(0)
 	binary.Read(r, binary.LittleEndian, &ln)
@@ -95,7 +95,7 @@ func (bbp *Library) DecodeBebop(ior io.Reader) (err error) {
 	return r.Err
 }
 
-func (bbp *Library) bodyLen() (uint32) {
+func (bbp *Library) bodyLen() uint32 {
 	bodyLen := uint32(0)
 	bodyLen += 4
 	for _, v := range bbp.Songs {
@@ -114,7 +114,7 @@ type Song struct {
 }
 
 func (bbp Song) EncodeBebop(iow io.Writer) (err error) {
-	w := iohelp.ErrorWriter{Writer:iow}
+	w := iohelp.ErrorWriter{Writer: iow}
 	binary.Write(w, binary.LittleEndian, bbp.bodyLen())
 	if bbp.Title != nil {
 		w.Write([]byte{1})
@@ -143,7 +143,7 @@ func (bbp *Song) DecodeBebop(ior io.Reader) (err error) {
 	var ln uint32
 	var bodyLen uint32
 	var fieldNum byte
-	er := iohelp.ErrorReader{Reader:ior}
+	er := iohelp.ErrorReader{Reader: ior}
 	binary.Read(er, binary.LittleEndian, &bodyLen)
 	body := make([]byte, bodyLen)
 	er.Read(body)
@@ -175,7 +175,7 @@ func (bbp *Song) DecodeBebop(ior io.Reader) (err error) {
 	return er.Err
 }
 
-func (bbp *Song) bodyLen() (uint32) {
+func (bbp *Song) bodyLen() uint32 {
 	bodyLen := uint32(1)
 	if bbp.Title != nil {
 		bodyLen += 1

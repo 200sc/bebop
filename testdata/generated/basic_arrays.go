@@ -28,7 +28,7 @@ type BasicArrays struct {
 }
 
 func (bbp BasicArrays) EncodeBebop(iow io.Writer) (err error) {
-	w := iohelp.ErrorWriter{Writer:iow}
+	w := iohelp.ErrorWriter{Writer: iow}
 	binary.Write(w, binary.LittleEndian, uint32(len(bbp.A_bool)))
 	for _, elem := range bbp.A_bool {
 		binary.Write(w, binary.LittleEndian, elem)
@@ -82,7 +82,7 @@ func (bbp BasicArrays) EncodeBebop(iow io.Writer) (err error) {
 }
 
 func (bbp *BasicArrays) DecodeBebop(ior io.Reader) (err error) {
-	r := iohelp.ErrorReader{Reader:ior}
+	r := iohelp.ErrorReader{Reader: ior}
 	var ln uint32
 	ln = uint32(0)
 	binary.Read(r, binary.LittleEndian, &ln)
@@ -171,46 +171,46 @@ func (bbp *BasicArrays) DecodeBebop(ior io.Reader) (err error) {
 	return r.Err
 }
 
-func (bbp *BasicArrays) bodyLen() (uint32) {
+func (bbp *BasicArrays) bodyLen() uint32 {
 	bodyLen := uint32(0)
 	bodyLen += 4
-	for _ = range bbp.A_bool {
+	for range bbp.A_bool {
 		bodyLen += 1
 	}
 	bodyLen += 4
-	for _ = range bbp.A_byte {
+	for range bbp.A_byte {
 		bodyLen += 1
 	}
 	bodyLen += 4
-	for _ = range bbp.A_int16 {
+	for range bbp.A_int16 {
 		bodyLen += 2
 	}
 	bodyLen += 4
-	for _ = range bbp.A_uint16 {
+	for range bbp.A_uint16 {
 		bodyLen += 2
 	}
 	bodyLen += 4
-	for _ = range bbp.A_int32 {
+	for range bbp.A_int32 {
 		bodyLen += 4
 	}
 	bodyLen += 4
-	for _ = range bbp.A_uint32 {
+	for range bbp.A_uint32 {
 		bodyLen += 4
 	}
 	bodyLen += 4
-	for _ = range bbp.A_int64 {
+	for range bbp.A_int64 {
 		bodyLen += 8
 	}
 	bodyLen += 4
-	for _ = range bbp.A_uint64 {
+	for range bbp.A_uint64 {
 		bodyLen += 8
 	}
 	bodyLen += 4
-	for _ = range bbp.A_float32 {
+	for range bbp.A_float32 {
 		bodyLen += 4
 	}
 	bodyLen += 4
-	for _ = range bbp.A_float64 {
+	for range bbp.A_float64 {
 		bodyLen += 8
 	}
 	bodyLen += 4
@@ -219,7 +219,7 @@ func (bbp *BasicArrays) bodyLen() (uint32) {
 		bodyLen += uint32(len(elem))
 	}
 	bodyLen += 4
-	for _ = range bbp.A_guid {
+	for range bbp.A_guid {
 		bodyLen += 16
 	}
 	return bodyLen
@@ -232,7 +232,7 @@ type TestInt32Array struct {
 }
 
 func (bbp TestInt32Array) EncodeBebop(iow io.Writer) (err error) {
-	w := iohelp.ErrorWriter{Writer:iow}
+	w := iohelp.ErrorWriter{Writer: iow}
 	binary.Write(w, binary.LittleEndian, uint32(len(bbp.A)))
 	for _, elem := range bbp.A {
 		binary.Write(w, binary.LittleEndian, elem)
@@ -241,7 +241,7 @@ func (bbp TestInt32Array) EncodeBebop(iow io.Writer) (err error) {
 }
 
 func (bbp *TestInt32Array) DecodeBebop(ior io.Reader) (err error) {
-	r := iohelp.ErrorReader{Reader:ior}
+	r := iohelp.ErrorReader{Reader: ior}
 	var ln uint32
 	ln = uint32(0)
 	binary.Read(r, binary.LittleEndian, &ln)
@@ -253,10 +253,10 @@ func (bbp *TestInt32Array) DecodeBebop(ior io.Reader) (err error) {
 	return r.Err
 }
 
-func (bbp *TestInt32Array) bodyLen() (uint32) {
+func (bbp *TestInt32Array) bodyLen() uint32 {
 	bodyLen := uint32(0)
 	bodyLen += 4
-	for _ = range bbp.A {
+	for range bbp.A {
 		bodyLen += 4
 	}
 	return bodyLen

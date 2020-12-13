@@ -89,6 +89,7 @@ var genTestFiles = []string{
 
 func TestGenerateToFile(t *testing.T) {
 	for _, filename := range genTestFiles {
+		filename := filename
 		t.Run(filename, func(t *testing.T) {
 			f, err := os.Open(filepath.Join("testdata", filename+".bop"))
 			if err != nil {

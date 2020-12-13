@@ -24,6 +24,7 @@ var testFiles = []string{
 
 func TestTokenize(t *testing.T) {
 	for _, filename := range testFiles {
+		filename := filename
 		t.Run(filename, func(t *testing.T) {
 			filename += ".bop"
 			f, err := os.Open(filepath.Join("testdata", filename))
@@ -32,9 +33,7 @@ func TestTokenize(t *testing.T) {
 			}
 			defer f.Close()
 			tr := newTokenReader(f)
-			tokens := []token{}
 			for tr.Next() {
-				tokens = append(tokens, tr.Token())
 			}
 			if tr.Err() != nil {
 				t.Fatalf("token reader errored: %v", tr.Err())
@@ -45,6 +44,7 @@ func TestTokenize(t *testing.T) {
 
 func TestTokenizeFormat(t *testing.T) {
 	for _, filename := range testFiles {
+		filename := filename
 		t.Run(filename, func(t *testing.T) {
 			f, err := os.Open(filepath.Join("testdata", filename+".bop"))
 			if err != nil {

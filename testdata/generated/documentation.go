@@ -40,18 +40,18 @@ type DocS struct {
 }
 
 func (bbp DocS) EncodeBebop(iow io.Writer) (err error) {
-	w := iohelp.ErrorWriter{Writer:iow}
+	w := iohelp.ErrorWriter{Writer: iow}
 	binary.Write(w, binary.LittleEndian, bbp.X)
 	return w.Err
 }
 
 func (bbp *DocS) DecodeBebop(ior io.Reader) (err error) {
-	r := iohelp.ErrorReader{Reader:ior}
+	r := iohelp.ErrorReader{Reader: ior}
 	binary.Read(r, binary.LittleEndian, &bbp.X)
 	return r.Err
 }
 
-func (bbp *DocS) bodyLen() (uint32) {
+func (bbp *DocS) bodyLen() uint32 {
 	bodyLen := uint32(0)
 	bodyLen += 4
 	return bodyLen
@@ -65,7 +65,7 @@ type DepM struct {
 }
 
 func (bbp DepM) EncodeBebop(iow io.Writer) (err error) {
-	w := iohelp.ErrorWriter{Writer:iow}
+	w := iohelp.ErrorWriter{Writer: iow}
 	binary.Write(w, binary.LittleEndian, bbp.bodyLen())
 	if bbp.X != nil {
 		w.Write([]byte{1})
@@ -78,7 +78,7 @@ func (bbp DepM) EncodeBebop(iow io.Writer) (err error) {
 func (bbp *DepM) DecodeBebop(ior io.Reader) (err error) {
 	var bodyLen uint32
 	var fieldNum byte
-	er := iohelp.ErrorReader{Reader:ior}
+	er := iohelp.ErrorReader{Reader: ior}
 	binary.Read(er, binary.LittleEndian, &bodyLen)
 	body := make([]byte, bodyLen)
 	er.Read(body)
@@ -96,7 +96,7 @@ func (bbp *DepM) DecodeBebop(ior io.Reader) (err error) {
 	return er.Err
 }
 
-func (bbp *DepM) bodyLen() (uint32) {
+func (bbp *DepM) bodyLen() uint32 {
 	bodyLen := uint32(1)
 	if bbp.X != nil {
 		bodyLen += 1
@@ -119,7 +119,7 @@ type DocM struct {
 }
 
 func (bbp DocM) EncodeBebop(iow io.Writer) (err error) {
-	w := iohelp.ErrorWriter{Writer:iow}
+	w := iohelp.ErrorWriter{Writer: iow}
 	binary.Write(w, binary.LittleEndian, bbp.bodyLen())
 	if bbp.X != nil {
 		w.Write([]byte{1})
@@ -140,7 +140,7 @@ func (bbp DocM) EncodeBebop(iow io.Writer) (err error) {
 func (bbp *DocM) DecodeBebop(ior io.Reader) (err error) {
 	var bodyLen uint32
 	var fieldNum byte
-	er := iohelp.ErrorReader{Reader:ior}
+	er := iohelp.ErrorReader{Reader: ior}
 	binary.Read(er, binary.LittleEndian, &bodyLen)
 	body := make([]byte, bodyLen)
 	er.Read(body)
@@ -164,7 +164,7 @@ func (bbp *DocM) DecodeBebop(ior io.Reader) (err error) {
 	return er.Err
 }
 
-func (bbp *DocM) bodyLen() (uint32) {
+func (bbp *DocM) bodyLen() uint32 {
 	bodyLen := uint32(1)
 	if bbp.X != nil {
 		bodyLen += 1

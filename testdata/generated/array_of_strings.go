@@ -17,7 +17,7 @@ type ArrayOfStrings struct {
 }
 
 func (bbp ArrayOfStrings) EncodeBebop(iow io.Writer) (err error) {
-	w := iohelp.ErrorWriter{Writer:iow}
+	w := iohelp.ErrorWriter{Writer: iow}
 	binary.Write(w, binary.LittleEndian, uint32(len(bbp.Strings)))
 	for _, elem := range bbp.Strings {
 		binary.Write(w, binary.LittleEndian, uint32(len(elem)))
@@ -27,7 +27,7 @@ func (bbp ArrayOfStrings) EncodeBebop(iow io.Writer) (err error) {
 }
 
 func (bbp *ArrayOfStrings) DecodeBebop(ior io.Reader) (err error) {
-	r := iohelp.ErrorReader{Reader:ior}
+	r := iohelp.ErrorReader{Reader: ior}
 	var ln uint32
 	ln = uint32(0)
 	binary.Read(r, binary.LittleEndian, &ln)
@@ -39,7 +39,7 @@ func (bbp *ArrayOfStrings) DecodeBebop(ior io.Reader) (err error) {
 	return r.Err
 }
 
-func (bbp *ArrayOfStrings) bodyLen() (uint32) {
+func (bbp *ArrayOfStrings) bodyLen() uint32 {
 	bodyLen := uint32(0)
 	bodyLen += 4
 	for _, elem := range bbp.Strings {

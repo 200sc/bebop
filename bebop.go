@@ -40,10 +40,10 @@ func (f File) Equals(f2 File) bool {
 type Struct struct {
 	Name    string
 	Comment string
+	Fields  []Field
 	// If OpCode is defined, wire encodings of the struct will be
 	// preceded by the OpCode.
 	OpCode int32
-	Fields []Field
 	// If ReadOnly is true, generated code for the struct will
 	// provide field getters instead of exporting fields.
 	ReadOnly bool
@@ -103,8 +103,8 @@ func (f Field) Equals(f2 Field) bool {
 type Message struct {
 	Name     string
 	Comment  string
-	OpCode   int32
 	Fields   map[uint8]Field
+	OpCode   int32
 	ReadOnly bool
 }
 
@@ -162,9 +162,9 @@ func (e Enum) Equals(e2 Enum) bool {
 type EnumOption struct {
 	Name    string
 	Comment string
-	Value   int32
 	// DeprecatedMessage is only provided if Deprecated is true.
 	DeprecatedMessage string
+	Value             int32
 	Deprecated        bool
 }
 

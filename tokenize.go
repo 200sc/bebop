@@ -149,20 +149,17 @@ func (tr *tokenReader) Next() bool {
 		default:
 			if isInteger(b) {
 				return tr.nextInteger(b)
-			} else {
-				tr.r.UnreadByte()
-				rn, _, err := tr.r.ReadRune()
-				if err == io.ErrUnexpectedEOF || err == io.EOF {
-					tr.err = io.ErrUnexpectedEOF
-					return false
-				} else if err != nil {
-					tr.err = err
-					return false
-				} else {
-					if unicode.IsLetter(rn) {
-						return tr.nextIdent(rn)
-					}
-				}
+			}
+			tr.r.UnreadByte()
+			rn, _, err := tr.r.ReadRune()
+			if err == io.ErrUnexpectedEOF || err == io.EOF {
+				tr.err = io.ErrUnexpectedEOF
+				return false
+			} else if err != nil {
+				tr.err = err
+				return false
+			} else if unicode.IsLetter(rn) {
+				return tr.nextIdent(rn)
 			}
 			tr.err = fmt.Errorf("invalid token")
 			return false

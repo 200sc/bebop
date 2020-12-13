@@ -38,7 +38,6 @@ func format(tokens []token, w io.Writer) {
 				i++
 				fmt.Fprint(w, string(tokens[i].concrete))
 				fmt.Fprint(w, "\n")
-				firstOnLine = true
 			} else {
 				fmt.Fprint(w, string(t.concrete))
 			}
@@ -52,14 +51,12 @@ func format(tokens []token, w io.Writer) {
 			fmt.Fprint(w, string(t.concrete)+"\n")
 			setFirstOnLine = true
 		case tokenKindEquals:
-			switch lastToken.kind {
-			case tokenKindIdent:
+			if lastToken.kind == tokenKindIdent {
 				fmt.Fprint(w, " ")
 			}
 			fmt.Fprint(w, string(t.concrete))
 		case tokenKindOpenCurly:
-			switch lastToken.kind {
-			case tokenKindIdent:
+			if lastToken.kind == tokenKindIdent {
 				fmt.Fprint(w, " ")
 			}
 			fmt.Fprint(w, string(t.concrete)+"\n")
@@ -71,8 +68,7 @@ func format(tokens []token, w io.Writer) {
 			setFirstOnLine = true
 			inRecord = false
 		case tokenKindArrow:
-			switch lastToken.kind {
-			case tokenKindInteger:
+			if lastToken.kind == tokenKindInteger {
 				fmt.Fprint(w, " ")
 			}
 			fmt.Fprint(w, string(t.concrete))

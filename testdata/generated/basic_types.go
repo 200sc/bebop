@@ -30,7 +30,7 @@ type BasicTypes struct {
 }
 
 func (bbp BasicTypes) EncodeBebop(iow io.Writer) (err error) {
-	w := iohelp.ErrorWriter{Writer:iow}
+	w := iohelp.ErrorWriter{Writer: iow}
 	binary.Write(w, binary.LittleEndian, bbp.A_bool)
 	binary.Write(w, binary.LittleEndian, bbp.A_byte)
 	binary.Write(w, binary.LittleEndian, bbp.A_int16)
@@ -53,7 +53,7 @@ func (bbp BasicTypes) EncodeBebop(iow io.Writer) (err error) {
 }
 
 func (bbp *BasicTypes) DecodeBebop(ior io.Reader) (err error) {
-	r := iohelp.ErrorReader{Reader:ior}
+	r := iohelp.ErrorReader{Reader: ior}
 	binary.Read(r, binary.LittleEndian, &bbp.A_bool)
 	binary.Read(r, binary.LittleEndian, &bbp.A_byte)
 	binary.Read(r, binary.LittleEndian, &bbp.A_int16)
@@ -70,7 +70,7 @@ func (bbp *BasicTypes) DecodeBebop(ior io.Reader) (err error) {
 	return r.Err
 }
 
-func (bbp *BasicTypes) bodyLen() (uint32) {
+func (bbp *BasicTypes) bodyLen() uint32 {
 	bodyLen := uint32(0)
 	bodyLen += 1
 	bodyLen += 1

@@ -28,7 +28,7 @@ type Furniture struct {
 }
 
 func (bbp Furniture) EncodeBebop(iow io.Writer) (err error) {
-	w := iohelp.ErrorWriter{Writer:iow}
+	w := iohelp.ErrorWriter{Writer: iow}
 	binary.Write(w, binary.LittleEndian, uint32(len(bbp.name)))
 	w.Write([]byte(bbp.name))
 	binary.Write(w, binary.LittleEndian, bbp.price)
@@ -37,14 +37,14 @@ func (bbp Furniture) EncodeBebop(iow io.Writer) (err error) {
 }
 
 func (bbp *Furniture) DecodeBebop(ior io.Reader) (err error) {
-	r := iohelp.ErrorReader{Reader:ior}
+	r := iohelp.ErrorReader{Reader: ior}
 	bbp.name = iohelp.ReadString(r)
 	binary.Read(r, binary.LittleEndian, &bbp.price)
 	binary.Read(r, binary.LittleEndian, &bbp.family)
 	return r.Err
 }
 
-func (bbp *Furniture) bodyLen() (uint32) {
+func (bbp *Furniture) bodyLen() uint32 {
 	bodyLen := uint32(0)
 	bodyLen += 4
 	bodyLen += uint32(len(bbp.name))
@@ -74,7 +74,7 @@ type RequestResponse struct {
 }
 
 func (bbp RequestResponse) EncodeBebop(iow io.Writer) (err error) {
-	w := iohelp.ErrorWriter{Writer:iow}
+	w := iohelp.ErrorWriter{Writer: iow}
 	binary.Write(w, binary.LittleEndian, uint32(RequestResponseOpCode))
 	binary.Write(w, binary.LittleEndian, uint32(len(bbp.availableFurniture)))
 	for _, elem := range bbp.availableFurniture {
@@ -87,7 +87,7 @@ func (bbp RequestResponse) EncodeBebop(iow io.Writer) (err error) {
 }
 
 func (bbp *RequestResponse) DecodeBebop(ior io.Reader) (err error) {
-	r := iohelp.ErrorReader{Reader:ior}
+	r := iohelp.ErrorReader{Reader: ior}
 	var ln uint32
 	r.Read(make([]byte, 4))
 	ln = uint32(0)
@@ -103,7 +103,7 @@ func (bbp *RequestResponse) DecodeBebop(ior io.Reader) (err error) {
 	return r.Err
 }
 
-func (bbp *RequestResponse) bodyLen() (uint32) {
+func (bbp *RequestResponse) bodyLen() uint32 {
 	bodyLen := uint32(0)
 	bodyLen += 4
 	for _, elem := range bbp.availableFurniture {
@@ -127,7 +127,7 @@ type RequestCatalog struct {
 }
 
 func (bbp RequestCatalog) EncodeBebop(iow io.Writer) (err error) {
-	w := iohelp.ErrorWriter{Writer:iow}
+	w := iohelp.ErrorWriter{Writer: iow}
 	binary.Write(w, binary.LittleEndian, bbp.bodyLen())
 	if bbp.Family != nil {
 		w.Write([]byte{1})
@@ -145,7 +145,7 @@ func (bbp RequestCatalog) EncodeBebop(iow io.Writer) (err error) {
 func (bbp *RequestCatalog) DecodeBebop(ior io.Reader) (err error) {
 	var bodyLen uint32
 	var fieldNum byte
-	er := iohelp.ErrorReader{Reader:ior}
+	er := iohelp.ErrorReader{Reader: ior}
 	binary.Read(er, binary.LittleEndian, &bodyLen)
 	body := make([]byte, bodyLen)
 	er.Read(body)
@@ -166,7 +166,7 @@ func (bbp *RequestCatalog) DecodeBebop(ior io.Reader) (err error) {
 	return er.Err
 }
 
-func (bbp *RequestCatalog) bodyLen() (uint32) {
+func (bbp *RequestCatalog) bodyLen() uint32 {
 	bodyLen := uint32(1)
 	if bbp.Family != nil {
 		bodyLen += 1
