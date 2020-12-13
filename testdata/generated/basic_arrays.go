@@ -27,7 +27,8 @@ type BasicArrays struct {
 	A_guid [][16]byte
 }
 
-func(bbp BasicArrays) EncodeBebop(w io.Writer) (err error) {
+func (bbp BasicArrays) EncodeBebop(iow io.Writer) (err error) {
+	w := iohelp.ErrorWriter{Writer:iow}
 	binary.Write(w, binary.LittleEndian, uint32(len(bbp.A_bool)))
 	for _, elem := range bbp.A_bool {
 		binary.Write(w, binary.LittleEndian, elem)
@@ -77,10 +78,11 @@ func(bbp BasicArrays) EncodeBebop(w io.Writer) (err error) {
 	for _, elem := range bbp.A_guid {
 		iohelp.WriteGUID(w, elem)
 	}
-	return nil
+	return w.Err
 }
 
-func(bbp *BasicArrays) DecodeBebop(r io.Reader) (err error) {
+func (bbp *BasicArrays) DecodeBebop(ior io.Reader) (err error) {
+	r := iohelp.ErrorReader{Reader:ior}
 	var ln uint32
 	ln = uint32(0)
 	binary.Read(r, binary.LittleEndian, &ln)
@@ -166,10 +168,10 @@ func(bbp *BasicArrays) DecodeBebop(r io.Reader) (err error) {
 		*elem1 = iohelp.ReadGUID(r)
 		bbp.A_guid = append(bbp.A_guid, *elem1)
 	}
-	return nil
+	return r.Err
 }
 
-func(bbp *BasicArrays) bodyLen() (uint32) {
+func (bbp *BasicArrays) bodyLen() (uint32) {
 	bodyLen := uint32(0)
 	bodyLen += 4
 	for _ = range bbp.A_bool {
@@ -229,15 +231,17 @@ type TestInt32Array struct {
 	A []int32
 }
 
-func(bbp TestInt32Array) EncodeBebop(w io.Writer) (err error) {
+func (bbp TestInt32Array) EncodeBebop(iow io.Writer) (err error) {
+	w := iohelp.ErrorWriter{Writer:iow}
 	binary.Write(w, binary.LittleEndian, uint32(len(bbp.A)))
 	for _, elem := range bbp.A {
 		binary.Write(w, binary.LittleEndian, elem)
 	}
-	return nil
+	return w.Err
 }
 
-func(bbp *TestInt32Array) DecodeBebop(r io.Reader) (err error) {
+func (bbp *TestInt32Array) DecodeBebop(ior io.Reader) (err error) {
+	r := iohelp.ErrorReader{Reader:ior}
 	var ln uint32
 	ln = uint32(0)
 	binary.Read(r, binary.LittleEndian, &ln)
@@ -246,10 +250,10 @@ func(bbp *TestInt32Array) DecodeBebop(r io.Reader) (err error) {
 		binary.Read(r, binary.LittleEndian, elem1)
 		bbp.A = append(bbp.A, *elem1)
 	}
-	return nil
+	return r.Err
 }
 
-func(bbp *TestInt32Array) bodyLen() (uint32) {
+func (bbp *TestInt32Array) bodyLen() (uint32) {
 	bodyLen := uint32(0)
 	bodyLen += 4
 	for _ = range bbp.A {

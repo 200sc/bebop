@@ -133,8 +133,6 @@ func (f File) Generate(w io.Writer, settings GenerateSettings) error {
 	writeLine(w, "")
 	if len(f.Messages)+len(f.Structs) != 0 {
 		writeLine(w, "\t\"github.com/200sc/bebop\"")
-	}
-	if usedTypes["date"] || usedTypes["guid"] || usedTypes["string"] {
 		writeLine(w, "\t\"github.com/200sc/bebop/iohelp\"")
 	}
 	writeLine(w, ")")
@@ -227,7 +225,8 @@ func (st Struct) Generate(w io.Writer, settings GenerateSettings) {
 	}
 	writeLine(w, "}")
 	writeLine(w, "")
-	writeLine(w, "func(bbp %s) EncodeBebop(w io.Writer) (err error) {", exposedName)
+	writeLine(w, "func (bbp %s) EncodeBebop(iow io.Writer) (err error) {", exposedName)
+	writeLine(w, "\tw := iohelp.ErrorWriter{Writer:iow}")
 	if st.OpCode != 0 {
 		writeLine(w, "\tbinary.Write(w, binary.LittleEndian, uint32(%sOpCode))", exposedName)
 	}
@@ -238,10 +237,11 @@ func (st Struct) Generate(w io.Writer, settings GenerateSettings) {
 		}
 		writeStructFieldMarshaller("bbp."+name, fd.FieldType, w, settings, 1)
 	}
-	writeLine(w, "\treturn nil")
+	writeLine(w, "\treturn w.Err")
 	writeLine(w, "}")
 	writeLine(w, "")
-	writeLine(w, "func(bbp *%s) DecodeBebop(r io.Reader) (err error) {", exposedName)
+	writeLine(w, "func (bbp *%s) DecodeBebop(ior io.Reader) (err error) {", exposedName)
+	writeLine(w, "\tr := iohelp.ErrorReader{Reader:ior}")
 	if st.hasLengthedType() {
 		writeLine(w, "\tvar ln uint32")
 	}
@@ -255,10 +255,10 @@ func (st Struct) Generate(w io.Writer, settings GenerateSettings) {
 		}
 		writeStructFieldUnmarshaller("&bbp."+name, fd.FieldType, w, settings, 1)
 	}
-	writeLine(w, "\treturn nil")
+	writeLine(w, "\treturn r.Err")
 	writeLine(w, "}")
 	writeLine(w, "")
-	writeLine(w, "func(bbp *%s) bodyLen() (uint32) {", exposedName)
+	writeLine(w, "func (bbp *%s) bodyLen() (uint32) {", exposedName)
 	writeLine(w, "\tbodyLen := uint32(0)")
 	for _, fd := range st.Fields {
 		name := exposeName(fd.Name)
@@ -313,7 +313,8 @@ func (msg Message) Generate(w io.Writer, settings GenerateSettings) {
 	}
 	writeLine(w, "}")
 	writeLine(w, "")
-	writeLine(w, "func(bbp %s) EncodeBebop(w io.Writer) (err error) {", exposedName)
+	writeLine(w, "func (bbp %s) EncodeBebop(iow io.Writer) (err error) {", exposedName)
+	writeLine(w, "\tw := iohelp.ErrorWriter{Writer:iow}")
 	writeLine(w, "\tbinary.Write(w, binary.LittleEndian, bbp.bodyLen())")
 	for _, fd := range fields {
 		name := exposeName(fd.Name)
@@ -328,18 +329,19 @@ func (msg Message) Generate(w io.Writer, settings GenerateSettings) {
 		writeLineWithTabs(w, "}", 1)
 	}
 	writeLine(w, "\tw.Write([]byte{0})")
-	writeLine(w, "\treturn nil")
+	writeLine(w, "\treturn w.Err")
 	writeLine(w, "}")
 	writeLine(w, "")
-	writeLine(w, "func(bbp *%s) DecodeBebop(ior io.Reader) (err error) {", exposedName)
+	writeLine(w, "func (bbp *%s) DecodeBebop(ior io.Reader) (err error) {", exposedName)
 	if msg.hasLengthedType() {
 		writeLine(w, "\tvar ln uint32")
 	}
 	writeLine(w, "\tvar bodyLen uint32")
 	writeLine(w, "\tvar fieldNum byte")
-	writeLine(w, "\tbinary.Read(ior, binary.LittleEndian, &bodyLen)")
+	writeLine(w, "\ter := iohelp.ErrorReader{Reader:ior}")
+	writeLine(w, "\tbinary.Read(er, binary.LittleEndian, &bodyLen)")
 	writeLine(w, "\tbody := make([]byte, bodyLen)")
-	writeLine(w, "\tior.Read(body)")
+	writeLine(w, "\ter.Read(body)")
 	writeLine(w, "\tr := bytes.NewReader(body)")
 	writeLine(w, "\tfor r.Len() > 1 {")
 	writeLine(w, "\t\tfieldNum, _ = r.ReadByte()")
@@ -357,13 +359,13 @@ func (msg Message) Generate(w io.Writer, settings GenerateSettings) {
 	// for some reason we're allowed to skip parsing all remaining fields if we see one
 	// that we don't know about.
 	writeLine(w, "\t\tdefault:")
-	writeLine(w, "\t\t\treturn nil")
+	writeLine(w, "\t\t\treturn er.Err")
 	writeLine(w, "\t\t}")
 	writeLine(w, "\t}")
-	writeLine(w, "\treturn nil")
+	writeLine(w, "\treturn er.Err")
 	writeLine(w, "}")
 	writeLine(w, "")
-	writeLine(w, "func(bbp *%s) bodyLen() (uint32) {", exposedName)
+	writeLine(w, "func (bbp *%s) bodyLen() (uint32) {", exposedName)
 	writeLine(w, "\tbodyLen := uint32(1)")
 	for _, fd := range fields {
 		name := exposeName(fd.Name)

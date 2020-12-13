@@ -8,6 +8,7 @@ import (
 	"io"
 
 	"github.com/200sc/bebop"
+	"github.com/200sc/bebop/iohelp"
 )
 
 var _ bebop.Record = &Foo{}
@@ -16,23 +17,25 @@ type Foo struct {
 	Bar Bar
 }
 
-func(bbp Foo) EncodeBebop(w io.Writer) (err error) {
+func (bbp Foo) EncodeBebop(iow io.Writer) (err error) {
+	w := iohelp.ErrorWriter{Writer:iow}
 	err = (bbp.Bar).EncodeBebop(w)
 	if err != nil {
 		return err
 	}
-	return nil
+	return w.Err
 }
 
-func(bbp *Foo) DecodeBebop(r io.Reader) (err error) {
+func (bbp *Foo) DecodeBebop(ior io.Reader) (err error) {
+	r := iohelp.ErrorReader{Reader:ior}
 	err = (&bbp.Bar).DecodeBebop(r)
 	if err != nil {
 		return err
 	}
-	return nil
+	return r.Err
 }
 
-func(bbp *Foo) bodyLen() (uint32) {
+func (bbp *Foo) bodyLen() (uint32) {
 	bodyLen := uint32(0)
 	bodyLen += (bbp.Bar).bodyLen()
 	return bodyLen
@@ -46,7 +49,8 @@ type Bar struct {
 	Z *float64
 }
 
-func(bbp Bar) EncodeBebop(w io.Writer) (err error) {
+func (bbp Bar) EncodeBebop(iow io.Writer) (err error) {
+	w := iohelp.ErrorWriter{Writer:iow}
 	binary.Write(w, binary.LittleEndian, bbp.bodyLen())
 	if bbp.X != nil {
 		w.Write([]byte{1})
@@ -61,15 +65,16 @@ func(bbp Bar) EncodeBebop(w io.Writer) (err error) {
 		binary.Write(w, binary.LittleEndian, *bbp.Z)
 	}
 	w.Write([]byte{0})
-	return nil
+	return w.Err
 }
 
-func(bbp *Bar) DecodeBebop(ior io.Reader) (err error) {
+func (bbp *Bar) DecodeBebop(ior io.Reader) (err error) {
 	var bodyLen uint32
 	var fieldNum byte
-	binary.Read(ior, binary.LittleEndian, &bodyLen)
+	er := iohelp.ErrorReader{Reader:ior}
+	binary.Read(er, binary.LittleEndian, &bodyLen)
 	body := make([]byte, bodyLen)
-	ior.Read(body)
+	er.Read(body)
 	r := bytes.NewReader(body)
 	for r.Len() > 1 {
 		fieldNum, _ = r.ReadByte()
@@ -84,13 +89,13 @@ func(bbp *Bar) DecodeBebop(ior io.Reader) (err error) {
 			bbp.Z = new(float64)
 			binary.Read(r, binary.LittleEndian, bbp.Z)
 		default:
-			return nil
+			return er.Err
 		}
 	}
-	return nil
+	return er.Err
 }
 
-func(bbp *Bar) bodyLen() (uint32) {
+func (bbp *Bar) bodyLen() (uint32) {
 	bodyLen := uint32(1)
 	if bbp.X != nil {
 		bodyLen += 1

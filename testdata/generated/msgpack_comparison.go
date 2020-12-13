@@ -39,7 +39,8 @@ type MsgpackComparison struct {
 	ARRAY8 []int32
 }
 
-func(bbp MsgpackComparison) EncodeBebop(w io.Writer) (err error) {
+func (bbp MsgpackComparison) EncodeBebop(iow io.Writer) (err error) {
+	w := iohelp.ErrorWriter{Writer:iow}
 	binary.Write(w, binary.LittleEndian, bbp.INT0)
 	binary.Write(w, binary.LittleEndian, bbp.INT1)
 	binary.Write(w, binary.LittleEndian, bbp.INT1_)
@@ -76,10 +77,11 @@ func(bbp MsgpackComparison) EncodeBebop(w io.Writer) (err error) {
 	for _, elem := range bbp.ARRAY8 {
 		binary.Write(w, binary.LittleEndian, elem)
 	}
-	return nil
+	return w.Err
 }
 
-func(bbp *MsgpackComparison) DecodeBebop(r io.Reader) (err error) {
+func (bbp *MsgpackComparison) DecodeBebop(ior io.Reader) (err error) {
+	r := iohelp.ErrorReader{Reader:ior}
 	var ln uint32
 	binary.Read(r, binary.LittleEndian, &bbp.INT0)
 	binary.Read(r, binary.LittleEndian, &bbp.INT1)
@@ -120,10 +122,10 @@ func(bbp *MsgpackComparison) DecodeBebop(r io.Reader) (err error) {
 		binary.Read(r, binary.LittleEndian, elem1)
 		bbp.ARRAY8 = append(bbp.ARRAY8, *elem1)
 	}
-	return nil
+	return r.Err
 }
 
-func(bbp *MsgpackComparison) bodyLen() (uint32) {
+func (bbp *MsgpackComparison) bodyLen() (uint32) {
 	bodyLen := uint32(0)
 	bodyLen += 1
 	bodyLen += 1

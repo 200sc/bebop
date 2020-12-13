@@ -27,22 +27,24 @@ type Furniture struct {
 	family FurnitureFamily
 }
 
-func(bbp Furniture) EncodeBebop(w io.Writer) (err error) {
+func (bbp Furniture) EncodeBebop(iow io.Writer) (err error) {
+	w := iohelp.ErrorWriter{Writer:iow}
 	binary.Write(w, binary.LittleEndian, uint32(len(bbp.name)))
 	w.Write([]byte(bbp.name))
 	binary.Write(w, binary.LittleEndian, bbp.price)
 	binary.Write(w, binary.LittleEndian, uint32(bbp.family))
-	return nil
+	return w.Err
 }
 
-func(bbp *Furniture) DecodeBebop(r io.Reader) (err error) {
+func (bbp *Furniture) DecodeBebop(ior io.Reader) (err error) {
+	r := iohelp.ErrorReader{Reader:ior}
 	bbp.name = iohelp.ReadString(r)
 	binary.Read(r, binary.LittleEndian, &bbp.price)
 	binary.Read(r, binary.LittleEndian, &bbp.family)
-	return nil
+	return r.Err
 }
 
-func(bbp *Furniture) bodyLen() (uint32) {
+func (bbp *Furniture) bodyLen() (uint32) {
 	bodyLen := uint32(0)
 	bodyLen += 4
 	bodyLen += uint32(len(bbp.name))
@@ -71,7 +73,8 @@ type RequestResponse struct {
 	availableFurniture []Furniture
 }
 
-func(bbp RequestResponse) EncodeBebop(w io.Writer) (err error) {
+func (bbp RequestResponse) EncodeBebop(iow io.Writer) (err error) {
+	w := iohelp.ErrorWriter{Writer:iow}
 	binary.Write(w, binary.LittleEndian, uint32(RequestResponseOpCode))
 	binary.Write(w, binary.LittleEndian, uint32(len(bbp.availableFurniture)))
 	for _, elem := range bbp.availableFurniture {
@@ -80,10 +83,11 @@ func(bbp RequestResponse) EncodeBebop(w io.Writer) (err error) {
 			return err
 		}
 	}
-	return nil
+	return w.Err
 }
 
-func(bbp *RequestResponse) DecodeBebop(r io.Reader) (err error) {
+func (bbp *RequestResponse) DecodeBebop(ior io.Reader) (err error) {
+	r := iohelp.ErrorReader{Reader:ior}
 	var ln uint32
 	r.Read(make([]byte, 4))
 	ln = uint32(0)
@@ -96,10 +100,10 @@ func(bbp *RequestResponse) DecodeBebop(r io.Reader) (err error) {
 		}
 		bbp.availableFurniture = append(bbp.availableFurniture, *elem1)
 	}
-	return nil
+	return r.Err
 }
 
-func(bbp *RequestResponse) bodyLen() (uint32) {
+func (bbp *RequestResponse) bodyLen() (uint32) {
 	bodyLen := uint32(0)
 	bodyLen += 4
 	for _, elem := range bbp.availableFurniture {
@@ -122,7 +126,8 @@ type RequestCatalog struct {
 	SecretTunnel *string
 }
 
-func(bbp RequestCatalog) EncodeBebop(w io.Writer) (err error) {
+func (bbp RequestCatalog) EncodeBebop(iow io.Writer) (err error) {
+	w := iohelp.ErrorWriter{Writer:iow}
 	binary.Write(w, binary.LittleEndian, bbp.bodyLen())
 	if bbp.Family != nil {
 		w.Write([]byte{1})
@@ -134,15 +139,16 @@ func(bbp RequestCatalog) EncodeBebop(w io.Writer) (err error) {
 		w.Write([]byte(*bbp.SecretTunnel))
 	}
 	w.Write([]byte{0})
-	return nil
+	return w.Err
 }
 
-func(bbp *RequestCatalog) DecodeBebop(ior io.Reader) (err error) {
+func (bbp *RequestCatalog) DecodeBebop(ior io.Reader) (err error) {
 	var bodyLen uint32
 	var fieldNum byte
-	binary.Read(ior, binary.LittleEndian, &bodyLen)
+	er := iohelp.ErrorReader{Reader:ior}
+	binary.Read(er, binary.LittleEndian, &bodyLen)
 	body := make([]byte, bodyLen)
-	ior.Read(body)
+	er.Read(body)
 	r := bytes.NewReader(body)
 	for r.Len() > 1 {
 		fieldNum, _ = r.ReadByte()
@@ -154,13 +160,13 @@ func(bbp *RequestCatalog) DecodeBebop(ior io.Reader) (err error) {
 			bbp.SecretTunnel = new(string)
 			*bbp.SecretTunnel = iohelp.ReadString(r)
 		default:
-			return nil
+			return er.Err
 		}
 	}
-	return nil
+	return er.Err
 }
 
-func(bbp *RequestCatalog) bodyLen() (uint32) {
+func (bbp *RequestCatalog) bodyLen() (uint32) {
 	bodyLen := uint32(1)
 	if bbp.Family != nil {
 		bodyLen += 1

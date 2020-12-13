@@ -6,6 +6,32 @@ import (
 	"time"
 )
 
+type ErrorReader struct {
+	Reader io.Reader
+	Err    error
+}
+
+func (er ErrorReader) Read(b []byte) (n int, err error) {
+	n, err = er.Reader.Read(b)
+	if err != nil {
+		er.Err = err
+	}
+	return n, err
+}
+
+type ErrorWriter struct {
+	Writer io.Writer
+	Err    error
+}
+
+func (ew ErrorWriter) Write(b []byte) (n int, err error) {
+	n, err = ew.Writer.Write(b)
+	if err != nil {
+		ew.Err = err
+	}
+	return n, err
+}
+
 func ReadString(r io.Reader) string {
 	ln := uint32(0)
 	binary.Read(r, binary.LittleEndian, &ln)

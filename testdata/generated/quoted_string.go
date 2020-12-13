@@ -7,6 +7,7 @@ import (
 	"io"
 
 	"github.com/200sc/bebop"
+	"github.com/200sc/bebop/iohelp"
 )
 
 var _ bebop.Record = &QuotedString{}
@@ -20,21 +21,23 @@ type QuotedString struct {
 	Z int32
 }
 
-func(bbp QuotedString) EncodeBebop(w io.Writer) (err error) {
+func (bbp QuotedString) EncodeBebop(iow io.Writer) (err error) {
+	w := iohelp.ErrorWriter{Writer:iow}
 	binary.Write(w, binary.LittleEndian, bbp.X)
 	binary.Write(w, binary.LittleEndian, bbp.Y)
 	binary.Write(w, binary.LittleEndian, bbp.Z)
-	return nil
+	return w.Err
 }
 
-func(bbp *QuotedString) DecodeBebop(r io.Reader) (err error) {
+func (bbp *QuotedString) DecodeBebop(ior io.Reader) (err error) {
+	r := iohelp.ErrorReader{Reader:ior}
 	binary.Read(r, binary.LittleEndian, &bbp.X)
 	binary.Read(r, binary.LittleEndian, &bbp.Y)
 	binary.Read(r, binary.LittleEndian, &bbp.Z)
-	return nil
+	return r.Err
 }
 
-func(bbp *QuotedString) bodyLen() (uint32) {
+func (bbp *QuotedString) bodyLen() (uint32) {
 	bodyLen := uint32(0)
 	bodyLen += 4
 	bodyLen += 4

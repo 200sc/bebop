@@ -29,7 +29,8 @@ type BasicTypes struct {
 	A_date time.Time
 }
 
-func(bbp BasicTypes) EncodeBebop(w io.Writer) (err error) {
+func (bbp BasicTypes) EncodeBebop(iow io.Writer) (err error) {
+	w := iohelp.ErrorWriter{Writer:iow}
 	binary.Write(w, binary.LittleEndian, bbp.A_bool)
 	binary.Write(w, binary.LittleEndian, bbp.A_byte)
 	binary.Write(w, binary.LittleEndian, bbp.A_int16)
@@ -48,10 +49,11 @@ func(bbp BasicTypes) EncodeBebop(w io.Writer) (err error) {
 	} else {
 		binary.Write(w, binary.LittleEndian, int64(0))
 	}
-	return nil
+	return w.Err
 }
 
-func(bbp *BasicTypes) DecodeBebop(r io.Reader) (err error) {
+func (bbp *BasicTypes) DecodeBebop(ior io.Reader) (err error) {
+	r := iohelp.ErrorReader{Reader:ior}
 	binary.Read(r, binary.LittleEndian, &bbp.A_bool)
 	binary.Read(r, binary.LittleEndian, &bbp.A_byte)
 	binary.Read(r, binary.LittleEndian, &bbp.A_int16)
@@ -65,10 +67,10 @@ func(bbp *BasicTypes) DecodeBebop(r io.Reader) (err error) {
 	bbp.A_string = iohelp.ReadString(r)
 	bbp.A_guid = iohelp.ReadGUID(r)
 	bbp.A_date = iohelp.ReadTime(r)
-	return nil
+	return r.Err
 }
 
-func(bbp *BasicTypes) bodyLen() (uint32) {
+func (bbp *BasicTypes) bodyLen() (uint32) {
 	bodyLen := uint32(0)
 	bodyLen += 1
 	bodyLen += 1

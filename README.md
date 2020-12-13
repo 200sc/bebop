@@ -62,8 +62,6 @@ The following is a list of known issues with the current version of the project,
 
 Tokenization and parsing errors do not currently report locations (line number, character position / column of the error's source).
 
-Generated encoding and decoding code does not perform error checking on read/write operations.
-
 Original bebop does not support one .bop file importing type definitions from another .bop file, and so neither does this, yet.
 
 Original bebop requires semicolons after field definitions, and so do we. It seems practical for the language parser to

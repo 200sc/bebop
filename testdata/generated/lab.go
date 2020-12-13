@@ -8,6 +8,7 @@ import (
 	"io"
 
 	"github.com/200sc/bebop"
+	"github.com/200sc/bebop/iohelp"
 )
 
 type VideoCodec uint32
@@ -23,15 +24,17 @@ type Int32s struct {
 	A []int32
 }
 
-func(bbp Int32s) EncodeBebop(w io.Writer) (err error) {
+func (bbp Int32s) EncodeBebop(iow io.Writer) (err error) {
+	w := iohelp.ErrorWriter{Writer:iow}
 	binary.Write(w, binary.LittleEndian, uint32(len(bbp.A)))
 	for _, elem := range bbp.A {
 		binary.Write(w, binary.LittleEndian, elem)
 	}
-	return nil
+	return w.Err
 }
 
-func(bbp *Int32s) DecodeBebop(r io.Reader) (err error) {
+func (bbp *Int32s) DecodeBebop(ior io.Reader) (err error) {
+	r := iohelp.ErrorReader{Reader:ior}
 	var ln uint32
 	ln = uint32(0)
 	binary.Read(r, binary.LittleEndian, &ln)
@@ -40,10 +43,10 @@ func(bbp *Int32s) DecodeBebop(r io.Reader) (err error) {
 		binary.Read(r, binary.LittleEndian, elem1)
 		bbp.A = append(bbp.A, *elem1)
 	}
-	return nil
+	return r.Err
 }
 
-func(bbp *Int32s) bodyLen() (uint32) {
+func (bbp *Int32s) bodyLen() (uint32) {
 	bodyLen := uint32(0)
 	bodyLen += 4
 	for _ = range bbp.A {
@@ -58,15 +61,17 @@ type Uint32s struct {
 	A []uint32
 }
 
-func(bbp Uint32s) EncodeBebop(w io.Writer) (err error) {
+func (bbp Uint32s) EncodeBebop(iow io.Writer) (err error) {
+	w := iohelp.ErrorWriter{Writer:iow}
 	binary.Write(w, binary.LittleEndian, uint32(len(bbp.A)))
 	for _, elem := range bbp.A {
 		binary.Write(w, binary.LittleEndian, elem)
 	}
-	return nil
+	return w.Err
 }
 
-func(bbp *Uint32s) DecodeBebop(r io.Reader) (err error) {
+func (bbp *Uint32s) DecodeBebop(ior io.Reader) (err error) {
+	r := iohelp.ErrorReader{Reader:ior}
 	var ln uint32
 	ln = uint32(0)
 	binary.Read(r, binary.LittleEndian, &ln)
@@ -75,10 +80,10 @@ func(bbp *Uint32s) DecodeBebop(r io.Reader) (err error) {
 		binary.Read(r, binary.LittleEndian, elem1)
 		bbp.A = append(bbp.A, *elem1)
 	}
-	return nil
+	return r.Err
 }
 
-func(bbp *Uint32s) bodyLen() (uint32) {
+func (bbp *Uint32s) bodyLen() (uint32) {
 	bodyLen := uint32(0)
 	bodyLen += 4
 	for _ = range bbp.A {
@@ -93,15 +98,17 @@ type Float32s struct {
 	A []float32
 }
 
-func(bbp Float32s) EncodeBebop(w io.Writer) (err error) {
+func (bbp Float32s) EncodeBebop(iow io.Writer) (err error) {
+	w := iohelp.ErrorWriter{Writer:iow}
 	binary.Write(w, binary.LittleEndian, uint32(len(bbp.A)))
 	for _, elem := range bbp.A {
 		binary.Write(w, binary.LittleEndian, elem)
 	}
-	return nil
+	return w.Err
 }
 
-func(bbp *Float32s) DecodeBebop(r io.Reader) (err error) {
+func (bbp *Float32s) DecodeBebop(ior io.Reader) (err error) {
+	r := iohelp.ErrorReader{Reader:ior}
 	var ln uint32
 	ln = uint32(0)
 	binary.Read(r, binary.LittleEndian, &ln)
@@ -110,10 +117,10 @@ func(bbp *Float32s) DecodeBebop(r io.Reader) (err error) {
 		binary.Read(r, binary.LittleEndian, elem1)
 		bbp.A = append(bbp.A, *elem1)
 	}
-	return nil
+	return r.Err
 }
 
-func(bbp *Float32s) bodyLen() (uint32) {
+func (bbp *Float32s) bodyLen() (uint32) {
 	bodyLen := uint32(0)
 	bodyLen += 4
 	for _ = range bbp.A {
@@ -128,15 +135,17 @@ type Int64s struct {
 	A []int64
 }
 
-func(bbp Int64s) EncodeBebop(w io.Writer) (err error) {
+func (bbp Int64s) EncodeBebop(iow io.Writer) (err error) {
+	w := iohelp.ErrorWriter{Writer:iow}
 	binary.Write(w, binary.LittleEndian, uint32(len(bbp.A)))
 	for _, elem := range bbp.A {
 		binary.Write(w, binary.LittleEndian, elem)
 	}
-	return nil
+	return w.Err
 }
 
-func(bbp *Int64s) DecodeBebop(r io.Reader) (err error) {
+func (bbp *Int64s) DecodeBebop(ior io.Reader) (err error) {
+	r := iohelp.ErrorReader{Reader:ior}
 	var ln uint32
 	ln = uint32(0)
 	binary.Read(r, binary.LittleEndian, &ln)
@@ -145,10 +154,10 @@ func(bbp *Int64s) DecodeBebop(r io.Reader) (err error) {
 		binary.Read(r, binary.LittleEndian, elem1)
 		bbp.A = append(bbp.A, *elem1)
 	}
-	return nil
+	return r.Err
 }
 
-func(bbp *Int64s) bodyLen() (uint32) {
+func (bbp *Int64s) bodyLen() (uint32) {
 	bodyLen := uint32(0)
 	bodyLen += 4
 	for _ = range bbp.A {
@@ -163,15 +172,17 @@ type Uint64s struct {
 	A []uint64
 }
 
-func(bbp Uint64s) EncodeBebop(w io.Writer) (err error) {
+func (bbp Uint64s) EncodeBebop(iow io.Writer) (err error) {
+	w := iohelp.ErrorWriter{Writer:iow}
 	binary.Write(w, binary.LittleEndian, uint32(len(bbp.A)))
 	for _, elem := range bbp.A {
 		binary.Write(w, binary.LittleEndian, elem)
 	}
-	return nil
+	return w.Err
 }
 
-func(bbp *Uint64s) DecodeBebop(r io.Reader) (err error) {
+func (bbp *Uint64s) DecodeBebop(ior io.Reader) (err error) {
+	r := iohelp.ErrorReader{Reader:ior}
 	var ln uint32
 	ln = uint32(0)
 	binary.Read(r, binary.LittleEndian, &ln)
@@ -180,10 +191,10 @@ func(bbp *Uint64s) DecodeBebop(r io.Reader) (err error) {
 		binary.Read(r, binary.LittleEndian, elem1)
 		bbp.A = append(bbp.A, *elem1)
 	}
-	return nil
+	return r.Err
 }
 
-func(bbp *Uint64s) bodyLen() (uint32) {
+func (bbp *Uint64s) bodyLen() (uint32) {
 	bodyLen := uint32(0)
 	bodyLen += 4
 	for _ = range bbp.A {
@@ -198,15 +209,17 @@ type Float64s struct {
 	A []float64
 }
 
-func(bbp Float64s) EncodeBebop(w io.Writer) (err error) {
+func (bbp Float64s) EncodeBebop(iow io.Writer) (err error) {
+	w := iohelp.ErrorWriter{Writer:iow}
 	binary.Write(w, binary.LittleEndian, uint32(len(bbp.A)))
 	for _, elem := range bbp.A {
 		binary.Write(w, binary.LittleEndian, elem)
 	}
-	return nil
+	return w.Err
 }
 
-func(bbp *Float64s) DecodeBebop(r io.Reader) (err error) {
+func (bbp *Float64s) DecodeBebop(ior io.Reader) (err error) {
+	r := iohelp.ErrorReader{Reader:ior}
 	var ln uint32
 	ln = uint32(0)
 	binary.Read(r, binary.LittleEndian, &ln)
@@ -215,10 +228,10 @@ func(bbp *Float64s) DecodeBebop(r io.Reader) (err error) {
 		binary.Read(r, binary.LittleEndian, elem1)
 		bbp.A = append(bbp.A, *elem1)
 	}
-	return nil
+	return r.Err
 }
 
-func(bbp *Float64s) bodyLen() (uint32) {
+func (bbp *Float64s) bodyLen() (uint32) {
 	bodyLen := uint32(0)
 	bodyLen += 4
 	for _ = range bbp.A {
@@ -236,7 +249,8 @@ type VideoData struct {
 	Fragment []byte
 }
 
-func(bbp VideoData) EncodeBebop(w io.Writer) (err error) {
+func (bbp VideoData) EncodeBebop(iow io.Writer) (err error) {
+	w := iohelp.ErrorWriter{Writer:iow}
 	binary.Write(w, binary.LittleEndian, bbp.Time)
 	binary.Write(w, binary.LittleEndian, bbp.Width)
 	binary.Write(w, binary.LittleEndian, bbp.Height)
@@ -244,10 +258,11 @@ func(bbp VideoData) EncodeBebop(w io.Writer) (err error) {
 	for _, elem := range bbp.Fragment {
 		binary.Write(w, binary.LittleEndian, elem)
 	}
-	return nil
+	return w.Err
 }
 
-func(bbp *VideoData) DecodeBebop(r io.Reader) (err error) {
+func (bbp *VideoData) DecodeBebop(ior io.Reader) (err error) {
+	r := iohelp.ErrorReader{Reader:ior}
 	var ln uint32
 	binary.Read(r, binary.LittleEndian, &bbp.Time)
 	binary.Read(r, binary.LittleEndian, &bbp.Width)
@@ -259,10 +274,10 @@ func(bbp *VideoData) DecodeBebop(r io.Reader) (err error) {
 		binary.Read(r, binary.LittleEndian, elem1)
 		bbp.Fragment = append(bbp.Fragment, *elem1)
 	}
-	return nil
+	return r.Err
 }
 
-func(bbp *VideoData) bodyLen() (uint32) {
+func (bbp *VideoData) bodyLen() (uint32) {
 	bodyLen := uint32(0)
 	bodyLen += 8
 	bodyLen += 4
@@ -281,7 +296,8 @@ type MediaMessage struct {
 	Data *VideoData
 }
 
-func(bbp MediaMessage) EncodeBebop(w io.Writer) (err error) {
+func (bbp MediaMessage) EncodeBebop(iow io.Writer) (err error) {
+	w := iohelp.ErrorWriter{Writer:iow}
 	binary.Write(w, binary.LittleEndian, bbp.bodyLen())
 	if bbp.Codec != nil {
 		w.Write([]byte{1})
@@ -295,15 +311,16 @@ func(bbp MediaMessage) EncodeBebop(w io.Writer) (err error) {
 		}
 	}
 	w.Write([]byte{0})
-	return nil
+	return w.Err
 }
 
-func(bbp *MediaMessage) DecodeBebop(ior io.Reader) (err error) {
+func (bbp *MediaMessage) DecodeBebop(ior io.Reader) (err error) {
 	var bodyLen uint32
 	var fieldNum byte
-	binary.Read(ior, binary.LittleEndian, &bodyLen)
+	er := iohelp.ErrorReader{Reader:ior}
+	binary.Read(er, binary.LittleEndian, &bodyLen)
 	body := make([]byte, bodyLen)
-	ior.Read(body)
+	er.Read(body)
 	r := bytes.NewReader(body)
 	for r.Len() > 1 {
 		fieldNum, _ = r.ReadByte()
@@ -318,13 +335,13 @@ func(bbp *MediaMessage) DecodeBebop(ior io.Reader) (err error) {
 				return err
 			}
 		default:
-			return nil
+			return er.Err
 		}
 	}
-	return nil
+	return er.Err
 }
 
-func(bbp *MediaMessage) bodyLen() (uint32) {
+func (bbp *MediaMessage) bodyLen() (uint32) {
 	bodyLen := uint32(1)
 	if bbp.Codec != nil {
 		bodyLen += 1
@@ -345,7 +362,8 @@ type SkipTestOld struct {
 	Y *int32
 }
 
-func(bbp SkipTestOld) EncodeBebop(w io.Writer) (err error) {
+func (bbp SkipTestOld) EncodeBebop(iow io.Writer) (err error) {
+	w := iohelp.ErrorWriter{Writer:iow}
 	binary.Write(w, binary.LittleEndian, bbp.bodyLen())
 	if bbp.X != nil {
 		w.Write([]byte{1})
@@ -356,15 +374,16 @@ func(bbp SkipTestOld) EncodeBebop(w io.Writer) (err error) {
 		binary.Write(w, binary.LittleEndian, *bbp.Y)
 	}
 	w.Write([]byte{0})
-	return nil
+	return w.Err
 }
 
-func(bbp *SkipTestOld) DecodeBebop(ior io.Reader) (err error) {
+func (bbp *SkipTestOld) DecodeBebop(ior io.Reader) (err error) {
 	var bodyLen uint32
 	var fieldNum byte
-	binary.Read(ior, binary.LittleEndian, &bodyLen)
+	er := iohelp.ErrorReader{Reader:ior}
+	binary.Read(er, binary.LittleEndian, &bodyLen)
 	body := make([]byte, bodyLen)
-	ior.Read(body)
+	er.Read(body)
 	r := bytes.NewReader(body)
 	for r.Len() > 1 {
 		fieldNum, _ = r.ReadByte()
@@ -376,13 +395,13 @@ func(bbp *SkipTestOld) DecodeBebop(ior io.Reader) (err error) {
 			bbp.Y = new(int32)
 			binary.Read(r, binary.LittleEndian, bbp.Y)
 		default:
-			return nil
+			return er.Err
 		}
 	}
-	return nil
+	return er.Err
 }
 
-func(bbp *SkipTestOld) bodyLen() (uint32) {
+func (bbp *SkipTestOld) bodyLen() (uint32) {
 	bodyLen := uint32(1)
 	if bbp.X != nil {
 		bodyLen += 1
@@ -403,7 +422,8 @@ type SkipTestNew struct {
 	Z *int32
 }
 
-func(bbp SkipTestNew) EncodeBebop(w io.Writer) (err error) {
+func (bbp SkipTestNew) EncodeBebop(iow io.Writer) (err error) {
+	w := iohelp.ErrorWriter{Writer:iow}
 	binary.Write(w, binary.LittleEndian, bbp.bodyLen())
 	if bbp.X != nil {
 		w.Write([]byte{1})
@@ -418,15 +438,16 @@ func(bbp SkipTestNew) EncodeBebop(w io.Writer) (err error) {
 		binary.Write(w, binary.LittleEndian, *bbp.Z)
 	}
 	w.Write([]byte{0})
-	return nil
+	return w.Err
 }
 
-func(bbp *SkipTestNew) DecodeBebop(ior io.Reader) (err error) {
+func (bbp *SkipTestNew) DecodeBebop(ior io.Reader) (err error) {
 	var bodyLen uint32
 	var fieldNum byte
-	binary.Read(ior, binary.LittleEndian, &bodyLen)
+	er := iohelp.ErrorReader{Reader:ior}
+	binary.Read(er, binary.LittleEndian, &bodyLen)
 	body := make([]byte, bodyLen)
-	ior.Read(body)
+	er.Read(body)
 	r := bytes.NewReader(body)
 	for r.Len() > 1 {
 		fieldNum, _ = r.ReadByte()
@@ -441,13 +462,13 @@ func(bbp *SkipTestNew) DecodeBebop(ior io.Reader) (err error) {
 			bbp.Z = new(int32)
 			binary.Read(r, binary.LittleEndian, bbp.Z)
 		default:
-			return nil
+			return er.Err
 		}
 	}
-	return nil
+	return er.Err
 }
 
-func(bbp *SkipTestNew) bodyLen() (uint32) {
+func (bbp *SkipTestNew) bodyLen() (uint32) {
 	bodyLen := uint32(1)
 	if bbp.X != nil {
 		bodyLen += 1
@@ -471,7 +492,8 @@ type SkipTestOldContainer struct {
 	After *int32
 }
 
-func(bbp SkipTestOldContainer) EncodeBebop(w io.Writer) (err error) {
+func (bbp SkipTestOldContainer) EncodeBebop(iow io.Writer) (err error) {
+	w := iohelp.ErrorWriter{Writer:iow}
 	binary.Write(w, binary.LittleEndian, bbp.bodyLen())
 	if bbp.S != nil {
 		w.Write([]byte{1})
@@ -485,15 +507,16 @@ func(bbp SkipTestOldContainer) EncodeBebop(w io.Writer) (err error) {
 		binary.Write(w, binary.LittleEndian, *bbp.After)
 	}
 	w.Write([]byte{0})
-	return nil
+	return w.Err
 }
 
-func(bbp *SkipTestOldContainer) DecodeBebop(ior io.Reader) (err error) {
+func (bbp *SkipTestOldContainer) DecodeBebop(ior io.Reader) (err error) {
 	var bodyLen uint32
 	var fieldNum byte
-	binary.Read(ior, binary.LittleEndian, &bodyLen)
+	er := iohelp.ErrorReader{Reader:ior}
+	binary.Read(er, binary.LittleEndian, &bodyLen)
 	body := make([]byte, bodyLen)
-	ior.Read(body)
+	er.Read(body)
 	r := bytes.NewReader(body)
 	for r.Len() > 1 {
 		fieldNum, _ = r.ReadByte()
@@ -508,13 +531,13 @@ func(bbp *SkipTestOldContainer) DecodeBebop(ior io.Reader) (err error) {
 			bbp.After = new(int32)
 			binary.Read(r, binary.LittleEndian, bbp.After)
 		default:
-			return nil
+			return er.Err
 		}
 	}
-	return nil
+	return er.Err
 }
 
-func(bbp *SkipTestOldContainer) bodyLen() (uint32) {
+func (bbp *SkipTestOldContainer) bodyLen() (uint32) {
 	bodyLen := uint32(1)
 	if bbp.S != nil {
 		bodyLen += 1
@@ -534,7 +557,8 @@ type SkipTestNewContainer struct {
 	After *int32
 }
 
-func(bbp SkipTestNewContainer) EncodeBebop(w io.Writer) (err error) {
+func (bbp SkipTestNewContainer) EncodeBebop(iow io.Writer) (err error) {
+	w := iohelp.ErrorWriter{Writer:iow}
 	binary.Write(w, binary.LittleEndian, bbp.bodyLen())
 	if bbp.S != nil {
 		w.Write([]byte{1})
@@ -548,15 +572,16 @@ func(bbp SkipTestNewContainer) EncodeBebop(w io.Writer) (err error) {
 		binary.Write(w, binary.LittleEndian, *bbp.After)
 	}
 	w.Write([]byte{0})
-	return nil
+	return w.Err
 }
 
-func(bbp *SkipTestNewContainer) DecodeBebop(ior io.Reader) (err error) {
+func (bbp *SkipTestNewContainer) DecodeBebop(ior io.Reader) (err error) {
 	var bodyLen uint32
 	var fieldNum byte
-	binary.Read(ior, binary.LittleEndian, &bodyLen)
+	er := iohelp.ErrorReader{Reader:ior}
+	binary.Read(er, binary.LittleEndian, &bodyLen)
 	body := make([]byte, bodyLen)
-	ior.Read(body)
+	er.Read(body)
 	r := bytes.NewReader(body)
 	for r.Len() > 1 {
 		fieldNum, _ = r.ReadByte()
@@ -571,13 +596,13 @@ func(bbp *SkipTestNewContainer) DecodeBebop(ior io.Reader) (err error) {
 			bbp.After = new(int32)
 			binary.Read(r, binary.LittleEndian, bbp.After)
 		default:
-			return nil
+			return er.Err
 		}
 	}
-	return nil
+	return er.Err
 }
 
-func(bbp *SkipTestNewContainer) bodyLen() (uint32) {
+func (bbp *SkipTestNewContainer) bodyLen() (uint32) {
 	bodyLen := uint32(1)
 	if bbp.S != nil {
 		bodyLen += 1
