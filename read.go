@@ -472,6 +472,7 @@ func isPrimitiveType(simpleType string) bool {
 var primitiveTypes = map[string]struct{}{
 	"bool":    {},
 	"byte":    {},
+	"uint8":   {},
 	"uint16":  {},
 	"int16":   {},
 	"uint32":  {},

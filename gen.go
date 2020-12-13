@@ -19,11 +19,88 @@ type GenerateSettings struct {
 	customRecordTypes map[string]struct{}
 }
 
+var reservedWords = map[string]struct{}{
+	"map":      {},
+	"array":    {},
+	"struct":   {},
+	"message":  {},
+	"enum":     {},
+	"readonly": {},
+}
+
 func (f File) Validate() error {
-	// TODO: check no user defined type name is the same as a primitive (or reserved, like map/array/struct)
-	// TODO: check no duplicate type names are defined
-	// TODO: check that all types make sense (are primitive, or exist in the file)
-	// TODO: importing other files? oh god
+	customTypes := map[string]struct{}{}
+	for _, en := range f.Enums {
+		if _, ok := primitiveTypes[en.Name]; ok {
+			return fmt.Errorf("enum shares primitive type name %s", en.Name)
+		}
+		if _, ok := reservedWords[en.Name]; ok {
+			return fmt.Errorf("enum shares reserved word name %s", en.Name)
+		}
+		if _, ok := customTypes[en.Name]; ok {
+			return fmt.Errorf("enum has duplicated name %s", en.Name)
+		}
+		customTypes[en.Name] = struct{}{}
+	}
+	for _, st := range f.Structs {
+		if _, ok := primitiveTypes[st.Name]; ok {
+			return fmt.Errorf("struct shares primitive type name %s", st.Name)
+		}
+		if _, ok := reservedWords[st.Name]; ok {
+			return fmt.Errorf("struct shares reserved word name %s", st.Name)
+		}
+		if _, ok := customTypes[st.Name]; ok {
+			return fmt.Errorf("struct has duplicated name %s", st.Name)
+		}
+		customTypes[st.Name] = struct{}{}
+	}
+	for _, msg := range f.Messages {
+		if _, ok := primitiveTypes[msg.Name]; ok {
+			return fmt.Errorf("message shares primitive type name %s", msg.Name)
+		}
+		if _, ok := reservedWords[msg.Name]; ok {
+			return fmt.Errorf("message shares reserved word name %s", msg.Name)
+		}
+		if _, ok := customTypes[msg.Name]; ok {
+			return fmt.Errorf("message has duplicated name %s", msg.Name)
+		}
+		customTypes[msg.Name] = struct{}{}
+	}
+	allTypes := customTypes
+	for typ := range primitiveTypes {
+		allTypes[typ] = struct{}{}
+	}
+	for _, st := range f.Structs {
+		for _, fd := range st.Fields {
+			if err := typeDefined(fd.FieldType, allTypes); err != nil {
+				return err
+			}
+			// TODO: recursive type check
+		}
+	}
+	for _, msg := range f.Messages {
+		for _, fd := range msg.Fields {
+			if err := typeDefined(fd.FieldType, allTypes); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func typeDefined(ft FieldType, allTypes map[string]struct{}) error {
+	if ft.Array != nil {
+		return typeDefined(*ft.Array, allTypes)
+	}
+	if ft.Map != nil {
+		if _, ok := allTypes[ft.Map.Key]; !ok {
+			return fmt.Errorf("map key type %s undefined", ft.Map.Key)
+		}
+		return typeDefined(ft.Map.Value, allTypes)
+	}
+	if _, ok := allTypes[ft.Simple]; !ok {
+		return fmt.Errorf("type %s undefined", ft.Simple)
+	}
 	return nil
 }
 
