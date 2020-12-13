@@ -356,7 +356,7 @@ func readFieldType(tr *tokenReader) (FieldType, error) {
 		if err != nil {
 			return ft, err
 		}
-		if keyType.IsMap() || keyType.IsArray() {
+		if keyType.Map != nil || keyType.Array != nil {
 			return ft, fmt.Errorf("map must begin with simple type")
 		}
 		if !isPrimitiveType(keyType.Simple) {

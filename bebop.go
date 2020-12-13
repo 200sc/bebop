@@ -1,11 +1,13 @@
 package bebop
 
+// A File is a structured representation of a .bop file.
 type File struct {
 	Structs  []Struct
 	Messages []Message
 	Enums    []Enum
 }
 
+// Equals reports whether two Files are equivalent.
 func (f File) Equals(f2 File) bool {
 	if len(f.Structs) != len(f2.Structs) {
 		return false
@@ -34,14 +36,20 @@ func (f File) Equals(f2 File) bool {
 	return true
 }
 
+// A Struct is a record type where all fields are required.
 type Struct struct {
-	Name     string
-	Comment  string
-	OpCode   int32
-	Fields   []Field
+	Name    string
+	Comment string
+	// If OpCode is defined, wire encodings of the struct will be
+	// preceded by the OpCode.
+	OpCode int32
+	Fields []Field
+	// If ReadOnly is true, generated code for the struct will
+	// provide field getters instead of exporting fields.
 	ReadOnly bool
 }
 
+// Equals reports whether two Structs are equivalent.
 func (s Struct) Equals(s2 Struct) bool {
 	if s.Name != s2.Name {
 		return false
@@ -63,15 +71,18 @@ func (s Struct) Equals(s2 Struct) bool {
 	return true
 }
 
+// A Field is an individual, typed data component making up
+// a Struct or Message.
 type Field struct {
 	FieldType
 	Name    string
 	Comment string
-	// DeprecatedMessage is only provided if Deprecated is true.
+	// DeprecatedMessage should only be non-empty if Deprecated is true.
 	DeprecatedMessage string
 	Deprecated        bool
 }
 
+// Equals reports whether two Fields are equivalent.
 func (f Field) Equals(f2 Field) bool {
 	if f.Name != f2.Name {
 		return false
@@ -88,6 +99,7 @@ func (f Field) Equals(f2 Field) bool {
 	return f.FieldType.Equals(f2.FieldType)
 }
 
+// A Message is a record type where all fields are optional and keyed to indices.
 type Message struct {
 	Name     string
 	Comment  string
@@ -96,6 +108,7 @@ type Message struct {
 	ReadOnly bool
 }
 
+// Equals reports whether two Messages are equivalent.
 func (m Message) Equals(m2 Message) bool {
 	if m.Name != m2.Name {
 		return false
@@ -119,12 +132,14 @@ func (m Message) Equals(m2 Message) bool {
 	return true
 }
 
+// An Enum is a definition that will generate typed enumerable options.
 type Enum struct {
 	Name    string
 	Comment string
 	Options []EnumOption
 }
 
+// Equals reports whether two Enums are equivalent.
 func (e Enum) Equals(e2 Enum) bool {
 	if e.Name != e2.Name {
 		return false
@@ -143,6 +158,7 @@ func (e Enum) Equals(e2 Enum) bool {
 	return true
 }
 
+// An EnumOption is one possible value for a field typed as a specific Enum.
 type EnumOption struct {
 	Name    string
 	Comment string
@@ -152,22 +168,25 @@ type EnumOption struct {
 	Deprecated        bool
 }
 
+// Equals reports whether two EnumOptions are equivalent.
 func (eo EnumOption) Equals(eo2 EnumOption) bool {
 	return eo == eo2
 }
 
+// A FieldType is a union of three choices: Simple types, array types, and map types.
+// Only one of the three should be provided for a given FieldType.
 type FieldType struct {
 	Simple string
 	Map    *MapType
 	Array  *FieldType
 }
 
-func (ft FieldType) GoString() string {
+func (ft FieldType) goString() string {
 	if ft.Map != nil {
-		return "map[" + simpleGoString(ft.Map.Key) + "]" + ft.Map.Value.GoString()
+		return "map[" + simpleGoString(ft.Map.Key) + "]" + ft.Map.Value.goString()
 	}
 	if ft.Array != nil {
-		return "[]" + ft.Array.GoString()
+		return "[]" + ft.Array.goString()
 	}
 	return simpleGoString(ft.Simple)
 }
@@ -182,6 +201,7 @@ func simpleGoString(simple string) string {
 	return simple
 }
 
+// Equals reports whether two FieldTypes are equivalent.
 func (ft FieldType) Equals(ft2 FieldType) bool {
 	if ft.Simple != ft2.Simple {
 		return false
@@ -201,28 +221,15 @@ func (ft FieldType) Equals(ft2 FieldType) bool {
 	return true
 }
 
-func (ft FieldType) IsMap() bool {
-	return ft.Map != nil
-}
-
-func (ft FieldType) IsArray() bool {
-	return ft.Array != nil
-}
-
-type ArrayType struct {
-	Value FieldType
-}
-
-func (at ArrayType) Equals(at2 ArrayType) bool {
-	return at.Value.Equals(at2.Value)
-}
-
+// A MapType is a key-value type pair, where the key must be
+// a primitive builtin type.
 type MapType struct {
 	// Keys may only be named types
 	Key   string
 	Value FieldType
 }
 
+// Equals reports whether two MapTypes are equivalent.
 func (mt MapType) Equals(mt2 MapType) bool {
 	if mt.Key != mt2.Key {
 		return false
@@ -230,6 +237,6 @@ func (mt MapType) Equals(mt2 MapType) bool {
 	return mt.Value.Equals(mt2.Value)
 }
 
-func (mt MapType) GoString() string {
-	return "map[" + simpleGoString(mt.Key) + "]" + mt.Value.GoString()
+func (mt MapType) goString() string {
+	return "map[" + simpleGoString(mt.Key) + "]" + mt.Value.goString()
 }

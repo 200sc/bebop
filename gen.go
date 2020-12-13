@@ -312,7 +312,7 @@ func (st Struct) Generate(w io.Writer, settings GenerateSettings) {
 	// TODO: slices are not really readonly, we need to return a copy.
 	if st.ReadOnly {
 		for _, fd := range st.Fields {
-			writeLine(w, "func (bbp %s) Get%s() %s {", exposedName, exposeName(fd.Name), fd.FieldType.GoString())
+			writeLine(w, "func (bbp %s) Get%s() %s {", exposedName, exposeName(fd.Name), fd.FieldType.goString())
 			writeLine(w, "\treturn bbp.%s", unexposeName(fd.Name))
 			writeLine(w, "}")
 			writeLine(w, "")
@@ -389,7 +389,7 @@ func (msg Message) Generate(w io.Writer, settings GenerateSettings) {
 		if msg.ReadOnly {
 			name = unexposeName(fd.Name)
 		}
-		writeLine(w, "\t\t\tbbp.%[1]s = new(%[2]s)", name, fd.FieldType.GoString())
+		writeLine(w, "\t\t\tbbp.%[1]s = new(%[2]s)", name, fd.FieldType.goString())
 		writeMessageFieldUnmarshaller("bbp."+name, fd.FieldType, w, settings, 3)
 	}
 	// ref: https://github.com/RainwayApp/bebop/wiki/Wire-format#messages, final paragraph
@@ -421,7 +421,7 @@ func (msg Message) Generate(w io.Writer, settings GenerateSettings) {
 
 	if msg.ReadOnly {
 		for _, fd := range msg.Fields {
-			writeLine(w, "func (bbp %s) Get%s() *%s {", exposedName, exposeName(fd.Name), fd.FieldType.GoString())
+			writeLine(w, "func (bbp %s) Get%s() *%s {", exposedName, exposeName(fd.Name), fd.FieldType.goString())
 			writeLine(w, "\treturn bbp.%s", unexposeName(fd.Name))
 			writeLine(w, "}")
 			writeLine(w, "")
@@ -439,7 +439,7 @@ func writeFieldDefinition(fd Field, w io.Writer, settings GenerateSettings, read
 	if readOnly {
 		name = unexposeName(fd.Name)
 	}
-	typ := fd.FieldType.GoString()
+	typ := fd.FieldType.goString()
 	if message {
 		typ = "*" + typ
 	}
@@ -469,18 +469,18 @@ func writeStructFieldUnmarshaller(name string, typ FieldType, w io.Writer, setti
 		writeLineWithTabs(w, "ln = uint32(0)", depth)
 		writeLineWithTabs(w, "binary.Read(r, binary.LittleEndian, &ln)", depth, name)
 		writeLineWithTabs(w, "for i := uint32(0); i < ln; i++ {", depth, name)
-		writeLineWithTabs(w, elemName+" := new(%[2]s)", depth+1, typ.Array.GoString())
+		writeLineWithTabs(w, elemName+" := new(%[2]s)", depth+1, typ.Array.goString())
 		writeStructFieldUnmarshaller(elemName, *typ.Array, w, settings, depth+1)
 		writeLineWithTabs(w, "%[3]s = append(%[3]s, *"+elemName+")", depth+1, name)
 		writeLineWithTabs(w, "}", depth)
 	} else if typ.Map != nil {
 		writeLineWithTabs(w, "ln = uint32(0)", depth)
 		writeLineWithTabs(w, "binary.Read(r, binary.LittleEndian, &ln)", depth, name)
-		writeLineWithTabs(w, "%[3]s = make("+typ.Map.GoString()+")", depth, name)
+		writeLineWithTabs(w, "%[3]s = make("+typ.Map.goString()+")", depth, name)
 		writeLineWithTabs(w, "for i := uint32(0); i < ln; i++ {", depth, name)
 		writeLineWithTabs(w, "k := new("+simpleGoString(typ.Map.Key)+")", depth+1, name)
 		writeLineWithTabs(w, settings.typeUnmarshallers[typ.Map.Key], depth+1, "k")
-		writeLineWithTabs(w, elemName+" := new(%[2]s)", depth+1, typ.Map.Value.GoString())
+		writeLineWithTabs(w, elemName+" := new(%[2]s)", depth+1, typ.Map.Value.goString())
 		writeStructFieldUnmarshaller(elemName, typ.Map.Value, w, settings, depth+1)
 		writeLineWithTabs(w, "(%[3]s)[*k] = *"+elemName, depth+1, name)
 		writeLineWithTabs(w, "}", depth)
@@ -556,17 +556,17 @@ func writeMessageFieldUnmarshaller(name string, typ FieldType, w io.Writer, sett
 		writeLineWithTabs(w, "ln = uint32(0)", depth)
 		writeLineWithTabs(w, "binary.Read(r, binary.LittleEndian, &ln)", depth, name)
 		writeLineWithTabs(w, "for i := uint32(0); i < ln; i++ {", depth, name)
-		writeLineWithTabs(w, "elem := new(%[2]s)", depth+1, typ.Array.GoString())
+		writeLineWithTabs(w, "elem := new(%[2]s)", depth+1, typ.Array.goString())
 		writeMessageFieldUnmarshaller("elem", *typ.Array, w, settings, depth+1)
 		writeLineWithTabs(w, "}", depth)
 	} else if typ.Map != nil {
 		writeLineWithTabs(w, "ln = uint32(0)", depth)
 		writeLineWithTabs(w, "binary.Read(r, binary.LittleEndian, &ln)", depth, name)
-		writeLineWithTabs(w, "%[3]s = make("+typ.Map.GoString()+")", depth, name)
+		writeLineWithTabs(w, "%[3]s = make("+typ.Map.goString()+")", depth, name)
 		writeLineWithTabs(w, "for i := uint32(0); i < ln; i++ {", depth, name)
 		writeLineWithTabs(w, "var k "+simpleGoString(typ.Map.Key), depth+1, name)
 		writeLineWithTabs(w, settings.typeUnmarshallers[typ.Map.Key], depth+1, "k")
-		writeLineWithTabs(w, "elem := new(%[2]s)", depth+1, typ.Map.Value.GoString())
+		writeLineWithTabs(w, "elem := new(%[2]s)", depth+1, typ.Map.Value.goString())
 		writeMessageFieldUnmarshaller("elem", typ.Map.Value, w, settings, depth+1)
 		writeLineWithTabs(w, "}", depth)
 	} else {
