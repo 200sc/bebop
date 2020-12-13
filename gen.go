@@ -357,6 +357,7 @@ func writeStructFieldUnmarshaller(name string, typ FieldType, w io.Writer, setti
 	} else if typ.Map != nil {
 		writeLineWithTabs(w, "ln = uint32(0)", depth)
 		writeLineWithTabs(w, "binary.Read(r, binary.LittleEndian, &ln)", depth, name)
+		writeLineWithTabs(w, "%[3]s = make("+typ.Map.GoString()+")", depth, name)
 		writeLineWithTabs(w, "for i := uint32(0); i < ln; i++ {", depth, name)
 		writeLineWithTabs(w, "k := new("+simpleGoString(typ.Map.Key)+")", depth+1, name)
 		writeLineWithTabs(w, settings.messageTypeUnmarshaller(typ.Map.Key), depth+1, "k")
@@ -449,6 +450,7 @@ func writeMessageFieldUnmarshaller(name string, typ FieldType, w io.Writer, sett
 	} else if typ.Map != nil {
 		writeLineWithTabs(w, "ln = uint32(0)", depth)
 		writeLineWithTabs(w, "binary.Read(r, binary.LittleEndian, &ln)", depth, name)
+		writeLineWithTabs(w, "%[3]s = make("+typ.Map.GoString()+")", depth, name)
 		writeLineWithTabs(w, "for i := uint32(0); i < ln; i++ {", depth, name)
 		writeLineWithTabs(w, "var k "+simpleGoString(typ.Map.Key), depth+1, name)
 		writeLineWithTabs(w, settings.typeUnmarshallers[typ.Map.Key], depth+1, "k")
@@ -542,7 +544,11 @@ func (f File) typeMarshallers() map[string]string {
 		"w.Write([]byte(%[2]s))"
 	// TODO: we have to do whatever .NET does for uuids
 	out["guid"] = "w.Write(%[2]s[:])"
-	out["date"] = "binary.Write(w, binary.LittleEndian, (%[2]s.UnixNano()/100))"
+	out["date"] = "if %[2]s != (time.Time{}) {\n" +
+		"\tbinary.Write(w, binary.LittleEndian, (%[2]s.UnixNano()/100))\n" +
+		"} else {\n" +
+		"\tbinary.Write(w, binary.LittleEndian, int64(0))\n" +
+		"}"
 	for _, en := range f.Enums {
 		out[en.Name] = "binary.Write(w, binary.LittleEndian, uint32(%[2]s))"
 	}
@@ -680,7 +686,11 @@ func ReadTime(r io.Reader) time.Time {
 	tm := int64(0)
 	binary.Read(r, binary.LittleEndian, (&tm))
 	tm *= 100
-	return time.Unix(0, tm)
+	t := time.Time{}
+	if tm == 0 {
+		return t
+	}
+	return time.Unix(0, tm).UTC()
 }
 
 func ReadGUID(r io.Reader) [16]byte {

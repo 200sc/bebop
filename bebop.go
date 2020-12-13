@@ -232,3 +232,7 @@ func (mt MapType) Equals(mt2 MapType) bool {
 	}
 	return mt.Value.Equals(mt2.Value)
 }
+
+func (mt MapType) GoString() string {
+	return "map[" + simpleGoString(mt.Key) + "]" + mt.Value.GoString()
+}
