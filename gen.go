@@ -28,6 +28,7 @@ var reservedWords = map[string]struct{}{
 
 func (f File) Validate() error {
 	customTypes := map[string]struct{}{}
+	structTypeUsage := map[string]map[string]bool{}
 	for _, en := range f.Enums {
 		if _, ok := primitiveTypes[en.Name]; ok {
 			return fmt.Errorf("enum shares primitive type name %s", en.Name)
@@ -51,6 +52,7 @@ func (f File) Validate() error {
 			return fmt.Errorf("struct has duplicated name %s", st.Name)
 		}
 		customTypes[st.Name] = struct{}{}
+		structTypeUsage[st.Name] = st.usedTypes()
 	}
 	for _, msg := range f.Messages {
 		if _, ok := primitiveTypes[msg.Name]; ok {
@@ -73,7 +75,6 @@ func (f File) Validate() error {
 			if err := typeDefined(fd.FieldType, allTypes); err != nil {
 				return err
 			}
-			// TODO: recursive type check
 		}
 	}
 	for _, msg := range f.Messages {
@@ -83,6 +84,42 @@ func (f File) Validate() error {
 			}
 		}
 	}
+	// Determine which struct include themselves as required fields (which would lead
+	// to the struct taking up infinite size)
+	delta := true
+	// This is an unbounded loop because for this case:
+	// fooStruct:{barStruct}, barStruct{bizzStruct}, bizzStruct{bazStruct}, bazStruct{fooStruct}
+	// After each iteration we have these updated usages:
+	// 1. fooStruct:{barStruct, bizzStruct}, barStruct{bizzStruct, bazStruct}, bizzStruct{bazStruct, fooStruct}, bazStruct{fooStruct, barStruct}
+	// 2. fooStruct:{barStruct, bizzStruct, bazStruct, fooStruct}, barStruct{bizzStruct, bazStruct, fooStruct, barStruct}, bizzStruct{bazStruct, fooStruct, barStruct, bizzStruct}, bazStruct{fooStruct, barStruct, bizzStruct, bazStruct}
+	// ... and as the chain of structs gets longer the required iterations also increases.
+	for delta {
+		delta = false
+		for stName, usage := range structTypeUsage {
+			for stName2, usage2 := range structTypeUsage {
+				if stName == stName2 {
+					continue
+				}
+				// If struct1 includes struct2, it also includes
+				// all fields that struct2 includes
+				if usage[stName2] {
+					for k, v := range usage2 {
+						if !usage[k] {
+							delta = true
+						}
+						usage[k] = v
+					}
+				}
+			}
+			structTypeUsage[stName] = usage
+		}
+	}
+	for stName, usage := range structTypeUsage {
+		if usage[stName] {
+			return fmt.Errorf("struct %s recursively includes itself as a required field", stName)
+		}
+	}
+
 	return nil
 }
 
@@ -679,19 +716,37 @@ func (f File) customRecordTypes() map[string]struct{} {
 func (f File) usedTypes() map[string]bool {
 	out := make(map[string]bool)
 	for _, st := range f.Structs {
-		for _, fd := range st.Fields {
-			fdTypes := fd.usedTypes()
-			for k, v := range fdTypes {
-				out[k] = v
-			}
+		stOut := st.usedTypes()
+		for k, v := range stOut {
+			out[k] = v
 		}
 	}
 	for _, msg := range f.Messages {
-		for _, fd := range msg.Fields {
-			fdTypes := fd.usedTypes()
-			for k, v := range fdTypes {
-				out[k] = v
-			}
+		msgOut := msg.usedTypes()
+		for k, v := range msgOut {
+			out[k] = v
+		}
+	}
+	return out
+}
+
+func (st Struct) usedTypes() map[string]bool {
+	out := make(map[string]bool)
+	for _, fd := range st.Fields {
+		fdTypes := fd.usedTypes()
+		for k, v := range fdTypes {
+			out[k] = v
+		}
+	}
+	return out
+}
+
+func (msg Message) usedTypes() map[string]bool {
+	out := make(map[string]bool)
+	for _, fd := range msg.Fields {
+		fdTypes := fd.usedTypes()
+		for k, v := range fdTypes {
+			out[k] = v
 		}
 	}
 	return out

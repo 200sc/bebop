@@ -67,10 +67,6 @@ Original bebop does not support one .bop file importing type definitions from an
 Original bebop requires semicolons after field definitions, and so do we. It seems practical for the language parser to
 treat newlines as semicolons (as Go does).
 
-Invalid recursive type structures can be defined and generated. If they are impossible to size, the Go compiler will reject the generated code.
-A future change to this project will detect these conditions at generation time.
-
-
 ## Credit
 
 Original bebop compiler (C#, Typescript, ...): https://github.com/RainwayApp/bebop
