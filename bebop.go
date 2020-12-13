@@ -160,9 +160,6 @@ type FieldType struct {
 	Simple string
 	Map    *MapType
 	Array  *FieldType
-	// TODO: fight
-	// remove the array[t] alias
-	// it's added complexity and hurts
 }
 
 func (ft FieldType) GoString() string {

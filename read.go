@@ -268,12 +268,9 @@ func readStruct(tr *tokenReader) (Struct, error) {
 				return st, err
 			}
 			fdName := string(tr.Token().concrete)
-			// todo: fight
-			// we don't need end of line semicolons, newlines can be interpreted as semicolons.
 			if err := expectNext(tr, tokenKindSemicolon); err != nil {
 				return st, err
 			}
-			// todo: map types
 			st.Fields = append(st.Fields, Field{
 				Name:              fdName,
 				FieldType:         fdType,

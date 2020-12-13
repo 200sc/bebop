@@ -39,7 +39,7 @@ func run() error {
 		return fmt.Errorf("please provide an input file (-i)")
 	}
 	if *outputFile == "" {
-		return fmt.Errorf("please provide an output file (-i)")
+		return fmt.Errorf("please provide an output file (-o)")
 	}
 	f, err := os.Open(*inputFile)
 	if err != nil {

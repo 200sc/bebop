@@ -373,7 +373,6 @@ func (msg Message) Generate(w io.Writer, settings GenerateSettings) {
 	writeLine(w, "}")
 	writeLine(w, "")
 
-	// TODO: decode method
 	if msg.ReadOnly {
 		for _, fd := range msg.Fields {
 			writeLine(w, "func (bbp %s) Get%s() *%s {", exposedName, exposeName(fd.Name), fd.FieldType.GoString())
@@ -600,12 +599,10 @@ func (f File) typeMarshallers() map[string]string {
 	out["int32"] = "binary.Write(w, binary.LittleEndian, %[2]s)"
 	out["uint64"] = "binary.Write(w, binary.LittleEndian, %[2]s)"
 	out["int64"] = "binary.Write(w, binary.LittleEndian, %[2]s)"
-	// TODO: check floats
 	out["float32"] = "binary.Write(w, binary.LittleEndian, %[2]s)"
 	out["float64"] = "binary.Write(w, binary.LittleEndian, %[2]s)"
 	out["string"] = "binary.Write(w, binary.LittleEndian, uint32(len(%[2]s)))\n" +
 		"w.Write([]byte(%[2]s))"
-	// TODO: we have to do whatever .NET does for uuids
 	out["guid"] = "w.Write(%[2]s[:])"
 	out["date"] = "if %[2]s != (time.Time{}) {\n" +
 		"\tbinary.Write(w, binary.LittleEndian, (%[2]s.UnixNano()/100))\n" +
@@ -643,11 +640,9 @@ func (f File) typeLengthers() map[string]string {
 	out["int32"] = "bodyLen += 4"
 	out["uint64"] = "bodyLen += 8"
 	out["int64"] = "bodyLen += 8"
-	// TODO: check float encoding
 	out["float32"] = "bodyLen += 4"
 	out["float64"] = "bodyLen += 8"
 	out["string"] = "bodyLen += 4\n" + "bodyLen += uint32(len(%[2]s))"
-	// TODO: we have to do whatever .NET does for uuids
 	out["guid"] = "bodyLen += 16"
 	out["date"] = "bodyLen += 8"
 	for _, en := range f.Enums {
