@@ -294,7 +294,7 @@ func (tr *tokenReader) nextStringLiteral(firstByte byte) bool {
 		concrete: []byte{firstByte},
 		kind:     tokenKindStringLiteral,
 	}
-	var lastByte byte
+	var escaping bool
 	for {
 		b, err := tr.r.ReadByte()
 		if err == io.EOF {
@@ -306,11 +306,15 @@ func (tr *tokenReader) nextStringLiteral(firstByte byte) bool {
 			return false
 		}
 		tk.concrete = append(tk.concrete, b)
-		if b == '"' && lastByte != '\\' {
+		if b == '"' && !escaping {
 			tr.nextToken = tk
 			return true
 		}
-		lastByte = b
+		if b == '\\' && !escaping {
+			escaping = true
+		} else {
+			escaping = false
+		}
 	}
 }
 

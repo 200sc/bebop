@@ -14,20 +14,30 @@ var _ bebop.Record = &QuotedString{}
 type QuotedString struct {
 	// Deprecated: "deprecated"
 	X int32
+	// Deprecated: escaped slash: \
+	Y int32
+	// Deprecated: escaped" "slashes:\\"" \
+	Z int32
 }
 
 func(bbp QuotedString) EncodeBebop(w io.Writer) (err error) {
 	binary.Write(w, binary.LittleEndian, bbp.X)
+	binary.Write(w, binary.LittleEndian, bbp.Y)
+	binary.Write(w, binary.LittleEndian, bbp.Z)
 	return nil
 }
 
 func(bbp *QuotedString) DecodeBebop(r io.Reader) (err error) {
 	binary.Read(r, binary.LittleEndian, &bbp.X)
+	binary.Read(r, binary.LittleEndian, &bbp.Y)
+	binary.Read(r, binary.LittleEndian, &bbp.Z)
 	return nil
 }
 
 func(bbp *QuotedString) bodyLen() (uint32) {
 	bodyLen := uint32(0)
+	bodyLen += 4
+	bodyLen += 4
 	bodyLen += 4
 	return bodyLen
 }
