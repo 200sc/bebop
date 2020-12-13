@@ -337,9 +337,9 @@ func(bbp *MediaMessage) bodyLen() (uint32) {
 	return bodyLen
 }
 
-//  Should be able to decode a "SkipTestNewContainer" as a "SkipTestOldContainer".
 var _ bebop.Record = &SkipTestOld{}
 
+// Should be able to decode a "SkipTestNewContainer" as a "SkipTestOldContainer".
 type SkipTestOld struct {
 	X *int32
 	Y *int32

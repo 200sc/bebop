@@ -747,8 +747,8 @@ func TestReadFile(t *testing.T) {
 				Structs: []Struct{
 					{
 						Name: "MsgpackComparison",
-						// todo: concat multiple line comments in sequence
-						Comment: " key names in JSON to be the same length while not coinciding with Bebop keywords.",
+						Comment: " These field names are extremely weirdly capitalized, because I wanted the\n" +
+							" key names in JSON to be the same length while not coinciding with Bebop keywords.",
 						Fields: []Field{
 							{
 								Name: "iNT0",

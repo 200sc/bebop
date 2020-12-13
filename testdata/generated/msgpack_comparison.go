@@ -10,9 +10,10 @@ import (
 	"github.com/200sc/bebop/iohelp"
 )
 
-//  key names in JSON to be the same length while not coinciding with Bebop keywords.
 var _ bebop.Record = &MsgpackComparison{}
 
+// These field names are extremely weirdly capitalized, because I wanted the
+// key names in JSON to be the same length while not coinciding with Bebop keywords.
 type MsgpackComparison struct {
 	INT0 uint8
 	INT1 uint8
@@ -23,7 +24,7 @@ type MsgpackComparison struct {
 	INT16_ int16
 	INT32 int32
 	INT32_ int32
-	//  int8 nIL; // "nil": null,
+	// int8 nIL; // "nil": null,
 	TRUE bool
 	FALSE bool
 	FLOAT float64

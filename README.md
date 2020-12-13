@@ -60,8 +60,6 @@ little more sophisticated version of the first example in this document.
 The following is a list of known issues with the current version of the project, ordered by approximate priority for addressing them.
 
 
-Only the final line of multiline comments are currently taken from .bop files and translated to .go comments.
-
 Tokenization and parsing errors do not currently report locations (line number, character position / column of the error's source).
 
 Generated encoding and decoding code does not perform error checking on read/write operations.

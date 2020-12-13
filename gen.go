@@ -183,18 +183,26 @@ func writeLineWithTabs(w io.Writer, format string, depth int, args ...string) {
 	fmt.Fprintf(w, format+"\n", ifArgs...)
 }
 
+func writeComment(w io.Writer, depth int, comment string) {
+	if comment == "" {
+		return
+	}
+	tbs := strings.Repeat("\t", depth)
+
+	commentLines := strings.Split(comment, "\n")
+	for _, cm := range commentLines {
+		writeLine(w, tbs+"//%s", cm)
+	}
+}
+
 func (en Enum) Generate(w io.Writer, settings GenerateSettings) {
 	exposedName := exposeName(en.Name)
-	if en.Comment != "" {
-		writeLine(w, "// %s", en.Comment)
-	}
+	writeComment(w, 0, en.Comment)
 	writeLine(w, "type %s uint32", exposedName)
 	writeLine(w, "")
 	writeLine(w, "const (")
 	for _, opt := range en.Options {
-		if opt.Comment != "" {
-			writeLine(w, "\t// %s", opt.Comment)
-		}
+		writeComment(w, 1, opt.Comment)
 		if opt.Deprecated {
 			writeLine(w, "\t// Deprecated: %s", opt.DeprecatedMessage)
 		}
@@ -210,11 +218,9 @@ func (st Struct) Generate(w io.Writer, settings GenerateSettings) {
 		writeLine(w, "const %sOpCode = 0x%x", exposedName, st.OpCode)
 		writeLine(w, "")
 	}
-	if st.Comment != "" {
-		writeLine(w, "// %s", st.Comment)
-	}
 	writeLine(w, "var _ bebop.Record = &%s{}", exposedName)
 	writeLine(w, "")
+	writeComment(w, 0, st.Comment)
 	writeLine(w, "type %s struct {", exposedName)
 	for _, fd := range st.Fields {
 		writeFieldDefinition(fd, w, settings, st.ReadOnly, false)
@@ -288,11 +294,9 @@ func (msg Message) Generate(w io.Writer, settings GenerateSettings) {
 		writeLine(w, "const %sOpCode = 0x%x", exposedName, msg.OpCode)
 		writeLine(w, "")
 	}
-	if msg.Comment != "" {
-		writeLine(w, "// %s", msg.Comment)
-	}
 	writeLine(w, "var _ bebop.Record = &%s{}", exposedName)
 	writeLine(w, "")
+	writeComment(w, 0, msg.Comment)
 	writeLine(w, "type %s struct {", exposedName)
 	fields := make([]FieldWithNumber, 0, len(msg.Fields))
 	for i, fd := range msg.Fields {
@@ -387,9 +391,7 @@ func (msg Message) Generate(w io.Writer, settings GenerateSettings) {
 }
 
 func writeFieldDefinition(fd Field, w io.Writer, settings GenerateSettings, readOnly bool, message bool) {
-	if fd.Comment != "" {
-		writeLine(w, "\t// %s", fd.Comment)
-	}
+	writeComment(w, 1, fd.Comment)
 	if fd.Deprecated {
 		writeLine(w, "\t// Deprecated: %s", fd.DeprecatedMessage)
 	}

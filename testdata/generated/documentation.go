@@ -17,24 +17,24 @@ const (
 	DepE_X DepE = 1
 )
 
-//  Documented enum 
+// Documented enum 
 type DocE uint32
 
 const (
-	//  Documented constant 
+	// Documented constant 
 	DocE_X DocE = 1
 	// Deprecated: Y in DocE
 	DocE_Y DocE = 2
-	//  Deprecated, documented constant 
+	// Deprecated, documented constant 
 	// Deprecated: Z in DocE
 	DocE_Z DocE = 3
 )
 
-//  Documented struct 
 var _ bebop.Record = &DocS{}
 
+// Documented struct 
 type DocS struct {
-	//  Documented field 
+	// Documented field 
 	X int32
 }
 
@@ -100,15 +100,15 @@ func(bbp *DepM) bodyLen() (uint32) {
 	return bodyLen
 }
 
-//  Documented message 
 var _ bebop.Record = &DocM{}
 
+// Documented message 
 type DocM struct {
-	//  Documented field 
+	// Documented field 
 	X *int32
 	// Deprecated: y in DocM
 	Y *int32
-	//  Deprecated, documented field 
+	// Deprecated, documented field 
 	// Deprecated: z in DocM
 	Z *int32
 }

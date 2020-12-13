@@ -11,13 +11,14 @@ import (
 func ReadFile(r io.Reader) (File, error) {
 	f := File{}
 	tr := newTokenReader(r)
-	nextRecordComment := ""
+	nextCommentLines := []string{}
 	nextRecordOpCode := int32(0)
 	nextRecordReadOnly := false
 	for tr.Next() {
 		tk := tr.Token()
 		switch tk.kind {
 		case tokenKindNewline:
+			nextCommentLines = []string{}
 			continue
 		// top level:
 		case tokenKindIdent:
@@ -33,22 +34,22 @@ func ReadFile(r io.Reader) (File, error) {
 				if err != nil {
 					return f, err
 				}
-				en.Comment = nextRecordComment
+				en.Comment = strings.Join(nextCommentLines, "\n")
 				f.Enums = append(f.Enums, en)
 
-				nextRecordComment = ""
+				nextCommentLines = []string{}
 				nextRecordOpCode = 0
 			case "struct":
 				st, err := readStruct(tr)
 				if err != nil {
 					return f, err
 				}
-				st.Comment = nextRecordComment
+				st.Comment = strings.Join(nextCommentLines, "\n")
 				st.OpCode = nextRecordOpCode
 				st.ReadOnly = nextRecordReadOnly
 				f.Structs = append(f.Structs, st)
 
-				nextRecordComment = ""
+				nextCommentLines = []string{}
 				nextRecordOpCode = 0
 				nextRecordReadOnly = false
 			case "message":
@@ -56,20 +57,26 @@ func ReadFile(r io.Reader) (File, error) {
 				if err != nil {
 					return f, err
 				}
-				msg.Comment = nextRecordComment
+				msg.Comment = strings.Join(nextCommentLines, "\n")
 				msg.OpCode = nextRecordOpCode
 				msg.ReadOnly = nextRecordReadOnly
 				f.Messages = append(f.Messages, msg)
 
-				nextRecordComment = ""
+				nextCommentLines = []string{}
 				nextRecordOpCode = 0
 				nextRecordReadOnly = false
 			}
 		case tokenKindBlockComment:
-			nextRecordComment = string(tk.concrete[2 : len(tk.concrete)-2])
+			nextCommentLines = append(nextCommentLines, string(tk.concrete[2:len(tk.concrete)-2]))
+			if tr.Next() {
+				if tr.Token().kind != tokenKindNewline {
+					tr.UnNext()
+				}
+			}
 		case tokenKindLineComment:
-			nextRecordComment = string(tk.concrete[2:])
-			nextRecordComment = strings.Trim(nextRecordComment, "\r\n")
+			nextComment := string(tk.concrete[2:])
+			nextComment = strings.Trim(nextComment, "\r\n")
+			nextCommentLines = append(nextCommentLines, nextComment)
 		case tokenKindOpenSquare:
 			if err := expectNext(tr, tokenKindIdent); err != nil {
 				return f, err
@@ -146,7 +153,7 @@ func readEnum(tr *tokenReader) (Enum, error) {
 	if tr.Token().kind != tokenKindNewline {
 		tr.UnNext()
 	}
-	nextComment := ""
+	nextCommentLines := []string{}
 	nextDeprecatedMessage := ""
 	nextIsDeprecated := false
 	for tr.Token().kind != tokenKindCloseCurly {
@@ -155,6 +162,8 @@ func readEnum(tr *tokenReader) (Enum, error) {
 		}
 		tk := tr.Token()
 		switch tk.kind {
+		case tokenKindNewline:
+			nextCommentLines = []string{}
 		case tokenKindIdent:
 			optName := string(tk.concrete)
 			if err := expectNext(tr, tokenKindEquals); err != nil {
@@ -175,11 +184,11 @@ func readEnum(tr *tokenReader) (Enum, error) {
 				Value:             int32(optInteger),
 				DeprecatedMessage: nextDeprecatedMessage,
 				Deprecated:        nextIsDeprecated,
-				Comment:           nextComment,
+				Comment:           strings.Join(nextCommentLines, "\n"),
 			})
 			nextDeprecatedMessage = ""
 			nextIsDeprecated = false
-			nextComment = ""
+			nextCommentLines = []string{}
 
 		case tokenKindOpenSquare:
 			if nextIsDeprecated {
@@ -192,10 +201,16 @@ func readEnum(tr *tokenReader) (Enum, error) {
 			nextIsDeprecated = true
 			nextDeprecatedMessage = msg
 		case tokenKindBlockComment:
-			nextComment = string(tk.concrete[2 : len(tk.concrete)-2])
+			nextCommentLines = append(nextCommentLines, string(tk.concrete[2:len(tk.concrete)-2]))
+			if tr.Next() {
+				if tr.Token().kind != tokenKindNewline {
+					tr.UnNext()
+				}
+			}
 		case tokenKindLineComment:
-			nextComment = string(tk.concrete[2:])
+			nextComment := string(tk.concrete[2:])
 			nextComment = strings.Trim(nextComment, "\r\n")
+			nextCommentLines = append(nextCommentLines, nextComment)
 		}
 	}
 
@@ -249,7 +264,7 @@ func readStruct(tr *tokenReader) (Struct, error) {
 		tr.UnNext()
 	}
 
-	nextComment := ""
+	nextCommentLines := []string{}
 	nextDeprecatedMessage := ""
 	nextIsDeprecated := false
 	for tr.Token().kind != tokenKindCloseCurly {
@@ -258,6 +273,8 @@ func readStruct(tr *tokenReader) (Struct, error) {
 		}
 		tk := tr.Token()
 		switch tk.kind {
+		case tokenKindNewline:
+			nextCommentLines = []string{}
 		case tokenKindIdent:
 			tr.UnNext()
 			fdType, err := readFieldType(tr)
@@ -276,11 +293,11 @@ func readStruct(tr *tokenReader) (Struct, error) {
 				FieldType:         fdType,
 				DeprecatedMessage: nextDeprecatedMessage,
 				Deprecated:        nextIsDeprecated,
-				Comment:           nextComment,
+				Comment:           strings.Join(nextCommentLines, "\n"),
 			})
 			nextDeprecatedMessage = ""
 			nextIsDeprecated = false
-			nextComment = ""
+			nextCommentLines = []string{}
 
 			for tr.Next() {
 				nextTk := tr.Token()
@@ -307,10 +324,16 @@ func readStruct(tr *tokenReader) (Struct, error) {
 			nextIsDeprecated = true
 			nextDeprecatedMessage = msg
 		case tokenKindBlockComment:
-			nextComment = string(tk.concrete[2 : len(tk.concrete)-2])
+			nextCommentLines = append(nextCommentLines, string(tk.concrete[2:len(tk.concrete)-2]))
+			if tr.Next() {
+				if tr.Token().kind != tokenKindNewline {
+					tr.UnNext()
+				}
+			}
 		case tokenKindLineComment:
-			nextComment = string(tk.concrete[2:])
+			nextComment := string(tk.concrete[2:])
 			nextComment = strings.Trim(nextComment, "\r\n")
+			nextCommentLines = append(nextCommentLines, nextComment)
 		}
 	}
 
@@ -400,7 +423,7 @@ func readMessage(tr *tokenReader) (Message, error) {
 		tr.UnNext()
 	}
 
-	nextComment := ""
+	nextCommentLines := []string{}
 	nextDeprecatedMessage := ""
 	nextIsDeprecated := false
 	for tr.Token().kind != tokenKindCloseCurly {
@@ -409,6 +432,8 @@ func readMessage(tr *tokenReader) (Message, error) {
 		}
 		tk := tr.Token()
 		switch tk.kind {
+		case tokenKindNewline:
+			nextCommentLines = []string{}
 		case tokenKindInteger:
 			fdInteger, err := strconv.ParseInt(string(tr.Token().concrete), 10, 8)
 			if err != nil {
@@ -434,11 +459,11 @@ func readMessage(tr *tokenReader) (Message, error) {
 				FieldType:         fdType,
 				DeprecatedMessage: nextDeprecatedMessage,
 				Deprecated:        nextIsDeprecated,
-				Comment:           nextComment,
+				Comment:           strings.Join(nextCommentLines, "\n"),
 			}
 			nextDeprecatedMessage = ""
 			nextIsDeprecated = false
-			nextComment = ""
+			nextCommentLines = []string{}
 
 		case tokenKindOpenSquare:
 			if nextIsDeprecated {
@@ -451,10 +476,16 @@ func readMessage(tr *tokenReader) (Message, error) {
 			nextIsDeprecated = true
 			nextDeprecatedMessage = dpMsg
 		case tokenKindBlockComment:
-			nextComment = string(tk.concrete[2 : len(tk.concrete)-2])
+			nextCommentLines = append(nextCommentLines, string(tk.concrete[2:len(tk.concrete)-2]))
+			if tr.Next() {
+				if tr.Token().kind != tokenKindNewline {
+					tr.UnNext()
+				}
+			}
 		case tokenKindLineComment:
-			nextComment = string(tk.concrete[2:])
+			nextComment := string(tk.concrete[2:])
 			nextComment = strings.Trim(nextComment, "\r\n")
+			nextCommentLines = append(nextCommentLines, nextComment)
 		}
 	}
 
