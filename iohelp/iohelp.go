@@ -1,3 +1,4 @@
+// Package iohelp provides common io utilities for bebop generated code.
 package iohelp
 
 import (
