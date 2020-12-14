@@ -14,7 +14,7 @@ var printVersion = flag.String("version", "", "print the version of the compiler
 var printHelp = flag.String("help", "", "print usage text")
 var packageName = flag.String("package", "bebopgen", "specify the name of the package to generate")
 
-const version = "bebopc-go v0.0.1"
+const version = "bebopc-go v0.0.3"
 
 func main() {
 	err := run()
