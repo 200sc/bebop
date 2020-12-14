@@ -1055,7 +1055,7 @@ func TestReadFile(t *testing.T) {
 			if err != nil {
 				t.Fatalf("read file errored: %v", err)
 			}
-			if !bf.Equals(tc.expected) {
+			if !bf.equals(tc.expected) {
 				t.Fatal("parsed file did not match expected")
 			}
 		})
