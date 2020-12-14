@@ -240,6 +240,11 @@ func TestMarshalCycleRecords(t *testing.T) {
 		name:        "empty RequestCatalog",
 		record:      &generated.RequestCatalog{},
 		unmarshalTo: &generated.RequestCatalog{},
+	}, {
+		name:         "empty ReadOnlyMap",
+		record:       &generated.ReadOnlyMap{},
+		unmarshalTo:  &generated.ReadOnlyMap{},
+		skipEquality: true,
 	}}
 	for _, tc := range tcs {
 		tc := tc

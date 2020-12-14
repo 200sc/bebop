@@ -162,8 +162,8 @@ func (bbp *Song) DecodeBebop(ior io.Reader) (err error) {
 			ln = uint32(0)
 			binary.Read(r, binary.LittleEndian, &ln)
 			for i := uint32(0); i < ln; i++ {
-				elem := new(Musician)
-				err = (elem).DecodeBebop(r)
+				elem3 := new(Musician)
+				err = (elem3).DecodeBebop(r)
 				if err != nil {
 					return err
 				}

@@ -1,0 +1,3 @@
+readonly message ReadOnlyMap {
+    1 -> map[string, uint8] vals;
+}

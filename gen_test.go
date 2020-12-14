@@ -82,6 +82,7 @@ var genTestFiles = []string{
 	"jazz",
 	"lab",
 	"map_types",
+	"message_map",
 	"msgpack_comparison",
 	"quoted_string",
 	"request",
