@@ -161,7 +161,7 @@ func (f File) Generate(w io.Writer, settings GenerateSettings) error {
 	if len(f.Messages) != 0 {
 		writeLine(w, "\t\"bytes\"")
 	}
-	if len(f.Messages)+len(f.Structs) != 0 {
+	if len(f.Messages) != 0 {
 		writeLine(w, "\t\"encoding/binary\"")
 	}
 	if len(f.Messages)+len(f.Structs) != 0 {
@@ -284,18 +284,17 @@ func (st Struct) Generate(w io.Writer, settings GenerateSettings) {
 	writeLine(w, "")
 	writeLine(w, "func (bbp *%s) DecodeBebop(ior io.Reader) (err error) {", exposedName)
 	writeLine(w, "\tr := iohelp.NewErrorReader(ior)")
-	if st.hasLengthedType() {
-		writeLine(w, "\tvar ln uint32")
-	}
 	if st.OpCode != 0 {
 		writeLine(w, "\tr.Read(make([]byte, 4))")
 	}
 	for _, fd := range st.Fields {
+		writeLine(w, "\t{")
 		name := exposeName(fd.Name)
 		if st.ReadOnly {
 			name = unexposeName(fd.Name)
 		}
-		writeStructFieldUnmarshaller("&bbp."+name, fd.FieldType, w, settings, 1)
+		writeStructFieldUnmarshaller("&bbp."+name, fd.FieldType, w, settings, 2)
+		writeLine(w, "\t}")
 	}
 	writeLine(w, "\treturn r.Err")
 	writeLine(w, "}")
@@ -376,19 +375,15 @@ func (msg Message) Generate(w io.Writer, settings GenerateSettings) {
 	writeLine(w, "}")
 	writeLine(w, "")
 	writeLine(w, "func (bbp *%s) DecodeBebop(ior io.Reader) (err error) {", exposedName)
-	if msg.hasLengthedType() {
-		writeLine(w, "\tvar ln uint32")
-	}
-	writeLine(w, "\tvar bodyLen uint32")
-	writeLine(w, "\tvar fieldNum byte")
 	writeLine(w, "\ter := iohelp.NewErrorReader(ior)")
-	writeLine(w, "\tbinary.Read(er, binary.LittleEndian, &bodyLen)")
+	writeLine(w, "\tbodyLen := iohelp.ReadUint32(er)")
 	writeLine(w, "\tbody := make([]byte, bodyLen)")
 	writeLine(w, "\ter.Read(body)")
-	writeLine(w, "\tr := bytes.NewReader(body)")
-	writeLine(w, "\tfor r.Len() > 1 {")
-	writeLine(w, "\t\tfieldNum, _ = r.ReadByte()")
-	writeLine(w, "\t\tswitch fieldNum {")
+	writeLine(w, "\tr := iohelp.NewErrorReader(bytes.NewReader(body))")
+	writeLine(w, "\tfor {")
+	writeLine(w, "\t\tswitch iohelp.ReadByte(r) {")
+	writeLine(w, "\t\tcase 0:")
+	writeLine(w, "\t\t\treturn er.Err")
 	for _, fd := range fields {
 		writeLine(w, "\t\tcase %d:", fd.num)
 		name := exposeName(fd.Name)
@@ -471,19 +466,18 @@ func writeStructFieldMarshaller(name string, typ FieldType, w io.Writer, setting
 
 func writeStructFieldUnmarshaller(name string, typ FieldType, w io.Writer, settings GenerateSettings, depth int) {
 	elemName := "elem" + strconv.Itoa(depth)
+	lnName := "ln" + strconv.Itoa(depth)
 	if typ.Array != nil {
-		writeLineWithTabs(w, "ln = uint32(0)", depth)
-		writeLineWithTabs(w, "binary.Read(r, binary.LittleEndian, &ln)", depth, name)
-		writeLineWithTabs(w, "for i := uint32(0); i < ln; i++ {", depth, name)
+		writeLineWithTabs(w, lnName+" := iohelp.ReadUint32(r)", depth)
+		writeLineWithTabs(w, "for i := uint32(0); i < "+lnName+"; i++ {", depth, name)
 		writeLineWithTabs(w, elemName+" := new(%[2]s)", depth+1, typ.Array.goString())
 		writeStructFieldUnmarshaller(elemName, *typ.Array, w, settings, depth+1)
 		writeLineWithTabs(w, "%[3]s = append(%[3]s, *"+elemName+")", depth+1, name)
 		writeLineWithTabs(w, "}", depth)
 	} else if typ.Map != nil {
-		writeLineWithTabs(w, "ln = uint32(0)", depth)
-		writeLineWithTabs(w, "binary.Read(r, binary.LittleEndian, &ln)", depth, name)
+		writeLineWithTabs(w, lnName+" := iohelp.ReadUint32(r)", depth)
 		writeLineWithTabs(w, "%[3]s = make("+typ.Map.goString()+")", depth, name)
-		writeLineWithTabs(w, "for i := uint32(0); i < ln; i++ {", depth, name)
+		writeLineWithTabs(w, "for i := uint32(0); i < "+lnName+"; i++ {", depth, name)
 		writeLineWithTabs(w, "k := new("+simpleGoString(typ.Map.Key)+")", depth+1, name)
 		writeLineWithTabs(w, settings.typeUnmarshallers[typ.Map.Key], depth+1, "k")
 		writeLineWithTabs(w, elemName+" := new(%[2]s)", depth+1, typ.Map.Value.goString())
@@ -559,18 +553,19 @@ func writeMessageFieldBodyCount(name string, typ FieldType, w io.Writer, setting
 
 func writeMessageFieldUnmarshaller(name string, typ FieldType, w io.Writer, settings GenerateSettings, depth int) {
 	elemName := "elem" + strconv.Itoa(depth)
+	lnName := "ln" + strconv.Itoa(depth)
 	if typ.Array != nil {
-		writeLineWithTabs(w, "ln = uint32(0)", depth)
-		writeLineWithTabs(w, "binary.Read(r, binary.LittleEndian, &ln)", depth, name)
-		writeLineWithTabs(w, "for i := uint32(0); i < ln; i++ {", depth, name)
+		writeLineWithTabs(w, lnName+" := uint32(0)", depth)
+		writeLineWithTabs(w, "binary.Read(r, binary.LittleEndian, &"+lnName+")", depth, name)
+		writeLineWithTabs(w, "for i := uint32(0); i < "+lnName+"; i++ {", depth, name)
 		writeLineWithTabs(w, elemName+" := new(%[2]s)", depth+1, typ.Array.goString())
 		writeMessageFieldUnmarshaller(elemName, *typ.Array, w, settings, depth+1)
 		writeLineWithTabs(w, "}", depth)
 	} else if typ.Map != nil {
-		writeLineWithTabs(w, "ln = uint32(0)", depth)
-		writeLineWithTabs(w, "binary.Read(r, binary.LittleEndian, &ln)", depth, name)
+		writeLineWithTabs(w, lnName+" := uint32(0)", depth)
+		writeLineWithTabs(w, "binary.Read(r, binary.LittleEndian, &"+lnName+")", depth, name)
 		writeLineWithTabs(w, "%[3]s = make("+typ.Map.goString()+")", depth, name)
-		writeLineWithTabs(w, "for i := uint32(0); i < ln; i++ {", depth, name)
+		writeLineWithTabs(w, "for i := uint32(0); i < "+lnName+"; i++ {", depth, name)
 		writeLineWithTabs(w, "k := new("+simpleGoString(typ.Map.Key)+")", depth+1, name)
 		writeLineWithTabs(w, settings.typeUnmarshallers[typ.Map.Key], depth+1, "k")
 		writeLineWithTabs(w, elemName+" := new(%[2]s)", depth+1, typ.Map.Value.goString())
@@ -607,7 +602,7 @@ var fixedSizeTypes = []string{"bool", "byte", "uint8", "uint16", "int16", "uint3
 func (f File) typeUnmarshallers() map[string]string {
 	out := make(map[string]string)
 	for _, typ := range fixedSizeTypes {
-		out[typ] = "binary.Read(r, binary.LittleEndian, %[2]s)"
+		out[typ] = "%[3]s = iohelp.Read" + strings.Title(typ) + "(r)"
 	}
 	out["string"] = "%[3]s = iohelp.ReadString(r)"
 	out["guid"] = "%[3]s = iohelp.ReadGUID(r)"

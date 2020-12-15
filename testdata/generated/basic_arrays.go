@@ -3,7 +3,6 @@
 package generated
 
 import (
-	"encoding/binary"
 	"io"
 
 	"github.com/200sc/bebop"
@@ -83,90 +82,101 @@ func (bbp BasicArrays) EncodeBebop(iow io.Writer) (err error) {
 
 func (bbp *BasicArrays) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
-	var ln uint32
-	ln = uint32(0)
-	binary.Read(r, binary.LittleEndian, &ln)
-	for i := uint32(0); i < ln; i++ {
-		elem1 := new(bool)
-		binary.Read(r, binary.LittleEndian, elem1)
-		bbp.A_bool = append(bbp.A_bool, *elem1)
+	{
+		ln2 := iohelp.ReadUint32(r)
+		for i := uint32(0); i < ln2; i++ {
+			elem2 := new(bool)
+			*elem2 = iohelp.ReadBool(r)
+			bbp.A_bool = append(bbp.A_bool, *elem2)
+		}
 	}
-	ln = uint32(0)
-	binary.Read(r, binary.LittleEndian, &ln)
-	for i := uint32(0); i < ln; i++ {
-		elem1 := new(byte)
-		binary.Read(r, binary.LittleEndian, elem1)
-		bbp.A_byte = append(bbp.A_byte, *elem1)
+	{
+		ln2 := iohelp.ReadUint32(r)
+		for i := uint32(0); i < ln2; i++ {
+			elem2 := new(byte)
+			*elem2 = iohelp.ReadByte(r)
+			bbp.A_byte = append(bbp.A_byte, *elem2)
+		}
 	}
-	ln = uint32(0)
-	binary.Read(r, binary.LittleEndian, &ln)
-	for i := uint32(0); i < ln; i++ {
-		elem1 := new(int16)
-		binary.Read(r, binary.LittleEndian, elem1)
-		bbp.A_int16 = append(bbp.A_int16, *elem1)
+	{
+		ln2 := iohelp.ReadUint32(r)
+		for i := uint32(0); i < ln2; i++ {
+			elem2 := new(int16)
+			*elem2 = iohelp.ReadInt16(r)
+			bbp.A_int16 = append(bbp.A_int16, *elem2)
+		}
 	}
-	ln = uint32(0)
-	binary.Read(r, binary.LittleEndian, &ln)
-	for i := uint32(0); i < ln; i++ {
-		elem1 := new(uint16)
-		binary.Read(r, binary.LittleEndian, elem1)
-		bbp.A_uint16 = append(bbp.A_uint16, *elem1)
+	{
+		ln2 := iohelp.ReadUint32(r)
+		for i := uint32(0); i < ln2; i++ {
+			elem2 := new(uint16)
+			*elem2 = iohelp.ReadUint16(r)
+			bbp.A_uint16 = append(bbp.A_uint16, *elem2)
+		}
 	}
-	ln = uint32(0)
-	binary.Read(r, binary.LittleEndian, &ln)
-	for i := uint32(0); i < ln; i++ {
-		elem1 := new(int32)
-		binary.Read(r, binary.LittleEndian, elem1)
-		bbp.A_int32 = append(bbp.A_int32, *elem1)
+	{
+		ln2 := iohelp.ReadUint32(r)
+		for i := uint32(0); i < ln2; i++ {
+			elem2 := new(int32)
+			*elem2 = iohelp.ReadInt32(r)
+			bbp.A_int32 = append(bbp.A_int32, *elem2)
+		}
 	}
-	ln = uint32(0)
-	binary.Read(r, binary.LittleEndian, &ln)
-	for i := uint32(0); i < ln; i++ {
-		elem1 := new(uint32)
-		binary.Read(r, binary.LittleEndian, elem1)
-		bbp.A_uint32 = append(bbp.A_uint32, *elem1)
+	{
+		ln2 := iohelp.ReadUint32(r)
+		for i := uint32(0); i < ln2; i++ {
+			elem2 := new(uint32)
+			*elem2 = iohelp.ReadUint32(r)
+			bbp.A_uint32 = append(bbp.A_uint32, *elem2)
+		}
 	}
-	ln = uint32(0)
-	binary.Read(r, binary.LittleEndian, &ln)
-	for i := uint32(0); i < ln; i++ {
-		elem1 := new(int64)
-		binary.Read(r, binary.LittleEndian, elem1)
-		bbp.A_int64 = append(bbp.A_int64, *elem1)
+	{
+		ln2 := iohelp.ReadUint32(r)
+		for i := uint32(0); i < ln2; i++ {
+			elem2 := new(int64)
+			*elem2 = iohelp.ReadInt64(r)
+			bbp.A_int64 = append(bbp.A_int64, *elem2)
+		}
 	}
-	ln = uint32(0)
-	binary.Read(r, binary.LittleEndian, &ln)
-	for i := uint32(0); i < ln; i++ {
-		elem1 := new(uint64)
-		binary.Read(r, binary.LittleEndian, elem1)
-		bbp.A_uint64 = append(bbp.A_uint64, *elem1)
+	{
+		ln2 := iohelp.ReadUint32(r)
+		for i := uint32(0); i < ln2; i++ {
+			elem2 := new(uint64)
+			*elem2 = iohelp.ReadUint64(r)
+			bbp.A_uint64 = append(bbp.A_uint64, *elem2)
+		}
 	}
-	ln = uint32(0)
-	binary.Read(r, binary.LittleEndian, &ln)
-	for i := uint32(0); i < ln; i++ {
-		elem1 := new(float32)
-		binary.Read(r, binary.LittleEndian, elem1)
-		bbp.A_float32 = append(bbp.A_float32, *elem1)
+	{
+		ln2 := iohelp.ReadUint32(r)
+		for i := uint32(0); i < ln2; i++ {
+			elem2 := new(float32)
+			*elem2 = iohelp.ReadFloat32(r)
+			bbp.A_float32 = append(bbp.A_float32, *elem2)
+		}
 	}
-	ln = uint32(0)
-	binary.Read(r, binary.LittleEndian, &ln)
-	for i := uint32(0); i < ln; i++ {
-		elem1 := new(float64)
-		binary.Read(r, binary.LittleEndian, elem1)
-		bbp.A_float64 = append(bbp.A_float64, *elem1)
+	{
+		ln2 := iohelp.ReadUint32(r)
+		for i := uint32(0); i < ln2; i++ {
+			elem2 := new(float64)
+			*elem2 = iohelp.ReadFloat64(r)
+			bbp.A_float64 = append(bbp.A_float64, *elem2)
+		}
 	}
-	ln = uint32(0)
-	binary.Read(r, binary.LittleEndian, &ln)
-	for i := uint32(0); i < ln; i++ {
-		elem1 := new(string)
-		*elem1 = iohelp.ReadString(r)
-		bbp.A_string = append(bbp.A_string, *elem1)
+	{
+		ln2 := iohelp.ReadUint32(r)
+		for i := uint32(0); i < ln2; i++ {
+			elem2 := new(string)
+			*elem2 = iohelp.ReadString(r)
+			bbp.A_string = append(bbp.A_string, *elem2)
+		}
 	}
-	ln = uint32(0)
-	binary.Read(r, binary.LittleEndian, &ln)
-	for i := uint32(0); i < ln; i++ {
-		elem1 := new([16]byte)
-		*elem1 = iohelp.ReadGUID(r)
-		bbp.A_guid = append(bbp.A_guid, *elem1)
+	{
+		ln2 := iohelp.ReadUint32(r)
+		for i := uint32(0); i < ln2; i++ {
+			elem2 := new([16]byte)
+			*elem2 = iohelp.ReadGUID(r)
+			bbp.A_guid = append(bbp.A_guid, *elem2)
+		}
 	}
 	return r.Err
 }
@@ -242,13 +252,13 @@ func (bbp TestInt32Array) EncodeBebop(iow io.Writer) (err error) {
 
 func (bbp *TestInt32Array) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
-	var ln uint32
-	ln = uint32(0)
-	binary.Read(r, binary.LittleEndian, &ln)
-	for i := uint32(0); i < ln; i++ {
-		elem1 := new(int32)
-		binary.Read(r, binary.LittleEndian, elem1)
-		bbp.A = append(bbp.A, *elem1)
+	{
+		ln2 := iohelp.ReadUint32(r)
+		for i := uint32(0); i < ln2; i++ {
+			elem2 := new(int32)
+			*elem2 = iohelp.ReadInt32(r)
+			bbp.A = append(bbp.A, *elem2)
+		}
 	}
 	return r.Err
 }

@@ -3,7 +3,6 @@
 package generated
 
 import (
-	"encoding/binary"
 	"io"
 
 	"github.com/200sc/bebop"
@@ -28,13 +27,13 @@ func (bbp ArrayOfStrings) EncodeBebop(iow io.Writer) (err error) {
 
 func (bbp *ArrayOfStrings) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
-	var ln uint32
-	ln = uint32(0)
-	binary.Read(r, binary.LittleEndian, &ln)
-	for i := uint32(0); i < ln; i++ {
-		elem1 := new(string)
-		*elem1 = iohelp.ReadString(r)
-		bbp.Strings = append(bbp.Strings, *elem1)
+	{
+		ln2 := iohelp.ReadUint32(r)
+		for i := uint32(0); i < ln2; i++ {
+			elem2 := new(string)
+			*elem2 = iohelp.ReadString(r)
+			bbp.Strings = append(bbp.Strings, *elem2)
+		}
 	}
 	return r.Err
 }

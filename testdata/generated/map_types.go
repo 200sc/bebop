@@ -27,8 +27,12 @@ func (bbp S) EncodeBebop(iow io.Writer) (err error) {
 
 func (bbp *S) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
-	binary.Read(r, binary.LittleEndian, &bbp.x)
-	binary.Read(r, binary.LittleEndian, &bbp.y)
+	{
+		bbp.x = iohelp.ReadInt32(r)
+	}
+	{
+		bbp.y = iohelp.ReadInt32(r)
+	}
 	return r.Err
 }
 
@@ -119,104 +123,102 @@ func (bbp SomeMaps) EncodeBebop(iow io.Writer) (err error) {
 
 func (bbp *SomeMaps) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
-	var ln uint32
-	ln = uint32(0)
-	binary.Read(r, binary.LittleEndian, &ln)
-	bbp.M1 = make(map[bool]bool)
-	for i := uint32(0); i < ln; i++ {
-		k := new(bool)
-		binary.Read(r, binary.LittleEndian, k)
-		elem1 := new(bool)
-		binary.Read(r, binary.LittleEndian, elem1)
-		(bbp.M1)[*k] = *elem1
+	{
+		ln2 := iohelp.ReadUint32(r)
+		bbp.M1 = make(map[bool]bool)
+		for i := uint32(0); i < ln2; i++ {
+			k := new(bool)
+			*k = iohelp.ReadBool(r)
+			elem2 := new(bool)
+			*elem2 = iohelp.ReadBool(r)
+			(bbp.M1)[*k] = *elem2
+		}
 	}
-	ln = uint32(0)
-	binary.Read(r, binary.LittleEndian, &ln)
-	bbp.M2 = make(map[string]map[string]string)
-	for i := uint32(0); i < ln; i++ {
-		k := new(string)
-		*k = iohelp.ReadString(r)
-		elem1 := new(map[string]string)
-		ln = uint32(0)
-		binary.Read(r, binary.LittleEndian, &ln)
-		*elem1 = make(map[string]string)
-		for i := uint32(0); i < ln; i++ {
+	{
+		ln2 := iohelp.ReadUint32(r)
+		bbp.M2 = make(map[string]map[string]string)
+		for i := uint32(0); i < ln2; i++ {
 			k := new(string)
 			*k = iohelp.ReadString(r)
-			elem2 := new(string)
-			*elem2 = iohelp.ReadString(r)
-			(*elem1)[*k] = *elem2
+			elem2 := new(map[string]string)
+			ln3 := iohelp.ReadUint32(r)
+			*elem2 = make(map[string]string)
+			for i := uint32(0); i < ln3; i++ {
+				k := new(string)
+				*k = iohelp.ReadString(r)
+				elem3 := new(string)
+				*elem3 = iohelp.ReadString(r)
+				(*elem2)[*k] = *elem3
+			}
+			(bbp.M2)[*k] = *elem2
 		}
-		(bbp.M2)[*k] = *elem1
 	}
-	ln = uint32(0)
-	binary.Read(r, binary.LittleEndian, &ln)
-	for i := uint32(0); i < ln; i++ {
-		elem1 := new(map[int32][]map[bool]S)
-		ln = uint32(0)
-		binary.Read(r, binary.LittleEndian, &ln)
-		*elem1 = make(map[int32][]map[bool]S)
-		for i := uint32(0); i < ln; i++ {
-			k := new(int32)
-			binary.Read(r, binary.LittleEndian, k)
-			elem2 := new([]map[bool]S)
-			ln = uint32(0)
-			binary.Read(r, binary.LittleEndian, &ln)
-			for i := uint32(0); i < ln; i++ {
-				elem3 := new(map[bool]S)
-				ln = uint32(0)
-				binary.Read(r, binary.LittleEndian, &ln)
-				*elem3 = make(map[bool]S)
-				for i := uint32(0); i < ln; i++ {
-					k := new(bool)
-					binary.Read(r, binary.LittleEndian, k)
-					elem4 := new(S)
-					err = (elem4).DecodeBebop(r)
-					if err != nil {
-						return err
+	{
+		ln2 := iohelp.ReadUint32(r)
+		for i := uint32(0); i < ln2; i++ {
+			elem2 := new(map[int32][]map[bool]S)
+			ln3 := iohelp.ReadUint32(r)
+			*elem2 = make(map[int32][]map[bool]S)
+			for i := uint32(0); i < ln3; i++ {
+				k := new(int32)
+				*k = iohelp.ReadInt32(r)
+				elem3 := new([]map[bool]S)
+				ln4 := iohelp.ReadUint32(r)
+				for i := uint32(0); i < ln4; i++ {
+					elem4 := new(map[bool]S)
+					ln5 := iohelp.ReadUint32(r)
+					*elem4 = make(map[bool]S)
+					for i := uint32(0); i < ln5; i++ {
+						k := new(bool)
+						*k = iohelp.ReadBool(r)
+						elem5 := new(S)
+						err = (elem5).DecodeBebop(r)
+						if err != nil {
+							return err
+						}
+						(*elem4)[*k] = *elem5
 					}
-					(*elem3)[*k] = *elem4
+					*elem3 = append(*elem3, *elem4)
 				}
-				*elem2 = append(*elem2, *elem3)
+				(*elem2)[*k] = *elem3
 			}
-			(*elem1)[*k] = *elem2
+			bbp.M3 = append(bbp.M3, *elem2)
 		}
-		bbp.M3 = append(bbp.M3, *elem1)
 	}
-	ln = uint32(0)
-	binary.Read(r, binary.LittleEndian, &ln)
-	for i := uint32(0); i < ln; i++ {
-		elem1 := new(map[string][]float32)
-		ln = uint32(0)
-		binary.Read(r, binary.LittleEndian, &ln)
-		*elem1 = make(map[string][]float32)
-		for i := uint32(0); i < ln; i++ {
-			k := new(string)
-			*k = iohelp.ReadString(r)
-			elem2 := new([]float32)
-			ln = uint32(0)
-			binary.Read(r, binary.LittleEndian, &ln)
-			for i := uint32(0); i < ln; i++ {
-				elem3 := new(float32)
-				binary.Read(r, binary.LittleEndian, elem3)
-				*elem2 = append(*elem2, *elem3)
+	{
+		ln2 := iohelp.ReadUint32(r)
+		for i := uint32(0); i < ln2; i++ {
+			elem2 := new(map[string][]float32)
+			ln3 := iohelp.ReadUint32(r)
+			*elem2 = make(map[string][]float32)
+			for i := uint32(0); i < ln3; i++ {
+				k := new(string)
+				*k = iohelp.ReadString(r)
+				elem3 := new([]float32)
+				ln4 := iohelp.ReadUint32(r)
+				for i := uint32(0); i < ln4; i++ {
+					elem4 := new(float32)
+					*elem4 = iohelp.ReadFloat32(r)
+					*elem3 = append(*elem3, *elem4)
+				}
+				(*elem2)[*k] = *elem3
 			}
-			(*elem1)[*k] = *elem2
+			bbp.M4 = append(bbp.M4, *elem2)
 		}
-		bbp.M4 = append(bbp.M4, *elem1)
 	}
-	ln = uint32(0)
-	binary.Read(r, binary.LittleEndian, &ln)
-	bbp.M5 = make(map[[16]byte]M)
-	for i := uint32(0); i < ln; i++ {
-		k := new([16]byte)
-		*k = iohelp.ReadGUID(r)
-		elem1 := new(M)
-		err = (elem1).DecodeBebop(r)
-		if err != nil {
-			return err
+	{
+		ln2 := iohelp.ReadUint32(r)
+		bbp.M5 = make(map[[16]byte]M)
+		for i := uint32(0); i < ln2; i++ {
+			k := new([16]byte)
+			*k = iohelp.ReadGUID(r)
+			elem2 := new(M)
+			err = (elem2).DecodeBebop(r)
+			if err != nil {
+				return err
+			}
+			(bbp.M5)[*k] = *elem2
 		}
-		(bbp.M5)[*k] = *elem1
 	}
 	return r.Err
 }
@@ -298,22 +300,21 @@ func (bbp M) EncodeBebop(iow io.Writer) (err error) {
 }
 
 func (bbp *M) DecodeBebop(ior io.Reader) (err error) {
-	var bodyLen uint32
-	var fieldNum byte
 	er := iohelp.NewErrorReader(ior)
-	binary.Read(er, binary.LittleEndian, &bodyLen)
+	bodyLen := iohelp.ReadUint32(er)
 	body := make([]byte, bodyLen)
 	er.Read(body)
-	r := bytes.NewReader(body)
-	for r.Len() > 1 {
-		fieldNum, _ = r.ReadByte()
-		switch fieldNum {
+	r := iohelp.NewErrorReader(bytes.NewReader(body))
+	for {
+		switch iohelp.ReadByte(r) {
+		case 0:
+			return er.Err
 		case 1:
 			bbp.A = new(float32)
-			binary.Read(r, binary.LittleEndian, bbp.A)
+			*bbp.A = iohelp.ReadFloat32(r)
 		case 2:
 			bbp.B = new(float64)
-			binary.Read(r, binary.LittleEndian, bbp.B)
+			*bbp.B = iohelp.ReadFloat64(r)
 		default:
 			return er.Err
 		}

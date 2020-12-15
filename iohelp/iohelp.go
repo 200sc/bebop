@@ -2,7 +2,6 @@
 package iohelp
 
 import (
-	"bufio"
 	"encoding/binary"
 	"io"
 	"math"
@@ -17,7 +16,7 @@ type ErrorReader struct {
 
 func NewErrorReader(r io.Reader) ErrorReader {
 	return ErrorReader{
-		Reader: bufio.NewReader(r),
+		Reader: r,
 		Buffer: make([]byte, 8),
 	}
 }
@@ -88,7 +87,18 @@ func ReadBool(r ErrorReader) bool {
 }
 
 func ReadByte(r ErrorReader) byte {
-	io.ReadFull(r, r.Buffer[:1])
+	_, err := io.ReadFull(r, r.Buffer[:1])
+	if err != nil {
+		r.Err = err
+	}
+	return r.Buffer[0]
+}
+
+func ReadUint8(r ErrorReader) uint8 {
+	_, err := io.ReadFull(r, r.Buffer[:1])
+	if err != nil {
+		r.Err = err
+	}
 	return r.Buffer[0]
 }
 

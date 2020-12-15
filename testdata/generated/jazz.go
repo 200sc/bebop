@@ -36,8 +36,12 @@ func (bbp Musician) EncodeBebop(iow io.Writer) (err error) {
 
 func (bbp *Musician) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
-	bbp.name = iohelp.ReadString(r)
-	binary.Read(r, binary.LittleEndian, &bbp.plays)
+	{
+		bbp.name = iohelp.ReadString(r)
+	}
+	{
+		binary.Read(r, binary.LittleEndian, &bbp.plays)
+	}
 	return r.Err
 }
 
@@ -78,19 +82,19 @@ func (bbp Library) EncodeBebop(iow io.Writer) (err error) {
 
 func (bbp *Library) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
-	var ln uint32
-	ln = uint32(0)
-	binary.Read(r, binary.LittleEndian, &ln)
-	bbp.Songs = make(map[[16]byte]Song)
-	for i := uint32(0); i < ln; i++ {
-		k := new([16]byte)
-		*k = iohelp.ReadGUID(r)
-		elem1 := new(Song)
-		err = (elem1).DecodeBebop(r)
-		if err != nil {
-			return err
+	{
+		ln2 := iohelp.ReadUint32(r)
+		bbp.Songs = make(map[[16]byte]Song)
+		for i := uint32(0); i < ln2; i++ {
+			k := new([16]byte)
+			*k = iohelp.ReadGUID(r)
+			elem2 := new(Song)
+			err = (elem2).DecodeBebop(r)
+			if err != nil {
+				return err
+			}
+			(bbp.Songs)[*k] = *elem2
 		}
-		(bbp.Songs)[*k] = *elem1
 	}
 	return r.Err
 }
@@ -140,28 +144,26 @@ func (bbp Song) EncodeBebop(iow io.Writer) (err error) {
 }
 
 func (bbp *Song) DecodeBebop(ior io.Reader) (err error) {
-	var ln uint32
-	var bodyLen uint32
-	var fieldNum byte
 	er := iohelp.NewErrorReader(ior)
-	binary.Read(er, binary.LittleEndian, &bodyLen)
+	bodyLen := iohelp.ReadUint32(er)
 	body := make([]byte, bodyLen)
 	er.Read(body)
-	r := bytes.NewReader(body)
-	for r.Len() > 1 {
-		fieldNum, _ = r.ReadByte()
-		switch fieldNum {
+	r := iohelp.NewErrorReader(bytes.NewReader(body))
+	for {
+		switch iohelp.ReadByte(r) {
+		case 0:
+			return er.Err
 		case 1:
 			bbp.Title = new(string)
 			*bbp.Title = iohelp.ReadString(r)
 		case 2:
 			bbp.Year = new(uint16)
-			binary.Read(r, binary.LittleEndian, bbp.Year)
+			*bbp.Year = iohelp.ReadUint16(r)
 		case 3:
 			bbp.Performers = new([]Musician)
-			ln = uint32(0)
-			binary.Read(r, binary.LittleEndian, &ln)
-			for i := uint32(0); i < ln; i++ {
+			ln3 := uint32(0)
+			binary.Read(r, binary.LittleEndian, &ln3)
+			for i := uint32(0); i < ln3; i++ {
 				elem3 := new(Musician)
 				err = (elem3).DecodeBebop(r)
 				if err != nil {

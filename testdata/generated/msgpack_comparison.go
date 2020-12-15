@@ -3,7 +3,6 @@
 package generated
 
 import (
-	"encoding/binary"
 	"io"
 
 	"github.com/200sc/bebop"
@@ -82,45 +81,83 @@ func (bbp MsgpackComparison) EncodeBebop(iow io.Writer) (err error) {
 
 func (bbp *MsgpackComparison) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
-	var ln uint32
-	binary.Read(r, binary.LittleEndian, &bbp.INT0)
-	binary.Read(r, binary.LittleEndian, &bbp.INT1)
-	binary.Read(r, binary.LittleEndian, &bbp.INT1_)
-	binary.Read(r, binary.LittleEndian, &bbp.INT8)
-	binary.Read(r, binary.LittleEndian, &bbp.INT8_)
-	binary.Read(r, binary.LittleEndian, &bbp.INT16)
-	binary.Read(r, binary.LittleEndian, &bbp.INT16_)
-	binary.Read(r, binary.LittleEndian, &bbp.INT32)
-	binary.Read(r, binary.LittleEndian, &bbp.INT32_)
-	binary.Read(r, binary.LittleEndian, &bbp.TRUE)
-	binary.Read(r, binary.LittleEndian, &bbp.FALSE)
-	binary.Read(r, binary.LittleEndian, &bbp.FLOAT)
-	binary.Read(r, binary.LittleEndian, &bbp.FLOAT_)
-	bbp.STRING0 = iohelp.ReadString(r)
-	bbp.STRING1 = iohelp.ReadString(r)
-	bbp.STRING4 = iohelp.ReadString(r)
-	bbp.STRING8 = iohelp.ReadString(r)
-	bbp.STRING16 = iohelp.ReadString(r)
-	ln = uint32(0)
-	binary.Read(r, binary.LittleEndian, &ln)
-	for i := uint32(0); i < ln; i++ {
-		elem1 := new(int32)
-		binary.Read(r, binary.LittleEndian, elem1)
-		bbp.ARRAY0 = append(bbp.ARRAY0, *elem1)
+	{
+		bbp.INT0 = iohelp.ReadUint8(r)
 	}
-	ln = uint32(0)
-	binary.Read(r, binary.LittleEndian, &ln)
-	for i := uint32(0); i < ln; i++ {
-		elem1 := new(string)
-		*elem1 = iohelp.ReadString(r)
-		bbp.ARRAY1 = append(bbp.ARRAY1, *elem1)
+	{
+		bbp.INT1 = iohelp.ReadUint8(r)
 	}
-	ln = uint32(0)
-	binary.Read(r, binary.LittleEndian, &ln)
-	for i := uint32(0); i < ln; i++ {
-		elem1 := new(int32)
-		binary.Read(r, binary.LittleEndian, elem1)
-		bbp.ARRAY8 = append(bbp.ARRAY8, *elem1)
+	{
+		bbp.INT1_ = iohelp.ReadInt16(r)
+	}
+	{
+		bbp.INT8 = iohelp.ReadUint8(r)
+	}
+	{
+		bbp.INT8_ = iohelp.ReadInt16(r)
+	}
+	{
+		bbp.INT16 = iohelp.ReadInt16(r)
+	}
+	{
+		bbp.INT16_ = iohelp.ReadInt16(r)
+	}
+	{
+		bbp.INT32 = iohelp.ReadInt32(r)
+	}
+	{
+		bbp.INT32_ = iohelp.ReadInt32(r)
+	}
+	{
+		bbp.TRUE = iohelp.ReadBool(r)
+	}
+	{
+		bbp.FALSE = iohelp.ReadBool(r)
+	}
+	{
+		bbp.FLOAT = iohelp.ReadFloat64(r)
+	}
+	{
+		bbp.FLOAT_ = iohelp.ReadFloat64(r)
+	}
+	{
+		bbp.STRING0 = iohelp.ReadString(r)
+	}
+	{
+		bbp.STRING1 = iohelp.ReadString(r)
+	}
+	{
+		bbp.STRING4 = iohelp.ReadString(r)
+	}
+	{
+		bbp.STRING8 = iohelp.ReadString(r)
+	}
+	{
+		bbp.STRING16 = iohelp.ReadString(r)
+	}
+	{
+		ln2 := iohelp.ReadUint32(r)
+		for i := uint32(0); i < ln2; i++ {
+			elem2 := new(int32)
+			*elem2 = iohelp.ReadInt32(r)
+			bbp.ARRAY0 = append(bbp.ARRAY0, *elem2)
+		}
+	}
+	{
+		ln2 := iohelp.ReadUint32(r)
+		for i := uint32(0); i < ln2; i++ {
+			elem2 := new(string)
+			*elem2 = iohelp.ReadString(r)
+			bbp.ARRAY1 = append(bbp.ARRAY1, *elem2)
+		}
+	}
+	{
+		ln2 := iohelp.ReadUint32(r)
+		for i := uint32(0); i < ln2; i++ {
+			elem2 := new(int32)
+			*elem2 = iohelp.ReadInt32(r)
+			bbp.ARRAY8 = append(bbp.ARRAY8, *elem2)
+		}
 	}
 	return r.Err
 }

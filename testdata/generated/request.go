@@ -38,9 +38,15 @@ func (bbp Furniture) EncodeBebop(iow io.Writer) (err error) {
 
 func (bbp *Furniture) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
-	bbp.name = iohelp.ReadString(r)
-	binary.Read(r, binary.LittleEndian, &bbp.price)
-	binary.Read(r, binary.LittleEndian, &bbp.family)
+	{
+		bbp.name = iohelp.ReadString(r)
+	}
+	{
+		bbp.price = iohelp.ReadUint32(r)
+	}
+	{
+		binary.Read(r, binary.LittleEndian, &bbp.family)
+	}
 	return r.Err
 }
 
@@ -88,17 +94,17 @@ func (bbp RequestResponse) EncodeBebop(iow io.Writer) (err error) {
 
 func (bbp *RequestResponse) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
-	var ln uint32
 	r.Read(make([]byte, 4))
-	ln = uint32(0)
-	binary.Read(r, binary.LittleEndian, &ln)
-	for i := uint32(0); i < ln; i++ {
-		elem1 := new(Furniture)
-		err = (elem1).DecodeBebop(r)
-		if err != nil {
-			return err
+	{
+		ln2 := iohelp.ReadUint32(r)
+		for i := uint32(0); i < ln2; i++ {
+			elem2 := new(Furniture)
+			err = (elem2).DecodeBebop(r)
+			if err != nil {
+				return err
+			}
+			bbp.availableFurniture = append(bbp.availableFurniture, *elem2)
 		}
-		bbp.availableFurniture = append(bbp.availableFurniture, *elem1)
 	}
 	return r.Err
 }
@@ -143,16 +149,15 @@ func (bbp RequestCatalog) EncodeBebop(iow io.Writer) (err error) {
 }
 
 func (bbp *RequestCatalog) DecodeBebop(ior io.Reader) (err error) {
-	var bodyLen uint32
-	var fieldNum byte
 	er := iohelp.NewErrorReader(ior)
-	binary.Read(er, binary.LittleEndian, &bodyLen)
+	bodyLen := iohelp.ReadUint32(er)
 	body := make([]byte, bodyLen)
 	er.Read(body)
-	r := bytes.NewReader(body)
-	for r.Len() > 1 {
-		fieldNum, _ = r.ReadByte()
-		switch fieldNum {
+	r := iohelp.NewErrorReader(bytes.NewReader(body))
+	for {
+		switch iohelp.ReadByte(r) {
+		case 0:
+			return er.Err
 		case 1:
 			bbp.Family = new(FurnitureFamily)
 			binary.Read(r, binary.LittleEndian, bbp.Family)

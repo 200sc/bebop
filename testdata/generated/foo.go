@@ -28,9 +28,11 @@ func (bbp Foo) EncodeBebop(iow io.Writer) (err error) {
 
 func (bbp *Foo) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
-	err = (&bbp.Bar).DecodeBebop(r)
-	if err != nil {
-		return err
+	{
+		err = (&bbp.Bar).DecodeBebop(r)
+		if err != nil {
+			return err
+		}
 	}
 	return r.Err
 }
@@ -69,25 +71,24 @@ func (bbp Bar) EncodeBebop(iow io.Writer) (err error) {
 }
 
 func (bbp *Bar) DecodeBebop(ior io.Reader) (err error) {
-	var bodyLen uint32
-	var fieldNum byte
 	er := iohelp.NewErrorReader(ior)
-	binary.Read(er, binary.LittleEndian, &bodyLen)
+	bodyLen := iohelp.ReadUint32(er)
 	body := make([]byte, bodyLen)
 	er.Read(body)
-	r := bytes.NewReader(body)
-	for r.Len() > 1 {
-		fieldNum, _ = r.ReadByte()
-		switch fieldNum {
+	r := iohelp.NewErrorReader(bytes.NewReader(body))
+	for {
+		switch iohelp.ReadByte(r) {
+		case 0:
+			return er.Err
 		case 1:
 			bbp.X = new(float64)
-			binary.Read(r, binary.LittleEndian, bbp.X)
+			*bbp.X = iohelp.ReadFloat64(r)
 		case 2:
 			bbp.Y = new(float64)
-			binary.Read(r, binary.LittleEndian, bbp.Y)
+			*bbp.Y = iohelp.ReadFloat64(r)
 		case 3:
 			bbp.Z = new(float64)
-			binary.Read(r, binary.LittleEndian, bbp.Z)
+			*bbp.Z = iohelp.ReadFloat64(r)
 		default:
 			return er.Err
 		}

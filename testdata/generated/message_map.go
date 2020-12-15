@@ -34,27 +34,25 @@ func (bbp ReadOnlyMap) EncodeBebop(iow io.Writer) (err error) {
 }
 
 func (bbp *ReadOnlyMap) DecodeBebop(ior io.Reader) (err error) {
-	var ln uint32
-	var bodyLen uint32
-	var fieldNum byte
 	er := iohelp.NewErrorReader(ior)
-	binary.Read(er, binary.LittleEndian, &bodyLen)
+	bodyLen := iohelp.ReadUint32(er)
 	body := make([]byte, bodyLen)
 	er.Read(body)
-	r := bytes.NewReader(body)
-	for r.Len() > 1 {
-		fieldNum, _ = r.ReadByte()
-		switch fieldNum {
+	r := iohelp.NewErrorReader(bytes.NewReader(body))
+	for {
+		switch iohelp.ReadByte(r) {
+		case 0:
+			return er.Err
 		case 1:
 			bbp.vals = new(map[string]uint8)
-			ln = uint32(0)
-			binary.Read(r, binary.LittleEndian, &ln)
+			ln3 := uint32(0)
+			binary.Read(r, binary.LittleEndian, &ln3)
 			*bbp.vals = make(map[string]uint8)
-			for i := uint32(0); i < ln; i++ {
+			for i := uint32(0); i < ln3; i++ {
 				k := new(string)
 				*k = iohelp.ReadString(r)
 				elem3 := new(uint8)
-				binary.Read(r, binary.LittleEndian, elem3)
+				*elem3 = iohelp.ReadUint8(r)
 				(*bbp.vals)[*k] = *elem3
 			}
 		default:
