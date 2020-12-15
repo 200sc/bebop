@@ -28,53 +28,53 @@ type BasicArrays struct {
 }
 
 func (bbp BasicArrays) EncodeBebop(iow io.Writer) (err error) {
-	w := iohelp.ErrorWriter{Writer: iow}
-	binary.Write(w, binary.LittleEndian, uint32(len(bbp.A_bool)))
+	w := iohelp.NewErrorWriter(iow)
+	iohelp.WriteUint32(w, uint32(len(bbp.A_bool)))
 	for _, elem := range bbp.A_bool {
-		binary.Write(w, binary.LittleEndian, elem)
+		iohelp.WriteBool(w, elem)
 	}
-	binary.Write(w, binary.LittleEndian, uint32(len(bbp.A_byte)))
+	iohelp.WriteUint32(w, uint32(len(bbp.A_byte)))
 	for _, elem := range bbp.A_byte {
-		binary.Write(w, binary.LittleEndian, elem)
+		iohelp.WriteByte(w, elem)
 	}
-	binary.Write(w, binary.LittleEndian, uint32(len(bbp.A_int16)))
+	iohelp.WriteUint32(w, uint32(len(bbp.A_int16)))
 	for _, elem := range bbp.A_int16 {
-		binary.Write(w, binary.LittleEndian, elem)
+		iohelp.WriteInt16(w, elem)
 	}
-	binary.Write(w, binary.LittleEndian, uint32(len(bbp.A_uint16)))
+	iohelp.WriteUint32(w, uint32(len(bbp.A_uint16)))
 	for _, elem := range bbp.A_uint16 {
-		binary.Write(w, binary.LittleEndian, elem)
+		iohelp.WriteUint16(w, elem)
 	}
-	binary.Write(w, binary.LittleEndian, uint32(len(bbp.A_int32)))
+	iohelp.WriteUint32(w, uint32(len(bbp.A_int32)))
 	for _, elem := range bbp.A_int32 {
-		binary.Write(w, binary.LittleEndian, elem)
+		iohelp.WriteInt32(w, elem)
 	}
-	binary.Write(w, binary.LittleEndian, uint32(len(bbp.A_uint32)))
+	iohelp.WriteUint32(w, uint32(len(bbp.A_uint32)))
 	for _, elem := range bbp.A_uint32 {
-		binary.Write(w, binary.LittleEndian, elem)
+		iohelp.WriteUint32(w, elem)
 	}
-	binary.Write(w, binary.LittleEndian, uint32(len(bbp.A_int64)))
+	iohelp.WriteUint32(w, uint32(len(bbp.A_int64)))
 	for _, elem := range bbp.A_int64 {
-		binary.Write(w, binary.LittleEndian, elem)
+		iohelp.WriteInt64(w, elem)
 	}
-	binary.Write(w, binary.LittleEndian, uint32(len(bbp.A_uint64)))
+	iohelp.WriteUint32(w, uint32(len(bbp.A_uint64)))
 	for _, elem := range bbp.A_uint64 {
-		binary.Write(w, binary.LittleEndian, elem)
+		iohelp.WriteUint64(w, elem)
 	}
-	binary.Write(w, binary.LittleEndian, uint32(len(bbp.A_float32)))
+	iohelp.WriteUint32(w, uint32(len(bbp.A_float32)))
 	for _, elem := range bbp.A_float32 {
-		binary.Write(w, binary.LittleEndian, elem)
+		iohelp.WriteFloat32(w, elem)
 	}
-	binary.Write(w, binary.LittleEndian, uint32(len(bbp.A_float64)))
+	iohelp.WriteUint32(w, uint32(len(bbp.A_float64)))
 	for _, elem := range bbp.A_float64 {
-		binary.Write(w, binary.LittleEndian, elem)
+		iohelp.WriteFloat64(w, elem)
 	}
-	binary.Write(w, binary.LittleEndian, uint32(len(bbp.A_string)))
+	iohelp.WriteUint32(w, uint32(len(bbp.A_string)))
 	for _, elem := range bbp.A_string {
-		binary.Write(w, binary.LittleEndian, uint32(len(elem)))
+		iohelp.WriteUint32(w, uint32(len(elem)))
 		w.Write([]byte(elem))
 	}
-	binary.Write(w, binary.LittleEndian, uint32(len(bbp.A_guid)))
+	iohelp.WriteUint32(w, uint32(len(bbp.A_guid)))
 	for _, elem := range bbp.A_guid {
 		iohelp.WriteGUID(w, elem)
 	}
@@ -82,7 +82,7 @@ func (bbp BasicArrays) EncodeBebop(iow io.Writer) (err error) {
 }
 
 func (bbp *BasicArrays) DecodeBebop(ior io.Reader) (err error) {
-	r := iohelp.ErrorReader{Reader: ior}
+	r := iohelp.NewErrorReader(ior)
 	var ln uint32
 	ln = uint32(0)
 	binary.Read(r, binary.LittleEndian, &ln)
@@ -232,16 +232,16 @@ type TestInt32Array struct {
 }
 
 func (bbp TestInt32Array) EncodeBebop(iow io.Writer) (err error) {
-	w := iohelp.ErrorWriter{Writer: iow}
-	binary.Write(w, binary.LittleEndian, uint32(len(bbp.A)))
+	w := iohelp.NewErrorWriter(iow)
+	iohelp.WriteUint32(w, uint32(len(bbp.A)))
 	for _, elem := range bbp.A {
-		binary.Write(w, binary.LittleEndian, elem)
+		iohelp.WriteInt32(w, elem)
 	}
 	return w.Err
 }
 
 func (bbp *TestInt32Array) DecodeBebop(ior io.Reader) (err error) {
-	r := iohelp.ErrorReader{Reader: ior}
+	r := iohelp.NewErrorReader(ior)
 	var ln uint32
 	ln = uint32(0)
 	binary.Read(r, binary.LittleEndian, &ln)

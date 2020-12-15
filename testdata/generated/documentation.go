@@ -40,13 +40,13 @@ type DocS struct {
 }
 
 func (bbp DocS) EncodeBebop(iow io.Writer) (err error) {
-	w := iohelp.ErrorWriter{Writer: iow}
-	binary.Write(w, binary.LittleEndian, bbp.X)
+	w := iohelp.NewErrorWriter(iow)
+	iohelp.WriteInt32(w, bbp.X)
 	return w.Err
 }
 
 func (bbp *DocS) DecodeBebop(ior io.Reader) (err error) {
-	r := iohelp.ErrorReader{Reader: ior}
+	r := iohelp.NewErrorReader(ior)
 	binary.Read(r, binary.LittleEndian, &bbp.X)
 	return r.Err
 }
@@ -65,11 +65,11 @@ type DepM struct {
 }
 
 func (bbp DepM) EncodeBebop(iow io.Writer) (err error) {
-	w := iohelp.ErrorWriter{Writer: iow}
+	w := iohelp.NewErrorWriter(iow)
 	binary.Write(w, binary.LittleEndian, bbp.bodyLen())
 	if bbp.X != nil {
 		w.Write([]byte{1})
-		binary.Write(w, binary.LittleEndian, *bbp.X)
+		iohelp.WriteInt32(w, *bbp.X)
 	}
 	w.Write([]byte{0})
 	return w.Err
@@ -78,7 +78,7 @@ func (bbp DepM) EncodeBebop(iow io.Writer) (err error) {
 func (bbp *DepM) DecodeBebop(ior io.Reader) (err error) {
 	var bodyLen uint32
 	var fieldNum byte
-	er := iohelp.ErrorReader{Reader: ior}
+	er := iohelp.NewErrorReader(ior)
 	binary.Read(er, binary.LittleEndian, &bodyLen)
 	body := make([]byte, bodyLen)
 	er.Read(body)
@@ -119,19 +119,19 @@ type DocM struct {
 }
 
 func (bbp DocM) EncodeBebop(iow io.Writer) (err error) {
-	w := iohelp.ErrorWriter{Writer: iow}
+	w := iohelp.NewErrorWriter(iow)
 	binary.Write(w, binary.LittleEndian, bbp.bodyLen())
 	if bbp.X != nil {
 		w.Write([]byte{1})
-		binary.Write(w, binary.LittleEndian, *bbp.X)
+		iohelp.WriteInt32(w, *bbp.X)
 	}
 	if bbp.Y != nil {
 		w.Write([]byte{2})
-		binary.Write(w, binary.LittleEndian, *bbp.Y)
+		iohelp.WriteInt32(w, *bbp.Y)
 	}
 	if bbp.Z != nil {
 		w.Write([]byte{3})
-		binary.Write(w, binary.LittleEndian, *bbp.Z)
+		iohelp.WriteInt32(w, *bbp.Z)
 	}
 	w.Write([]byte{0})
 	return w.Err
@@ -140,7 +140,7 @@ func (bbp DocM) EncodeBebop(iow io.Writer) (err error) {
 func (bbp *DocM) DecodeBebop(ior io.Reader) (err error) {
 	var bodyLen uint32
 	var fieldNum byte
-	er := iohelp.ErrorReader{Reader: ior}
+	er := iohelp.NewErrorReader(ior)
 	binary.Read(er, binary.LittleEndian, &bodyLen)
 	body := make([]byte, bodyLen)
 	er.Read(body)

@@ -268,7 +268,7 @@ func (st Struct) Generate(w io.Writer, settings GenerateSettings) {
 	writeLine(w, "}")
 	writeLine(w, "")
 	writeLine(w, "func (bbp %s) EncodeBebop(iow io.Writer) (err error) {", exposedName)
-	writeLine(w, "\tw := iohelp.ErrorWriter{Writer: iow}")
+	writeLine(w, "\tw := iohelp.NewErrorWriter(iow)")
 	if st.OpCode != 0 {
 		writeLine(w, "\tbinary.Write(w, binary.LittleEndian, uint32(%sOpCode))", exposedName)
 	}
@@ -283,7 +283,7 @@ func (st Struct) Generate(w io.Writer, settings GenerateSettings) {
 	writeLine(w, "}")
 	writeLine(w, "")
 	writeLine(w, "func (bbp *%s) DecodeBebop(ior io.Reader) (err error) {", exposedName)
-	writeLine(w, "\tr := iohelp.ErrorReader{Reader: ior}")
+	writeLine(w, "\tr := iohelp.NewErrorReader(ior)")
 	if st.hasLengthedType() {
 		writeLine(w, "\tvar ln uint32")
 	}
@@ -357,7 +357,7 @@ func (msg Message) Generate(w io.Writer, settings GenerateSettings) {
 	writeLine(w, "}")
 	writeLine(w, "")
 	writeLine(w, "func (bbp %s) EncodeBebop(iow io.Writer) (err error) {", exposedName)
-	writeLine(w, "\tw := iohelp.ErrorWriter{Writer: iow}")
+	writeLine(w, "\tw := iohelp.NewErrorWriter(iow)")
 	writeLine(w, "\tbinary.Write(w, binary.LittleEndian, bbp.bodyLen())")
 	for _, fd := range fields {
 		name := exposeName(fd.Name)
@@ -381,7 +381,7 @@ func (msg Message) Generate(w io.Writer, settings GenerateSettings) {
 	}
 	writeLine(w, "\tvar bodyLen uint32")
 	writeLine(w, "\tvar fieldNum byte")
-	writeLine(w, "\ter := iohelp.ErrorReader{Reader: ior}")
+	writeLine(w, "\ter := iohelp.NewErrorReader(ior)")
 	writeLine(w, "\tbinary.Read(er, binary.LittleEndian, &bodyLen)")
 	writeLine(w, "\tbody := make([]byte, bodyLen)")
 	writeLine(w, "\ter.Read(body)")
@@ -454,12 +454,12 @@ func writeFieldDefinition(fd Field, w io.Writer, readOnly bool, message bool) {
 
 func writeStructFieldMarshaller(name string, typ FieldType, w io.Writer, settings GenerateSettings, depth int) {
 	if typ.Array != nil {
-		writeLineWithTabs(w, "binary.Write(w, binary.LittleEndian, uint32(len(%[2]s)))", depth, name)
+		writeLineWithTabs(w, "iohelp.WriteUint32(w, uint32(len(%[2]s)))", depth, name)
 		writeLineWithTabs(w, "for _, elem := range %[2]s {", depth, name)
 		writeStructFieldMarshaller("elem", *typ.Array, w, settings, depth+1)
 		writeLineWithTabs(w, "}", depth)
 	} else if typ.Map != nil {
-		writeLineWithTabs(w, "binary.Write(w, binary.LittleEndian, uint32(len(%[2]s)))", depth, name)
+		writeLineWithTabs(w, "iohelp.WriteUint32(w, uint32(len(%[2]s)))", depth, name)
 		writeLineWithTabs(w, "for k, v := range %[2]s {", depth, name)
 		writeLineWithTabs(w, settings.typeMarshallers[typ.Map.Key], depth+1, "k")
 		writeStructFieldMarshaller("v", typ.Map.Value, w, settings, depth+1)
@@ -635,18 +635,18 @@ func (f File) typeUnmarshallers() map[string]string {
 func (f File) typeMarshallers() map[string]string {
 	out := make(map[string]string)
 	for _, typ := range fixedSizeTypes {
-		out[typ] = "binary.Write(w, binary.LittleEndian, %[2]s)"
+		out[typ] = "iohelp.Write" + strings.Title(typ) + "(w, %[2]s)"
 	}
-	out["string"] = "binary.Write(w, binary.LittleEndian, uint32(len(%[2]s)))\n" +
+	out["string"] = "iohelp.WriteUint32(w, uint32(len(%[2]s)))\n" +
 		"w.Write([]byte(%[2]s))"
 	out["guid"] = "iohelp.WriteGUID(w, %[2]s)"
 	out["date"] = "if %[2]s != (time.Time{}) {\n" +
-		"\tbinary.Write(w, binary.LittleEndian, (%[2]s.UnixNano()/100))\n" +
+		"\tiohelp.WriteInt64(w, (%[2]s.UnixNano()/100))\n" +
 		"} else {\n" +
-		"\tbinary.Write(w, binary.LittleEndian, int64(0))\n" +
+		"\tiohelp.WriteInt64(w, 0)\n" +
 		"}"
 	for _, en := range f.Enums {
-		out[en.Name] = "binary.Write(w, binary.LittleEndian, uint32(%[2]s))"
+		out[en.Name] = "iohelp.WriteUint32(w, uint32(%[2]s))"
 	}
 	for _, st := range f.Structs {
 		format := "err = (%[2]s).EncodeBebop(w)\n" +

@@ -17,17 +17,17 @@ type ArrayOfStrings struct {
 }
 
 func (bbp ArrayOfStrings) EncodeBebop(iow io.Writer) (err error) {
-	w := iohelp.ErrorWriter{Writer: iow}
-	binary.Write(w, binary.LittleEndian, uint32(len(bbp.Strings)))
+	w := iohelp.NewErrorWriter(iow)
+	iohelp.WriteUint32(w, uint32(len(bbp.Strings)))
 	for _, elem := range bbp.Strings {
-		binary.Write(w, binary.LittleEndian, uint32(len(elem)))
+		iohelp.WriteUint32(w, uint32(len(elem)))
 		w.Write([]byte(elem))
 	}
 	return w.Err
 }
 
 func (bbp *ArrayOfStrings) DecodeBebop(ior io.Reader) (err error) {
-	r := iohelp.ErrorReader{Reader: ior}
+	r := iohelp.NewErrorReader(ior)
 	var ln uint32
 	ln = uint32(0)
 	binary.Read(r, binary.LittleEndian, &ln)

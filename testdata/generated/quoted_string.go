@@ -22,15 +22,15 @@ type QuotedString struct {
 }
 
 func (bbp QuotedString) EncodeBebop(iow io.Writer) (err error) {
-	w := iohelp.ErrorWriter{Writer: iow}
-	binary.Write(w, binary.LittleEndian, bbp.X)
-	binary.Write(w, binary.LittleEndian, bbp.Y)
-	binary.Write(w, binary.LittleEndian, bbp.Z)
+	w := iohelp.NewErrorWriter(iow)
+	iohelp.WriteInt32(w, bbp.X)
+	iohelp.WriteInt32(w, bbp.Y)
+	iohelp.WriteInt32(w, bbp.Z)
 	return w.Err
 }
 
 func (bbp *QuotedString) DecodeBebop(ior io.Reader) (err error) {
-	r := iohelp.ErrorReader{Reader: ior}
+	r := iohelp.NewErrorReader(ior)
 	binary.Read(r, binary.LittleEndian, &bbp.X)
 	binary.Read(r, binary.LittleEndian, &bbp.Y)
 	binary.Read(r, binary.LittleEndian, &bbp.Z)

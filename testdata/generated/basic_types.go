@@ -30,30 +30,30 @@ type BasicTypes struct {
 }
 
 func (bbp BasicTypes) EncodeBebop(iow io.Writer) (err error) {
-	w := iohelp.ErrorWriter{Writer: iow}
-	binary.Write(w, binary.LittleEndian, bbp.A_bool)
-	binary.Write(w, binary.LittleEndian, bbp.A_byte)
-	binary.Write(w, binary.LittleEndian, bbp.A_int16)
-	binary.Write(w, binary.LittleEndian, bbp.A_uint16)
-	binary.Write(w, binary.LittleEndian, bbp.A_int32)
-	binary.Write(w, binary.LittleEndian, bbp.A_uint32)
-	binary.Write(w, binary.LittleEndian, bbp.A_int64)
-	binary.Write(w, binary.LittleEndian, bbp.A_uint64)
-	binary.Write(w, binary.LittleEndian, bbp.A_float32)
-	binary.Write(w, binary.LittleEndian, bbp.A_float64)
-	binary.Write(w, binary.LittleEndian, uint32(len(bbp.A_string)))
+	w := iohelp.NewErrorWriter(iow)
+	iohelp.WriteBool(w, bbp.A_bool)
+	iohelp.WriteByte(w, bbp.A_byte)
+	iohelp.WriteInt16(w, bbp.A_int16)
+	iohelp.WriteUint16(w, bbp.A_uint16)
+	iohelp.WriteInt32(w, bbp.A_int32)
+	iohelp.WriteUint32(w, bbp.A_uint32)
+	iohelp.WriteInt64(w, bbp.A_int64)
+	iohelp.WriteUint64(w, bbp.A_uint64)
+	iohelp.WriteFloat32(w, bbp.A_float32)
+	iohelp.WriteFloat64(w, bbp.A_float64)
+	iohelp.WriteUint32(w, uint32(len(bbp.A_string)))
 	w.Write([]byte(bbp.A_string))
 	iohelp.WriteGUID(w, bbp.A_guid)
 	if bbp.A_date != (time.Time{}) {
-		binary.Write(w, binary.LittleEndian, (bbp.A_date.UnixNano()/100))
+		iohelp.WriteInt64(w, (bbp.A_date.UnixNano()/100))
 	} else {
-		binary.Write(w, binary.LittleEndian, int64(0))
+		iohelp.WriteInt64(w, 0)
 	}
 	return w.Err
 }
 
 func (bbp *BasicTypes) DecodeBebop(ior io.Reader) (err error) {
-	r := iohelp.ErrorReader{Reader: ior}
+	r := iohelp.NewErrorReader(ior)
 	binary.Read(r, binary.LittleEndian, &bbp.A_bool)
 	binary.Read(r, binary.LittleEndian, &bbp.A_byte)
 	binary.Read(r, binary.LittleEndian, &bbp.A_int16)

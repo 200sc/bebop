@@ -40,48 +40,48 @@ type MsgpackComparison struct {
 }
 
 func (bbp MsgpackComparison) EncodeBebop(iow io.Writer) (err error) {
-	w := iohelp.ErrorWriter{Writer: iow}
-	binary.Write(w, binary.LittleEndian, bbp.INT0)
-	binary.Write(w, binary.LittleEndian, bbp.INT1)
-	binary.Write(w, binary.LittleEndian, bbp.INT1_)
-	binary.Write(w, binary.LittleEndian, bbp.INT8)
-	binary.Write(w, binary.LittleEndian, bbp.INT8_)
-	binary.Write(w, binary.LittleEndian, bbp.INT16)
-	binary.Write(w, binary.LittleEndian, bbp.INT16_)
-	binary.Write(w, binary.LittleEndian, bbp.INT32)
-	binary.Write(w, binary.LittleEndian, bbp.INT32_)
-	binary.Write(w, binary.LittleEndian, bbp.TRUE)
-	binary.Write(w, binary.LittleEndian, bbp.FALSE)
-	binary.Write(w, binary.LittleEndian, bbp.FLOAT)
-	binary.Write(w, binary.LittleEndian, bbp.FLOAT_)
-	binary.Write(w, binary.LittleEndian, uint32(len(bbp.STRING0)))
+	w := iohelp.NewErrorWriter(iow)
+	iohelp.WriteUint8(w, bbp.INT0)
+	iohelp.WriteUint8(w, bbp.INT1)
+	iohelp.WriteInt16(w, bbp.INT1_)
+	iohelp.WriteUint8(w, bbp.INT8)
+	iohelp.WriteInt16(w, bbp.INT8_)
+	iohelp.WriteInt16(w, bbp.INT16)
+	iohelp.WriteInt16(w, bbp.INT16_)
+	iohelp.WriteInt32(w, bbp.INT32)
+	iohelp.WriteInt32(w, bbp.INT32_)
+	iohelp.WriteBool(w, bbp.TRUE)
+	iohelp.WriteBool(w, bbp.FALSE)
+	iohelp.WriteFloat64(w, bbp.FLOAT)
+	iohelp.WriteFloat64(w, bbp.FLOAT_)
+	iohelp.WriteUint32(w, uint32(len(bbp.STRING0)))
 	w.Write([]byte(bbp.STRING0))
-	binary.Write(w, binary.LittleEndian, uint32(len(bbp.STRING1)))
+	iohelp.WriteUint32(w, uint32(len(bbp.STRING1)))
 	w.Write([]byte(bbp.STRING1))
-	binary.Write(w, binary.LittleEndian, uint32(len(bbp.STRING4)))
+	iohelp.WriteUint32(w, uint32(len(bbp.STRING4)))
 	w.Write([]byte(bbp.STRING4))
-	binary.Write(w, binary.LittleEndian, uint32(len(bbp.STRING8)))
+	iohelp.WriteUint32(w, uint32(len(bbp.STRING8)))
 	w.Write([]byte(bbp.STRING8))
-	binary.Write(w, binary.LittleEndian, uint32(len(bbp.STRING16)))
+	iohelp.WriteUint32(w, uint32(len(bbp.STRING16)))
 	w.Write([]byte(bbp.STRING16))
-	binary.Write(w, binary.LittleEndian, uint32(len(bbp.ARRAY0)))
+	iohelp.WriteUint32(w, uint32(len(bbp.ARRAY0)))
 	for _, elem := range bbp.ARRAY0 {
-		binary.Write(w, binary.LittleEndian, elem)
+		iohelp.WriteInt32(w, elem)
 	}
-	binary.Write(w, binary.LittleEndian, uint32(len(bbp.ARRAY1)))
+	iohelp.WriteUint32(w, uint32(len(bbp.ARRAY1)))
 	for _, elem := range bbp.ARRAY1 {
-		binary.Write(w, binary.LittleEndian, uint32(len(elem)))
+		iohelp.WriteUint32(w, uint32(len(elem)))
 		w.Write([]byte(elem))
 	}
-	binary.Write(w, binary.LittleEndian, uint32(len(bbp.ARRAY8)))
+	iohelp.WriteUint32(w, uint32(len(bbp.ARRAY8)))
 	for _, elem := range bbp.ARRAY8 {
-		binary.Write(w, binary.LittleEndian, elem)
+		iohelp.WriteInt32(w, elem)
 	}
 	return w.Err
 }
 
 func (bbp *MsgpackComparison) DecodeBebop(ior io.Reader) (err error) {
-	r := iohelp.ErrorReader{Reader: ior}
+	r := iohelp.NewErrorReader(ior)
 	var ln uint32
 	binary.Read(r, binary.LittleEndian, &bbp.INT0)
 	binary.Read(r, binary.LittleEndian, &bbp.INT1)

@@ -18,7 +18,7 @@ type Foo struct {
 }
 
 func (bbp Foo) EncodeBebop(iow io.Writer) (err error) {
-	w := iohelp.ErrorWriter{Writer: iow}
+	w := iohelp.NewErrorWriter(iow)
 	err = (bbp.Bar).EncodeBebop(w)
 	if err != nil {
 		return err
@@ -27,7 +27,7 @@ func (bbp Foo) EncodeBebop(iow io.Writer) (err error) {
 }
 
 func (bbp *Foo) DecodeBebop(ior io.Reader) (err error) {
-	r := iohelp.ErrorReader{Reader: ior}
+	r := iohelp.NewErrorReader(ior)
 	err = (&bbp.Bar).DecodeBebop(r)
 	if err != nil {
 		return err
@@ -50,19 +50,19 @@ type Bar struct {
 }
 
 func (bbp Bar) EncodeBebop(iow io.Writer) (err error) {
-	w := iohelp.ErrorWriter{Writer: iow}
+	w := iohelp.NewErrorWriter(iow)
 	binary.Write(w, binary.LittleEndian, bbp.bodyLen())
 	if bbp.X != nil {
 		w.Write([]byte{1})
-		binary.Write(w, binary.LittleEndian, *bbp.X)
+		iohelp.WriteFloat64(w, *bbp.X)
 	}
 	if bbp.Y != nil {
 		w.Write([]byte{2})
-		binary.Write(w, binary.LittleEndian, *bbp.Y)
+		iohelp.WriteFloat64(w, *bbp.Y)
 	}
 	if bbp.Z != nil {
 		w.Write([]byte{3})
-		binary.Write(w, binary.LittleEndian, *bbp.Z)
+		iohelp.WriteFloat64(w, *bbp.Z)
 	}
 	w.Write([]byte{0})
 	return w.Err
@@ -71,7 +71,7 @@ func (bbp Bar) EncodeBebop(iow io.Writer) (err error) {
 func (bbp *Bar) DecodeBebop(ior io.Reader) (err error) {
 	var bodyLen uint32
 	var fieldNum byte
-	er := iohelp.ErrorReader{Reader: ior}
+	er := iohelp.NewErrorReader(ior)
 	binary.Read(er, binary.LittleEndian, &bodyLen)
 	body := make([]byte, bodyLen)
 	er.Read(body)

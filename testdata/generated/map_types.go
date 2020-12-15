@@ -19,14 +19,14 @@ type S struct {
 }
 
 func (bbp S) EncodeBebop(iow io.Writer) (err error) {
-	w := iohelp.ErrorWriter{Writer: iow}
-	binary.Write(w, binary.LittleEndian, bbp.x)
-	binary.Write(w, binary.LittleEndian, bbp.y)
+	w := iohelp.NewErrorWriter(iow)
+	iohelp.WriteInt32(w, bbp.x)
+	iohelp.WriteInt32(w, bbp.y)
 	return w.Err
 }
 
 func (bbp *S) DecodeBebop(ior io.Reader) (err error) {
-	r := iohelp.ErrorReader{Reader: ior}
+	r := iohelp.NewErrorReader(ior)
 	binary.Read(r, binary.LittleEndian, &bbp.x)
 	binary.Read(r, binary.LittleEndian, &bbp.y)
 	return r.Err
@@ -58,34 +58,34 @@ type SomeMaps struct {
 }
 
 func (bbp SomeMaps) EncodeBebop(iow io.Writer) (err error) {
-	w := iohelp.ErrorWriter{Writer: iow}
-	binary.Write(w, binary.LittleEndian, uint32(len(bbp.M1)))
+	w := iohelp.NewErrorWriter(iow)
+	iohelp.WriteUint32(w, uint32(len(bbp.M1)))
 	for k, v := range bbp.M1 {
-		binary.Write(w, binary.LittleEndian, k)
-		binary.Write(w, binary.LittleEndian, v)
+		iohelp.WriteBool(w, k)
+		iohelp.WriteBool(w, v)
 	}
-	binary.Write(w, binary.LittleEndian, uint32(len(bbp.M2)))
+	iohelp.WriteUint32(w, uint32(len(bbp.M2)))
 	for k, v := range bbp.M2 {
-		binary.Write(w, binary.LittleEndian, uint32(len(k)))
+		iohelp.WriteUint32(w, uint32(len(k)))
 		w.Write([]byte(k))
-		binary.Write(w, binary.LittleEndian, uint32(len(v)))
+		iohelp.WriteUint32(w, uint32(len(v)))
 		for k, v := range v {
-			binary.Write(w, binary.LittleEndian, uint32(len(k)))
+			iohelp.WriteUint32(w, uint32(len(k)))
 			w.Write([]byte(k))
-			binary.Write(w, binary.LittleEndian, uint32(len(v)))
+			iohelp.WriteUint32(w, uint32(len(v)))
 			w.Write([]byte(v))
 		}
 	}
-	binary.Write(w, binary.LittleEndian, uint32(len(bbp.M3)))
+	iohelp.WriteUint32(w, uint32(len(bbp.M3)))
 	for _, elem := range bbp.M3 {
-		binary.Write(w, binary.LittleEndian, uint32(len(elem)))
+		iohelp.WriteUint32(w, uint32(len(elem)))
 		for k, v := range elem {
-			binary.Write(w, binary.LittleEndian, k)
-			binary.Write(w, binary.LittleEndian, uint32(len(v)))
+			iohelp.WriteInt32(w, k)
+			iohelp.WriteUint32(w, uint32(len(v)))
 			for _, elem := range v {
-				binary.Write(w, binary.LittleEndian, uint32(len(elem)))
+				iohelp.WriteUint32(w, uint32(len(elem)))
 				for k, v := range elem {
-					binary.Write(w, binary.LittleEndian, k)
+					iohelp.WriteBool(w, k)
 					err = (v).EncodeBebop(w)
 					if err != nil {
 						return err
@@ -94,19 +94,19 @@ func (bbp SomeMaps) EncodeBebop(iow io.Writer) (err error) {
 			}
 		}
 	}
-	binary.Write(w, binary.LittleEndian, uint32(len(bbp.M4)))
+	iohelp.WriteUint32(w, uint32(len(bbp.M4)))
 	for _, elem := range bbp.M4 {
-		binary.Write(w, binary.LittleEndian, uint32(len(elem)))
+		iohelp.WriteUint32(w, uint32(len(elem)))
 		for k, v := range elem {
-			binary.Write(w, binary.LittleEndian, uint32(len(k)))
+			iohelp.WriteUint32(w, uint32(len(k)))
 			w.Write([]byte(k))
-			binary.Write(w, binary.LittleEndian, uint32(len(v)))
+			iohelp.WriteUint32(w, uint32(len(v)))
 			for _, elem := range v {
-				binary.Write(w, binary.LittleEndian, elem)
+				iohelp.WriteFloat32(w, elem)
 			}
 		}
 	}
-	binary.Write(w, binary.LittleEndian, uint32(len(bbp.M5)))
+	iohelp.WriteUint32(w, uint32(len(bbp.M5)))
 	for k, v := range bbp.M5 {
 		iohelp.WriteGUID(w, k)
 		err = (v).EncodeBebop(w)
@@ -118,7 +118,7 @@ func (bbp SomeMaps) EncodeBebop(iow io.Writer) (err error) {
 }
 
 func (bbp *SomeMaps) DecodeBebop(ior io.Reader) (err error) {
-	r := iohelp.ErrorReader{Reader: ior}
+	r := iohelp.NewErrorReader(ior)
 	var ln uint32
 	ln = uint32(0)
 	binary.Read(r, binary.LittleEndian, &ln)
@@ -283,15 +283,15 @@ type M struct {
 }
 
 func (bbp M) EncodeBebop(iow io.Writer) (err error) {
-	w := iohelp.ErrorWriter{Writer: iow}
+	w := iohelp.NewErrorWriter(iow)
 	binary.Write(w, binary.LittleEndian, bbp.bodyLen())
 	if bbp.A != nil {
 		w.Write([]byte{1})
-		binary.Write(w, binary.LittleEndian, *bbp.A)
+		iohelp.WriteFloat32(w, *bbp.A)
 	}
 	if bbp.B != nil {
 		w.Write([]byte{2})
-		binary.Write(w, binary.LittleEndian, *bbp.B)
+		iohelp.WriteFloat64(w, *bbp.B)
 	}
 	w.Write([]byte{0})
 	return w.Err
@@ -300,7 +300,7 @@ func (bbp M) EncodeBebop(iow io.Writer) (err error) {
 func (bbp *M) DecodeBebop(ior io.Reader) (err error) {
 	var bodyLen uint32
 	var fieldNum byte
-	er := iohelp.ErrorReader{Reader: ior}
+	er := iohelp.NewErrorReader(ior)
 	binary.Read(er, binary.LittleEndian, &bodyLen)
 	body := make([]byte, bodyLen)
 	er.Read(body)

@@ -18,15 +18,15 @@ type ReadOnlyMap struct {
 }
 
 func (bbp ReadOnlyMap) EncodeBebop(iow io.Writer) (err error) {
-	w := iohelp.ErrorWriter{Writer: iow}
+	w := iohelp.NewErrorWriter(iow)
 	binary.Write(w, binary.LittleEndian, bbp.bodyLen())
 	if bbp.vals != nil {
 		w.Write([]byte{1})
 		binary.Write(w, binary.LittleEndian, uint32(len(*bbp.vals)))
 		for k, v := range *bbp.vals {
-			binary.Write(w, binary.LittleEndian, uint32(len(k)))
+			iohelp.WriteUint32(w, uint32(len(k)))
 			w.Write([]byte(k))
-			binary.Write(w, binary.LittleEndian, v)
+			iohelp.WriteUint8(w, v)
 		}
 	}
 	w.Write([]byte{0})
@@ -37,7 +37,7 @@ func (bbp *ReadOnlyMap) DecodeBebop(ior io.Reader) (err error) {
 	var ln uint32
 	var bodyLen uint32
 	var fieldNum byte
-	er := iohelp.ErrorReader{Reader: ior}
+	er := iohelp.NewErrorReader(ior)
 	binary.Read(er, binary.LittleEndian, &bodyLen)
 	body := make([]byte, bodyLen)
 	er.Read(body)
