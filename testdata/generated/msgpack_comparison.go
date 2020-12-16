@@ -81,77 +81,35 @@ func (bbp MsgpackComparison) EncodeBebop(iow io.Writer) (err error) {
 
 func (bbp *MsgpackComparison) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
-	{
-		bbp.INT0 = iohelp.ReadUint8(r)
+	bbp.INT0 = iohelp.ReadUint8(r)
+	bbp.INT1 = iohelp.ReadUint8(r)
+	bbp.INT1_ = iohelp.ReadInt16(r)
+	bbp.INT8 = iohelp.ReadUint8(r)
+	bbp.INT8_ = iohelp.ReadInt16(r)
+	bbp.INT16 = iohelp.ReadInt16(r)
+	bbp.INT16_ = iohelp.ReadInt16(r)
+	bbp.INT32 = iohelp.ReadInt32(r)
+	bbp.INT32_ = iohelp.ReadInt32(r)
+	bbp.TRUE = iohelp.ReadBool(r)
+	bbp.FALSE = iohelp.ReadBool(r)
+	bbp.FLOAT = iohelp.ReadFloat64(r)
+	bbp.FLOAT_ = iohelp.ReadFloat64(r)
+	bbp.STRING0 = iohelp.ReadString(r)
+	bbp.STRING1 = iohelp.ReadString(r)
+	bbp.STRING4 = iohelp.ReadString(r)
+	bbp.STRING8 = iohelp.ReadString(r)
+	bbp.STRING16 = iohelp.ReadString(r)
+	bbp.ARRAY0 = make([]int32, iohelp.ReadUint32(r))
+	for i1 := range bbp.ARRAY0 {
+		(bbp.ARRAY0[i1]) = iohelp.ReadInt32(r)
 	}
-	{
-		bbp.INT1 = iohelp.ReadUint8(r)
+	bbp.ARRAY1 = make([]string, iohelp.ReadUint32(r))
+	for i1 := range bbp.ARRAY1 {
+		(bbp.ARRAY1[i1]) = iohelp.ReadString(r)
 	}
-	{
-		bbp.INT1_ = iohelp.ReadInt16(r)
-	}
-	{
-		bbp.INT8 = iohelp.ReadUint8(r)
-	}
-	{
-		bbp.INT8_ = iohelp.ReadInt16(r)
-	}
-	{
-		bbp.INT16 = iohelp.ReadInt16(r)
-	}
-	{
-		bbp.INT16_ = iohelp.ReadInt16(r)
-	}
-	{
-		bbp.INT32 = iohelp.ReadInt32(r)
-	}
-	{
-		bbp.INT32_ = iohelp.ReadInt32(r)
-	}
-	{
-		bbp.TRUE = iohelp.ReadBool(r)
-	}
-	{
-		bbp.FALSE = iohelp.ReadBool(r)
-	}
-	{
-		bbp.FLOAT = iohelp.ReadFloat64(r)
-	}
-	{
-		bbp.FLOAT_ = iohelp.ReadFloat64(r)
-	}
-	{
-		bbp.STRING0 = iohelp.ReadString(r)
-	}
-	{
-		bbp.STRING1 = iohelp.ReadString(r)
-	}
-	{
-		bbp.STRING4 = iohelp.ReadString(r)
-	}
-	{
-		bbp.STRING8 = iohelp.ReadString(r)
-	}
-	{
-		bbp.STRING16 = iohelp.ReadString(r)
-	}
-	{
-		bbp.ARRAY0 = make([]int32, iohelp.ReadUint32(r))
-		for i2 := range bbp.ARRAY0 {
-			(bbp.ARRAY0[i2]) = iohelp.ReadInt32(r)
-		}
-	}
-	{
-		bbp.ARRAY1 = make([]string, iohelp.ReadUint32(r))
-		for i2 := range bbp.ARRAY1 {
-			(bbp.ARRAY1[i2]) = iohelp.ReadString(r)
-		}
-	}
-	{
-		bbp.ARRAY8 = make([]int32, iohelp.ReadUint32(r))
-		for i2 := range bbp.ARRAY8 {
-			(bbp.ARRAY8[i2]) = iohelp.ReadInt32(r)
-		}
+	bbp.ARRAY8 = make([]int32, iohelp.ReadUint32(r))
+	for i1 := range bbp.ARRAY8 {
+		(bbp.ARRAY8[i1]) = iohelp.ReadInt32(r)
 	}
 	return r.Err
 }
@@ -195,5 +153,11 @@ func (bbp *MsgpackComparison) bodyLen() uint32 {
 		bodyLen += 4
 	}
 	return bodyLen
+}
+
+func makeMsgpackComparison(r iohelp.ErrorReader) (MsgpackComparison, error) {
+	v := MsgpackComparison{}
+	err := v.DecodeBebop(r)
+	return v, err
 }
 

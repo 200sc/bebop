@@ -23,10 +23,10 @@ func (bbp ReadOnlyMap) EncodeBebop(iow io.Writer) (err error) {
 	if bbp.vals != nil {
 		w.Write([]byte{1})
 		binary.Write(w, binary.LittleEndian, uint32(len(*bbp.vals)))
-		for k, v := range *bbp.vals {
-			iohelp.WriteUint32(w, uint32(len(k)))
-			w.Write([]byte(k))
-			iohelp.WriteUint8(w, v)
+		for k2, v2 := range *bbp.vals {
+			iohelp.WriteUint32(w, uint32(len(k2)))
+			w.Write([]byte(k2))
+			iohelp.WriteUint8(w, v2)
 		}
 	}
 	w.Write([]byte{0})
@@ -45,15 +45,11 @@ func (bbp *ReadOnlyMap) DecodeBebop(ior io.Reader) (err error) {
 			return er.Err
 		case 1:
 			bbp.vals = new(map[string]uint8)
-			ln3 := uint32(0)
-			binary.Read(r, binary.LittleEndian, &ln3)
+			ln3 := iohelp.ReadUint32(r)
 			*bbp.vals = make(map[string]uint8)
 			for i := uint32(0); i < ln3; i++ {
-				k := iohelp.ReadString(r)
-				k = iohelp.ReadString(r)
-				elem3 := new(uint8)
-				*elem3 = iohelp.ReadUint8(r)
-				(*bbp.vals)[k] = *elem3
+				k3 := iohelp.ReadString(r)
+				(*bbp.vals)[k3] = iohelp.ReadUint8(r)
 			}
 		default:
 			return er.Err
@@ -67,13 +63,19 @@ func (bbp *ReadOnlyMap) bodyLen() uint32 {
 	if bbp.vals != nil {
 		bodyLen += 1
 		bodyLen += 4
-		for k := range *bbp.vals {
+		for k2 := range *bbp.vals {
 			bodyLen += 4
-			bodyLen += uint32(len(k))
+			bodyLen += uint32(len(k2))
 			bodyLen += 1
 		}
 	}
 	return bodyLen
+}
+
+func makeReadOnlyMap(r iohelp.ErrorReader) (ReadOnlyMap, error) {
+	v := ReadOnlyMap{}
+	err := v.DecodeBebop(r)
+	return v, err
 }
 
 func (bbp ReadOnlyMap) GetVals() *map[string]uint8 {

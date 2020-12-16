@@ -36,12 +36,8 @@ func (bbp Musician) EncodeBebop(iow io.Writer) (err error) {
 
 func (bbp *Musician) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
-	{
-		bbp.name = iohelp.ReadString(r)
-	}
-	{
-		binary.Read(r, binary.LittleEndian, &bbp.plays)
-	}
+	bbp.name = iohelp.ReadString(r)
+	binary.Read(r, binary.LittleEndian, &bbp.plays)
 	return r.Err
 }
 
@@ -51,6 +47,12 @@ func (bbp *Musician) bodyLen() uint32 {
 	bodyLen += uint32(len(bbp.name))
 	bodyLen += 4
 	return bodyLen
+}
+
+func makeMusician(r iohelp.ErrorReader) (Musician, error) {
+	v := Musician{}
+	err := v.DecodeBebop(r)
+	return v, err
 }
 
 func (bbp Musician) GetName() string {
@@ -70,9 +72,9 @@ type Library struct {
 func (bbp Library) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
 	iohelp.WriteUint32(w, uint32(len(bbp.Songs)))
-	for k, v := range bbp.Songs {
-		iohelp.WriteGUID(w, k)
-		err = (v).EncodeBebop(w)
+	for k1, v1 := range bbp.Songs {
+		iohelp.WriteGUID(w, k1)
+		err = (v1).EncodeBebop(w)
 		if err != nil {
 			return err
 		}
@@ -82,17 +84,13 @@ func (bbp Library) EncodeBebop(iow io.Writer) (err error) {
 
 func (bbp *Library) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
-	{
-		ln2 := iohelp.ReadUint32(r)
-		bbp.Songs = make(map[[16]byte]Song, ln2)
-		for i2 := uint32(0); i2 < ln2; i2++ {
-			k := iohelp.ReadGUID(r)
-			elem2 := new(Song)
-			err = (elem2).DecodeBebop(r)
-			if err != nil {
-				return err
-			}
-			(bbp.Songs)[k] = *elem2
+	ln1 := iohelp.ReadUint32(r)
+	bbp.Songs = make(map[[16]byte]Song, ln1)
+	for i1 := uint32(0); i1 < ln1; i1++ {
+		k1 := iohelp.ReadGUID(r)
+		((bbp.Songs[k1])), err = makeSong(r)
+		if err != nil {
+			return err
 		}
 	}
 	return r.Err
@@ -101,11 +99,17 @@ func (bbp *Library) DecodeBebop(ior io.Reader) (err error) {
 func (bbp *Library) bodyLen() uint32 {
 	bodyLen := uint32(0)
 	bodyLen += 4
-	for _, v := range bbp.Songs {
+	for _, v1 := range bbp.Songs {
 		bodyLen += 16
-		bodyLen += (v).bodyLen()
+		bodyLen += (v1).bodyLen()
 	}
 	return bodyLen
+}
+
+func makeLibrary(r iohelp.ErrorReader) (Library, error) {
+	v := Library{}
+	err := v.DecodeBebop(r)
+	return v, err
 }
 
 var _ bebop.Record = &Song{}
@@ -160,11 +164,9 @@ func (bbp *Song) DecodeBebop(ior io.Reader) (err error) {
 			*bbp.Year = iohelp.ReadUint16(r)
 		case 3:
 			bbp.Performers = new([]Musician)
-			ln3 := uint32(0)
-			binary.Read(r, binary.LittleEndian, &ln3)
-			for i := uint32(0); i < ln3; i++ {
-				elem3 := new(Musician)
-				err = (elem3).DecodeBebop(r)
+			*bbp.Performers = make([]Musician, iohelp.ReadUint32(r))
+			for i := range *bbp.Performers {
+				((*bbp.Performers)[i]), err = makeMusician(r)
 				if err != nil {
 					return err
 				}
@@ -195,5 +197,11 @@ func (bbp *Song) bodyLen() uint32 {
 		}
 	}
 	return bodyLen
+}
+
+func makeSong(r iohelp.ErrorReader) (Song, error) {
+	v := Song{}
+	err := v.DecodeBebop(r)
+	return v, err
 }
 

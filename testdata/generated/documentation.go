@@ -47,9 +47,7 @@ func (bbp DocS) EncodeBebop(iow io.Writer) (err error) {
 
 func (bbp *DocS) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
-	{
-		bbp.X = iohelp.ReadInt32(r)
-	}
+	bbp.X = iohelp.ReadInt32(r)
 	return r.Err
 }
 
@@ -57,6 +55,12 @@ func (bbp *DocS) bodyLen() uint32 {
 	bodyLen := uint32(0)
 	bodyLen += 4
 	return bodyLen
+}
+
+func makeDocS(r iohelp.ErrorReader) (DocS, error) {
+	v := DocS{}
+	err := v.DecodeBebop(r)
+	return v, err
 }
 
 var _ bebop.Record = &DepM{}
@@ -104,6 +108,12 @@ func (bbp *DepM) bodyLen() uint32 {
 		bodyLen += 4
 	}
 	return bodyLen
+}
+
+func makeDepM(r iohelp.ErrorReader) (DepM, error) {
+	v := DepM{}
+	err := v.DecodeBebop(r)
+	return v, err
 }
 
 var _ bebop.Record = &DocM{}
@@ -179,5 +189,11 @@ func (bbp *DocM) bodyLen() uint32 {
 		bodyLen += 4
 	}
 	return bodyLen
+}
+
+func makeDocM(r iohelp.ErrorReader) (DocM, error) {
+	v := DocM{}
+	err := v.DecodeBebop(r)
+	return v, err
 }
 

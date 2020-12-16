@@ -53,45 +53,19 @@ func (bbp BasicTypes) EncodeBebop(iow io.Writer) (err error) {
 
 func (bbp *BasicTypes) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
-	{
-		bbp.A_bool = iohelp.ReadBool(r)
-	}
-	{
-		bbp.A_byte = iohelp.ReadByte(r)
-	}
-	{
-		bbp.A_int16 = iohelp.ReadInt16(r)
-	}
-	{
-		bbp.A_uint16 = iohelp.ReadUint16(r)
-	}
-	{
-		bbp.A_int32 = iohelp.ReadInt32(r)
-	}
-	{
-		bbp.A_uint32 = iohelp.ReadUint32(r)
-	}
-	{
-		bbp.A_int64 = iohelp.ReadInt64(r)
-	}
-	{
-		bbp.A_uint64 = iohelp.ReadUint64(r)
-	}
-	{
-		bbp.A_float32 = iohelp.ReadFloat32(r)
-	}
-	{
-		bbp.A_float64 = iohelp.ReadFloat64(r)
-	}
-	{
-		bbp.A_string = iohelp.ReadString(r)
-	}
-	{
-		bbp.A_guid = iohelp.ReadGUID(r)
-	}
-	{
-		bbp.A_date = iohelp.ReadTime(r)
-	}
+	bbp.A_bool = iohelp.ReadBool(r)
+	bbp.A_byte = iohelp.ReadByte(r)
+	bbp.A_int16 = iohelp.ReadInt16(r)
+	bbp.A_uint16 = iohelp.ReadUint16(r)
+	bbp.A_int32 = iohelp.ReadInt32(r)
+	bbp.A_uint32 = iohelp.ReadUint32(r)
+	bbp.A_int64 = iohelp.ReadInt64(r)
+	bbp.A_uint64 = iohelp.ReadUint64(r)
+	bbp.A_float32 = iohelp.ReadFloat32(r)
+	bbp.A_float64 = iohelp.ReadFloat64(r)
+	bbp.A_string = iohelp.ReadString(r)
+	bbp.A_guid = iohelp.ReadGUID(r)
+	bbp.A_date = iohelp.ReadTime(r)
 	return r.Err
 }
 
@@ -112,5 +86,11 @@ func (bbp *BasicTypes) bodyLen() uint32 {
 	bodyLen += 16
 	bodyLen += 8
 	return bodyLen
+}
+
+func makeBasicTypes(r iohelp.ErrorReader) (BasicTypes, error) {
+	v := BasicTypes{}
+	err := v.DecodeBebop(r)
+	return v, err
 }
 

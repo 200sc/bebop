@@ -30,15 +30,9 @@ func (bbp QuotedString) EncodeBebop(iow io.Writer) (err error) {
 
 func (bbp *QuotedString) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
-	{
-		bbp.X = iohelp.ReadInt32(r)
-	}
-	{
-		bbp.Y = iohelp.ReadInt32(r)
-	}
-	{
-		bbp.Z = iohelp.ReadInt32(r)
-	}
+	bbp.X = iohelp.ReadInt32(r)
+	bbp.Y = iohelp.ReadInt32(r)
+	bbp.Z = iohelp.ReadInt32(r)
 	return r.Err
 }
 
@@ -48,5 +42,11 @@ func (bbp *QuotedString) bodyLen() uint32 {
 	bodyLen += 4
 	bodyLen += 4
 	return bodyLen
+}
+
+func makeQuotedString(r iohelp.ErrorReader) (QuotedString, error) {
+	v := QuotedString{}
+	err := v.DecodeBebop(r)
+	return v, err
 }
 

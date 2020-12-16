@@ -28,11 +28,9 @@ func (bbp Foo) EncodeBebop(iow io.Writer) (err error) {
 
 func (bbp *Foo) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
-	{
-		err = (&bbp.Bar).DecodeBebop(r)
-		if err != nil {
-			return err
-		}
+	(bbp.Bar), err = makeBar(r)
+	if err != nil {
+		return err
 	}
 	return r.Err
 }
@@ -41,6 +39,12 @@ func (bbp *Foo) bodyLen() uint32 {
 	bodyLen := uint32(0)
 	bodyLen += (bbp.Bar).bodyLen()
 	return bodyLen
+}
+
+func makeFoo(r iohelp.ErrorReader) (Foo, error) {
+	v := Foo{}
+	err := v.DecodeBebop(r)
+	return v, err
 }
 
 var _ bebop.Record = &Bar{}
@@ -111,5 +115,11 @@ func (bbp *Bar) bodyLen() uint32 {
 		bodyLen += 8
 	}
 	return bodyLen
+}
+
+func makeBar(r iohelp.ErrorReader) (Bar, error) {
+	v := Bar{}
+	err := v.DecodeBebop(r)
+	return v, err
 }
 

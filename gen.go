@@ -196,34 +196,39 @@ func writeLine(w io.Writer, format string, args ...interface{}) {
 }
 
 func writeLineWithTabs(w io.Writer, format string, depth int, args ...string) {
-	// Index 0: none, fmt is 1-indexed
-	// Index 1: tabs
-	// Index 2:	the name to read from
-	// Index 3: the name to assign to
-	// At the final index we have the original name in non-pointer form for decoding
-	if len(args) != 0 {
-		if args[0][0] == '&' || args[0][0] == '*' {
-			args = append(args, args[0][1:])
+	var assigner string
+	var receiver string
+	var typename string
+	if len(args) > 0 {
+		assigner = args[0]
+		if assigner[0] == '&' || assigner[0] == '*' {
+			receiver = assigner[1:]
 		} else {
-			if args[0][0] == '(' {
-				args = append(args, "(*"+args[0][1:])
+			if assigner[0] == '(' {
+				receiver = "(*" + assigner[1:]
 			} else {
-				args = append(args, "*"+args[0])
+				receiver = "*" + assigner
 			}
 		}
 	}
-
+	if len(args) > 1 {
+		typename = args[1]
+	}
 	// add tabs
 	tbs := strings.Repeat("\t", depth)
-	args = append([]string{tbs}, args...)
-	format = "%[1]s" + format
-	format = strings.Replace(format, "\n", "\n%[1]s", -1)
+	format = tbs + format
+	format = strings.Replace(format, "\n", "\n"+tbs, -1)
 
-	ifArgs := make([]interface{}, len(args))
-	for i, arg := range args {
-		ifArgs[i] = arg
-	}
-	fmt.Fprintf(w, format+"\n", ifArgs...)
+	// %RECV = receiver
+	// %ASGN = assigner
+	// %TYPE = typename
+	format = strings.Replace(format, "%RECV", receiver, -1)
+	format = strings.Replace(format, "%ASGN", assigner, -1)
+	format = strings.Replace(format, "%TYPE", typename, -1)
+	format = strings.Replace(format, "%KNAME", depthName("k", depth), -1)
+	format = strings.Replace(format, "%VNAME", depthName("v", depth), -1)
+
+	fmt.Fprint(w, format+"\n")
 }
 
 func getLineWithTabs(format string, depth int, args ...string) string {
@@ -278,6 +283,7 @@ func (st Struct) Generate(w io.Writer, settings GenerateSettings) {
 	}
 	writeLine(w, "}")
 	writeLine(w, "")
+	isFirstTopLength = true
 	writeLine(w, "func (bbp %s) EncodeBebop(iow io.Writer) (err error) {", exposedName)
 	writeLine(w, "\tw := iohelp.NewErrorWriter(iow)")
 	if st.OpCode != 0 {
@@ -293,19 +299,18 @@ func (st Struct) Generate(w io.Writer, settings GenerateSettings) {
 	writeLine(w, "\treturn w.Err")
 	writeLine(w, "}")
 	writeLine(w, "")
+	isFirstTopLength = true
 	writeLine(w, "func (bbp *%s) DecodeBebop(ior io.Reader) (err error) {", exposedName)
 	writeLine(w, "\tr := iohelp.NewErrorReader(ior)")
 	if st.OpCode != 0 {
 		writeLine(w, "\tr.Read(make([]byte, 4))")
 	}
 	for _, fd := range st.Fields {
-		writeLine(w, "\t{")
 		name := exposeName(fd.Name)
 		if st.ReadOnly {
 			name = unexposeName(fd.Name)
 		}
-		writeStructFieldUnmarshaller("&bbp."+name, fd.FieldType, w, settings, 2)
-		writeLine(w, "\t}")
+		writeStructFieldUnmarshaller("&bbp."+name, fd.FieldType, w, settings, 1)
 	}
 	writeLine(w, "\treturn r.Err")
 	writeLine(w, "}")
@@ -321,6 +326,12 @@ func (st Struct) Generate(w io.Writer, settings GenerateSettings) {
 		writeMessageFieldBodyCount(name, fd.FieldType, w, settings, 1)
 	}
 	writeLine(w, "\treturn bodyLen")
+	writeLine(w, "}")
+	writeLine(w, "")
+	writeLine(w, "func make%[1]s(r iohelp.ErrorReader) (%[1]s, error) {", exposedName)
+	writeLine(w, "\tv := %s{}", exposedName)
+	writeLine(w, "\terr := v.DecodeBebop(r)")
+	writeLine(w, "\treturn v, err")
 	writeLine(w, "}")
 	writeLine(w, "")
 
@@ -366,6 +377,7 @@ func (msg Message) Generate(w io.Writer, settings GenerateSettings) {
 	}
 	writeLine(w, "}")
 	writeLine(w, "")
+	isFirstTopLength = true
 	writeLine(w, "func (bbp %s) EncodeBebop(iow io.Writer) (err error) {", exposedName)
 	writeLine(w, "\tw := iohelp.NewErrorWriter(iow)")
 	writeLine(w, "\tbinary.Write(w, binary.LittleEndian, bbp.bodyLen())")
@@ -376,8 +388,8 @@ func (msg Message) Generate(w io.Writer, settings GenerateSettings) {
 		}
 		num := strconv.Itoa(int(fd.num))
 		name = "*bbp." + name
-		writeLineWithTabs(w, "if %[3]s != nil {", 1, name)
-		writeLineWithTabs(w, "w.Write([]byte{%[2]s})", 2, num)
+		writeLineWithTabs(w, "if %RECV != nil {", 1, name)
+		writeLineWithTabs(w, "w.Write([]byte{%ASGN})", 2, num)
 		writeMessageFieldMarshaller(name, fd.FieldType, w, settings, 2)
 		writeLineWithTabs(w, "}", 1)
 	}
@@ -385,6 +397,7 @@ func (msg Message) Generate(w io.Writer, settings GenerateSettings) {
 	writeLine(w, "\treturn w.Err")
 	writeLine(w, "}")
 	writeLine(w, "")
+	isFirstTopLength = true
 	writeLine(w, "func (bbp *%s) DecodeBebop(ior io.Reader) (err error) {", exposedName)
 	writeLine(w, "\ter := iohelp.NewErrorReader(ior)")
 	writeLine(w, "\tbodyLen := iohelp.ReadUint32(er)")
@@ -422,7 +435,7 @@ func (msg Message) Generate(w io.Writer, settings GenerateSettings) {
 			name = unexposeName(fd.Name)
 		}
 		name = "*bbp." + name
-		writeLineWithTabs(w, "if %[3]s != nil {", 1, name)
+		writeLineWithTabs(w, "if %RECV != nil {", 1, name)
 		writeLineWithTabs(w, "bodyLen += 1", 2)
 		writeMessageFieldBodyCount(name, fd.FieldType, w, settings, 2)
 		writeLineWithTabs(w, "}", 1)
@@ -430,7 +443,12 @@ func (msg Message) Generate(w io.Writer, settings GenerateSettings) {
 	writeLine(w, "\treturn bodyLen")
 	writeLine(w, "}")
 	writeLine(w, "")
-
+	writeLine(w, "func make%[1]s(r iohelp.ErrorReader) (%[1]s, error) {", exposedName)
+	writeLine(w, "\tv := %s{}", exposedName)
+	writeLine(w, "\terr := v.DecodeBebop(r)")
+	writeLine(w, "\treturn v, err")
+	writeLine(w, "}")
+	writeLine(w, "")
 	if msg.ReadOnly {
 		for _, fd := range msg.Fields {
 			writeLine(w, "func (bbp %s) Get%s() *%s {", exposedName, exposeName(fd.Name), fd.FieldType.goString())
@@ -458,28 +476,41 @@ func writeFieldDefinition(fd Field, w io.Writer, readOnly bool, message bool) {
 	writeLine(w, "\t%s %s", name, typ)
 }
 
+func depthName(name string, depth int) string {
+	return name + strconv.Itoa(depth)
+}
+
+var lengthInc = 0
+
+func lengthName() string {
+	lengthInc++
+	return "ln" + strconv.Itoa(lengthInc)
+}
+
 func writeStructFieldMarshaller(name string, typ FieldType, w io.Writer, settings GenerateSettings, depth int) {
 	if typ.Array != nil {
-		writeLineWithTabs(w, "iohelp.WriteUint32(w, uint32(len(%[2]s)))", depth, name)
-		writeLineWithTabs(w, "for _, elem := range %[2]s {", depth, name)
+		writeLineWithTabs(w, "iohelp.WriteUint32(w, uint32(len(%ASGN)))", depth, name)
+		writeLineWithTabs(w, "for _, elem := range %ASGN {", depth, name)
 		writeStructFieldMarshaller("elem", *typ.Array, w, settings, depth+1)
 		writeLineWithTabs(w, "}", depth)
 	} else if typ.Map != nil {
-		writeLineWithTabs(w, "iohelp.WriteUint32(w, uint32(len(%[2]s)))", depth, name)
-		writeLineWithTabs(w, "for k, v := range %[2]s {", depth, name)
-		writeLineWithTabs(w, settings.typeMarshallers[typ.Map.Key], depth+1, "k")
-		writeStructFieldMarshaller("v", typ.Map.Value, w, settings, depth+1)
+		writeLineWithTabs(w, "iohelp.WriteUint32(w, uint32(len(%ASGN)))", depth, name)
+		writeLineWithTabs(w, "for %KNAME, %VNAME := range %ASGN {", depth, name)
+		writeLineWithTabs(w, settings.typeMarshallers[typ.Map.Key], depth+1, depthName("k", depth))
+		writeStructFieldMarshaller(depthName("v", depth), typ.Map.Value, w, settings, depth+1)
 		writeLineWithTabs(w, "}", depth)
 	} else {
-		writeLineWithTabs(w, settings.typeMarshallers[typ.Simple], depth, name)
+		writeLineWithTabs(w, settings.typeMarshallers[typ.Simple], depth, name, typ.goString())
 	}
 }
+
+var isFirstTopLength = true
 
 func writeStructFieldUnmarshaller(name string, typ FieldType, w io.Writer, settings GenerateSettings, depth int) {
 	iName := "i" + strconv.Itoa(depth)
 	if typ.Array != nil {
-		writeLineWithTabs(w, "%[4]s = make([]%[3]s, iohelp.ReadUint32(r))", depth, name, typ.Array.goString())
-		writeLineWithTabs(w, "for "+iName+" := range %[3]s {", depth, name)
+		writeLineWithTabs(w, "%RECV = make([]%TYPE, iohelp.ReadUint32(r))", depth, name, typ.Array.goString())
+		writeLineWithTabs(w, "for "+iName+" := range %RECV {", depth, name)
 		if name[0] == '&' {
 			name = "&(" + name[1:] + "[" + iName + "])"
 		} else {
@@ -489,35 +520,44 @@ func writeStructFieldUnmarshaller(name string, typ FieldType, w io.Writer, setti
 		writeLineWithTabs(w, "}", depth)
 	} else if typ.Map != nil {
 		lnName := "ln" + strconv.Itoa(depth)
-		elemName := "elem" + strconv.Itoa(depth)
-		writeLineWithTabs(w, lnName+" := iohelp.ReadUint32(r)", depth)
-		writeLineWithTabs(w, "%[4]s = make(%[3]s, "+lnName+")", depth, name, typ.Map.goString())
+		if isFirstTopLength && depth == 1 {
+			writeLineWithTabs(w, lnName+" := iohelp.ReadUint32(r)", depth)
+			isFirstTopLength = false
+		} else if depth == 1 {
+			writeLineWithTabs(w, lnName+" = iohelp.ReadUint32(r)", depth)
+		} else {
+			writeLineWithTabs(w, lnName+" := iohelp.ReadUint32(r)", depth)
+		}
+		writeLineWithTabs(w, "%RECV = make(%TYPE, "+lnName+")", depth, name, typ.Map.goString())
 		writeLineWithTabs(w, "for "+iName+" := uint32(0); "+iName+" < "+lnName+"; "+iName+"++ {", depth, name)
-		ln := getLineWithTabs(settings.typeUnmarshallers[typ.Map.Key], depth+1, "&k")
+		ln := getLineWithTabs(settings.typeUnmarshallers[typ.Map.Key], depth+1, "&"+depthName("k", depth))
 		w.Write([]byte(strings.Replace(ln, "=", ":=", 1)))
-		writeLineWithTabs(w, elemName+" := new(%[2]s)", depth+1, typ.Map.Value.goString())
-		writeStructFieldUnmarshaller(elemName, typ.Map.Value, w, settings, depth+1)
-		writeLineWithTabs(w, "(%[3]s)[k] = *"+elemName, depth+1, name)
+		if name[0] == '&' {
+			name = "&(" + name[1:] + "[" + depthName("k", depth) + "])"
+		} else {
+			name = "(" + name + ")[" + depthName("k", depth) + "]"
+		}
+		writeStructFieldUnmarshaller(name, typ.Map.Value, w, settings, depth+1)
 		writeLineWithTabs(w, "}", depth)
 	} else {
-		writeLineWithTabs(w, settings.typeUnmarshallers[typ.Simple], depth, name)
+		writeLineWithTabs(w, settings.typeUnmarshallers[typ.Simple], depth, name, typ.goString())
 	}
 }
 
 func writeMessageFieldMarshaller(name string, typ FieldType, w io.Writer, settings GenerateSettings, depth int) {
 	if typ.Array != nil {
-		writeLineWithTabs(w, "binary.Write(w, binary.LittleEndian, uint32(len(%[2]s)))", depth, name)
-		writeLineWithTabs(w, "for _, elem := range %[2]s {", depth, name)
+		writeLineWithTabs(w, "binary.Write(w, binary.LittleEndian, uint32(len(%ASGN)))", depth, name)
+		writeLineWithTabs(w, "for _, elem := range %ASGN {", depth, name)
 		writeMessageFieldMarshaller("elem", *typ.Array, w, settings, depth+1)
 		writeLineWithTabs(w, "}", depth)
 	} else if typ.Map != nil {
-		writeLineWithTabs(w, "binary.Write(w, binary.LittleEndian, uint32(len(%[2]s)))", depth, name)
-		writeLineWithTabs(w, "for k, v := range %[2]s {", depth, name)
-		writeLineWithTabs(w, settings.typeMarshallers[typ.Map.Key], depth+1, "k")
-		writeMessageFieldMarshaller("v", typ.Map.Value, w, settings, depth+1)
+		writeLineWithTabs(w, "binary.Write(w, binary.LittleEndian, uint32(len(%ASGN)))", depth, name)
+		writeLineWithTabs(w, "for %KNAME, %VNAME := range %ASGN {", depth, name)
+		writeLineWithTabs(w, settings.typeMarshallers[typ.Map.Key], depth+1, depthName("k", depth))
+		writeMessageFieldMarshaller(depthName("v", depth), typ.Map.Value, w, settings, depth+1)
 		writeLineWithTabs(w, "}", depth)
 	} else {
-		writeLineWithTabs(w, settings.typeMarshallers[typ.Simple], depth, name)
+		writeLineWithTabs(w, settings.typeMarshallers[typ.Simple], depth, name, typ.goString())
 	}
 }
 
@@ -539,9 +579,9 @@ func writeMessageFieldBodyCount(name string, typ FieldType, w io.Writer, setting
 	if typ.Array != nil {
 		writeLineWithTabs(w, "bodyLen += 4", depth)
 		if typeNeedsElem(typ.Array.Simple, settings) {
-			writeLineWithTabs(w, "for _, elem := range %[2]s {", depth, name)
+			writeLineWithTabs(w, "for _, elem := range %ASGN {", depth, name)
 		} else {
-			writeLineWithTabs(w, "for range %[2]s {", depth, name)
+			writeLineWithTabs(w, "for range %ASGN {", depth, name)
 		}
 		writeMessageFieldBodyCount("elem", *typ.Array, w, settings, depth+1)
 		writeLineWithTabs(w, "}", depth)
@@ -550,46 +590,39 @@ func writeMessageFieldBodyCount(name string, typ FieldType, w io.Writer, setting
 		useV := typeNeedsElem(typ.Map.Value.Simple, settings)
 		useK := typ.Map.Key == "string"
 		if useV && useK {
-			writeLineWithTabs(w, "for k, v := range %[2]s {", depth, name)
+			writeLineWithTabs(w, "for %KNAME, %VNAME := range %ASGN {", depth, name)
 		} else if useV {
-			writeLineWithTabs(w, "for _, v := range %[2]s {", depth, name)
+			writeLineWithTabs(w, "for _, %VNAME := range %ASGN {", depth, name)
 		} else if useK {
-			writeLineWithTabs(w, "for k := range %[2]s {", depth, name)
+			writeLineWithTabs(w, "for %KNAME := range %ASGN {", depth, name)
 		} else {
-			writeLineWithTabs(w, "for range %[2]s {", depth, name)
+			writeLineWithTabs(w, "for range %ASGN {", depth, name)
 		}
-		writeLineWithTabs(w, settings.typeLengthers[typ.Map.Key], depth+1, "k")
-		writeMessageFieldBodyCount("v", typ.Map.Value, w, settings, depth+1)
+		writeLineWithTabs(w, settings.typeLengthers[typ.Map.Key], depth+1, depthName("k", depth))
+		writeMessageFieldBodyCount(depthName("v", depth), typ.Map.Value, w, settings, depth+1)
 		writeLineWithTabs(w, "}", depth)
 	} else {
-		writeLineWithTabs(w, settings.typeLengthers[typ.Simple], depth, name)
+		writeLineWithTabs(w, settings.typeLengthers[typ.Simple], depth, name, typ.goString())
 	}
 }
 
 func writeMessageFieldUnmarshaller(name string, typ FieldType, w io.Writer, settings GenerateSettings, depth int) {
-	elemName := "elem" + strconv.Itoa(depth)
-	lnName := "ln" + strconv.Itoa(depth)
 	if typ.Array != nil {
-		writeLineWithTabs(w, lnName+" := uint32(0)", depth)
-		writeLineWithTabs(w, "binary.Read(r, binary.LittleEndian, &"+lnName+")", depth, name)
-		writeLineWithTabs(w, "for i := uint32(0); i < "+lnName+"; i++ {", depth, name)
-		writeLineWithTabs(w, elemName+" := new(%[2]s)", depth+1, typ.Array.goString())
-		writeMessageFieldUnmarshaller(elemName, *typ.Array, w, settings, depth+1)
+		writeLineWithTabs(w, "%RECV = make([]%TYPE, iohelp.ReadUint32(r))", depth, name, typ.Array.goString())
+		writeLineWithTabs(w, "for i := range %RECV {", depth, name)
+		writeMessageFieldUnmarshaller("("+name+")[i]", *typ.Array, w, settings, depth+1)
 		writeLineWithTabs(w, "}", depth)
 	} else if typ.Map != nil {
-		writeLineWithTabs(w, lnName+" := uint32(0)", depth)
-		writeLineWithTabs(w, "binary.Read(r, binary.LittleEndian, &"+lnName+")", depth, name)
-		writeLineWithTabs(w, "%[3]s = make("+typ.Map.goString()+")", depth, name)
+		lnName := "ln" + strconv.Itoa(depth)
+		writeLineWithTabs(w, lnName+" := iohelp.ReadUint32(r)", depth)
+		writeLineWithTabs(w, "%RECV = make("+typ.Map.goString()+")", depth, name)
 		writeLineWithTabs(w, "for i := uint32(0); i < "+lnName+"; i++ {", depth, name)
-		ln := getLineWithTabs(settings.typeUnmarshallers[typ.Map.Key], depth+1, "&k")
+		ln := getLineWithTabs(settings.typeUnmarshallers[typ.Map.Key], depth+1, "&"+depthName("k", depth))
 		w.Write([]byte(strings.Replace(ln, "=", ":=", 1)))
-		writeLineWithTabs(w, settings.typeUnmarshallers[typ.Map.Key], depth+1, "&k")
-		writeLineWithTabs(w, elemName+" := new(%[2]s)", depth+1, typ.Map.Value.goString())
-		writeMessageFieldUnmarshaller(elemName, typ.Map.Value, w, settings, depth+1)
-		writeLineWithTabs(w, "(%[3]s)[k] = *"+elemName, depth+1, name)
+		writeMessageFieldUnmarshaller("("+name+")["+depthName("k", depth)+"]", typ.Map.Value, w, settings, depth+1)
 		writeLineWithTabs(w, "}", depth)
 	} else {
-		writeLineWithTabs(w, settings.typeUnmarshallers[typ.Simple], depth, name)
+		writeLineWithTabs(w, settings.typeUnmarshallers[typ.Simple], depth, name, typ.goString())
 	}
 }
 
@@ -618,23 +651,23 @@ var fixedSizeTypes = []string{"bool", "byte", "uint8", "uint16", "int16", "uint3
 func (f File) typeUnmarshallers() map[string]string {
 	out := make(map[string]string)
 	for _, typ := range fixedSizeTypes {
-		out[typ] = "%[3]s = iohelp.Read" + strings.Title(typ) + "(r)"
+		out[typ] = "%RECV = iohelp.Read" + strings.Title(typ) + "(r)"
 	}
-	out["string"] = "%[3]s = iohelp.ReadString(r)"
-	out["guid"] = "%[3]s = iohelp.ReadGUID(r)"
-	out["date"] = "%[3]s = iohelp.ReadTime(r)"
+	out["string"] = "%RECV = iohelp.ReadString(r)"
+	out["guid"] = "%RECV = iohelp.ReadGUID(r)"
+	out["date"] = "%RECV = iohelp.ReadTime(r)"
 	for _, en := range f.Enums {
-		out[en.Name] = "binary.Read(r, binary.LittleEndian, %[2]s)"
+		out[en.Name] = "binary.Read(r, binary.LittleEndian, %ASGN)"
 	}
 	for _, st := range f.Structs {
-		format := "err = (%[2]s).DecodeBebop(r)\n" +
+		format := "(%RECV), err = make%TYPE(r)\n" +
 			"if err != nil {\n" +
 			"\treturn err\n" +
 			"}"
 		out[st.Name] = format
 	}
 	for _, msg := range f.Messages {
-		format := "err = (%[2]s).DecodeBebop(r)\n" +
+		format := "(%RECV), err = make%TYPE(r)\n" +
 			"if err != nil {\n" +
 			"\treturn err\n" +
 			"}"
@@ -646,28 +679,28 @@ func (f File) typeUnmarshallers() map[string]string {
 func (f File) typeMarshallers() map[string]string {
 	out := make(map[string]string)
 	for _, typ := range fixedSizeTypes {
-		out[typ] = "iohelp.Write" + strings.Title(typ) + "(w, %[2]s)"
+		out[typ] = "iohelp.Write" + strings.Title(typ) + "(w, %ASGN)"
 	}
-	out["string"] = "iohelp.WriteUint32(w, uint32(len(%[2]s)))\n" +
-		"w.Write([]byte(%[2]s))"
-	out["guid"] = "iohelp.WriteGUID(w, %[2]s)"
-	out["date"] = "if %[2]s != (time.Time{}) {\n" +
-		"\tiohelp.WriteInt64(w, (%[2]s.UnixNano()/100))\n" +
+	out["string"] = "iohelp.WriteUint32(w, uint32(len(%ASGN)))\n" +
+		"w.Write([]byte(%ASGN))"
+	out["guid"] = "iohelp.WriteGUID(w, %ASGN)"
+	out["date"] = "if %ASGN != (time.Time{}) {\n" +
+		"\tiohelp.WriteInt64(w, (%ASGN.UnixNano()/100))\n" +
 		"} else {\n" +
 		"\tiohelp.WriteInt64(w, 0)\n" +
 		"}"
 	for _, en := range f.Enums {
-		out[en.Name] = "iohelp.WriteUint32(w, uint32(%[2]s))"
+		out[en.Name] = "iohelp.WriteUint32(w, uint32(%ASGN))"
 	}
 	for _, st := range f.Structs {
-		format := "err = (%[2]s).EncodeBebop(w)\n" +
+		format := "err = (%ASGN).EncodeBebop(w)\n" +
 			"if err != nil {\n" +
 			"\treturn err\n" +
 			"}"
 		out[st.Name] = format
 	}
 	for _, msg := range f.Messages {
-		format := "err = (%[2]s).EncodeBebop(w)\n" +
+		format := "err = (%ASGN).EncodeBebop(w)\n" +
 			"if err != nil {\n" +
 			"\treturn err\n" +
 			"}"
@@ -689,18 +722,18 @@ func (f File) typeLengthers() map[string]string {
 	out["int64"] = "bodyLen += 8"
 	out["float32"] = "bodyLen += 4"
 	out["float64"] = "bodyLen += 8"
-	out["string"] = "bodyLen += 4\n" + "bodyLen += uint32(len(%[2]s))"
+	out["string"] = "bodyLen += 4\n" + "bodyLen += uint32(len(%ASGN))"
 	out["guid"] = "bodyLen += 16"
 	out["date"] = "bodyLen += 8"
 	for _, en := range f.Enums {
 		out[en.Name] = "bodyLen += 4"
 	}
 	for _, st := range f.Structs {
-		format := "bodyLen += (%[2]s).bodyLen()"
+		format := "bodyLen += (%ASGN).bodyLen()"
 		out[st.Name] = format
 	}
 	for _, msg := range f.Messages {
-		format := "bodyLen += (%[2]s).bodyLen()"
+		format := "bodyLen += (%ASGN).bodyLen()"
 		out[msg.Name] = format
 	}
 	return out

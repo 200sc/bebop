@@ -27,12 +27,8 @@ func (bbp S) EncodeBebop(iow io.Writer) (err error) {
 
 func (bbp *S) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
-	{
-		bbp.x = iohelp.ReadInt32(r)
-	}
-	{
-		bbp.y = iohelp.ReadInt32(r)
-	}
+	bbp.x = iohelp.ReadInt32(r)
+	bbp.y = iohelp.ReadInt32(r)
 	return r.Err
 }
 
@@ -41,6 +37,12 @@ func (bbp *S) bodyLen() uint32 {
 	bodyLen += 4
 	bodyLen += 4
 	return bodyLen
+}
+
+func makeS(r iohelp.ErrorReader) (S, error) {
+	v := S{}
+	err := v.DecodeBebop(r)
+	return v, err
 }
 
 func (bbp S) GetX() int32 {
@@ -64,33 +66,33 @@ type SomeMaps struct {
 func (bbp SomeMaps) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
 	iohelp.WriteUint32(w, uint32(len(bbp.M1)))
-	for k, v := range bbp.M1 {
-		iohelp.WriteBool(w, k)
-		iohelp.WriteBool(w, v)
+	for k1, v1 := range bbp.M1 {
+		iohelp.WriteBool(w, k1)
+		iohelp.WriteBool(w, v1)
 	}
 	iohelp.WriteUint32(w, uint32(len(bbp.M2)))
-	for k, v := range bbp.M2 {
-		iohelp.WriteUint32(w, uint32(len(k)))
-		w.Write([]byte(k))
-		iohelp.WriteUint32(w, uint32(len(v)))
-		for k, v := range v {
-			iohelp.WriteUint32(w, uint32(len(k)))
-			w.Write([]byte(k))
-			iohelp.WriteUint32(w, uint32(len(v)))
-			w.Write([]byte(v))
+	for k1, v1 := range bbp.M2 {
+		iohelp.WriteUint32(w, uint32(len(k1)))
+		w.Write([]byte(k1))
+		iohelp.WriteUint32(w, uint32(len(v1)))
+		for k2, v2 := range v1 {
+			iohelp.WriteUint32(w, uint32(len(k2)))
+			w.Write([]byte(k2))
+			iohelp.WriteUint32(w, uint32(len(v2)))
+			w.Write([]byte(v2))
 		}
 	}
 	iohelp.WriteUint32(w, uint32(len(bbp.M3)))
 	for _, elem := range bbp.M3 {
 		iohelp.WriteUint32(w, uint32(len(elem)))
-		for k, v := range elem {
-			iohelp.WriteInt32(w, k)
-			iohelp.WriteUint32(w, uint32(len(v)))
-			for _, elem := range v {
+		for k2, v2 := range elem {
+			iohelp.WriteInt32(w, k2)
+			iohelp.WriteUint32(w, uint32(len(v2)))
+			for _, elem := range v2 {
 				iohelp.WriteUint32(w, uint32(len(elem)))
-				for k, v := range elem {
-					iohelp.WriteBool(w, k)
-					err = (v).EncodeBebop(w)
+				for k4, v4 := range elem {
+					iohelp.WriteBool(w, k4)
+					err = (v4).EncodeBebop(w)
 					if err != nil {
 						return err
 					}
@@ -101,19 +103,19 @@ func (bbp SomeMaps) EncodeBebop(iow io.Writer) (err error) {
 	iohelp.WriteUint32(w, uint32(len(bbp.M4)))
 	for _, elem := range bbp.M4 {
 		iohelp.WriteUint32(w, uint32(len(elem)))
-		for k, v := range elem {
-			iohelp.WriteUint32(w, uint32(len(k)))
-			w.Write([]byte(k))
-			iohelp.WriteUint32(w, uint32(len(v)))
-			for _, elem := range v {
+		for k2, v2 := range elem {
+			iohelp.WriteUint32(w, uint32(len(k2)))
+			w.Write([]byte(k2))
+			iohelp.WriteUint32(w, uint32(len(v2)))
+			for _, elem := range v2 {
 				iohelp.WriteFloat32(w, elem)
 			}
 		}
 	}
 	iohelp.WriteUint32(w, uint32(len(bbp.M5)))
-	for k, v := range bbp.M5 {
-		iohelp.WriteGUID(w, k)
-		err = (v).EncodeBebop(w)
+	for k1, v1 := range bbp.M5 {
+		iohelp.WriteGUID(w, k1)
+		err = (v1).EncodeBebop(w)
 		if err != nil {
 			return err
 		}
@@ -123,86 +125,62 @@ func (bbp SomeMaps) EncodeBebop(iow io.Writer) (err error) {
 
 func (bbp *SomeMaps) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
-	{
+	ln1 := iohelp.ReadUint32(r)
+	bbp.M1 = make(map[bool]bool, ln1)
+	for i1 := uint32(0); i1 < ln1; i1++ {
+		k1 := iohelp.ReadBool(r)
+		(bbp.M1[k1]) = iohelp.ReadBool(r)
+	}
+	ln1 = iohelp.ReadUint32(r)
+	bbp.M2 = make(map[string]map[string]string, ln1)
+	for i1 := uint32(0); i1 < ln1; i1++ {
+		k1 := iohelp.ReadString(r)
 		ln2 := iohelp.ReadUint32(r)
-		bbp.M1 = make(map[bool]bool, ln2)
+		(bbp.M2[k1]) = make(map[string]string, ln2)
 		for i2 := uint32(0); i2 < ln2; i2++ {
-			k := iohelp.ReadBool(r)
-			elem2 := new(bool)
-			*elem2 = iohelp.ReadBool(r)
-			(bbp.M1)[k] = *elem2
+			k2 := iohelp.ReadString(r)
+			((bbp.M2[k1])[k2]) = iohelp.ReadString(r)
 		}
 	}
-	{
+	bbp.M3 = make([]map[int32][]map[bool]S, iohelp.ReadUint32(r))
+	for i1 := range bbp.M3 {
 		ln2 := iohelp.ReadUint32(r)
-		bbp.M2 = make(map[string]map[string]string, ln2)
+		(bbp.M3[i1]) = make(map[int32][]map[bool]S, ln2)
 		for i2 := uint32(0); i2 < ln2; i2++ {
-			k := iohelp.ReadString(r)
-			elem2 := new(map[string]string)
-			ln3 := iohelp.ReadUint32(r)
-			*elem2 = make(map[string]string, ln3)
-			for i3 := uint32(0); i3 < ln3; i3++ {
-				k := iohelp.ReadString(r)
-				elem3 := new(string)
-				*elem3 = iohelp.ReadString(r)
-				(*elem2)[k] = *elem3
-			}
-			(bbp.M2)[k] = *elem2
-		}
-	}
-	{
-		bbp.M3 = make([]map[int32][]map[bool]S, iohelp.ReadUint32(r))
-		for i2 := range bbp.M3 {
-			ln3 := iohelp.ReadUint32(r)
-			(bbp.M3[i2]) = make(map[int32][]map[bool]S, ln3)
-			for i3 := uint32(0); i3 < ln3; i3++ {
-				k := iohelp.ReadInt32(r)
-				elem3 := new([]map[bool]S)
-				*elem3 = make([]map[bool]S, iohelp.ReadUint32(r))
-				for i4 := range *elem3 {
-					ln5 := iohelp.ReadUint32(r)
-					(*elem3)[i4] = make(map[bool]S, ln5)
-					for i5 := uint32(0); i5 < ln5; i5++ {
-						k := iohelp.ReadBool(r)
-						elem5 := new(S)
-						err = (elem5).DecodeBebop(r)
-						if err != nil {
-							return err
-						}
-						((*elem3)[i4])[k] = *elem5
+			k2 := iohelp.ReadInt32(r)
+			((bbp.M3[i1])[k2]) = make([]map[bool]S, iohelp.ReadUint32(r))
+			for i3 := range ((bbp.M3[i1])[k2]) {
+				ln4 := iohelp.ReadUint32(r)
+				(((bbp.M3[i1])[k2])[i3]) = make(map[bool]S, ln4)
+				for i4 := uint32(0); i4 < ln4; i4++ {
+					k4 := iohelp.ReadBool(r)
+					(((((bbp.M3[i1])[k2])[i3])[k4])), err = makeS(r)
+					if err != nil {
+						return err
 					}
 				}
-				((bbp.M3[i2]))[k] = *elem3
 			}
 		}
 	}
-	{
-		bbp.M4 = make([]map[string][]float32, iohelp.ReadUint32(r))
-		for i2 := range bbp.M4 {
-			ln3 := iohelp.ReadUint32(r)
-			(bbp.M4[i2]) = make(map[string][]float32, ln3)
-			for i3 := uint32(0); i3 < ln3; i3++ {
-				k := iohelp.ReadString(r)
-				elem3 := new([]float32)
-				*elem3 = make([]float32, iohelp.ReadUint32(r))
-				for i4 := range *elem3 {
-					(*elem3)[i4] = iohelp.ReadFloat32(r)
-				}
-				((bbp.M4[i2]))[k] = *elem3
-			}
-		}
-	}
-	{
+	bbp.M4 = make([]map[string][]float32, iohelp.ReadUint32(r))
+	for i1 := range bbp.M4 {
 		ln2 := iohelp.ReadUint32(r)
-		bbp.M5 = make(map[[16]byte]M, ln2)
+		(bbp.M4[i1]) = make(map[string][]float32, ln2)
 		for i2 := uint32(0); i2 < ln2; i2++ {
-			k := iohelp.ReadGUID(r)
-			elem2 := new(M)
-			err = (elem2).DecodeBebop(r)
-			if err != nil {
-				return err
+			k2 := iohelp.ReadString(r)
+			((bbp.M4[i1])[k2]) = make([]float32, iohelp.ReadUint32(r))
+			for i3 := range ((bbp.M4[i1])[k2]) {
+				(((bbp.M4[i1])[k2])[i3]) = iohelp.ReadFloat32(r)
 			}
-			(bbp.M5)[k] = *elem2
+		}
+	}
+	ln1 = iohelp.ReadUint32(r)
+	bbp.M5 = make(map[[16]byte]M, ln1)
+	for i1 := uint32(0); i1 < ln1; i1++ {
+		k1 := iohelp.ReadGUID(r)
+		((bbp.M5[k1])), err = makeM(r)
+		if err != nil {
+			return err
 		}
 	}
 	return r.Err
@@ -216,28 +194,28 @@ func (bbp *SomeMaps) bodyLen() uint32 {
 		bodyLen += 1
 	}
 	bodyLen += 4
-	for k, v := range bbp.M2 {
+	for k1, v1 := range bbp.M2 {
 		bodyLen += 4
-		bodyLen += uint32(len(k))
+		bodyLen += uint32(len(k1))
 		bodyLen += 4
-		for k, v := range v {
+		for k2, v2 := range v1 {
 			bodyLen += 4
-			bodyLen += uint32(len(k))
+			bodyLen += uint32(len(k2))
 			bodyLen += 4
-			bodyLen += uint32(len(v))
+			bodyLen += uint32(len(v2))
 		}
 	}
 	bodyLen += 4
 	for _, elem := range bbp.M3 {
 		bodyLen += 4
-		for _, v := range elem {
+		for _, v2 := range elem {
 			bodyLen += 4
 			bodyLen += 4
-			for _, elem := range v {
+			for _, elem := range v2 {
 				bodyLen += 4
-				for _, v := range elem {
+				for _, v4 := range elem {
 					bodyLen += 1
-					bodyLen += (v).bodyLen()
+					bodyLen += (v4).bodyLen()
 				}
 			}
 		}
@@ -245,21 +223,27 @@ func (bbp *SomeMaps) bodyLen() uint32 {
 	bodyLen += 4
 	for _, elem := range bbp.M4 {
 		bodyLen += 4
-		for k, v := range elem {
+		for k2, v2 := range elem {
 			bodyLen += 4
-			bodyLen += uint32(len(k))
+			bodyLen += uint32(len(k2))
 			bodyLen += 4
-			for range v {
+			for range v2 {
 				bodyLen += 4
 			}
 		}
 	}
 	bodyLen += 4
-	for _, v := range bbp.M5 {
+	for _, v1 := range bbp.M5 {
 		bodyLen += 16
-		bodyLen += (v).bodyLen()
+		bodyLen += (v1).bodyLen()
 	}
 	return bodyLen
+}
+
+func makeSomeMaps(r iohelp.ErrorReader) (SomeMaps, error) {
+	v := SomeMaps{}
+	err := v.DecodeBebop(r)
+	return v, err
 }
 
 var _ bebop.Record = &M{}
@@ -318,5 +302,11 @@ func (bbp *M) bodyLen() uint32 {
 		bodyLen += 8
 	}
 	return bodyLen
+}
+
+func makeM(r iohelp.ErrorReader) (M, error) {
+	v := M{}
+	err := v.DecodeBebop(r)
+	return v, err
 }
 

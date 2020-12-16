@@ -35,11 +35,9 @@ func (bbp Int32s) EncodeBebop(iow io.Writer) (err error) {
 
 func (bbp *Int32s) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
-	{
-		bbp.A = make([]int32, iohelp.ReadUint32(r))
-		for i2 := range bbp.A {
-			(bbp.A[i2]) = iohelp.ReadInt32(r)
-		}
+	bbp.A = make([]int32, iohelp.ReadUint32(r))
+	for i1 := range bbp.A {
+		(bbp.A[i1]) = iohelp.ReadInt32(r)
 	}
 	return r.Err
 }
@@ -51,6 +49,12 @@ func (bbp *Int32s) bodyLen() uint32 {
 		bodyLen += 4
 	}
 	return bodyLen
+}
+
+func makeInt32s(r iohelp.ErrorReader) (Int32s, error) {
+	v := Int32s{}
+	err := v.DecodeBebop(r)
+	return v, err
 }
 
 var _ bebop.Record = &Uint32s{}
@@ -70,11 +74,9 @@ func (bbp Uint32s) EncodeBebop(iow io.Writer) (err error) {
 
 func (bbp *Uint32s) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
-	{
-		bbp.A = make([]uint32, iohelp.ReadUint32(r))
-		for i2 := range bbp.A {
-			(bbp.A[i2]) = iohelp.ReadUint32(r)
-		}
+	bbp.A = make([]uint32, iohelp.ReadUint32(r))
+	for i1 := range bbp.A {
+		(bbp.A[i1]) = iohelp.ReadUint32(r)
 	}
 	return r.Err
 }
@@ -86,6 +88,12 @@ func (bbp *Uint32s) bodyLen() uint32 {
 		bodyLen += 4
 	}
 	return bodyLen
+}
+
+func makeUint32s(r iohelp.ErrorReader) (Uint32s, error) {
+	v := Uint32s{}
+	err := v.DecodeBebop(r)
+	return v, err
 }
 
 var _ bebop.Record = &Float32s{}
@@ -105,11 +113,9 @@ func (bbp Float32s) EncodeBebop(iow io.Writer) (err error) {
 
 func (bbp *Float32s) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
-	{
-		bbp.A = make([]float32, iohelp.ReadUint32(r))
-		for i2 := range bbp.A {
-			(bbp.A[i2]) = iohelp.ReadFloat32(r)
-		}
+	bbp.A = make([]float32, iohelp.ReadUint32(r))
+	for i1 := range bbp.A {
+		(bbp.A[i1]) = iohelp.ReadFloat32(r)
 	}
 	return r.Err
 }
@@ -121,6 +127,12 @@ func (bbp *Float32s) bodyLen() uint32 {
 		bodyLen += 4
 	}
 	return bodyLen
+}
+
+func makeFloat32s(r iohelp.ErrorReader) (Float32s, error) {
+	v := Float32s{}
+	err := v.DecodeBebop(r)
+	return v, err
 }
 
 var _ bebop.Record = &Int64s{}
@@ -140,11 +152,9 @@ func (bbp Int64s) EncodeBebop(iow io.Writer) (err error) {
 
 func (bbp *Int64s) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
-	{
-		bbp.A = make([]int64, iohelp.ReadUint32(r))
-		for i2 := range bbp.A {
-			(bbp.A[i2]) = iohelp.ReadInt64(r)
-		}
+	bbp.A = make([]int64, iohelp.ReadUint32(r))
+	for i1 := range bbp.A {
+		(bbp.A[i1]) = iohelp.ReadInt64(r)
 	}
 	return r.Err
 }
@@ -156,6 +166,12 @@ func (bbp *Int64s) bodyLen() uint32 {
 		bodyLen += 8
 	}
 	return bodyLen
+}
+
+func makeInt64s(r iohelp.ErrorReader) (Int64s, error) {
+	v := Int64s{}
+	err := v.DecodeBebop(r)
+	return v, err
 }
 
 var _ bebop.Record = &Uint64s{}
@@ -175,11 +191,9 @@ func (bbp Uint64s) EncodeBebop(iow io.Writer) (err error) {
 
 func (bbp *Uint64s) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
-	{
-		bbp.A = make([]uint64, iohelp.ReadUint32(r))
-		for i2 := range bbp.A {
-			(bbp.A[i2]) = iohelp.ReadUint64(r)
-		}
+	bbp.A = make([]uint64, iohelp.ReadUint32(r))
+	for i1 := range bbp.A {
+		(bbp.A[i1]) = iohelp.ReadUint64(r)
 	}
 	return r.Err
 }
@@ -191,6 +205,12 @@ func (bbp *Uint64s) bodyLen() uint32 {
 		bodyLen += 8
 	}
 	return bodyLen
+}
+
+func makeUint64s(r iohelp.ErrorReader) (Uint64s, error) {
+	v := Uint64s{}
+	err := v.DecodeBebop(r)
+	return v, err
 }
 
 var _ bebop.Record = &Float64s{}
@@ -210,11 +230,9 @@ func (bbp Float64s) EncodeBebop(iow io.Writer) (err error) {
 
 func (bbp *Float64s) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
-	{
-		bbp.A = make([]float64, iohelp.ReadUint32(r))
-		for i2 := range bbp.A {
-			(bbp.A[i2]) = iohelp.ReadFloat64(r)
-		}
+	bbp.A = make([]float64, iohelp.ReadUint32(r))
+	for i1 := range bbp.A {
+		(bbp.A[i1]) = iohelp.ReadFloat64(r)
 	}
 	return r.Err
 }
@@ -226,6 +244,12 @@ func (bbp *Float64s) bodyLen() uint32 {
 		bodyLen += 8
 	}
 	return bodyLen
+}
+
+func makeFloat64s(r iohelp.ErrorReader) (Float64s, error) {
+	v := Float64s{}
+	err := v.DecodeBebop(r)
+	return v, err
 }
 
 var _ bebop.Record = &VideoData{}
@@ -251,20 +275,12 @@ func (bbp VideoData) EncodeBebop(iow io.Writer) (err error) {
 
 func (bbp *VideoData) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
-	{
-		bbp.Time = iohelp.ReadFloat64(r)
-	}
-	{
-		bbp.Width = iohelp.ReadUint32(r)
-	}
-	{
-		bbp.Height = iohelp.ReadUint32(r)
-	}
-	{
-		bbp.Fragment = make([]byte, iohelp.ReadUint32(r))
-		for i2 := range bbp.Fragment {
-			(bbp.Fragment[i2]) = iohelp.ReadByte(r)
-		}
+	bbp.Time = iohelp.ReadFloat64(r)
+	bbp.Width = iohelp.ReadUint32(r)
+	bbp.Height = iohelp.ReadUint32(r)
+	bbp.Fragment = make([]byte, iohelp.ReadUint32(r))
+	for i1 := range bbp.Fragment {
+		(bbp.Fragment[i1]) = iohelp.ReadByte(r)
 	}
 	return r.Err
 }
@@ -279,6 +295,12 @@ func (bbp *VideoData) bodyLen() uint32 {
 		bodyLen += 1
 	}
 	return bodyLen
+}
+
+func makeVideoData(r iohelp.ErrorReader) (VideoData, error) {
+	v := VideoData{}
+	err := v.DecodeBebop(r)
+	return v, err
 }
 
 var _ bebop.Record = &MediaMessage{}
@@ -321,7 +343,7 @@ func (bbp *MediaMessage) DecodeBebop(ior io.Reader) (err error) {
 			binary.Read(r, binary.LittleEndian, bbp.Codec)
 		case 2:
 			bbp.Data = new(VideoData)
-			err = (bbp.Data).DecodeBebop(r)
+			(*bbp.Data), err = makeVideoData(r)
 			if err != nil {
 				return err
 			}
@@ -343,6 +365,12 @@ func (bbp *MediaMessage) bodyLen() uint32 {
 		bodyLen += (*bbp.Data).bodyLen()
 	}
 	return bodyLen
+}
+
+func makeMediaMessage(r iohelp.ErrorReader) (MediaMessage, error) {
+	v := MediaMessage{}
+	err := v.DecodeBebop(r)
+	return v, err
 }
 
 var _ bebop.Record = &SkipTestOld{}
@@ -402,6 +430,12 @@ func (bbp *SkipTestOld) bodyLen() uint32 {
 		bodyLen += 4
 	}
 	return bodyLen
+}
+
+func makeSkipTestOld(r iohelp.ErrorReader) (SkipTestOld, error) {
+	v := SkipTestOld{}
+	err := v.DecodeBebop(r)
+	return v, err
 }
 
 var _ bebop.Record = &SkipTestNew{}
@@ -474,6 +508,12 @@ func (bbp *SkipTestNew) bodyLen() uint32 {
 	return bodyLen
 }
 
+func makeSkipTestNew(r iohelp.ErrorReader) (SkipTestNew, error) {
+	v := SkipTestNew{}
+	err := v.DecodeBebop(r)
+	return v, err
+}
+
 var _ bebop.Record = &SkipTestOldContainer{}
 
 type SkipTestOldContainer struct {
@@ -511,7 +551,7 @@ func (bbp *SkipTestOldContainer) DecodeBebop(ior io.Reader) (err error) {
 			return er.Err
 		case 1:
 			bbp.S = new(SkipTestOld)
-			err = (bbp.S).DecodeBebop(r)
+			(*bbp.S), err = makeSkipTestOld(r)
 			if err != nil {
 				return err
 			}
@@ -536,6 +576,12 @@ func (bbp *SkipTestOldContainer) bodyLen() uint32 {
 		bodyLen += 4
 	}
 	return bodyLen
+}
+
+func makeSkipTestOldContainer(r iohelp.ErrorReader) (SkipTestOldContainer, error) {
+	v := SkipTestOldContainer{}
+	err := v.DecodeBebop(r)
+	return v, err
 }
 
 var _ bebop.Record = &SkipTestNewContainer{}
@@ -575,7 +621,7 @@ func (bbp *SkipTestNewContainer) DecodeBebop(ior io.Reader) (err error) {
 			return er.Err
 		case 1:
 			bbp.S = new(SkipTestNew)
-			err = (bbp.S).DecodeBebop(r)
+			(*bbp.S), err = makeSkipTestNew(r)
 			if err != nil {
 				return err
 			}
@@ -600,5 +646,11 @@ func (bbp *SkipTestNewContainer) bodyLen() uint32 {
 		bodyLen += 4
 	}
 	return bodyLen
+}
+
+func makeSkipTestNewContainer(r iohelp.ErrorReader) (SkipTestNewContainer, error) {
+	v := SkipTestNewContainer{}
+	err := v.DecodeBebop(r)
+	return v, err
 }
 
