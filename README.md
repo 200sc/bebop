@@ -61,10 +61,16 @@ little more sophisticated version of the first example in this document.
 
 The following is a list of known issues with the current version of the project, ordered by approximate priority for addressing them.
 
-
 Tokenization and parsing errors do not currently report locations (line number, character position / column of the error's source).
 
+Benchmarks do not currently compare to protobuf, and would benefit from a larger set of messages
+to compare with.
+
+Much of the code would be well served having a fuzzer thrown at it.
+
 Original bebop does not support one .bop file importing type definitions from another .bop file, and so neither does this, yet.
+
+- This is nontrivial, and requires a lot of design toward the importing / packaging ecosystem.
 
 Original bebop requires semicolons after field definitions, and so do we. It seems practical for the language parser to
 treat newlines as semicolons (as Go does).
