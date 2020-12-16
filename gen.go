@@ -204,7 +204,11 @@ func writeLineWithTabs(w io.Writer, format string, depth int, args ...string) {
 		if args[0][0] == '&' || args[0][0] == '*' {
 			args = append(args, args[0][1:])
 		} else {
-			args = append(args, "*"+args[0])
+			if args[0][0] == '(' {
+				args = append(args, "(*"+args[0][1:])
+			} else {
+				args = append(args, "*"+args[0])
+			}
 		}
 	}
 
@@ -465,19 +469,23 @@ func writeStructFieldMarshaller(name string, typ FieldType, w io.Writer, setting
 }
 
 func writeStructFieldUnmarshaller(name string, typ FieldType, w io.Writer, settings GenerateSettings, depth int) {
-	elemName := "elem" + strconv.Itoa(depth)
-	lnName := "ln" + strconv.Itoa(depth)
+	iName := "i" + strconv.Itoa(depth)
 	if typ.Array != nil {
-		writeLineWithTabs(w, lnName+" := iohelp.ReadUint32(r)", depth)
-		writeLineWithTabs(w, "for i := uint32(0); i < "+lnName+"; i++ {", depth, name)
-		writeLineWithTabs(w, elemName+" := new(%[2]s)", depth+1, typ.Array.goString())
-		writeStructFieldUnmarshaller(elemName, *typ.Array, w, settings, depth+1)
-		writeLineWithTabs(w, "%[3]s = append(%[3]s, *"+elemName+")", depth+1, name)
+		writeLineWithTabs(w, "%[4]s = make([]%[3]s, iohelp.ReadUint32(r))", depth, name, typ.Array.goString())
+		writeLineWithTabs(w, "for "+iName+" := range %[3]s {", depth, name)
+		if name[0] == '&' {
+			name = "&(" + name[1:] + "[" + iName + "])"
+		} else {
+			name = "(" + name + ")[" + iName + "]"
+		}
+		writeStructFieldUnmarshaller(name, *typ.Array, w, settings, depth+1)
 		writeLineWithTabs(w, "}", depth)
 	} else if typ.Map != nil {
+		lnName := "ln" + strconv.Itoa(depth)
+		elemName := "elem" + strconv.Itoa(depth)
 		writeLineWithTabs(w, lnName+" := iohelp.ReadUint32(r)", depth)
-		writeLineWithTabs(w, "%[3]s = make("+typ.Map.goString()+")", depth, name)
-		writeLineWithTabs(w, "for i := uint32(0); i < "+lnName+"; i++ {", depth, name)
+		writeLineWithTabs(w, "%[4]s = make(%[3]s, "+lnName+")", depth, name, typ.Map.goString())
+		writeLineWithTabs(w, "for "+iName+" := uint32(0); "+iName+" < "+lnName+"; "+iName+"++ {", depth, name)
 		writeLineWithTabs(w, "k := new("+simpleGoString(typ.Map.Key)+")", depth+1, name)
 		writeLineWithTabs(w, settings.typeUnmarshallers[typ.Map.Key], depth+1, "k")
 		writeLineWithTabs(w, elemName+" := new(%[2]s)", depth+1, typ.Map.Value.goString())

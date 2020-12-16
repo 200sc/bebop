@@ -83,99 +83,75 @@ func (bbp BasicArrays) EncodeBebop(iow io.Writer) (err error) {
 func (bbp *BasicArrays) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
 	{
-		ln2 := iohelp.ReadUint32(r)
-		for i := uint32(0); i < ln2; i++ {
-			elem2 := new(bool)
-			*elem2 = iohelp.ReadBool(r)
-			bbp.A_bool = append(bbp.A_bool, *elem2)
+		bbp.A_bool = make([]bool, iohelp.ReadUint32(r))
+		for i2 := range bbp.A_bool {
+			(bbp.A_bool[i2]) = iohelp.ReadBool(r)
 		}
 	}
 	{
-		ln2 := iohelp.ReadUint32(r)
-		for i := uint32(0); i < ln2; i++ {
-			elem2 := new(byte)
-			*elem2 = iohelp.ReadByte(r)
-			bbp.A_byte = append(bbp.A_byte, *elem2)
+		bbp.A_byte = make([]byte, iohelp.ReadUint32(r))
+		for i2 := range bbp.A_byte {
+			(bbp.A_byte[i2]) = iohelp.ReadByte(r)
 		}
 	}
 	{
-		ln2 := iohelp.ReadUint32(r)
-		for i := uint32(0); i < ln2; i++ {
-			elem2 := new(int16)
-			*elem2 = iohelp.ReadInt16(r)
-			bbp.A_int16 = append(bbp.A_int16, *elem2)
+		bbp.A_int16 = make([]int16, iohelp.ReadUint32(r))
+		for i2 := range bbp.A_int16 {
+			(bbp.A_int16[i2]) = iohelp.ReadInt16(r)
 		}
 	}
 	{
-		ln2 := iohelp.ReadUint32(r)
-		for i := uint32(0); i < ln2; i++ {
-			elem2 := new(uint16)
-			*elem2 = iohelp.ReadUint16(r)
-			bbp.A_uint16 = append(bbp.A_uint16, *elem2)
+		bbp.A_uint16 = make([]uint16, iohelp.ReadUint32(r))
+		for i2 := range bbp.A_uint16 {
+			(bbp.A_uint16[i2]) = iohelp.ReadUint16(r)
 		}
 	}
 	{
-		ln2 := iohelp.ReadUint32(r)
-		for i := uint32(0); i < ln2; i++ {
-			elem2 := new(int32)
-			*elem2 = iohelp.ReadInt32(r)
-			bbp.A_int32 = append(bbp.A_int32, *elem2)
+		bbp.A_int32 = make([]int32, iohelp.ReadUint32(r))
+		for i2 := range bbp.A_int32 {
+			(bbp.A_int32[i2]) = iohelp.ReadInt32(r)
 		}
 	}
 	{
-		ln2 := iohelp.ReadUint32(r)
-		for i := uint32(0); i < ln2; i++ {
-			elem2 := new(uint32)
-			*elem2 = iohelp.ReadUint32(r)
-			bbp.A_uint32 = append(bbp.A_uint32, *elem2)
+		bbp.A_uint32 = make([]uint32, iohelp.ReadUint32(r))
+		for i2 := range bbp.A_uint32 {
+			(bbp.A_uint32[i2]) = iohelp.ReadUint32(r)
 		}
 	}
 	{
-		ln2 := iohelp.ReadUint32(r)
-		for i := uint32(0); i < ln2; i++ {
-			elem2 := new(int64)
-			*elem2 = iohelp.ReadInt64(r)
-			bbp.A_int64 = append(bbp.A_int64, *elem2)
+		bbp.A_int64 = make([]int64, iohelp.ReadUint32(r))
+		for i2 := range bbp.A_int64 {
+			(bbp.A_int64[i2]) = iohelp.ReadInt64(r)
 		}
 	}
 	{
-		ln2 := iohelp.ReadUint32(r)
-		for i := uint32(0); i < ln2; i++ {
-			elem2 := new(uint64)
-			*elem2 = iohelp.ReadUint64(r)
-			bbp.A_uint64 = append(bbp.A_uint64, *elem2)
+		bbp.A_uint64 = make([]uint64, iohelp.ReadUint32(r))
+		for i2 := range bbp.A_uint64 {
+			(bbp.A_uint64[i2]) = iohelp.ReadUint64(r)
 		}
 	}
 	{
-		ln2 := iohelp.ReadUint32(r)
-		for i := uint32(0); i < ln2; i++ {
-			elem2 := new(float32)
-			*elem2 = iohelp.ReadFloat32(r)
-			bbp.A_float32 = append(bbp.A_float32, *elem2)
+		bbp.A_float32 = make([]float32, iohelp.ReadUint32(r))
+		for i2 := range bbp.A_float32 {
+			(bbp.A_float32[i2]) = iohelp.ReadFloat32(r)
 		}
 	}
 	{
-		ln2 := iohelp.ReadUint32(r)
-		for i := uint32(0); i < ln2; i++ {
-			elem2 := new(float64)
-			*elem2 = iohelp.ReadFloat64(r)
-			bbp.A_float64 = append(bbp.A_float64, *elem2)
+		bbp.A_float64 = make([]float64, iohelp.ReadUint32(r))
+		for i2 := range bbp.A_float64 {
+			(bbp.A_float64[i2]) = iohelp.ReadFloat64(r)
 		}
 	}
 	{
-		ln2 := iohelp.ReadUint32(r)
-		for i := uint32(0); i < ln2; i++ {
-			elem2 := new(string)
-			*elem2 = iohelp.ReadString(r)
-			bbp.A_string = append(bbp.A_string, *elem2)
+		bbp.A_string = make([]string, iohelp.ReadUint32(r))
+		for i2 := range bbp.A_string {
+			(bbp.A_string[i2]) = iohelp.ReadString(r)
 		}
 	}
 	{
-		ln2 := iohelp.ReadUint32(r)
-		for i := uint32(0); i < ln2; i++ {
-			elem2 := new([16]byte)
-			*elem2 = iohelp.ReadGUID(r)
-			bbp.A_guid = append(bbp.A_guid, *elem2)
+		bbp.A_guid = make([][16]byte, iohelp.ReadUint32(r))
+		for i2 := range bbp.A_guid {
+			(bbp.A_guid[i2]) = iohelp.ReadGUID(r)
 		}
 	}
 	return r.Err
@@ -253,11 +229,9 @@ func (bbp TestInt32Array) EncodeBebop(iow io.Writer) (err error) {
 func (bbp *TestInt32Array) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
 	{
-		ln2 := iohelp.ReadUint32(r)
-		for i := uint32(0); i < ln2; i++ {
-			elem2 := new(int32)
-			*elem2 = iohelp.ReadInt32(r)
-			bbp.A = append(bbp.A, *elem2)
+		bbp.A = make([]int32, iohelp.ReadUint32(r))
+		for i2 := range bbp.A {
+			(bbp.A[i2]) = iohelp.ReadInt32(r)
 		}
 	}
 	return r.Err

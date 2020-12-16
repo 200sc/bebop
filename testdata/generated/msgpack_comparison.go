@@ -136,27 +136,21 @@ func (bbp *MsgpackComparison) DecodeBebop(ior io.Reader) (err error) {
 		bbp.STRING16 = iohelp.ReadString(r)
 	}
 	{
-		ln2 := iohelp.ReadUint32(r)
-		for i := uint32(0); i < ln2; i++ {
-			elem2 := new(int32)
-			*elem2 = iohelp.ReadInt32(r)
-			bbp.ARRAY0 = append(bbp.ARRAY0, *elem2)
+		bbp.ARRAY0 = make([]int32, iohelp.ReadUint32(r))
+		for i2 := range bbp.ARRAY0 {
+			(bbp.ARRAY0[i2]) = iohelp.ReadInt32(r)
 		}
 	}
 	{
-		ln2 := iohelp.ReadUint32(r)
-		for i := uint32(0); i < ln2; i++ {
-			elem2 := new(string)
-			*elem2 = iohelp.ReadString(r)
-			bbp.ARRAY1 = append(bbp.ARRAY1, *elem2)
+		bbp.ARRAY1 = make([]string, iohelp.ReadUint32(r))
+		for i2 := range bbp.ARRAY1 {
+			(bbp.ARRAY1[i2]) = iohelp.ReadString(r)
 		}
 	}
 	{
-		ln2 := iohelp.ReadUint32(r)
-		for i := uint32(0); i < ln2; i++ {
-			elem2 := new(int32)
-			*elem2 = iohelp.ReadInt32(r)
-			bbp.ARRAY8 = append(bbp.ARRAY8, *elem2)
+		bbp.ARRAY8 = make([]int32, iohelp.ReadUint32(r))
+		for i2 := range bbp.ARRAY8 {
+			(bbp.ARRAY8[i2]) = iohelp.ReadInt32(r)
 		}
 	}
 	return r.Err

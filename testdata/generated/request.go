@@ -96,14 +96,12 @@ func (bbp *RequestResponse) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
 	r.Read(make([]byte, 4))
 	{
-		ln2 := iohelp.ReadUint32(r)
-		for i := uint32(0); i < ln2; i++ {
-			elem2 := new(Furniture)
-			err = (elem2).DecodeBebop(r)
+		bbp.availableFurniture = make([]Furniture, iohelp.ReadUint32(r))
+		for i2 := range bbp.availableFurniture {
+			err = (&(bbp.availableFurniture[i2])).DecodeBebop(r)
 			if err != nil {
 				return err
 			}
-			bbp.availableFurniture = append(bbp.availableFurniture, *elem2)
 		}
 	}
 	return r.Err

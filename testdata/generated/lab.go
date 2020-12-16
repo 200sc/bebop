@@ -36,11 +36,9 @@ func (bbp Int32s) EncodeBebop(iow io.Writer) (err error) {
 func (bbp *Int32s) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
 	{
-		ln2 := iohelp.ReadUint32(r)
-		for i := uint32(0); i < ln2; i++ {
-			elem2 := new(int32)
-			*elem2 = iohelp.ReadInt32(r)
-			bbp.A = append(bbp.A, *elem2)
+		bbp.A = make([]int32, iohelp.ReadUint32(r))
+		for i2 := range bbp.A {
+			(bbp.A[i2]) = iohelp.ReadInt32(r)
 		}
 	}
 	return r.Err
@@ -73,11 +71,9 @@ func (bbp Uint32s) EncodeBebop(iow io.Writer) (err error) {
 func (bbp *Uint32s) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
 	{
-		ln2 := iohelp.ReadUint32(r)
-		for i := uint32(0); i < ln2; i++ {
-			elem2 := new(uint32)
-			*elem2 = iohelp.ReadUint32(r)
-			bbp.A = append(bbp.A, *elem2)
+		bbp.A = make([]uint32, iohelp.ReadUint32(r))
+		for i2 := range bbp.A {
+			(bbp.A[i2]) = iohelp.ReadUint32(r)
 		}
 	}
 	return r.Err
@@ -110,11 +106,9 @@ func (bbp Float32s) EncodeBebop(iow io.Writer) (err error) {
 func (bbp *Float32s) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
 	{
-		ln2 := iohelp.ReadUint32(r)
-		for i := uint32(0); i < ln2; i++ {
-			elem2 := new(float32)
-			*elem2 = iohelp.ReadFloat32(r)
-			bbp.A = append(bbp.A, *elem2)
+		bbp.A = make([]float32, iohelp.ReadUint32(r))
+		for i2 := range bbp.A {
+			(bbp.A[i2]) = iohelp.ReadFloat32(r)
 		}
 	}
 	return r.Err
@@ -147,11 +141,9 @@ func (bbp Int64s) EncodeBebop(iow io.Writer) (err error) {
 func (bbp *Int64s) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
 	{
-		ln2 := iohelp.ReadUint32(r)
-		for i := uint32(0); i < ln2; i++ {
-			elem2 := new(int64)
-			*elem2 = iohelp.ReadInt64(r)
-			bbp.A = append(bbp.A, *elem2)
+		bbp.A = make([]int64, iohelp.ReadUint32(r))
+		for i2 := range bbp.A {
+			(bbp.A[i2]) = iohelp.ReadInt64(r)
 		}
 	}
 	return r.Err
@@ -184,11 +176,9 @@ func (bbp Uint64s) EncodeBebop(iow io.Writer) (err error) {
 func (bbp *Uint64s) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
 	{
-		ln2 := iohelp.ReadUint32(r)
-		for i := uint32(0); i < ln2; i++ {
-			elem2 := new(uint64)
-			*elem2 = iohelp.ReadUint64(r)
-			bbp.A = append(bbp.A, *elem2)
+		bbp.A = make([]uint64, iohelp.ReadUint32(r))
+		for i2 := range bbp.A {
+			(bbp.A[i2]) = iohelp.ReadUint64(r)
 		}
 	}
 	return r.Err
@@ -221,11 +211,9 @@ func (bbp Float64s) EncodeBebop(iow io.Writer) (err error) {
 func (bbp *Float64s) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
 	{
-		ln2 := iohelp.ReadUint32(r)
-		for i := uint32(0); i < ln2; i++ {
-			elem2 := new(float64)
-			*elem2 = iohelp.ReadFloat64(r)
-			bbp.A = append(bbp.A, *elem2)
+		bbp.A = make([]float64, iohelp.ReadUint32(r))
+		for i2 := range bbp.A {
+			(bbp.A[i2]) = iohelp.ReadFloat64(r)
 		}
 	}
 	return r.Err
@@ -273,11 +261,9 @@ func (bbp *VideoData) DecodeBebop(ior io.Reader) (err error) {
 		bbp.Height = iohelp.ReadUint32(r)
 	}
 	{
-		ln2 := iohelp.ReadUint32(r)
-		for i := uint32(0); i < ln2; i++ {
-			elem2 := new(byte)
-			*elem2 = iohelp.ReadByte(r)
-			bbp.Fragment = append(bbp.Fragment, *elem2)
+		bbp.Fragment = make([]byte, iohelp.ReadUint32(r))
+		for i2 := range bbp.Fragment {
+			(bbp.Fragment[i2]) = iohelp.ReadByte(r)
 		}
 	}
 	return r.Err

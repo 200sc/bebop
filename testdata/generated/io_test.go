@@ -20,8 +20,10 @@ func TestMarshalCycleRecords(t *testing.T) {
 		skipEquality bool
 	}
 	tcs := []testCase{{
-		name:        "empty ArrayOfStrings",
-		record:      &generated.ArrayOfStrings{},
+		name: "empty ArrayOfStrings",
+		record: &generated.ArrayOfStrings{
+			Strings: []string{},
+		},
 		unmarshalTo: &generated.ArrayOfStrings{},
 	}, {
 		name: "ArrayOfStrings",
@@ -33,19 +35,44 @@ func TestMarshalCycleRecords(t *testing.T) {
 		},
 		unmarshalTo: &generated.ArrayOfStrings{},
 	}, {
-		name:        "empty BasicArrays",
-		record:      &generated.BasicArrays{},
+		name: "empty BasicArrays",
+		record: &generated.BasicArrays{
+			A_bool:    []bool{},
+			A_byte:    []byte{},
+			A_int16:   []int16{},
+			A_uint16:  []uint16{},
+			A_int32:   []int32{},
+			A_uint32:  []uint32{},
+			A_int64:   []int64{},
+			A_uint64:  []uint64{},
+			A_float32: []float32{},
+			A_float64: []float64{},
+			A_string:  []string{},
+			A_guid:    [][16]byte{},
+		},
 		unmarshalTo: &generated.BasicArrays{},
 	}, {
 		name: "BasicArrays",
 		record: &generated.BasicArrays{
-			A_bool:   []bool{true, false, true},
-			A_uint16: []uint16{0, 2, 65535},
+			A_bool:    []bool{true, false, true},
+			A_uint16:  []uint16{0, 2, 65535},
+			A_byte:    []byte{},
+			A_int16:   []int16{},
+			A_int32:   []int32{},
+			A_uint32:  []uint32{},
+			A_int64:   []int64{},
+			A_uint64:  []uint64{},
+			A_float32: []float32{},
+			A_float64: []float64{},
+			A_string:  []string{},
+			A_guid:    [][16]byte{},
 		},
 		unmarshalTo: &generated.BasicArrays{},
 	}, {
-		name:        "empty TestInt32Array",
-		record:      &generated.TestInt32Array{},
+		name: "empty TestInt32Array",
+		record: &generated.TestInt32Array{
+			A: []int32{},
+		},
 		unmarshalTo: &generated.TestInt32Array{},
 	}, {
 		name: "TestInt32Array",
@@ -158,8 +185,10 @@ func TestMarshalCycleRecords(t *testing.T) {
 		},
 		unmarshalTo: &generated.Song{},
 	}, {
-		name:        "empty VideoData",
-		record:      &generated.VideoData{},
+		name: "empty VideoData",
+		record: &generated.VideoData{
+			Fragment: []byte{},
+		},
 		unmarshalTo: &generated.VideoData{},
 	}, {
 		name: "VideoData",
@@ -215,6 +244,8 @@ func TestMarshalCycleRecords(t *testing.T) {
 		record: &generated.SomeMaps{
 			M1: map[bool]bool{},
 			M2: map[string]map[string]string{},
+			M3: []map[int32][]map[bool]generated.S{},
+			M4: []map[string][]float32{},
 			M5: map[[16]byte]generated.M{},
 		},
 		unmarshalTo: &generated.SomeMaps{},
@@ -231,73 +262,80 @@ func TestMarshalCycleRecords(t *testing.T) {
 		},
 		unmarshalTo:  &generated.SomeMaps{},
 		skipEquality: true,
-	}, {
-		name: "SomeMaps2",
-		record: &generated.SomeMaps{
-			M1: map[bool]bool{
-				true: true,
+	},
+		// we can't do some maps 2 because it contains maps with more than one element, whose order is marshalled randomly.
+		// {
+		// 	name: "SomeMaps2",
+		// 	record: &generated.SomeMaps{
+		// 		M1: map[bool]bool{
+		// 			true: true,
+		// 		},
+		// 		M2: map[string]map[string]string{
+		// 			"mario": map[string]string{
+		// 				"mario":    "",
+		// 				"luigi":    "",
+		// 				"brothers": "",
+		// 			},
+		// 		},
+		// 		M3: []map[int32][]map[bool]generated.S{
+		// 			{
+		// 				0: []map[bool]generated.S{{
+		// 					true: generated.S{},
+		// 				}},
+		// 			}, {
+		// 				2: []map[bool]generated.S{{
+		// 					true: generated.S{},
+		// 				}},
+		// 			}, {
+		// 				41111: []map[bool]generated.S{{
+		// 					false: generated.S{},
+		// 				}},
+		// 			},
+		// 		},
+		// 		M4: []map[string][]float32{
+		// 			{
+		// 				"a": []float32{1321, 1423, 1423, 540, 12314, 1231, 4123, 1412, 1230, 4123, 123},
+		// 			},
+		// 		},
+		// 		M5: map[[16]byte]generated.M{
+		// 			[16]byte{5: 3}: generated.M{B: float64p(0.0000002)},
+		// 		},
+		// 	},
+		// 	unmarshalTo:  &generated.SomeMaps{},
+		// 	skipEquality: true,
+		// },
+		{
+			name:        "empty M",
+			record:      &generated.M{},
+			unmarshalTo: &generated.M{},
+		}, {
+			name: "empty MsgpackComparison",
+			record: &generated.MsgpackComparison{
+				ARRAY0: []int32{},
+				ARRAY1: []string{},
+				ARRAY8: []int32{},
 			},
-			M2: map[string]map[string]string{
-				"mario": map[string]string{
-					"mario":    "",
-					"luigi":    "",
-					"brothers": "",
-				},
-			},
-			M3: []map[int32][]map[bool]generated.S{
-				{
-					0: []map[bool]generated.S{{
-						true: generated.S{},
-					}},
-				}, {
-					2: []map[bool]generated.S{{
-						true: generated.S{},
-					}},
-				}, {
-					41111: []map[bool]generated.S{{
-						false: generated.S{},
-					}},
-				},
-			},
-			M4: []map[string][]float32{
-				{
-					"a": []float32{1321, 1423, 1423, 540, 12314, 1231, 4123, 1412, 1230, 4123, 123},
-				},
-			},
-			M5: map[[16]byte]generated.M{
-				[16]byte{5: 3}: generated.M{B: float64p(0.0000002)},
-			},
-		},
-		unmarshalTo:  &generated.SomeMaps{},
-		skipEquality: true,
-	}, {
-		name:        "empty M",
-		record:      &generated.M{},
-		unmarshalTo: &generated.M{},
-	}, {
-		name:        "empty MsgpackComparison",
-		record:      &generated.MsgpackComparison{},
-		unmarshalTo: &generated.MsgpackComparison{},
-	}, {
-		name:         "empty Furniture",
-		record:       &generated.Furniture{},
-		unmarshalTo:  &generated.Furniture{},
-		skipEquality: true,
-	}, {
-		name:         "empty RequestResponse",
-		record:       &generated.RequestResponse{},
-		unmarshalTo:  &generated.RequestResponse{},
-		skipEquality: true,
-	}, {
-		name:        "empty RequestCatalog",
-		record:      &generated.RequestCatalog{},
-		unmarshalTo: &generated.RequestCatalog{},
-	}, {
-		name:         "empty ReadOnlyMap",
-		record:       &generated.ReadOnlyMap{},
-		unmarshalTo:  &generated.ReadOnlyMap{},
-		skipEquality: true,
-	}}
+			unmarshalTo: &generated.MsgpackComparison{},
+		}, {
+			name:         "empty Furniture",
+			record:       &generated.Furniture{},
+			unmarshalTo:  &generated.Furniture{},
+			skipEquality: true,
+		}, {
+			name:         "empty RequestResponse",
+			record:       &generated.RequestResponse{},
+			unmarshalTo:  &generated.RequestResponse{},
+			skipEquality: true,
+		}, {
+			name:        "empty RequestCatalog",
+			record:      &generated.RequestCatalog{},
+			unmarshalTo: &generated.RequestCatalog{},
+		}, {
+			name:         "empty ReadOnlyMap",
+			record:       &generated.ReadOnlyMap{},
+			unmarshalTo:  &generated.ReadOnlyMap{},
+			skipEquality: true,
+		}}
 	for _, tc := range tcs {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {

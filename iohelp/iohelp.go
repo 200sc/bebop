@@ -50,7 +50,7 @@ func (ew ErrorWriter) Write(b []byte) (n int, err error) {
 	return n, err
 }
 
-func ReadString(r io.Reader) string {
+func ReadString(r ErrorReader) string {
 	ln := uint32(0)
 	binary.Read(r, binary.LittleEndian, &ln)
 	data := make([]byte, ln)
@@ -58,7 +58,7 @@ func ReadString(r io.Reader) string {
 	return string(data)
 }
 
-func ReadTime(r io.Reader) time.Time {
+func ReadTime(r ErrorReader) time.Time {
 	tm := int64(0)
 	binary.Read(r, binary.LittleEndian, (&tm))
 	tm *= 100
@@ -69,7 +69,7 @@ func ReadTime(r io.Reader) time.Time {
 	return time.Unix(0, tm).UTC()
 }
 
-func ReadGUID(r io.Reader) [16]byte {
+func ReadGUID(r ErrorReader) [16]byte {
 	data := make([]byte, 16)
 	r.Read(data)
 	flipped := [16]byte{

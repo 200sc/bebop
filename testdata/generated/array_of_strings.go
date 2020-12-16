@@ -28,11 +28,9 @@ func (bbp ArrayOfStrings) EncodeBebop(iow io.Writer) (err error) {
 func (bbp *ArrayOfStrings) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
 	{
-		ln2 := iohelp.ReadUint32(r)
-		for i := uint32(0); i < ln2; i++ {
-			elem2 := new(string)
-			*elem2 = iohelp.ReadString(r)
-			bbp.Strings = append(bbp.Strings, *elem2)
+		bbp.Strings = make([]string, iohelp.ReadUint32(r))
+		for i2 := range bbp.Strings {
+			(bbp.Strings[i2]) = iohelp.ReadString(r)
 		}
 	}
 	return r.Err

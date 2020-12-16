@@ -84,8 +84,8 @@ func (bbp *Library) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
 	{
 		ln2 := iohelp.ReadUint32(r)
-		bbp.Songs = make(map[[16]byte]Song)
-		for i := uint32(0); i < ln2; i++ {
+		bbp.Songs = make(map[[16]byte]Song, ln2)
+		for i2 := uint32(0); i2 < ln2; i2++ {
 			k := new([16]byte)
 			*k = iohelp.ReadGUID(r)
 			elem2 := new(Song)
