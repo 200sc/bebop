@@ -401,13 +401,15 @@ func (msg Message) Generate(w io.Writer, settings GenerateSettings) {
 	writeLine(w, "func (bbp *%s) DecodeBebop(ior io.Reader) (err error) {", exposedName)
 	writeLine(w, "\ter := iohelp.NewErrorReader(ior)")
 	writeLine(w, "\tbodyLen := iohelp.ReadUint32(er)")
+	// why read the entire body upfront? Because we're allowed
+	// to exit early, and if we do exit early and this message
+	// is a field of another record we need that record to resume
+	// reading at the after this entire body.
 	writeLine(w, "\tbody := make([]byte, bodyLen)")
 	writeLine(w, "\ter.Read(body)")
 	writeLine(w, "\tr := iohelp.NewErrorReader(bytes.NewReader(body))")
 	writeLine(w, "\tfor {")
 	writeLine(w, "\t\tswitch iohelp.ReadByte(r) {")
-	writeLine(w, "\t\tcase 0:")
-	writeLine(w, "\t\t\treturn er.Err")
 	for _, fd := range fields {
 		writeLine(w, "\t\tcase %d:", fd.num)
 		name := exposeName(fd.Name)
@@ -424,7 +426,6 @@ func (msg Message) Generate(w io.Writer, settings GenerateSettings) {
 	writeLine(w, "\t\t\treturn er.Err")
 	writeLine(w, "\t\t}")
 	writeLine(w, "\t}")
-	writeLine(w, "\treturn er.Err")
 	writeLine(w, "}")
 	writeLine(w, "")
 	writeLine(w, "func (bbp *%s) bodyLen() uint32 {", exposedName)

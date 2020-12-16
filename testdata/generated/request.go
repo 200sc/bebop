@@ -158,8 +158,6 @@ func (bbp *RequestCatalog) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(bytes.NewReader(body))
 	for {
 		switch iohelp.ReadByte(r) {
-		case 0:
-			return er.Err
 		case 1:
 			bbp.Family = new(FurnitureFamily)
 			binary.Read(r, binary.LittleEndian, bbp.Family)
@@ -170,7 +168,6 @@ func (bbp *RequestCatalog) DecodeBebop(ior io.Reader) (err error) {
 			return er.Err
 		}
 	}
-	return er.Err
 }
 
 func (bbp *RequestCatalog) bodyLen() uint32 {

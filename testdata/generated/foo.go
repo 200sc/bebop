@@ -82,8 +82,6 @@ func (bbp *Bar) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(bytes.NewReader(body))
 	for {
 		switch iohelp.ReadByte(r) {
-		case 0:
-			return er.Err
 		case 1:
 			bbp.X = new(float64)
 			*bbp.X = iohelp.ReadFloat64(r)
@@ -97,7 +95,6 @@ func (bbp *Bar) DecodeBebop(ior io.Reader) (err error) {
 			return er.Err
 		}
 	}
-	return er.Err
 }
 
 func (bbp *Bar) bodyLen() uint32 {

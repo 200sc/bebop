@@ -336,8 +336,6 @@ func (bbp *MediaMessage) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(bytes.NewReader(body))
 	for {
 		switch iohelp.ReadByte(r) {
-		case 0:
-			return er.Err
 		case 1:
 			bbp.Codec = new(VideoCodec)
 			binary.Read(r, binary.LittleEndian, bbp.Codec)
@@ -351,7 +349,6 @@ func (bbp *MediaMessage) DecodeBebop(ior io.Reader) (err error) {
 			return er.Err
 		}
 	}
-	return er.Err
 }
 
 func (bbp *MediaMessage) bodyLen() uint32 {
@@ -404,8 +401,6 @@ func (bbp *SkipTestOld) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(bytes.NewReader(body))
 	for {
 		switch iohelp.ReadByte(r) {
-		case 0:
-			return er.Err
 		case 1:
 			bbp.X = new(int32)
 			*bbp.X = iohelp.ReadInt32(r)
@@ -416,7 +411,6 @@ func (bbp *SkipTestOld) DecodeBebop(ior io.Reader) (err error) {
 			return er.Err
 		}
 	}
-	return er.Err
 }
 
 func (bbp *SkipTestOld) bodyLen() uint32 {
@@ -473,8 +467,6 @@ func (bbp *SkipTestNew) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(bytes.NewReader(body))
 	for {
 		switch iohelp.ReadByte(r) {
-		case 0:
-			return er.Err
 		case 1:
 			bbp.X = new(int32)
 			*bbp.X = iohelp.ReadInt32(r)
@@ -488,7 +480,6 @@ func (bbp *SkipTestNew) DecodeBebop(ior io.Reader) (err error) {
 			return er.Err
 		}
 	}
-	return er.Err
 }
 
 func (bbp *SkipTestNew) bodyLen() uint32 {
@@ -547,8 +538,6 @@ func (bbp *SkipTestOldContainer) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(bytes.NewReader(body))
 	for {
 		switch iohelp.ReadByte(r) {
-		case 0:
-			return er.Err
 		case 1:
 			bbp.S = new(SkipTestOld)
 			(*bbp.S), err = makeSkipTestOld(r)
@@ -562,7 +551,6 @@ func (bbp *SkipTestOldContainer) DecodeBebop(ior io.Reader) (err error) {
 			return er.Err
 		}
 	}
-	return er.Err
 }
 
 func (bbp *SkipTestOldContainer) bodyLen() uint32 {
@@ -617,8 +605,6 @@ func (bbp *SkipTestNewContainer) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(bytes.NewReader(body))
 	for {
 		switch iohelp.ReadByte(r) {
-		case 0:
-			return er.Err
 		case 1:
 			bbp.S = new(SkipTestNew)
 			(*bbp.S), err = makeSkipTestNew(r)
@@ -632,7 +618,6 @@ func (bbp *SkipTestNewContainer) DecodeBebop(ior io.Reader) (err error) {
 			return er.Err
 		}
 	}
-	return er.Err
 }
 
 func (bbp *SkipTestNewContainer) bodyLen() uint32 {

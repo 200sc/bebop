@@ -41,8 +41,6 @@ func (bbp *ReadOnlyMap) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(bytes.NewReader(body))
 	for {
 		switch iohelp.ReadByte(r) {
-		case 0:
-			return er.Err
 		case 1:
 			bbp.vals = new(map[string]uint8)
 			ln3 := iohelp.ReadUint32(r)
@@ -55,7 +53,6 @@ func (bbp *ReadOnlyMap) DecodeBebop(ior io.Reader) (err error) {
 			return er.Err
 		}
 	}
-	return er.Err
 }
 
 func (bbp *ReadOnlyMap) bodyLen() uint32 {

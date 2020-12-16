@@ -89,8 +89,6 @@ func (bbp *DepM) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(bytes.NewReader(body))
 	for {
 		switch iohelp.ReadByte(r) {
-		case 0:
-			return er.Err
 		case 1:
 			bbp.X = new(int32)
 			*bbp.X = iohelp.ReadInt32(r)
@@ -98,7 +96,6 @@ func (bbp *DepM) DecodeBebop(ior io.Reader) (err error) {
 			return er.Err
 		}
 	}
-	return er.Err
 }
 
 func (bbp *DepM) bodyLen() uint32 {
@@ -156,8 +153,6 @@ func (bbp *DocM) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(bytes.NewReader(body))
 	for {
 		switch iohelp.ReadByte(r) {
-		case 0:
-			return er.Err
 		case 1:
 			bbp.X = new(int32)
 			*bbp.X = iohelp.ReadInt32(r)
@@ -171,7 +166,6 @@ func (bbp *DocM) DecodeBebop(ior io.Reader) (err error) {
 			return er.Err
 		}
 	}
-	return er.Err
 }
 
 func (bbp *DocM) bodyLen() uint32 {
