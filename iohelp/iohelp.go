@@ -90,6 +90,7 @@ func ReadByte(r ErrorReader) byte {
 	_, err := io.ReadFull(r, r.Buffer[:1])
 	if err != nil {
 		r.Err = err
+		return 0
 	}
 	return r.Buffer[0]
 }
