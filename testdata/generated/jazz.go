@@ -86,14 +86,14 @@ func (bbp *Library) DecodeBebop(ior io.Reader) (err error) {
 		ln2 := iohelp.ReadUint32(r)
 		bbp.Songs = make(map[[16]byte]Song, ln2)
 		for i2 := uint32(0); i2 < ln2; i2++ {
-			k := new([16]byte)
-			*k = iohelp.ReadGUID(r)
+			var k [16]byte
+			k = iohelp.ReadGUID(r)
 			elem2 := new(Song)
 			err = (elem2).DecodeBebop(r)
 			if err != nil {
 				return err
 			}
-			(bbp.Songs)[*k] = *elem2
+			(bbp.Songs)[k] = *elem2
 		}
 	}
 	return r.Err

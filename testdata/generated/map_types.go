@@ -127,30 +127,30 @@ func (bbp *SomeMaps) DecodeBebop(ior io.Reader) (err error) {
 		ln2 := iohelp.ReadUint32(r)
 		bbp.M1 = make(map[bool]bool, ln2)
 		for i2 := uint32(0); i2 < ln2; i2++ {
-			k := new(bool)
-			*k = iohelp.ReadBool(r)
+			var k bool
+			k = iohelp.ReadBool(r)
 			elem2 := new(bool)
 			*elem2 = iohelp.ReadBool(r)
-			(bbp.M1)[*k] = *elem2
+			(bbp.M1)[k] = *elem2
 		}
 	}
 	{
 		ln2 := iohelp.ReadUint32(r)
 		bbp.M2 = make(map[string]map[string]string, ln2)
 		for i2 := uint32(0); i2 < ln2; i2++ {
-			k := new(string)
-			*k = iohelp.ReadString(r)
+			var k string
+			k = iohelp.ReadString(r)
 			elem2 := new(map[string]string)
 			ln3 := iohelp.ReadUint32(r)
 			*elem2 = make(map[string]string, ln3)
 			for i3 := uint32(0); i3 < ln3; i3++ {
-				k := new(string)
-				*k = iohelp.ReadString(r)
+				var k string
+				k = iohelp.ReadString(r)
 				elem3 := new(string)
 				*elem3 = iohelp.ReadString(r)
-				(*elem2)[*k] = *elem3
+				(*elem2)[k] = *elem3
 			}
-			(bbp.M2)[*k] = *elem2
+			(bbp.M2)[k] = *elem2
 		}
 	}
 	{
@@ -159,25 +159,25 @@ func (bbp *SomeMaps) DecodeBebop(ior io.Reader) (err error) {
 			ln3 := iohelp.ReadUint32(r)
 			(bbp.M3[i2]) = make(map[int32][]map[bool]S, ln3)
 			for i3 := uint32(0); i3 < ln3; i3++ {
-				k := new(int32)
-				*k = iohelp.ReadInt32(r)
+				var k int32
+				k = iohelp.ReadInt32(r)
 				elem3 := new([]map[bool]S)
 				*elem3 = make([]map[bool]S, iohelp.ReadUint32(r))
 				for i4 := range *elem3 {
 					ln5 := iohelp.ReadUint32(r)
 					(*elem3)[i4] = make(map[bool]S, ln5)
 					for i5 := uint32(0); i5 < ln5; i5++ {
-						k := new(bool)
-						*k = iohelp.ReadBool(r)
+						var k bool
+						k = iohelp.ReadBool(r)
 						elem5 := new(S)
 						err = (elem5).DecodeBebop(r)
 						if err != nil {
 							return err
 						}
-						((*elem3)[i4])[*k] = *elem5
+						((*elem3)[i4])[k] = *elem5
 					}
 				}
-				((bbp.M3[i2]))[*k] = *elem3
+				((bbp.M3[i2]))[k] = *elem3
 			}
 		}
 	}
@@ -187,14 +187,14 @@ func (bbp *SomeMaps) DecodeBebop(ior io.Reader) (err error) {
 			ln3 := iohelp.ReadUint32(r)
 			(bbp.M4[i2]) = make(map[string][]float32, ln3)
 			for i3 := uint32(0); i3 < ln3; i3++ {
-				k := new(string)
-				*k = iohelp.ReadString(r)
+				var k string
+				k = iohelp.ReadString(r)
 				elem3 := new([]float32)
 				*elem3 = make([]float32, iohelp.ReadUint32(r))
 				for i4 := range *elem3 {
 					(*elem3)[i4] = iohelp.ReadFloat32(r)
 				}
-				((bbp.M4[i2]))[*k] = *elem3
+				((bbp.M4[i2]))[k] = *elem3
 			}
 		}
 	}
@@ -202,14 +202,14 @@ func (bbp *SomeMaps) DecodeBebop(ior io.Reader) (err error) {
 		ln2 := iohelp.ReadUint32(r)
 		bbp.M5 = make(map[[16]byte]M, ln2)
 		for i2 := uint32(0); i2 < ln2; i2++ {
-			k := new([16]byte)
-			*k = iohelp.ReadGUID(r)
+			var k [16]byte
+			k = iohelp.ReadGUID(r)
 			elem2 := new(M)
 			err = (elem2).DecodeBebop(r)
 			if err != nil {
 				return err
 			}
-			(bbp.M5)[*k] = *elem2
+			(bbp.M5)[k] = *elem2
 		}
 	}
 	return r.Err
