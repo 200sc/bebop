@@ -4,7 +4,6 @@ package generated
 
 import (
 	"bytes"
-	"encoding/binary"
 	"io"
 
 	"github.com/200sc/bebop"
@@ -72,7 +71,7 @@ type DepM struct {
 
 func (bbp DepM) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
-	binary.Write(w, binary.LittleEndian, bbp.bodyLen())
+	iohelp.WriteUint32(w, bbp.bodyLen())
 	if bbp.X != nil {
 		w.Write([]byte{1})
 		iohelp.WriteInt32(w, *bbp.X)
@@ -128,7 +127,7 @@ type DocM struct {
 
 func (bbp DocM) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
-	binary.Write(w, binary.LittleEndian, bbp.bodyLen())
+	iohelp.WriteUint32(w, bbp.bodyLen())
 	if bbp.X != nil {
 		w.Write([]byte{1})
 		iohelp.WriteInt32(w, *bbp.X)

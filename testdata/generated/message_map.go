@@ -4,7 +4,6 @@ package generated
 
 import (
 	"bytes"
-	"encoding/binary"
 	"io"
 
 	"github.com/200sc/bebop"
@@ -19,10 +18,10 @@ type ReadOnlyMap struct {
 
 func (bbp ReadOnlyMap) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
-	binary.Write(w, binary.LittleEndian, bbp.bodyLen())
+	iohelp.WriteUint32(w, bbp.bodyLen())
 	if bbp.vals != nil {
 		w.Write([]byte{1})
-		binary.Write(w, binary.LittleEndian, uint32(len(*bbp.vals)))
+		iohelp.WriteUint32(w, uint32(len(*bbp.vals)))
 		for k2, v2 := range *bbp.vals {
 			iohelp.WriteUint32(w, uint32(len(k2)))
 			w.Write([]byte(k2))

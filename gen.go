@@ -162,9 +162,6 @@ func (f File) Generate(w io.Writer, settings GenerateSettings) error {
 	if len(f.Messages) != 0 {
 		writeLine(w, "\t\"bytes\"")
 	}
-	if len(f.Messages) != 0 {
-		writeLine(w, "\t\"encoding/binary\"")
-	}
 	if len(f.Messages)+len(f.Structs) != 0 {
 		writeLine(w, "\t\"io\"")
 	}
@@ -287,7 +284,7 @@ func (st Struct) Generate(w io.Writer, settings GenerateSettings) {
 	writeLine(w, "func (bbp %s) EncodeBebop(iow io.Writer) (err error) {", exposedName)
 	writeLine(w, "\tw := iohelp.NewErrorWriter(iow)")
 	if st.OpCode != 0 {
-		writeLine(w, "\tbinary.Write(w, binary.LittleEndian, uint32(%sOpCode))", exposedName)
+		writeLine(w, "\tiohelp.WriteUint32(w, uint32(%sOpCode))", exposedName)
 	}
 	for _, fd := range st.Fields {
 		name := exposeName(fd.Name)
@@ -380,7 +377,7 @@ func (msg Message) Generate(w io.Writer, settings GenerateSettings) {
 	isFirstTopLength = true
 	writeLine(w, "func (bbp %s) EncodeBebop(iow io.Writer) (err error) {", exposedName)
 	writeLine(w, "\tw := iohelp.NewErrorWriter(iow)")
-	writeLine(w, "\tbinary.Write(w, binary.LittleEndian, bbp.bodyLen())")
+	writeLine(w, "\tiohelp.WriteUint32(w, bbp.bodyLen())")
 	for _, fd := range fields {
 		name := exposeName(fd.Name)
 		if msg.ReadOnly {
@@ -547,12 +544,12 @@ func writeStructFieldUnmarshaller(name string, typ FieldType, w io.Writer, setti
 
 func writeMessageFieldMarshaller(name string, typ FieldType, w io.Writer, settings GenerateSettings, depth int) {
 	if typ.Array != nil {
-		writeLineWithTabs(w, "binary.Write(w, binary.LittleEndian, uint32(len(%ASGN)))", depth, name)
+		writeLineWithTabs(w, "iohelp.WriteUint32(w, uint32(len(%ASGN)))", depth, name)
 		writeLineWithTabs(w, "for _, elem := range %ASGN {", depth, name)
 		writeMessageFieldMarshaller("elem", *typ.Array, w, settings, depth+1)
 		writeLineWithTabs(w, "}", depth)
 	} else if typ.Map != nil {
-		writeLineWithTabs(w, "binary.Write(w, binary.LittleEndian, uint32(len(%ASGN)))", depth, name)
+		writeLineWithTabs(w, "iohelp.WriteUint32(w, uint32(len(%ASGN)))", depth, name)
 		writeLineWithTabs(w, "for %KNAME, %VNAME := range %ASGN {", depth, name)
 		writeLineWithTabs(w, settings.typeMarshallers[typ.Map.Key], depth+1, depthName("k", depth))
 		writeMessageFieldMarshaller(depthName("v", depth), typ.Map.Value, w, settings, depth+1)
@@ -658,7 +655,7 @@ func (f File) typeUnmarshallers() map[string]string {
 	out["guid"] = "%RECV = iohelp.ReadGUID(r)"
 	out["date"] = "%RECV = iohelp.ReadTime(r)"
 	for _, en := range f.Enums {
-		out[en.Name] = "binary.Read(r, binary.LittleEndian, %ASGN)"
+		out[en.Name] = "%RECV = %TYPE(iohelp.ReadUint32(r))"
 	}
 	for _, st := range f.Structs {
 		format := "(%RECV), err = make%TYPE(r)\n" +

@@ -4,7 +4,6 @@ package generated
 
 import (
 	"bytes"
-	"encoding/binary"
 	"io"
 
 	"github.com/200sc/bebop"
@@ -57,7 +56,7 @@ type Bar struct {
 
 func (bbp Bar) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
-	binary.Write(w, binary.LittleEndian, bbp.bodyLen())
+	iohelp.WriteUint32(w, bbp.bodyLen())
 	if bbp.X != nil {
 		w.Write([]byte{1})
 		iohelp.WriteFloat64(w, *bbp.X)

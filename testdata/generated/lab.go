@@ -4,7 +4,6 @@ package generated
 
 import (
 	"bytes"
-	"encoding/binary"
 	"io"
 
 	"github.com/200sc/bebop"
@@ -312,7 +311,7 @@ type MediaMessage struct {
 
 func (bbp MediaMessage) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
-	binary.Write(w, binary.LittleEndian, bbp.bodyLen())
+	iohelp.WriteUint32(w, bbp.bodyLen())
 	if bbp.Codec != nil {
 		w.Write([]byte{1})
 		iohelp.WriteUint32(w, uint32(*bbp.Codec))
@@ -338,7 +337,7 @@ func (bbp *MediaMessage) DecodeBebop(ior io.Reader) (err error) {
 		switch iohelp.ReadByte(r) {
 		case 1:
 			bbp.Codec = new(VideoCodec)
-			binary.Read(r, binary.LittleEndian, bbp.Codec)
+			*bbp.Codec = VideoCodec(iohelp.ReadUint32(r))
 		case 2:
 			bbp.Data = new(VideoData)
 			(*bbp.Data), err = makeVideoData(r)
@@ -380,7 +379,7 @@ type SkipTestOld struct {
 
 func (bbp SkipTestOld) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
-	binary.Write(w, binary.LittleEndian, bbp.bodyLen())
+	iohelp.WriteUint32(w, bbp.bodyLen())
 	if bbp.X != nil {
 		w.Write([]byte{1})
 		iohelp.WriteInt32(w, *bbp.X)
@@ -442,7 +441,7 @@ type SkipTestNew struct {
 
 func (bbp SkipTestNew) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
-	binary.Write(w, binary.LittleEndian, bbp.bodyLen())
+	iohelp.WriteUint32(w, bbp.bodyLen())
 	if bbp.X != nil {
 		w.Write([]byte{1})
 		iohelp.WriteInt32(w, *bbp.X)
@@ -514,7 +513,7 @@ type SkipTestOldContainer struct {
 
 func (bbp SkipTestOldContainer) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
-	binary.Write(w, binary.LittleEndian, bbp.bodyLen())
+	iohelp.WriteUint32(w, bbp.bodyLen())
 	if bbp.S != nil {
 		w.Write([]byte{1})
 		err = (*bbp.S).EncodeBebop(w)
@@ -581,7 +580,7 @@ type SkipTestNewContainer struct {
 
 func (bbp SkipTestNewContainer) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
-	binary.Write(w, binary.LittleEndian, bbp.bodyLen())
+	iohelp.WriteUint32(w, bbp.bodyLen())
 	if bbp.S != nil {
 		w.Write([]byte{1})
 		err = (*bbp.S).EncodeBebop(w)

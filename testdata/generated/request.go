@@ -4,7 +4,6 @@ package generated
 
 import (
 	"bytes"
-	"encoding/binary"
 	"io"
 
 	"github.com/200sc/bebop"
@@ -40,7 +39,7 @@ func (bbp *Furniture) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
 	bbp.name = iohelp.ReadString(r)
 	bbp.price = iohelp.ReadUint32(r)
-	binary.Read(r, binary.LittleEndian, &bbp.family)
+	bbp.family = FurnitureFamily(iohelp.ReadUint32(r))
 	return r.Err
 }
 
@@ -81,7 +80,7 @@ type RequestResponse struct {
 
 func (bbp RequestResponse) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
-	binary.Write(w, binary.LittleEndian, uint32(RequestResponseOpCode))
+	iohelp.WriteUint32(w, uint32(RequestResponseOpCode))
 	iohelp.WriteUint32(w, uint32(len(bbp.availableFurniture)))
 	for _, elem := range bbp.availableFurniture {
 		err = (elem).EncodeBebop(w)
@@ -136,7 +135,7 @@ type RequestCatalog struct {
 
 func (bbp RequestCatalog) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
-	binary.Write(w, binary.LittleEndian, bbp.bodyLen())
+	iohelp.WriteUint32(w, bbp.bodyLen())
 	if bbp.Family != nil {
 		w.Write([]byte{1})
 		iohelp.WriteUint32(w, uint32(*bbp.Family))
@@ -160,7 +159,7 @@ func (bbp *RequestCatalog) DecodeBebop(ior io.Reader) (err error) {
 		switch iohelp.ReadByte(r) {
 		case 1:
 			bbp.Family = new(FurnitureFamily)
-			binary.Read(r, binary.LittleEndian, bbp.Family)
+			*bbp.Family = FurnitureFamily(iohelp.ReadUint32(r))
 		case 2:
 			bbp.SecretTunnel = new(string)
 			*bbp.SecretTunnel = iohelp.ReadString(r)

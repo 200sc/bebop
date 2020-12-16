@@ -4,7 +4,6 @@ package generated
 
 import (
 	"bytes"
-	"encoding/binary"
 	"io"
 
 	"github.com/200sc/bebop"
@@ -37,7 +36,7 @@ func (bbp Musician) EncodeBebop(iow io.Writer) (err error) {
 func (bbp *Musician) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
 	bbp.name = iohelp.ReadString(r)
-	binary.Read(r, binary.LittleEndian, &bbp.plays)
+	bbp.plays = Instrument(iohelp.ReadUint32(r))
 	return r.Err
 }
 
@@ -122,7 +121,7 @@ type Song struct {
 
 func (bbp Song) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
-	binary.Write(w, binary.LittleEndian, bbp.bodyLen())
+	iohelp.WriteUint32(w, bbp.bodyLen())
 	if bbp.Title != nil {
 		w.Write([]byte{1})
 		iohelp.WriteUint32(w, uint32(len(*bbp.Title)))
@@ -134,7 +133,7 @@ func (bbp Song) EncodeBebop(iow io.Writer) (err error) {
 	}
 	if bbp.Performers != nil {
 		w.Write([]byte{3})
-		binary.Write(w, binary.LittleEndian, uint32(len(*bbp.Performers)))
+		iohelp.WriteUint32(w, uint32(len(*bbp.Performers)))
 		for _, elem := range *bbp.Performers {
 			err = (elem).EncodeBebop(w)
 			if err != nil {
