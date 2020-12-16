@@ -1,6 +1,7 @@
 package bebop
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"sort"
@@ -223,6 +224,12 @@ func writeLineWithTabs(w io.Writer, format string, depth int, args ...string) {
 		ifArgs[i] = arg
 	}
 	fmt.Fprintf(w, format+"\n", ifArgs...)
+}
+
+func getLineWithTabs(format string, depth int, args ...string) string {
+	var b = new(bytes.Buffer)
+	writeLineWithTabs(b, format, depth, args...)
+	return b.String()
 }
 
 func writeComment(w io.Writer, depth int, comment string) {
@@ -486,8 +493,8 @@ func writeStructFieldUnmarshaller(name string, typ FieldType, w io.Writer, setti
 		writeLineWithTabs(w, lnName+" := iohelp.ReadUint32(r)", depth)
 		writeLineWithTabs(w, "%[4]s = make(%[3]s, "+lnName+")", depth, name, typ.Map.goString())
 		writeLineWithTabs(w, "for "+iName+" := uint32(0); "+iName+" < "+lnName+"; "+iName+"++ {", depth, name)
-		writeLineWithTabs(w, "var k "+simpleGoString(typ.Map.Key), depth+1, name)
-		writeLineWithTabs(w, settings.typeUnmarshallers[typ.Map.Key], depth+1, "&k")
+		ln := getLineWithTabs(settings.typeUnmarshallers[typ.Map.Key], depth+1, "&k")
+		w.Write([]byte(strings.Replace(ln, "=", ":=", 1)))
 		writeLineWithTabs(w, elemName+" := new(%[2]s)", depth+1, typ.Map.Value.goString())
 		writeStructFieldUnmarshaller(elemName, typ.Map.Value, w, settings, depth+1)
 		writeLineWithTabs(w, "(%[3]s)[k] = *"+elemName, depth+1, name)
@@ -574,11 +581,12 @@ func writeMessageFieldUnmarshaller(name string, typ FieldType, w io.Writer, sett
 		writeLineWithTabs(w, "binary.Read(r, binary.LittleEndian, &"+lnName+")", depth, name)
 		writeLineWithTabs(w, "%[3]s = make("+typ.Map.goString()+")", depth, name)
 		writeLineWithTabs(w, "for i := uint32(0); i < "+lnName+"; i++ {", depth, name)
-		writeLineWithTabs(w, "k := new("+simpleGoString(typ.Map.Key)+")", depth+1, name)
-		writeLineWithTabs(w, settings.typeUnmarshallers[typ.Map.Key], depth+1, "k")
+		ln := getLineWithTabs(settings.typeUnmarshallers[typ.Map.Key], depth+1, "&k")
+		w.Write([]byte(strings.Replace(ln, "=", ":=", 1)))
+		writeLineWithTabs(w, settings.typeUnmarshallers[typ.Map.Key], depth+1, "&k")
 		writeLineWithTabs(w, elemName+" := new(%[2]s)", depth+1, typ.Map.Value.goString())
 		writeMessageFieldUnmarshaller(elemName, typ.Map.Value, w, settings, depth+1)
-		writeLineWithTabs(w, "(%[3]s)[*k] = *"+elemName, depth+1, name)
+		writeLineWithTabs(w, "(%[3]s)[k] = *"+elemName, depth+1, name)
 		writeLineWithTabs(w, "}", depth)
 	} else {
 		writeLineWithTabs(w, settings.typeUnmarshallers[typ.Simple], depth, name)

@@ -49,11 +49,11 @@ func (bbp *ReadOnlyMap) DecodeBebop(ior io.Reader) (err error) {
 			binary.Read(r, binary.LittleEndian, &ln3)
 			*bbp.vals = make(map[string]uint8)
 			for i := uint32(0); i < ln3; i++ {
-				k := new(string)
-				*k = iohelp.ReadString(r)
+				k := iohelp.ReadString(r)
+				k = iohelp.ReadString(r)
 				elem3 := new(uint8)
 				*elem3 = iohelp.ReadUint8(r)
-				(*bbp.vals)[*k] = *elem3
+				(*bbp.vals)[k] = *elem3
 			}
 		default:
 			return er.Err
