@@ -28,6 +28,48 @@ type BasicTypes struct {
 	A_date time.Time
 }
 
+func (bbp BasicTypes) MarshalBebop() []byte {
+	buf := make([]byte, bbp.bodyLen())
+	bbp.MarshalBebopTo(buf)
+	return buf
+}
+
+func (bbp BasicTypes) MarshalBebopTo(buf []byte) {
+	at := 0
+	iohelp.WriteBoolBytes(buf[at:], bbp.A_bool)
+	at += 1
+	iohelp.WriteByteBytes(buf[at:], bbp.A_byte)
+	at += 1
+	iohelp.WriteInt16Bytes(buf[at:], bbp.A_int16)
+	at += 2
+	iohelp.WriteUint16Bytes(buf[at:], bbp.A_uint16)
+	at += 2
+	iohelp.WriteInt32Bytes(buf[at:], bbp.A_int32)
+	at += 4
+	iohelp.WriteUint32Bytes(buf[at:], bbp.A_uint32)
+	at += 4
+	iohelp.WriteInt64Bytes(buf[at:], bbp.A_int64)
+	at += 8
+	iohelp.WriteUint64Bytes(buf[at:], bbp.A_uint64)
+	at += 8
+	iohelp.WriteFloat32Bytes(buf[at:], bbp.A_float32)
+	at += 4
+	iohelp.WriteFloat64Bytes(buf[at:], bbp.A_float64)
+	at += 8
+	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.A_string)))
+	at += 4
+	copy(buf[at:at+len(bbp.A_string)], []byte(bbp.A_string))
+	at += len(bbp.A_string)
+	iohelp.WriteGUIDBytes(buf[at:], bbp.A_guid)
+	at += 16
+	if bbp.A_date != (time.Time{}) {
+		iohelp.WriteInt64Bytes(buf[at:], (bbp.A_date.UnixNano()/100))
+	} else {
+		iohelp.WriteInt64Bytes(buf[at:], 0)
+	}
+	at += 8
+}
+
 func (bbp BasicTypes) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
 	iohelp.WriteBool(w, bbp.A_bool)
@@ -69,8 +111,8 @@ func (bbp *BasicTypes) DecodeBebop(ior io.Reader) (err error) {
 	return r.Err
 }
 
-func (bbp *BasicTypes) bodyLen() uint32 {
-	bodyLen := uint32(0)
+func (bbp *BasicTypes) bodyLen() int {
+	bodyLen := 0
 	bodyLen += 1
 	bodyLen += 1
 	bodyLen += 2
@@ -82,7 +124,7 @@ func (bbp *BasicTypes) bodyLen() uint32 {
 	bodyLen += 4
 	bodyLen += 8
 	bodyLen += 4
-	bodyLen += uint32(len(bbp.A_string))
+	bodyLen += len(bbp.A_string)
 	bodyLen += 16
 	bodyLen += 8
 	return bodyLen

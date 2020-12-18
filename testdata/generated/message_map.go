@@ -16,9 +16,35 @@ type ReadOnlyMap struct {
 	vals *map[string]uint8
 }
 
+func (bbp ReadOnlyMap) MarshalBebop() []byte {
+	buf := make([]byte, bbp.bodyLen())
+	bbp.MarshalBebopTo(buf)
+	return buf
+}
+
+func (bbp ReadOnlyMap) MarshalBebopTo(buf []byte) {
+	at := 0
+	iohelp.WriteUint32Bytes(buf[at:], uint32(bbp.bodyLen()))
+	at += 4
+	if bbp.vals != nil {
+		buf[at] = 1
+		at++
+		iohelp.WriteUint32Bytes(buf[at:], uint32(len(*bbp.vals)))
+		at += 4
+		for k2, v2 := range *bbp.vals {
+			iohelp.WriteUint32Bytes(buf[at:], uint32(len(k2)))
+			at += 4
+			copy(buf[at:at+len(k2)], []byte(k2))
+			at += len(k2)
+			iohelp.WriteUint8Bytes(buf[at:], v2)
+			at += 1
+		}
+	}
+}
+
 func (bbp ReadOnlyMap) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
-	iohelp.WriteUint32(w, bbp.bodyLen())
+	iohelp.WriteUint32(w, uint32(bbp.bodyLen()))
 	if bbp.vals != nil {
 		w.Write([]byte{1})
 		iohelp.WriteUint32(w, uint32(len(*bbp.vals)))
@@ -54,14 +80,14 @@ func (bbp *ReadOnlyMap) DecodeBebop(ior io.Reader) (err error) {
 	}
 }
 
-func (bbp *ReadOnlyMap) bodyLen() uint32 {
-	bodyLen := uint32(1)
+func (bbp *ReadOnlyMap) bodyLen() int {
+	bodyLen := 5
 	if bbp.vals != nil {
 		bodyLen += 1
 		bodyLen += 4
 		for k2 := range *bbp.vals {
 			bodyLen += 4
-			bodyLen += uint32(len(k2))
+			bodyLen += len(k2)
 			bodyLen += 1
 		}
 	}

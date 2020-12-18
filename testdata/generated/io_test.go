@@ -364,6 +364,12 @@ func TestMarshalCycleRecords(t *testing.T) {
 					t.Fatal("original did not match unmarshaled")
 				}
 			}
+			noWriterMarshal := tc.record.MarshalBebop()
+			if string(marshalData) != string(noWriterMarshal) {
+				fmt.Println(marshalData)
+				fmt.Println(noWriterMarshal)
+				t.Fatal("no-writer marshal did not have same bytes as with-writer")
+			}
 		})
 	}
 }

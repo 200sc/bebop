@@ -61,10 +61,11 @@ little more sophisticated version of the first example in this document.
 
 The following is a list of known issues with the current version of the project, ordered by approximate priority for addressing them.
 
+We've added `Record.MarshalBebop() []byte`, but we now need `Record.UnmarshalBebop([]byte) error`.
+
 Tokenization and parsing errors do not currently report locations (line number, character position / column of the error's source).
 
-Benchmarks do not currently compare to protobuf, and would benefit from a larger set of messages
-to compare with.
+Benchmarks would benefit from a larger set of messages to compare with.
 
 Much of the code would be well served having a fuzzer thrown at it.
 

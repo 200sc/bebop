@@ -26,6 +26,88 @@ type BasicArrays struct {
 	A_guid [][16]byte
 }
 
+func (bbp BasicArrays) MarshalBebop() []byte {
+	buf := make([]byte, bbp.bodyLen())
+	bbp.MarshalBebopTo(buf)
+	return buf
+}
+
+func (bbp BasicArrays) MarshalBebopTo(buf []byte) {
+	at := 0
+	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.A_bool)))
+	at += 4
+	for _, v1 := range bbp.A_bool {
+		iohelp.WriteBoolBytes(buf[at:], v1)
+		at += 1
+	}
+	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.A_byte)))
+	at += 4
+	copy(buf[at:at+len(bbp.A_byte)], bbp.A_byte)
+	at += len(bbp.A_byte)
+	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.A_int16)))
+	at += 4
+	for _, v1 := range bbp.A_int16 {
+		iohelp.WriteInt16Bytes(buf[at:], v1)
+		at += 2
+	}
+	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.A_uint16)))
+	at += 4
+	for _, v1 := range bbp.A_uint16 {
+		iohelp.WriteUint16Bytes(buf[at:], v1)
+		at += 2
+	}
+	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.A_int32)))
+	at += 4
+	for _, v1 := range bbp.A_int32 {
+		iohelp.WriteInt32Bytes(buf[at:], v1)
+		at += 4
+	}
+	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.A_uint32)))
+	at += 4
+	for _, v1 := range bbp.A_uint32 {
+		iohelp.WriteUint32Bytes(buf[at:], v1)
+		at += 4
+	}
+	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.A_int64)))
+	at += 4
+	for _, v1 := range bbp.A_int64 {
+		iohelp.WriteInt64Bytes(buf[at:], v1)
+		at += 8
+	}
+	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.A_uint64)))
+	at += 4
+	for _, v1 := range bbp.A_uint64 {
+		iohelp.WriteUint64Bytes(buf[at:], v1)
+		at += 8
+	}
+	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.A_float32)))
+	at += 4
+	for _, v1 := range bbp.A_float32 {
+		iohelp.WriteFloat32Bytes(buf[at:], v1)
+		at += 4
+	}
+	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.A_float64)))
+	at += 4
+	for _, v1 := range bbp.A_float64 {
+		iohelp.WriteFloat64Bytes(buf[at:], v1)
+		at += 8
+	}
+	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.A_string)))
+	at += 4
+	for _, v1 := range bbp.A_string {
+		iohelp.WriteUint32Bytes(buf[at:], uint32(len(v1)))
+		at += 4
+		copy(buf[at:at+len(v1)], []byte(v1))
+		at += len(v1)
+	}
+	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.A_guid)))
+	at += 4
+	for _, v1 := range bbp.A_guid {
+		iohelp.WriteGUIDBytes(buf[at:], v1)
+		at += 16
+	}
+}
+
 func (bbp BasicArrays) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
 	iohelp.WriteUint32(w, uint32(len(bbp.A_bool)))
@@ -133,57 +215,35 @@ func (bbp *BasicArrays) DecodeBebop(ior io.Reader) (err error) {
 	return r.Err
 }
 
-func (bbp *BasicArrays) bodyLen() uint32 {
-	bodyLen := uint32(0)
+func (bbp *BasicArrays) bodyLen() int {
+	bodyLen := 0
 	bodyLen += 4
-	for range bbp.A_bool {
-		bodyLen += 1
-	}
+	bodyLen += len(bbp.A_bool) * 1
 	bodyLen += 4
-	for range bbp.A_byte {
-		bodyLen += 1
-	}
+	bodyLen += len(bbp.A_byte) * 1
 	bodyLen += 4
-	for range bbp.A_int16 {
-		bodyLen += 2
-	}
+	bodyLen += len(bbp.A_int16) * 2
 	bodyLen += 4
-	for range bbp.A_uint16 {
-		bodyLen += 2
-	}
+	bodyLen += len(bbp.A_uint16) * 2
 	bodyLen += 4
-	for range bbp.A_int32 {
-		bodyLen += 4
-	}
+	bodyLen += len(bbp.A_int32) * 4
 	bodyLen += 4
-	for range bbp.A_uint32 {
-		bodyLen += 4
-	}
+	bodyLen += len(bbp.A_uint32) * 4
 	bodyLen += 4
-	for range bbp.A_int64 {
-		bodyLen += 8
-	}
+	bodyLen += len(bbp.A_int64) * 8
 	bodyLen += 4
-	for range bbp.A_uint64 {
-		bodyLen += 8
-	}
+	bodyLen += len(bbp.A_uint64) * 8
 	bodyLen += 4
-	for range bbp.A_float32 {
-		bodyLen += 4
-	}
+	bodyLen += len(bbp.A_float32) * 4
 	bodyLen += 4
-	for range bbp.A_float64 {
-		bodyLen += 8
-	}
+	bodyLen += len(bbp.A_float64) * 8
 	bodyLen += 4
 	for _, elem := range bbp.A_string {
 		bodyLen += 4
-		bodyLen += uint32(len(elem))
+		bodyLen += len(elem)
 	}
 	bodyLen += 4
-	for range bbp.A_guid {
-		bodyLen += 16
-	}
+	bodyLen += len(bbp.A_guid) * 16
 	return bodyLen
 }
 
@@ -197,6 +257,22 @@ var _ bebop.Record = &TestInt32Array{}
 
 type TestInt32Array struct {
 	A []int32
+}
+
+func (bbp TestInt32Array) MarshalBebop() []byte {
+	buf := make([]byte, bbp.bodyLen())
+	bbp.MarshalBebopTo(buf)
+	return buf
+}
+
+func (bbp TestInt32Array) MarshalBebopTo(buf []byte) {
+	at := 0
+	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.A)))
+	at += 4
+	for _, v1 := range bbp.A {
+		iohelp.WriteInt32Bytes(buf[at:], v1)
+		at += 4
+	}
 }
 
 func (bbp TestInt32Array) EncodeBebop(iow io.Writer) (err error) {
@@ -217,12 +293,10 @@ func (bbp *TestInt32Array) DecodeBebop(ior io.Reader) (err error) {
 	return r.Err
 }
 
-func (bbp *TestInt32Array) bodyLen() uint32 {
-	bodyLen := uint32(0)
+func (bbp *TestInt32Array) bodyLen() int {
+	bodyLen := 0
 	bodyLen += 4
-	for range bbp.A {
-		bodyLen += 4
-	}
+	bodyLen += len(bbp.A) * 4
 	return bodyLen
 }
 

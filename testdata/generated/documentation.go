@@ -38,6 +38,18 @@ type DocS struct {
 	X int32
 }
 
+func (bbp DocS) MarshalBebop() []byte {
+	buf := make([]byte, bbp.bodyLen())
+	bbp.MarshalBebopTo(buf)
+	return buf
+}
+
+func (bbp DocS) MarshalBebopTo(buf []byte) {
+	at := 0
+	iohelp.WriteInt32Bytes(buf[at:], bbp.X)
+	at += 4
+}
+
 func (bbp DocS) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
 	iohelp.WriteInt32(w, bbp.X)
@@ -50,8 +62,8 @@ func (bbp *DocS) DecodeBebop(ior io.Reader) (err error) {
 	return r.Err
 }
 
-func (bbp *DocS) bodyLen() uint32 {
-	bodyLen := uint32(0)
+func (bbp *DocS) bodyLen() int {
+	bodyLen := 0
 	bodyLen += 4
 	return bodyLen
 }
@@ -69,9 +81,27 @@ type DepM struct {
 	X *int32
 }
 
+func (bbp DepM) MarshalBebop() []byte {
+	buf := make([]byte, bbp.bodyLen())
+	bbp.MarshalBebopTo(buf)
+	return buf
+}
+
+func (bbp DepM) MarshalBebopTo(buf []byte) {
+	at := 0
+	iohelp.WriteUint32Bytes(buf[at:], uint32(bbp.bodyLen()))
+	at += 4
+	if bbp.X != nil {
+		buf[at] = 1
+		at++
+		iohelp.WriteInt32Bytes(buf[at:], *bbp.X)
+		at += 4
+	}
+}
+
 func (bbp DepM) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
-	iohelp.WriteUint32(w, bbp.bodyLen())
+	iohelp.WriteUint32(w, uint32(bbp.bodyLen()))
 	if bbp.X != nil {
 		w.Write([]byte{1})
 		iohelp.WriteInt32(w, *bbp.X)
@@ -97,8 +127,8 @@ func (bbp *DepM) DecodeBebop(ior io.Reader) (err error) {
 	}
 }
 
-func (bbp *DepM) bodyLen() uint32 {
-	bodyLen := uint32(1)
+func (bbp *DepM) bodyLen() int {
+	bodyLen := 5
 	if bbp.X != nil {
 		bodyLen += 1
 		bodyLen += 4
@@ -125,9 +155,39 @@ type DocM struct {
 	Z *int32
 }
 
+func (bbp DocM) MarshalBebop() []byte {
+	buf := make([]byte, bbp.bodyLen())
+	bbp.MarshalBebopTo(buf)
+	return buf
+}
+
+func (bbp DocM) MarshalBebopTo(buf []byte) {
+	at := 0
+	iohelp.WriteUint32Bytes(buf[at:], uint32(bbp.bodyLen()))
+	at += 4
+	if bbp.X != nil {
+		buf[at] = 1
+		at++
+		iohelp.WriteInt32Bytes(buf[at:], *bbp.X)
+		at += 4
+	}
+	if bbp.Y != nil {
+		buf[at] = 2
+		at++
+		iohelp.WriteInt32Bytes(buf[at:], *bbp.Y)
+		at += 4
+	}
+	if bbp.Z != nil {
+		buf[at] = 3
+		at++
+		iohelp.WriteInt32Bytes(buf[at:], *bbp.Z)
+		at += 4
+	}
+}
+
 func (bbp DocM) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
-	iohelp.WriteUint32(w, bbp.bodyLen())
+	iohelp.WriteUint32(w, uint32(bbp.bodyLen()))
 	if bbp.X != nil {
 		w.Write([]byte{1})
 		iohelp.WriteInt32(w, *bbp.X)
@@ -167,8 +227,8 @@ func (bbp *DocM) DecodeBebop(ior io.Reader) (err error) {
 	}
 }
 
-func (bbp *DocM) bodyLen() uint32 {
-	bodyLen := uint32(1)
+func (bbp *DocM) bodyLen() int {
+	bodyLen := 5
 	if bbp.X != nil {
 		bodyLen += 1
 		bodyLen += 4

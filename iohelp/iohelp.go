@@ -157,64 +157,122 @@ func WriteGUID(w ErrorWriter, guid [16]byte) {
 	w.Write(flipped[:])
 }
 
+func WriteGUIDBytes(b []byte, guid [16]byte) {
+	_ = b[15]
+	b[0] = guid[3]
+	b[1] = guid[2]
+	b[2] = guid[1]
+	b[3] = guid[0]
+	b[4] = guid[5]
+	b[5] = guid[4]
+	b[6] = guid[7]
+	b[7] = guid[6]
+	b[8] = guid[8]
+	b[9] = guid[9]
+	b[10] = guid[10]
+	b[11] = guid[11]
+	b[12] = guid[12]
+	b[13] = guid[13]
+	b[14] = guid[14]
+	b[15] = guid[15]
+}
+
 func WriteInt64(w ErrorWriter, i int64) {
-	w.Buffer[0] = byte(i)
-	w.Buffer[1] = byte(i >> 8)
-	w.Buffer[2] = byte(i >> 16)
-	w.Buffer[3] = byte(i >> 24)
-	w.Buffer[4] = byte(i >> 32)
-	w.Buffer[5] = byte(i >> 40)
-	w.Buffer[6] = byte(i >> 48)
-	w.Buffer[7] = byte(i >> 56)
+	WriteInt64Bytes(w.Buffer, i)
 	w.Write(w.Buffer)
+}
+
+func WriteInt64Bytes(b []byte, i int64) {
+	_ = b[7]
+	b[0] = byte(i)
+	b[1] = byte(i >> 8)
+	b[2] = byte(i >> 16)
+	b[3] = byte(i >> 24)
+	b[4] = byte(i >> 32)
+	b[5] = byte(i >> 40)
+	b[6] = byte(i >> 48)
+	b[7] = byte(i >> 56)
 }
 
 func WriteUint64(w ErrorWriter, i uint64) {
-	w.Buffer[0] = byte(i)
-	w.Buffer[1] = byte(i >> 8)
-	w.Buffer[2] = byte(i >> 16)
-	w.Buffer[3] = byte(i >> 24)
-	w.Buffer[4] = byte(i >> 32)
-	w.Buffer[5] = byte(i >> 40)
-	w.Buffer[6] = byte(i >> 48)
-	w.Buffer[7] = byte(i >> 56)
+	WriteUint64Bytes(w.Buffer, i)
 	w.Write(w.Buffer)
 }
 
+func WriteUint64Bytes(b []byte, i uint64) {
+	_ = b[7]
+	b[0] = byte(i)
+	b[1] = byte(i >> 8)
+	b[2] = byte(i >> 16)
+	b[3] = byte(i >> 24)
+	b[4] = byte(i >> 32)
+	b[5] = byte(i >> 40)
+	b[6] = byte(i >> 48)
+	b[7] = byte(i >> 56)
+}
+
 func WriteInt32(w ErrorWriter, i int32) {
-	w.Buffer[0] = byte(i)
-	w.Buffer[1] = byte(i >> 8)
-	w.Buffer[2] = byte(i >> 16)
-	w.Buffer[3] = byte(i >> 24)
+	WriteInt32Bytes(w.Buffer, i)
 	w.Write(w.Buffer[:4])
+}
+
+func WriteInt32Bytes(b []byte, i int32) {
+	_ = b[3]
+	b[0] = byte(i)
+	b[1] = byte(i >> 8)
+	b[2] = byte(i >> 16)
+	b[3] = byte(i >> 24)
 }
 
 func WriteUint32(w ErrorWriter, i uint32) {
-	w.Buffer[0] = byte(i)
-	w.Buffer[1] = byte(i >> 8)
-	w.Buffer[2] = byte(i >> 16)
-	w.Buffer[3] = byte(i >> 24)
+	WriteUint32Bytes(w.Buffer, i)
 	w.Write(w.Buffer[:4])
 }
 
+func WriteUint32Bytes(b []byte, i uint32) {
+	_ = b[3]
+	b[0] = byte(i)
+	b[1] = byte(i >> 8)
+	b[2] = byte(i >> 16)
+	b[3] = byte(i >> 24)
+}
+
 func WriteInt16(w ErrorWriter, i int16) {
-	w.Buffer[0] = byte(i)
-	w.Buffer[1] = byte(i >> 8)
+	WriteInt16Bytes(w.Buffer, i)
 	w.Write(w.Buffer[:2])
 }
 
+func WriteInt16Bytes(b []byte, i int16) {
+	_ = b[1]
+	b[0] = byte(i)
+	b[1] = byte(i >> 8)
+}
+
 func WriteUint16(w ErrorWriter, i uint16) {
-	w.Buffer[0] = byte(i)
-	w.Buffer[1] = byte(i >> 8)
+	WriteUint16Bytes(w.Buffer, i)
 	w.Write(w.Buffer[:2])
+}
+
+func WriteUint16Bytes(b []byte, i uint16) {
+	_ = b[1]
+	b[0] = byte(i)
+	b[1] = byte(i >> 8)
 }
 
 func WriteByte(w ErrorWriter, b byte) {
 	w.Write([]byte{b})
 }
 
+func WriteByteBytes(b []byte, by byte) {
+	b[0] = by
+}
+
 func WriteUint8(w ErrorWriter, b uint8) {
 	w.Write([]byte{b})
+}
+
+func WriteUint8Bytes(b []byte, by uint8) {
+	b[0] = by
 }
 
 func WriteBool(w ErrorWriter, b bool) {
@@ -225,10 +283,26 @@ func WriteBool(w ErrorWriter, b bool) {
 	}
 }
 
+func WriteBoolBytes(b []byte, bl bool) {
+	if bl {
+		b[0] = 1
+	} else {
+		b[0] = 0
+	}
+}
+
 func WriteFloat32(w ErrorWriter, f float32) {
 	WriteUint32(w, math.Float32bits(f))
 }
 
+func WriteFloat32Bytes(b []byte, f float32) {
+	WriteUint32Bytes(b, math.Float32bits(f))
+}
+
 func WriteFloat64(w ErrorWriter, f float64) {
 	WriteUint64(w, math.Float64bits(f))
+}
+
+func WriteFloat64Bytes(b []byte, f float64) {
+	WriteUint64Bytes(b, math.Float64bits(f))
 }

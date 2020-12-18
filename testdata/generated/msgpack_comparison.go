@@ -38,6 +38,82 @@ type MsgpackComparison struct {
 	ARRAY8 []int32
 }
 
+func (bbp MsgpackComparison) MarshalBebop() []byte {
+	buf := make([]byte, bbp.bodyLen())
+	bbp.MarshalBebopTo(buf)
+	return buf
+}
+
+func (bbp MsgpackComparison) MarshalBebopTo(buf []byte) {
+	at := 0
+	iohelp.WriteUint8Bytes(buf[at:], bbp.INT0)
+	at += 1
+	iohelp.WriteUint8Bytes(buf[at:], bbp.INT1)
+	at += 1
+	iohelp.WriteInt16Bytes(buf[at:], bbp.INT1_)
+	at += 2
+	iohelp.WriteUint8Bytes(buf[at:], bbp.INT8)
+	at += 1
+	iohelp.WriteInt16Bytes(buf[at:], bbp.INT8_)
+	at += 2
+	iohelp.WriteInt16Bytes(buf[at:], bbp.INT16)
+	at += 2
+	iohelp.WriteInt16Bytes(buf[at:], bbp.INT16_)
+	at += 2
+	iohelp.WriteInt32Bytes(buf[at:], bbp.INT32)
+	at += 4
+	iohelp.WriteInt32Bytes(buf[at:], bbp.INT32_)
+	at += 4
+	iohelp.WriteBoolBytes(buf[at:], bbp.TRUE)
+	at += 1
+	iohelp.WriteBoolBytes(buf[at:], bbp.FALSE)
+	at += 1
+	iohelp.WriteFloat64Bytes(buf[at:], bbp.FLOAT)
+	at += 8
+	iohelp.WriteFloat64Bytes(buf[at:], bbp.FLOAT_)
+	at += 8
+	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.STRING0)))
+	at += 4
+	copy(buf[at:at+len(bbp.STRING0)], []byte(bbp.STRING0))
+	at += len(bbp.STRING0)
+	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.STRING1)))
+	at += 4
+	copy(buf[at:at+len(bbp.STRING1)], []byte(bbp.STRING1))
+	at += len(bbp.STRING1)
+	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.STRING4)))
+	at += 4
+	copy(buf[at:at+len(bbp.STRING4)], []byte(bbp.STRING4))
+	at += len(bbp.STRING4)
+	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.STRING8)))
+	at += 4
+	copy(buf[at:at+len(bbp.STRING8)], []byte(bbp.STRING8))
+	at += len(bbp.STRING8)
+	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.STRING16)))
+	at += 4
+	copy(buf[at:at+len(bbp.STRING16)], []byte(bbp.STRING16))
+	at += len(bbp.STRING16)
+	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.ARRAY0)))
+	at += 4
+	for _, v1 := range bbp.ARRAY0 {
+		iohelp.WriteInt32Bytes(buf[at:], v1)
+		at += 4
+	}
+	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.ARRAY1)))
+	at += 4
+	for _, v1 := range bbp.ARRAY1 {
+		iohelp.WriteUint32Bytes(buf[at:], uint32(len(v1)))
+		at += 4
+		copy(buf[at:at+len(v1)], []byte(v1))
+		at += len(v1)
+	}
+	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.ARRAY8)))
+	at += 4
+	for _, v1 := range bbp.ARRAY8 {
+		iohelp.WriteInt32Bytes(buf[at:], v1)
+		at += 4
+	}
+}
+
 func (bbp MsgpackComparison) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
 	iohelp.WriteUint8(w, bbp.INT0)
@@ -114,8 +190,8 @@ func (bbp *MsgpackComparison) DecodeBebop(ior io.Reader) (err error) {
 	return r.Err
 }
 
-func (bbp *MsgpackComparison) bodyLen() uint32 {
-	bodyLen := uint32(0)
+func (bbp *MsgpackComparison) bodyLen() int {
+	bodyLen := 0
 	bodyLen += 1
 	bodyLen += 1
 	bodyLen += 2
@@ -130,28 +206,24 @@ func (bbp *MsgpackComparison) bodyLen() uint32 {
 	bodyLen += 8
 	bodyLen += 8
 	bodyLen += 4
-	bodyLen += uint32(len(bbp.STRING0))
+	bodyLen += len(bbp.STRING0)
 	bodyLen += 4
-	bodyLen += uint32(len(bbp.STRING1))
+	bodyLen += len(bbp.STRING1)
 	bodyLen += 4
-	bodyLen += uint32(len(bbp.STRING4))
+	bodyLen += len(bbp.STRING4)
 	bodyLen += 4
-	bodyLen += uint32(len(bbp.STRING8))
+	bodyLen += len(bbp.STRING8)
 	bodyLen += 4
-	bodyLen += uint32(len(bbp.STRING16))
+	bodyLen += len(bbp.STRING16)
 	bodyLen += 4
-	for range bbp.ARRAY0 {
-		bodyLen += 4
-	}
+	bodyLen += len(bbp.ARRAY0) * 4
 	bodyLen += 4
 	for _, elem := range bbp.ARRAY1 {
 		bodyLen += 4
-		bodyLen += uint32(len(elem))
+		bodyLen += len(elem)
 	}
 	bodyLen += 4
-	for range bbp.ARRAY8 {
-		bodyLen += 4
-	}
+	bodyLen += len(bbp.ARRAY8) * 4
 	return bodyLen
 }
 

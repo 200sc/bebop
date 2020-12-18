@@ -15,6 +15,24 @@ type ArrayOfStrings struct {
 	Strings []string
 }
 
+func (bbp ArrayOfStrings) MarshalBebop() []byte {
+	buf := make([]byte, bbp.bodyLen())
+	bbp.MarshalBebopTo(buf)
+	return buf
+}
+
+func (bbp ArrayOfStrings) MarshalBebopTo(buf []byte) {
+	at := 0
+	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.Strings)))
+	at += 4
+	for _, v1 := range bbp.Strings {
+		iohelp.WriteUint32Bytes(buf[at:], uint32(len(v1)))
+		at += 4
+		copy(buf[at:at+len(v1)], []byte(v1))
+		at += len(v1)
+	}
+}
+
 func (bbp ArrayOfStrings) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
 	iohelp.WriteUint32(w, uint32(len(bbp.Strings)))
@@ -34,12 +52,12 @@ func (bbp *ArrayOfStrings) DecodeBebop(ior io.Reader) (err error) {
 	return r.Err
 }
 
-func (bbp *ArrayOfStrings) bodyLen() uint32 {
-	bodyLen := uint32(0)
+func (bbp *ArrayOfStrings) bodyLen() int {
+	bodyLen := 0
 	bodyLen += 4
 	for _, elem := range bbp.Strings {
 		bodyLen += 4
-		bodyLen += uint32(len(elem))
+		bodyLen += len(elem)
 	}
 	return bodyLen
 }

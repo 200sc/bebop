@@ -13,6 +13,7 @@ import (
 type GenerateSettings struct {
 	PackageName string
 
+	typeByters        map[string]string
 	typeMarshallers   map[string]string
 	typeUnmarshallers map[string]string
 	typeLengthers     map[string]string
@@ -148,6 +149,7 @@ func (f File) Generate(w io.Writer, settings GenerateSettings) error {
 		return fmt.Errorf("cannot generate file: %w", err)
 	}
 	settings.typeMarshallers = f.typeMarshallers()
+	settings.typeByters = f.typeByters()
 	settings.typeUnmarshallers = f.typeUnmarshallers()
 	settings.typeLengthers = f.typeLengthers()
 	settings.customRecordTypes = f.customRecordTypes()
@@ -280,6 +282,28 @@ func (st Struct) Generate(w io.Writer, settings GenerateSettings) {
 	}
 	writeLine(w, "}")
 	writeLine(w, "")
+	writeLine(w, "func (bbp %s) MarshalBebop() []byte {", exposedName)
+	writeLine(w, "\tbuf := make([]byte, bbp.bodyLen())")
+	writeLine(w, "\tbbp.MarshalBebopTo(buf)")
+	writeLine(w, "\treturn buf")
+	writeLine(w, "}")
+	writeLine(w, "")
+	writeLine(w, "func (bbp %s) MarshalBebopTo(buf []byte) {", exposedName)
+	if st.OpCode != 0 {
+		writeLine(w, "\tiohelp.WriteUint32Bytes(buf, uint32(%sOpCode))", exposedName)
+		writeLine(w, "\tat := 4")
+	} else {
+		writeLine(w, "\tat := 0")
+	}
+	for _, fd := range st.Fields {
+		name := exposeName(fd.Name)
+		if st.ReadOnly {
+			name = unexposeName(fd.Name)
+		}
+		writeFieldByter("bbp."+name, fd.FieldType, w, settings, 1)
+	}
+	writeLine(w, "}")
+	writeLine(w, "")
 	isFirstTopLength = true
 	writeLine(w, "func (bbp %s) EncodeBebop(iow io.Writer) (err error) {", exposedName)
 	writeLine(w, "\tw := iohelp.NewErrorWriter(iow)")
@@ -291,7 +315,7 @@ func (st Struct) Generate(w io.Writer, settings GenerateSettings) {
 		if st.ReadOnly {
 			name = unexposeName(fd.Name)
 		}
-		writeStructFieldMarshaller("bbp."+name, fd.FieldType, w, settings, 1)
+		writeFieldMarshaller("bbp."+name, fd.FieldType, w, settings, 1)
 	}
 	writeLine(w, "\treturn w.Err")
 	writeLine(w, "}")
@@ -312,8 +336,11 @@ func (st Struct) Generate(w io.Writer, settings GenerateSettings) {
 	writeLine(w, "\treturn r.Err")
 	writeLine(w, "}")
 	writeLine(w, "")
-	writeLine(w, "func (bbp *%s) bodyLen() uint32 {", exposedName)
-	writeLine(w, "\tbodyLen := uint32(0)")
+	writeLine(w, "func (bbp *%s) bodyLen() int {", exposedName)
+	writeLine(w, "\tbodyLen := 0")
+	if st.OpCode != 0 {
+		writeLine(w, "\tbodyLen += 4")
+	}
 	for _, fd := range st.Fields {
 		name := exposeName(fd.Name)
 		if st.ReadOnly {
@@ -374,10 +401,43 @@ func (msg Message) Generate(w io.Writer, settings GenerateSettings) {
 	}
 	writeLine(w, "}")
 	writeLine(w, "")
+	writeLine(w, "func (bbp %s) MarshalBebop() []byte {", exposedName)
+	writeLine(w, "\tbuf := make([]byte, bbp.bodyLen())")
+	writeLine(w, "\tbbp.MarshalBebopTo(buf)")
+	writeLine(w, "\treturn buf")
+	writeLine(w, "}")
+	writeLine(w, "")
+	writeLine(w, "func (bbp %s) MarshalBebopTo(buf []byte) {", exposedName)
+	if msg.OpCode != 0 {
+		writeLine(w, "\tiohelp.WriteUint32Bytes(buf, uint32(%sOpCode))", exposedName)
+		writeLine(w, "\tat := 4")
+	} else {
+		writeLine(w, "\tat := 0")
+	}
+	writeLine(w, "\tiohelp.WriteUint32Bytes(buf[at:], uint32(bbp.bodyLen()))")
+	writeLine(w, "\tat += 4")
+	for _, fd := range fields {
+		name := exposeName(fd.Name)
+		if msg.ReadOnly {
+			name = unexposeName(fd.Name)
+		}
+		num := strconv.Itoa(int(fd.num))
+		name = "*bbp." + name
+		writeLineWithTabs(w, "if %RECV != nil {", 1, name)
+		writeLineWithTabs(w, "buf[at] = %ASGN", 2, num)
+		writeLineWithTabs(w, "at++", 2)
+		writeFieldByter(name, fd.FieldType, w, settings, 2)
+		writeLineWithTabs(w, "}", 1)
+	}
+	writeLine(w, "}")
+	writeLine(w, "")
 	isFirstTopLength = true
 	writeLine(w, "func (bbp %s) EncodeBebop(iow io.Writer) (err error) {", exposedName)
 	writeLine(w, "\tw := iohelp.NewErrorWriter(iow)")
-	writeLine(w, "\tiohelp.WriteUint32(w, bbp.bodyLen())")
+	if msg.OpCode != 0 {
+		writeLine(w, "\tiohelp.WriteUint32(w, uint32(%sOpCode))", exposedName)
+	}
+	writeLine(w, "\tiohelp.WriteUint32(w, uint32(bbp.bodyLen()))")
 	for _, fd := range fields {
 		name := exposeName(fd.Name)
 		if msg.ReadOnly {
@@ -387,7 +447,7 @@ func (msg Message) Generate(w io.Writer, settings GenerateSettings) {
 		name = "*bbp." + name
 		writeLineWithTabs(w, "if %RECV != nil {", 1, name)
 		writeLineWithTabs(w, "w.Write([]byte{%ASGN})", 2, num)
-		writeMessageFieldMarshaller(name, fd.FieldType, w, settings, 2)
+		writeFieldMarshaller(name, fd.FieldType, w, settings, 2)
 		writeLineWithTabs(w, "}", 1)
 	}
 	writeLine(w, "\tw.Write([]byte{0})")
@@ -425,8 +485,12 @@ func (msg Message) Generate(w io.Writer, settings GenerateSettings) {
 	writeLine(w, "\t}")
 	writeLine(w, "}")
 	writeLine(w, "")
-	writeLine(w, "func (bbp *%s) bodyLen() uint32 {", exposedName)
-	writeLine(w, "\tbodyLen := uint32(1)")
+	writeLine(w, "func (bbp *%s) bodyLen() int {", exposedName)
+	// size at front (4) + 0 byte (1)
+	writeLine(w, "\tbodyLen := 5")
+	if msg.OpCode != 0 {
+		writeLine(w, "\tbodyLen += 4")
+	}
 	for _, fd := range fields {
 		name := exposeName(fd.Name)
 		if msg.ReadOnly {
@@ -485,17 +549,41 @@ func lengthName() string {
 	return "ln" + strconv.Itoa(lengthInc)
 }
 
-func writeStructFieldMarshaller(name string, typ FieldType, w io.Writer, settings GenerateSettings, depth int) {
+func writeFieldByter(name string, typ FieldType, w io.Writer, settings GenerateSettings, depth int) {
+	if typ.Array != nil {
+		writeLineWithTabs(w, "iohelp.WriteUint32Bytes(buf[at:], uint32(len(%ASGN)))", depth, name)
+		writeLineWithTabs(w, "at += 4", depth)
+		if typ.Array.Simple == "byte" || typ.Array.Simple == "uint8" {
+			writeLineWithTabs(w, "copy(buf[at:at+len(%ASGN)], %ASGN)", depth, name)
+			writeLineWithTabs(w, "at += len(%ASGN)", depth, name)
+			return
+		}
+		writeLineWithTabs(w, "for _, %VNAME := range %ASGN {", depth, name)
+		writeFieldByter(depthName("v", depth), *typ.Array, w, settings, depth+1)
+		writeLineWithTabs(w, "}", depth)
+	} else if typ.Map != nil {
+		writeLineWithTabs(w, "iohelp.WriteUint32Bytes(buf[at:], uint32(len(%ASGN)))", depth, name)
+		writeLineWithTabs(w, "at += 4", depth)
+		writeLineWithTabs(w, "for %KNAME, %VNAME := range %ASGN {", depth, name)
+		writeLineWithTabs(w, settings.typeByters[typ.Map.Key], depth+1, depthName("k", depth))
+		writeFieldByter(depthName("v", depth), typ.Map.Value, w, settings, depth+1)
+		writeLineWithTabs(w, "}", depth)
+	} else {
+		writeLineWithTabs(w, settings.typeByters[typ.Simple], depth, name, typ.goString())
+	}
+}
+
+func writeFieldMarshaller(name string, typ FieldType, w io.Writer, settings GenerateSettings, depth int) {
 	if typ.Array != nil {
 		writeLineWithTabs(w, "iohelp.WriteUint32(w, uint32(len(%ASGN)))", depth, name)
 		writeLineWithTabs(w, "for _, elem := range %ASGN {", depth, name)
-		writeStructFieldMarshaller("elem", *typ.Array, w, settings, depth+1)
+		writeFieldMarshaller("elem", *typ.Array, w, settings, depth+1)
 		writeLineWithTabs(w, "}", depth)
 	} else if typ.Map != nil {
 		writeLineWithTabs(w, "iohelp.WriteUint32(w, uint32(len(%ASGN)))", depth, name)
 		writeLineWithTabs(w, "for %KNAME, %VNAME := range %ASGN {", depth, name)
 		writeLineWithTabs(w, settings.typeMarshallers[typ.Map.Key], depth+1, depthName("k", depth))
-		writeStructFieldMarshaller(depthName("v", depth), typ.Map.Value, w, settings, depth+1)
+		writeFieldMarshaller(depthName("v", depth), typ.Map.Value, w, settings, depth+1)
 		writeLineWithTabs(w, "}", depth)
 	} else {
 		writeLineWithTabs(w, settings.typeMarshallers[typ.Simple], depth, name, typ.goString())
@@ -542,23 +630,6 @@ func writeStructFieldUnmarshaller(name string, typ FieldType, w io.Writer, setti
 	}
 }
 
-func writeMessageFieldMarshaller(name string, typ FieldType, w io.Writer, settings GenerateSettings, depth int) {
-	if typ.Array != nil {
-		writeLineWithTabs(w, "iohelp.WriteUint32(w, uint32(len(%ASGN)))", depth, name)
-		writeLineWithTabs(w, "for _, elem := range %ASGN {", depth, name)
-		writeMessageFieldMarshaller("elem", *typ.Array, w, settings, depth+1)
-		writeLineWithTabs(w, "}", depth)
-	} else if typ.Map != nil {
-		writeLineWithTabs(w, "iohelp.WriteUint32(w, uint32(len(%ASGN)))", depth, name)
-		writeLineWithTabs(w, "for %KNAME, %VNAME := range %ASGN {", depth, name)
-		writeLineWithTabs(w, settings.typeMarshallers[typ.Map.Key], depth+1, depthName("k", depth))
-		writeMessageFieldMarshaller(depthName("v", depth), typ.Map.Value, w, settings, depth+1)
-		writeLineWithTabs(w, "}", depth)
-	} else {
-		writeLineWithTabs(w, settings.typeMarshallers[typ.Simple], depth, name, typ.goString())
-	}
-}
-
 func typeNeedsElem(typ string, settings GenerateSettings) bool {
 	switch typ {
 	case "":
@@ -576,6 +647,11 @@ func typeNeedsElem(typ string, settings GenerateSettings) bool {
 func writeMessageFieldBodyCount(name string, typ FieldType, w io.Writer, settings GenerateSettings, depth int) {
 	if typ.Array != nil {
 		writeLineWithTabs(w, "bodyLen += 4", depth)
+		if sz, ok := fixedSizeTypes[typ.Array.Simple]; ok {
+			// short circuit-- write length times elem size
+			writeLineWithTabs(w, "bodyLen += len(%ASGN) * "+strconv.Itoa(int(sz)), depth, name)
+			return
+		}
 		if typeNeedsElem(typ.Array.Simple, settings) {
 			writeLineWithTabs(w, "for _, elem := range %ASGN {", depth, name)
 		} else {
@@ -644,11 +720,25 @@ func unexposeName(name string) string {
 	return ""
 }
 
-var fixedSizeTypes = []string{"bool", "byte", "uint8", "uint16", "int16", "uint32", "int32", "uint64", "int64", "float32", "float64"}
+var fixedSizeTypes = map[string]uint8{
+	"bool":    1,
+	"byte":    1,
+	"uint8":   1,
+	"uint16":  2,
+	"int16":   2,
+	"uint32":  4,
+	"int32":   4,
+	"uint64":  8,
+	"int64":   8,
+	"float32": 4,
+	"float64": 8,
+	"guid":    16,
+	"date":    8,
+}
 
 func (f File) typeUnmarshallers() map[string]string {
 	out := make(map[string]string)
-	for _, typ := range fixedSizeTypes {
+	for typ := range fixedSizeTypes {
 		out[typ] = "%RECV = iohelp.Read" + strings.Title(typ) + "(r)"
 	}
 	out["string"] = "%RECV = iohelp.ReadString(r)"
@@ -676,7 +766,7 @@ func (f File) typeUnmarshallers() map[string]string {
 
 func (f File) typeMarshallers() map[string]string {
 	out := make(map[string]string)
-	for _, typ := range fixedSizeTypes {
+	for typ := range fixedSizeTypes {
 		out[typ] = "iohelp.Write" + strings.Title(typ) + "(w, %ASGN)"
 	}
 	out["string"] = "iohelp.WriteUint32(w, uint32(len(%ASGN)))\n" +
@@ -709,20 +799,10 @@ func (f File) typeMarshallers() map[string]string {
 
 func (f File) typeLengthers() map[string]string {
 	out := make(map[string]string)
-	out["bool"] = "bodyLen += 1"
-	out["byte"] = "bodyLen += 1"
-	out["uint8"] = out["byte"]
-	out["uint16"] = "bodyLen += 2"
-	out["int16"] = "bodyLen += 2"
-	out["uint32"] = "bodyLen += 4"
-	out["int32"] = "bodyLen += 4"
-	out["uint64"] = "bodyLen += 8"
-	out["int64"] = "bodyLen += 8"
-	out["float32"] = "bodyLen += 4"
-	out["float64"] = "bodyLen += 8"
-	out["string"] = "bodyLen += 4\n" + "bodyLen += uint32(len(%ASGN))"
-	out["guid"] = "bodyLen += 16"
-	out["date"] = "bodyLen += 8"
+	for typ, sz := range fixedSizeTypes {
+		out[typ] = "bodyLen += " + strconv.Itoa(int(sz))
+	}
+	out["string"] = "bodyLen += 4\n" + "bodyLen += len(%ASGN)"
 	for _, en := range f.Enums {
 		out[en.Name] = "bodyLen += 4"
 	}
@@ -733,6 +813,40 @@ func (f File) typeLengthers() map[string]string {
 	for _, msg := range f.Messages {
 		format := "bodyLen += (%ASGN).bodyLen()"
 		out[msg.Name] = format
+	}
+	return out
+}
+
+func (f File) typeByters() map[string]string {
+	out := make(map[string]string)
+	for typ, sz := range fixedSizeTypes {
+		out[typ] = "iohelp.Write" + strings.Title(typ) + "Bytes(buf[at:], %ASGN)\n" +
+			"at += " + strconv.Itoa(int(sz))
+	}
+	out["string"] = "iohelp.WriteUint32Bytes(buf[at:], uint32(len(%ASGN)))\n" +
+		"at += 4\n" +
+		"copy(buf[at:at+len(%ASGN)], []byte(%ASGN))\n" +
+		"at += len(%ASGN)"
+
+	out["guid"] = "iohelp.WriteGUIDBytes(buf[at:], %ASGN)\n" +
+		"at += 16"
+	out["date"] = "if %ASGN != (time.Time{}) {\n" +
+		"\tiohelp.WriteInt64Bytes(buf[at:], (%ASGN.UnixNano()/100))\n" +
+		"} else {\n" +
+		"\tiohelp.WriteInt64Bytes(buf[at:], 0)\n" +
+		"}\n" +
+		"at += 8"
+	for _, en := range f.Enums {
+		out[en.Name] = "iohelp.WriteUint32Bytes(buf[at:], uint32(%ASGN))\n" +
+			"at += 4\n"
+	}
+	for _, st := range f.Structs {
+		out[st.Name] = "(%ASGN).MarshalBebopTo(buf[at:])\n" +
+			"at += (%ASGN).bodyLen()"
+	}
+	for _, msg := range f.Messages {
+		out[msg.Name] = "(%ASGN).MarshalBebopTo(buf[at:])\n" +
+			"at += (%ASGN).bodyLen()"
 	}
 	return out
 }
