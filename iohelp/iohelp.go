@@ -2,11 +2,12 @@
 package iohelp
 
 import (
-	"encoding/binary"
 	"io"
 	"math"
 	"time"
 )
+
+var ErrTooShort error
 
 type ErrorReader struct {
 	Reader io.Reader
@@ -51,16 +52,34 @@ func (ew ErrorWriter) Write(b []byte) (n int, err error) {
 }
 
 func ReadString(r ErrorReader) string {
-	ln := uint32(0)
-	binary.Read(r, binary.LittleEndian, &ln)
-	data := make([]byte, ln)
+	data := make([]byte, ReadUint32(r))
 	r.Read(data)
 	return string(data)
 }
 
-func ReadTime(r ErrorReader) time.Time {
-	tm := int64(0)
-	binary.Read(r, binary.LittleEndian, (&tm))
+func MustReadStringBytes(buf []byte) string {
+	sz := ReadUint32Bytes(buf)
+	return string(buf[4 : 4+sz])
+}
+
+func ReadStringBytes(buf []byte) (string, error) {
+	if len(buf) < 4 {
+		return "", ErrTooShort
+	}
+	sz := ReadUint32Bytes(buf)
+	if len(buf) < int(sz)+4 {
+		return "", ErrTooShort
+	}
+	return string(buf[4 : 4+sz]), nil
+}
+
+func ReadDate(r ErrorReader) time.Time {
+	io.ReadFull(r, r.Buffer)
+	return ReadDateBytes(r.Buffer)
+}
+
+func ReadDateBytes(buf []byte) time.Time {
+	tm := ReadInt64Bytes(buf)
 	tm *= 100
 	t := time.Time{}
 	if tm == 0 {
@@ -72,18 +91,26 @@ func ReadTime(r ErrorReader) time.Time {
 func ReadGUID(r ErrorReader) [16]byte {
 	data := make([]byte, 16)
 	r.Read(data)
-	flipped := [16]byte{
-		data[3], data[2], data[1], data[0],
-		data[5], data[4],
-		data[7], data[6],
-		data[8], data[9], data[10], data[11], data[12], data[13], data[14], data[15],
+	return ReadGUIDBytes(data)
+}
+
+func ReadGUIDBytes(buf []byte) [16]byte {
+	return [16]byte{
+		buf[3], buf[2], buf[1], buf[0],
+		buf[5], buf[4],
+		buf[7], buf[6],
+		buf[8], buf[9], buf[10], buf[11], buf[12], buf[13], buf[14], buf[15],
 	}
-	return flipped
 }
 
 func ReadBool(r ErrorReader) bool {
 	io.ReadFull(r, r.Buffer[:1])
 	return r.Buffer[0] == 1
+}
+
+func ReadBoolBytes(buf []byte) bool {
+	// Technically a value other than 0 or 1 is invalid.
+	return buf[0] == 1
 }
 
 func ReadByte(r ErrorReader) byte {
@@ -95,6 +122,10 @@ func ReadByte(r ErrorReader) byte {
 	return r.Buffer[0]
 }
 
+func ReadByteBytes(buf []byte) byte {
+	return buf[0]
+}
+
 func ReadUint8(r ErrorReader) uint8 {
 	_, err := io.ReadFull(r, r.Buffer[:1])
 	if err != nil {
@@ -103,44 +134,80 @@ func ReadUint8(r ErrorReader) uint8 {
 	return r.Buffer[0]
 }
 
+func ReadUint8Bytes(buf []byte) uint8 {
+	return buf[0]
+}
+
 func ReadUint16(r ErrorReader) uint16 {
 	io.ReadFull(r, r.Buffer[:2])
-	return uint16(r.Buffer[0]) | uint16(r.Buffer[1])<<8
+	return ReadUint16Bytes(r.Buffer)
+}
+
+func ReadUint16Bytes(buf []byte) uint16 {
+	return uint16(buf[0]) | uint16(buf[1])<<8
 }
 
 func ReadInt16(r ErrorReader) int16 {
 	io.ReadFull(r, r.Buffer[:2])
-	return int16(r.Buffer[0]) | int16(r.Buffer[1])<<8
+	return ReadInt16Bytes(r.Buffer)
+}
+
+func ReadInt16Bytes(buf []byte) int16 {
+	return int16(buf[0]) | int16(buf[1])<<8
 }
 
 func ReadUint32(r ErrorReader) uint32 {
 	io.ReadFull(r, r.Buffer[:4])
-	return uint32(r.Buffer[0]) | uint32(r.Buffer[1])<<8 | uint32(r.Buffer[2])<<16 | uint32(r.Buffer[3])<<24
+	return ReadUint32Bytes(r.Buffer)
+}
+
+func ReadUint32Bytes(buf []byte) uint32 {
+	return uint32(buf[0]) | uint32(buf[1])<<8 | uint32(buf[2])<<16 | uint32(buf[3])<<24
 }
 
 func ReadInt32(r ErrorReader) int32 {
 	io.ReadFull(r, r.Buffer[:4])
-	return int32(r.Buffer[0]) | int32(r.Buffer[1])<<8 | int32(r.Buffer[2])<<16 | int32(r.Buffer[3])<<24
+	return ReadInt32Bytes(r.Buffer)
+}
+
+func ReadInt32Bytes(buf []byte) int32 {
+	return int32(buf[0]) | int32(buf[1])<<8 | int32(buf[2])<<16 | int32(buf[3])<<24
 }
 
 func ReadUint64(r ErrorReader) uint64 {
 	io.ReadFull(r, r.Buffer)
-	return uint64(r.Buffer[0]) | uint64(r.Buffer[1])<<8 | uint64(r.Buffer[2])<<16 | uint64(r.Buffer[3])<<24 |
-		uint64(r.Buffer[4])<<32 | uint64(r.Buffer[5])<<40 | uint64(r.Buffer[6])<<48 | uint64(r.Buffer[7])<<56
+	return ReadUint64Bytes(r.Buffer)
+}
+
+func ReadUint64Bytes(buf []byte) uint64 {
+	return uint64(buf[0]) | uint64(buf[1])<<8 | uint64(buf[2])<<16 | uint64(buf[3])<<24 |
+		uint64(buf[4])<<32 | uint64(buf[5])<<40 | uint64(buf[6])<<48 | uint64(buf[7])<<56
 }
 
 func ReadInt64(r ErrorReader) int64 {
 	io.ReadFull(r, r.Buffer)
-	return int64(r.Buffer[0]) | int64(r.Buffer[1])<<8 | int64(r.Buffer[2])<<16 | int64(r.Buffer[3])<<24 |
-		int64(r.Buffer[4])<<32 | int64(r.Buffer[5])<<40 | int64(r.Buffer[6])<<48 | int64(r.Buffer[7])<<56
+	return ReadInt64Bytes(r.Buffer)
+}
+
+func ReadInt64Bytes(buf []byte) int64 {
+	return int64(buf[0]) | int64(buf[1])<<8 | int64(buf[2])<<16 | int64(buf[3])<<24 |
+		int64(buf[4])<<32 | int64(buf[5])<<40 | int64(buf[6])<<48 | int64(buf[7])<<56
 }
 
 func ReadFloat32(r ErrorReader) float32 {
 	return math.Float32frombits(ReadUint32(r))
 }
 
+func ReadFloat32Bytes(buf []byte) float32 {
+	return math.Float32frombits(ReadUint32Bytes(buf))
+}
+
 func ReadFloat64(r ErrorReader) float64 {
 	return math.Float64frombits(ReadUint64(r))
+}
+
+func ReadFloat64Bytes(buf []byte) float64 {
+	return math.Float64frombits(ReadUint64Bytes(buf))
 }
 
 func WriteGUID(w ErrorWriter, guid [16]byte) {

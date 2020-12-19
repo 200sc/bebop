@@ -1,6 +1,7 @@
 package generated_test
 
 import (
+	"bytes"
 	"fmt"
 	"testing"
 	"time"
@@ -17,6 +18,7 @@ func TestMarshalCycleRecords(t *testing.T) {
 		// notable bug: unmarshalling to a non-empty record
 		// causes random behavior based on the field types of the record.
 		unmarshalTo  bebop.Record
+		unmarshalTo2 bebop.Record
 		skipEquality bool
 	}
 	tcs := []testCase{{
@@ -24,7 +26,8 @@ func TestMarshalCycleRecords(t *testing.T) {
 		record: &generated.ArrayOfStrings{
 			Strings: []string{},
 		},
-		unmarshalTo: &generated.ArrayOfStrings{},
+		unmarshalTo:  &generated.ArrayOfStrings{},
+		unmarshalTo2: &generated.ArrayOfStrings{},
 	}, {
 		name: "ArrayOfStrings",
 		record: &generated.ArrayOfStrings{
@@ -33,7 +36,8 @@ func TestMarshalCycleRecords(t *testing.T) {
 				"world",
 			},
 		},
-		unmarshalTo: &generated.ArrayOfStrings{},
+		unmarshalTo:  &generated.ArrayOfStrings{},
+		unmarshalTo2: &generated.ArrayOfStrings{},
 	}, {
 		name: "empty BasicArrays",
 		record: &generated.BasicArrays{
@@ -50,7 +54,8 @@ func TestMarshalCycleRecords(t *testing.T) {
 			A_string:  []string{},
 			A_guid:    [][16]byte{},
 		},
-		unmarshalTo: &generated.BasicArrays{},
+		unmarshalTo:  &generated.BasicArrays{},
+		unmarshalTo2: &generated.BasicArrays{},
 	}, {
 		name: "BasicArrays",
 		record: &generated.BasicArrays{
@@ -67,13 +72,15 @@ func TestMarshalCycleRecords(t *testing.T) {
 			A_string:  []string{},
 			A_guid:    [][16]byte{},
 		},
-		unmarshalTo: &generated.BasicArrays{},
+		unmarshalTo:  &generated.BasicArrays{},
+		unmarshalTo2: &generated.BasicArrays{},
 	}, {
 		name: "empty TestInt32Array",
 		record: &generated.TestInt32Array{
 			A: []int32{},
 		},
-		unmarshalTo: &generated.TestInt32Array{},
+		unmarshalTo:  &generated.TestInt32Array{},
+		unmarshalTo2: &generated.TestInt32Array{},
 	}, {
 		name: "TestInt32Array",
 		record: &generated.TestInt32Array{
@@ -81,11 +88,13 @@ func TestMarshalCycleRecords(t *testing.T) {
 				0, 2, 15412, 301523, 3441213,
 			},
 		},
-		unmarshalTo: &generated.TestInt32Array{},
+		unmarshalTo:  &generated.TestInt32Array{},
+		unmarshalTo2: &generated.TestInt32Array{},
 	}, {
-		name:        "empty BasicTypes",
-		record:      &generated.BasicTypes{},
-		unmarshalTo: &generated.BasicTypes{},
+		name:         "empty BasicTypes",
+		record:       &generated.BasicTypes{},
+		unmarshalTo:  &generated.BasicTypes{},
+		unmarshalTo2: &generated.BasicTypes{},
 	}, {
 		name: "BasicTypes",
 		record: &generated.BasicTypes{
@@ -95,31 +104,37 @@ func TestMarshalCycleRecords(t *testing.T) {
 			A_date:    time.Unix(444444, 0).UTC(),
 			A_float64: 3.3333,
 		},
-		unmarshalTo: &generated.BasicTypes{},
+		unmarshalTo:  &generated.BasicTypes{},
+		unmarshalTo2: &generated.BasicTypes{},
 	}, {
-		name:        "empty DocS",
-		record:      &generated.DocS{},
-		unmarshalTo: &generated.DocS{},
+		name:         "empty DocS",
+		record:       &generated.DocS{},
+		unmarshalTo:  &generated.DocS{},
+		unmarshalTo2: &generated.DocS{},
 	}, {
 		name: "DocS",
 		record: &generated.DocS{
 			X: 203202003,
 		},
-		unmarshalTo: &generated.DocS{},
+		unmarshalTo:  &generated.DocS{},
+		unmarshalTo2: &generated.DocS{},
 	}, {
-		name:        "empty DepM",
-		record:      &generated.DepM{},
-		unmarshalTo: &generated.DepM{},
+		name:         "empty DepM",
+		record:       &generated.DepM{},
+		unmarshalTo:  &generated.DepM{},
+		unmarshalTo2: &generated.DepM{},
 	}, {
 		name: "DepM",
 		record: &generated.DepM{
 			X: int32p(444),
 		},
-		unmarshalTo: &generated.DepM{},
+		unmarshalTo:  &generated.DepM{},
+		unmarshalTo2: &generated.DepM{},
 	}, {
-		name:        "empty DocM",
-		record:      &generated.DocM{},
-		unmarshalTo: &generated.DocM{},
+		name:         "empty DocM",
+		record:       &generated.DocM{},
+		unmarshalTo:  &generated.DocM{},
+		unmarshalTo2: &generated.DocM{},
 	}, {
 		name: "DocM",
 		record: &generated.DocM{
@@ -127,11 +142,13 @@ func TestMarshalCycleRecords(t *testing.T) {
 			Y: int32p(12314502),
 			Z: int32p(-2),
 		},
-		unmarshalTo: &generated.DocM{},
+		unmarshalTo:  &generated.DocM{},
+		unmarshalTo2: &generated.DocM{},
 	}, {
-		name:        "empty Foo",
-		record:      &generated.Foo{},
-		unmarshalTo: &generated.Foo{},
+		name:         "empty Foo",
+		record:       &generated.Foo{},
+		unmarshalTo:  &generated.Foo{},
+		unmarshalTo2: &generated.Foo{},
 	}, {
 		name: "Foo",
 		record: &generated.Foo{
@@ -141,28 +158,33 @@ func TestMarshalCycleRecords(t *testing.T) {
 				Z: float64p(3.21312421),
 			},
 		},
-		unmarshalTo: &generated.Foo{},
+		unmarshalTo:  &generated.Foo{},
+		unmarshalTo2: &generated.Foo{},
 	}, {
-		name:        "empty Bar",
-		record:      &generated.Bar{},
-		unmarshalTo: &generated.Bar{},
+		name:         "empty Bar",
+		record:       &generated.Bar{},
+		unmarshalTo:  &generated.Bar{},
+		unmarshalTo2: &generated.Bar{},
 	}, {
 		name: "Bar",
 		record: &generated.Bar{
 			Y: float64p(19999999999999999.2),
 		},
-		unmarshalTo: &generated.Bar{},
+		unmarshalTo:  &generated.Bar{},
+		unmarshalTo2: &generated.Bar{},
 	}, {
 		name:         "empty Musician",
 		record:       &generated.Musician{},
 		unmarshalTo:  &generated.Musician{},
+		unmarshalTo2: &generated.Musician{},
 		skipEquality: true,
 	}, {
 		name: "empty Library",
 		record: &generated.Library{
 			Songs: map[[16]uint8]generated.Song{},
 		},
-		unmarshalTo: &generated.Library{},
+		unmarshalTo:  &generated.Library{},
+		unmarshalTo2: &generated.Library{},
 	}, {
 		name: "Library",
 		record: &generated.Library{
@@ -173,23 +195,27 @@ func TestMarshalCycleRecords(t *testing.T) {
 				},
 			},
 		},
-		unmarshalTo: &generated.Library{},
+		unmarshalTo:  &generated.Library{},
+		unmarshalTo2: &generated.Library{},
 	}, {
-		name:        "empty Song",
-		record:      &generated.Song{},
-		unmarshalTo: &generated.Song{},
+		name:         "empty Song",
+		record:       &generated.Song{},
+		unmarshalTo:  &generated.Song{},
+		unmarshalTo2: &generated.Song{},
 	}, {name: "Song",
 		record: &generated.Song{
 			Title: stringp("song-title2"),
 			Year:  uint16p(20342),
 		},
-		unmarshalTo: &generated.Song{},
+		unmarshalTo:  &generated.Song{},
+		unmarshalTo2: &generated.Song{},
 	}, {
 		name: "empty VideoData",
 		record: &generated.VideoData{
 			Fragment: []byte{},
 		},
-		unmarshalTo: &generated.VideoData{},
+		unmarshalTo:  &generated.VideoData{},
+		unmarshalTo2: &generated.VideoData{},
 	}, {
 		name: "VideoData",
 		record: &generated.VideoData{
@@ -198,26 +224,31 @@ func TestMarshalCycleRecords(t *testing.T) {
 			Height:   123,
 			Fragment: []byte{0, 123, 5, 1, 3, 50, 123, 3, 3, 3, 3, 3},
 		},
-		unmarshalTo: &generated.VideoData{},
+		unmarshalTo:  &generated.VideoData{},
+		unmarshalTo2: &generated.VideoData{},
 	}, {
-		name:        "empty MediaMessage",
-		record:      &generated.MediaMessage{},
-		unmarshalTo: &generated.MediaMessage{},
+		name:         "empty MediaMessage",
+		record:       &generated.MediaMessage{},
+		unmarshalTo:  &generated.MediaMessage{},
+		unmarshalTo2: &generated.MediaMessage{},
 	}, {
-		name:        "empty SkipTestOld",
-		record:      &generated.SkipTestOld{},
-		unmarshalTo: &generated.SkipTestOld{},
+		name:         "empty SkipTestOld",
+		record:       &generated.SkipTestOld{},
+		unmarshalTo:  &generated.SkipTestOld{},
+		unmarshalTo2: &generated.SkipTestOld{},
 	}, {
 		name: "SkipTestOld",
 		record: &generated.SkipTestOld{
 			X: int32p(2222),
 			Y: int32p(12315),
 		},
-		unmarshalTo: &generated.SkipTestOld{},
+		unmarshalTo:  &generated.SkipTestOld{},
+		unmarshalTo2: &generated.SkipTestOld{},
 	}, {
-		name:        "empty SkipTestNew",
-		record:      &generated.SkipTestNew{},
-		unmarshalTo: &generated.SkipTestNew{},
+		name:         "empty SkipTestNew",
+		record:       &generated.SkipTestNew{},
+		unmarshalTo:  &generated.SkipTestNew{},
+		unmarshalTo2: &generated.SkipTestNew{},
 	}, {
 		name: "SkipTestNew",
 		record: &generated.SkipTestNew{
@@ -225,19 +256,23 @@ func TestMarshalCycleRecords(t *testing.T) {
 			Y: int32p(123125),
 			Z: int32p(-12344444),
 		},
-		unmarshalTo: &generated.SkipTestNew{},
+		unmarshalTo:  &generated.SkipTestNew{},
+		unmarshalTo2: &generated.SkipTestNew{},
 	}, {
-		name:        "empty SkipTestOldContainer",
-		record:      &generated.SkipTestOldContainer{},
-		unmarshalTo: &generated.SkipTestOldContainer{},
+		name:         "empty SkipTestOldContainer",
+		record:       &generated.SkipTestOldContainer{},
+		unmarshalTo:  &generated.SkipTestOldContainer{},
+		unmarshalTo2: &generated.SkipTestOldContainer{},
 	}, {
-		name:        "empty SkipTestNewContainer",
-		record:      &generated.SkipTestNewContainer{},
-		unmarshalTo: &generated.SkipTestNewContainer{},
+		name:         "empty SkipTestNewContainer",
+		record:       &generated.SkipTestNewContainer{},
+		unmarshalTo:  &generated.SkipTestNewContainer{},
+		unmarshalTo2: &generated.SkipTestNewContainer{},
 	}, {
 		name:         "empty S",
 		record:       &generated.S{},
 		unmarshalTo:  &generated.S{},
+		unmarshalTo2: &generated.S{},
 		skipEquality: true,
 	}, {
 		name: "empty SomeMaps",
@@ -248,7 +283,8 @@ func TestMarshalCycleRecords(t *testing.T) {
 			M4: []map[string][]float32{},
 			M5: map[[16]byte]generated.M{},
 		},
-		unmarshalTo: &generated.SomeMaps{},
+		unmarshalTo:  &generated.SomeMaps{},
+		unmarshalTo2: &generated.SomeMaps{},
 	}, {
 		name: "SomeMaps1",
 		record: &generated.SomeMaps{
@@ -261,6 +297,7 @@ func TestMarshalCycleRecords(t *testing.T) {
 			},
 		},
 		unmarshalTo:  &generated.SomeMaps{},
+		unmarshalTo2: &generated.SomeMaps{},
 		skipEquality: true,
 	},
 		// we can't do some maps 2 because it contains maps with more than one element, whose order is marshalled randomly.
@@ -302,12 +339,14 @@ func TestMarshalCycleRecords(t *testing.T) {
 		// 		},
 		// 	},
 		// 	unmarshalTo:  &generated.SomeMaps{},
+		//  unmarshalTo2:  &generated.SomeMaps{},
 		// 	skipEquality: true,
 		// },
 		{
-			name:        "empty M",
-			record:      &generated.M{},
-			unmarshalTo: &generated.M{},
+			name:         "empty M",
+			record:       &generated.M{},
+			unmarshalTo:  &generated.M{},
+			unmarshalTo2: &generated.M{},
 		}, {
 			name: "empty MsgpackComparison",
 			record: &generated.MsgpackComparison{
@@ -315,39 +354,48 @@ func TestMarshalCycleRecords(t *testing.T) {
 				ARRAY1: []string{},
 				ARRAY8: []int32{},
 			},
-			unmarshalTo: &generated.MsgpackComparison{},
+			unmarshalTo:  &generated.MsgpackComparison{},
+			unmarshalTo2: &generated.MsgpackComparison{},
 		}, {
 			name:         "empty Furniture",
 			record:       &generated.Furniture{},
 			unmarshalTo:  &generated.Furniture{},
+			unmarshalTo2: &generated.Furniture{},
 			skipEquality: true,
 		}, {
 			name:         "empty RequestResponse",
 			record:       &generated.RequestResponse{},
 			unmarshalTo:  &generated.RequestResponse{},
+			unmarshalTo2: &generated.RequestResponse{},
 			skipEquality: true,
 		}, {
-			name:        "empty RequestCatalog",
-			record:      &generated.RequestCatalog{},
-			unmarshalTo: &generated.RequestCatalog{},
+			name:         "empty RequestCatalog",
+			record:       &generated.RequestCatalog{},
+			unmarshalTo:  &generated.RequestCatalog{},
+			unmarshalTo2: &generated.RequestCatalog{},
 		}, {
 			name:         "empty ReadOnlyMap",
 			record:       &generated.ReadOnlyMap{},
 			unmarshalTo:  &generated.ReadOnlyMap{},
+			unmarshalTo2: &generated.ReadOnlyMap{},
 			skipEquality: true,
 		}}
 	for _, tc := range tcs {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			marshalData, err := bebop.Marshal(tc.record)
+			buf := &bytes.Buffer{}
+			err := tc.record.EncodeBebop(buf)
+			marshalData := buf.Bytes()
 			if err != nil {
 				t.Fatalf("initial marshal failed: %v", err)
 			}
-			err = bebop.Unmarshal(marshalData, tc.unmarshalTo)
+			err = tc.unmarshalTo.DecodeBebop(bytes.NewBuffer(marshalData))
 			if err != nil {
 				t.Fatalf("initial unmarshal failed: %v", err)
 			}
-			marshalData2, err := bebop.Marshal(tc.unmarshalTo)
+			buf = &bytes.Buffer{}
+			err = tc.unmarshalTo.EncodeBebop(buf)
+			marshalData2 := buf.Bytes()
 			if err != nil {
 				t.Fatalf("second marshal failed: %v", err)
 			}
@@ -369,6 +417,22 @@ func TestMarshalCycleRecords(t *testing.T) {
 				fmt.Println(marshalData)
 				fmt.Println(noWriterMarshal)
 				t.Fatal("no-writer marshal did not have same bytes as with-writer")
+			}
+			err = tc.unmarshalTo2.UnmarshalBebop(noWriterMarshal)
+			if err != nil {
+				t.Fatalf("second unmarshal failed: %v", err)
+			}
+			if !tc.skipEquality {
+				if diff := cmp.Diff(tc.record, tc.unmarshalTo2); diff != "" {
+					fmt.Println(diff)
+					t.Fatal("original did not match unmarshaled")
+				}
+			}
+			marshalData3 := tc.unmarshalTo2.MarshalBebop()
+			if string(marshalData) != string(marshalData3) {
+				fmt.Println(marshalData)
+				fmt.Println(noWriterMarshal)
+				t.Fatal("no-writer unmarshal did not have same bytes as prior unmarshals")
 			}
 		})
 	}

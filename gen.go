@@ -14,10 +14,13 @@ type GenerateSettings struct {
 	PackageName string
 
 	typeByters        map[string]string
+	typeByteReaders   map[string]string
 	typeMarshallers   map[string]string
 	typeUnmarshallers map[string]string
 	typeLengthers     map[string]string
 	customRecordTypes map[string]struct{}
+
+	GenerateUnsafeMethods bool
 }
 
 var reservedWords = map[string]struct{}{
@@ -88,7 +91,7 @@ func (f File) Validate() error {
 			}
 		}
 	}
-	// Determine which struct include themselves as required fields (which would lead
+	// Determine which structs include themselves as required fields (which would lead
 	// to the struct taking up infinite size)
 	delta := true
 	// This is an unbounded loop because for this case:
@@ -150,6 +153,7 @@ func (f File) Generate(w io.Writer, settings GenerateSettings) error {
 	}
 	settings.typeMarshallers = f.typeMarshallers()
 	settings.typeByters = f.typeByters()
+	settings.typeByteReaders = f.typeByteReaders()
 	settings.typeUnmarshallers = f.typeUnmarshallers()
 	settings.typeLengthers = f.typeLengthers()
 	settings.customRecordTypes = f.customRecordTypes()
@@ -304,6 +308,39 @@ func (st Struct) Generate(w io.Writer, settings GenerateSettings) {
 	}
 	writeLine(w, "}")
 	writeLine(w, "")
+	writeLine(w, "func (bbp *%s) UnmarshalBebop(buf []byte) (err error) {", exposedName)
+	if st.OpCode != 0 {
+		writeLine(w, "\tat := 4")
+	} else {
+		writeLine(w, "\tat := 0")
+	}
+	for _, fd := range st.Fields {
+		name := exposeName(fd.Name)
+		if st.ReadOnly {
+			name = unexposeName(fd.Name)
+		}
+		writeFieldReadByter("bbp."+name, fd.FieldType, w, settings, 1, true)
+	}
+	writeLine(w, "\treturn nil")
+	writeLine(w, "}")
+	writeLine(w, "")
+	if settings.GenerateUnsafeMethods {
+		writeLine(w, "func (bbp *%s) MustUnmarshalBebop(buf []byte) {", exposedName)
+		if st.OpCode != 0 {
+			writeLine(w, "\tat := 4")
+		} else {
+			writeLine(w, "\tat := 0")
+		}
+		for _, fd := range st.Fields {
+			name := exposeName(fd.Name)
+			if st.ReadOnly {
+				name = unexposeName(fd.Name)
+			}
+			writeFieldReadByter("bbp."+name, fd.FieldType, w, settings, 1, false)
+		}
+		writeLine(w, "}")
+		writeLine(w, "")
+	}
 	isFirstTopLength = true
 	writeLine(w, "func (bbp %s) EncodeBebop(iow io.Writer) (err error) {", exposedName)
 	writeLine(w, "\tw := iohelp.NewErrorWriter(iow)")
@@ -336,7 +373,7 @@ func (st Struct) Generate(w io.Writer, settings GenerateSettings) {
 	writeLine(w, "\treturn r.Err")
 	writeLine(w, "}")
 	writeLine(w, "")
-	writeLine(w, "func (bbp *%s) bodyLen() int {", exposedName)
+	writeLine(w, "func (bbp %s) bodyLen() int {", exposedName)
 	writeLine(w, "\tbodyLen := 0")
 	if st.OpCode != 0 {
 		writeLine(w, "\tbodyLen += 4")
@@ -358,7 +395,20 @@ func (st Struct) Generate(w io.Writer, settings GenerateSettings) {
 	writeLine(w, "\treturn v, err")
 	writeLine(w, "}")
 	writeLine(w, "")
-
+	writeLine(w, "func make%[1]sFromBytes(buf []byte) (%[1]s, error) {", exposedName)
+	writeLine(w, "\tv := %s{}", exposedName)
+	writeLine(w, "\terr := v.UnmarshalBebop(buf)")
+	writeLine(w, "\treturn v, err")
+	writeLine(w, "}")
+	writeLine(w, "")
+	if settings.GenerateUnsafeMethods {
+		writeLine(w, "func mustMake%[1]sFromBytes(buf []byte) %[1]s {", exposedName)
+		writeLine(w, "\tv := %s{}", exposedName)
+		writeLine(w, "\tv.MustUnmarshalBebop(buf)")
+		writeLine(w, "\treturn v")
+		writeLine(w, "}")
+		writeLine(w, "")
+	}
 	// TODO: slices are not really readonly, we need to return a copy.
 	if st.ReadOnly {
 		for _, fd := range st.Fields {
@@ -431,6 +481,57 @@ func (msg Message) Generate(w io.Writer, settings GenerateSettings) {
 	}
 	writeLine(w, "}")
 	writeLine(w, "")
+	writeLine(w, "func (bbp *%s) UnmarshalBebop(buf []byte) (err error) {", exposedName)
+	if msg.OpCode != 0 {
+		writeLine(w, "\tat := 4")
+	} else {
+		writeLine(w, "\tat := 0")
+	}
+	writeLine(w, "\t_ = iohelp.ReadUint32Bytes(buf[at:])")
+	writeLine(w, "\tbuf = buf[4:]")
+	writeLine(w, "\tfor {")
+	writeLine(w, "\t\tswitch buf[at] {")
+	for _, fd := range fields {
+		name := exposeName(fd.Name)
+		if msg.ReadOnly {
+			name = unexposeName(fd.Name)
+		}
+		writeLine(w, "\t\tcase %d:", fd.num)
+		writeLine(w, "\t\t\tat += 1")
+		writeLine(w, "\t\t\tbbp.%[1]s = new(%[2]s)", name, fd.FieldType.goString())
+		writeFieldReadByter("(*bbp."+name+")", fd.FieldType, w, settings, 3, true)
+	}
+	writeLine(w, "\t\tdefault:")
+	writeLine(w, "\t\t\treturn nil")
+	writeLine(w, "\t\t}")
+	writeLine(w, "\t}")
+	writeLine(w, "}")
+	writeLine(w, "")
+	if settings.GenerateUnsafeMethods {
+		writeLine(w, "func (bbp *%s) MustUnmarshalBebop(buf []byte) {", exposedName)
+		if msg.OpCode != 0 {
+			writeLine(w, "\tat := 4")
+		} else {
+			writeLine(w, "\tat := 0")
+		}
+		writeLine(w, "\tfor {")
+		writeLine(w, "\t\tswitch buf[at] {")
+		for _, fd := range fields {
+			name := exposeName(fd.Name)
+			if msg.ReadOnly {
+				name = unexposeName(fd.Name)
+			}
+			writeLine(w, "\t\tcase %d:", fd.num)
+			writeLine(w, "\t\t\tbbp.%[1]s = new(%[2]s)", name, fd.FieldType.goString())
+			writeFieldReadByter("(*bbp."+name+")", fd.FieldType, w, settings, 3, false)
+		}
+		writeLine(w, "\t\tdefault:")
+		writeLine(w, "\t\t\treturn")
+		writeLine(w, "\t\t}")
+		writeLine(w, "\t}")
+		writeLine(w, "}")
+		writeLine(w, "")
+	}
 	isFirstTopLength = true
 	writeLine(w, "func (bbp %s) EncodeBebop(iow io.Writer) (err error) {", exposedName)
 	writeLine(w, "\tw := iohelp.NewErrorWriter(iow)")
@@ -461,7 +562,7 @@ func (msg Message) Generate(w io.Writer, settings GenerateSettings) {
 	// why read the entire body upfront? Because we're allowed
 	// to exit early, and if we do exit early and this message
 	// is a field of another record we need that record to resume
-	// reading at the after this entire body.
+	// reading at the byte after this entire body.
 	writeLine(w, "\tbody := make([]byte, bodyLen)")
 	writeLine(w, "\ter.Read(body)")
 	writeLine(w, "\tr := iohelp.NewErrorReader(bytes.NewReader(body))")
@@ -485,8 +586,11 @@ func (msg Message) Generate(w io.Writer, settings GenerateSettings) {
 	writeLine(w, "\t}")
 	writeLine(w, "}")
 	writeLine(w, "")
-	writeLine(w, "func (bbp *%s) bodyLen() int {", exposedName)
+	writeLine(w, "func (bbp %s) bodyLen() int {", exposedName)
 	// size at front (4) + 0 byte (1)
+	// q: why do messages end in a 0 byte?
+	// a: (I think) because then we can loop reading a single byte for each field, and if we read 0
+	// we know we're done and don't have to unread the byte
 	writeLine(w, "\tbodyLen := 5")
 	if msg.OpCode != 0 {
 		writeLine(w, "\tbodyLen += 4")
@@ -511,6 +615,20 @@ func (msg Message) Generate(w io.Writer, settings GenerateSettings) {
 	writeLine(w, "\treturn v, err")
 	writeLine(w, "}")
 	writeLine(w, "")
+	writeLine(w, "func make%[1]sFromBytes(buf []byte) (%[1]s, error) {", exposedName)
+	writeLine(w, "\tv := %s{}", exposedName)
+	writeLine(w, "\terr := v.UnmarshalBebop(buf)")
+	writeLine(w, "\treturn v, err")
+	writeLine(w, "}")
+	writeLine(w, "")
+	if settings.GenerateUnsafeMethods {
+		writeLine(w, "func mustMake%[1]sFromBytes(buf []byte) %[1]s {", exposedName)
+		writeLine(w, "\tv := %s{}", exposedName)
+		writeLine(w, "\tv.MustUnmarshalBebop(buf)")
+		writeLine(w, "\treturn v")
+		writeLine(w, "}")
+		writeLine(w, "")
+	}
 	if msg.ReadOnly {
 		for _, fd := range msg.Fields {
 			writeLine(w, "func (bbp %s) Get%s() *%s {", exposedName, exposeName(fd.Name), fd.FieldType.goString())
@@ -573,6 +691,65 @@ func writeFieldByter(name string, typ FieldType, w io.Writer, settings GenerateS
 	}
 }
 
+func writeLengthCheck(w io.Writer, ln string, depth int, args ...string) {
+	writeLineWithTabs(w, "if len(buf[at:]) < "+ln+" {", depth, args...)
+	writeLineWithTabs(w, "\t return iohelp.ErrTooShort", depth, args...)
+	writeLineWithTabs(w, "}", depth, args...)
+}
+
+func writeFieldReadByter(name string, typ FieldType, w io.Writer, settings GenerateSettings, depth int, safe bool) {
+	if typ.Array != nil {
+		if safe {
+			writeLengthCheck(w, "4", depth)
+		}
+
+		writeLineWithTabs(w, "%ASGN = make([]%TYPE, iohelp.ReadUint32Bytes(buf[at:]))", depth, name, typ.Array.goString())
+		writeLineWithTabs(w, "at += 4", depth)
+		if safe {
+			if sz, ok := fixedSizeTypes[typ.Array.Simple]; ok {
+				writeLengthCheck(w, "len(%ASGN)*"+strconv.Itoa(int(sz)), depth, name)
+				safe = false
+			}
+		}
+		if typ.Array.Simple == "byte" || typ.Array.Simple == "uint8" {
+			writeLineWithTabs(w, "copy(%ASGN, buf[at:at+len(%ASGN)])", depth, name)
+			writeLineWithTabs(w, "at += len(%ASGN)", depth, name)
+			return
+		}
+		iName := depthName("i", depth)
+		writeLineWithTabs(w, "for "+iName+" := range %ASGN {", depth, name)
+		writeFieldReadByter("("+name+")["+iName+"]", *typ.Array, w, settings, depth+1, safe)
+		writeLineWithTabs(w, "}", depth)
+	} else if typ.Map != nil {
+		lnName := lengthName()
+		writeLineWithTabs(w, lnName+" := iohelp.ReadUint32Bytes(buf[at:])", depth)
+		writeLineWithTabs(w, "at += 4", depth)
+		writeLineWithTabs(w, "%ASGN = make(%TYPE,"+lnName+")", depth, name, typ.Map.goString())
+		writeLineWithTabs(w, "for i := uint32(0); i < "+lnName+"; i++ {", depth, name)
+		var ln string
+		if format, ok := settings.typeByteReaders[typ.Map.Key+"&safe"]; ok && safe {
+			ln = getLineWithTabs(format, depth+1, depthName("k", depth), simpleGoString(typ.Map.Key))
+		} else {
+			if sz, ok := fixedSizeTypes[typ.Map.Key]; ok && safe {
+				writeLengthCheck(w, strconv.Itoa(int(sz)), depth+1, depthName("k", depth))
+			}
+			ln = getLineWithTabs(settings.typeByteReaders[typ.Map.Key], depth+1, depthName("k", depth), typ.goString())
+		}
+		w.Write([]byte(strings.Replace(ln, "=", ":=", 1)))
+		writeFieldReadByter("("+name+")["+depthName("k", depth)+"]", typ.Map.Value, w, settings, depth+1, safe)
+		writeLineWithTabs(w, "}", depth)
+	} else {
+		if format, ok := settings.typeByteReaders[typ.Simple+"&safe"]; ok && safe {
+			writeLineWithTabs(w, format, depth, name, typ.goString())
+		} else {
+			if sz, ok := fixedSizeTypes[typ.Simple]; ok && safe {
+				writeLengthCheck(w, strconv.Itoa(int(sz)), depth, name)
+			}
+			writeLineWithTabs(w, settings.typeByteReaders[typ.Simple], depth, name, typ.goString())
+		}
+	}
+}
+
 func writeFieldMarshaller(name string, typ FieldType, w io.Writer, settings GenerateSettings, depth int) {
 	if typ.Array != nil {
 		writeLineWithTabs(w, "iohelp.WriteUint32(w, uint32(len(%ASGN)))", depth, name)
@@ -630,6 +807,26 @@ func writeStructFieldUnmarshaller(name string, typ FieldType, w io.Writer, setti
 	}
 }
 
+func writeMessageFieldUnmarshaller(name string, typ FieldType, w io.Writer, settings GenerateSettings, depth int) {
+	if typ.Array != nil {
+		writeLineWithTabs(w, "%RECV = make([]%TYPE, iohelp.ReadUint32(r))", depth, name, typ.Array.goString())
+		writeLineWithTabs(w, "for i := range %RECV {", depth, name)
+		writeMessageFieldUnmarshaller("("+name+")[i]", *typ.Array, w, settings, depth+1)
+		writeLineWithTabs(w, "}", depth)
+	} else if typ.Map != nil {
+		lnName := depthName("ln", depth)
+		writeLineWithTabs(w, lnName+" := iohelp.ReadUint32(r)", depth)
+		writeLineWithTabs(w, "%RECV = make("+typ.Map.goString()+")", depth, name)
+		writeLineWithTabs(w, "for i := uint32(0); i < "+lnName+"; i++ {", depth, name)
+		ln := getLineWithTabs(settings.typeUnmarshallers[typ.Map.Key], depth+1, "&"+depthName("k", depth))
+		w.Write([]byte(strings.Replace(ln, "=", ":=", 1)))
+		writeMessageFieldUnmarshaller("("+name+")["+depthName("k", depth)+"]", typ.Map.Value, w, settings, depth+1)
+		writeLineWithTabs(w, "}", depth)
+	} else {
+		writeLineWithTabs(w, settings.typeUnmarshallers[typ.Simple], depth, name, typ.goString())
+	}
+}
+
 func typeNeedsElem(typ string, settings GenerateSettings) bool {
 	switch typ {
 	case "":
@@ -680,26 +877,6 @@ func writeMessageFieldBodyCount(name string, typ FieldType, w io.Writer, setting
 	}
 }
 
-func writeMessageFieldUnmarshaller(name string, typ FieldType, w io.Writer, settings GenerateSettings, depth int) {
-	if typ.Array != nil {
-		writeLineWithTabs(w, "%RECV = make([]%TYPE, iohelp.ReadUint32(r))", depth, name, typ.Array.goString())
-		writeLineWithTabs(w, "for i := range %RECV {", depth, name)
-		writeMessageFieldUnmarshaller("("+name+")[i]", *typ.Array, w, settings, depth+1)
-		writeLineWithTabs(w, "}", depth)
-	} else if typ.Map != nil {
-		lnName := "ln" + strconv.Itoa(depth)
-		writeLineWithTabs(w, lnName+" := iohelp.ReadUint32(r)", depth)
-		writeLineWithTabs(w, "%RECV = make("+typ.Map.goString()+")", depth, name)
-		writeLineWithTabs(w, "for i := uint32(0); i < "+lnName+"; i++ {", depth, name)
-		ln := getLineWithTabs(settings.typeUnmarshallers[typ.Map.Key], depth+1, "&"+depthName("k", depth))
-		w.Write([]byte(strings.Replace(ln, "=", ":=", 1)))
-		writeMessageFieldUnmarshaller("("+name+")["+depthName("k", depth)+"]", typ.Map.Value, w, settings, depth+1)
-		writeLineWithTabs(w, "}", depth)
-	} else {
-		writeLineWithTabs(w, settings.typeUnmarshallers[typ.Simple], depth, name, typ.goString())
-	}
-}
-
 func exposeName(name string) string {
 	if len(name) > 1 {
 		return strings.ToUpper(string(name[0])) + name[1:]
@@ -743,7 +920,6 @@ func (f File) typeUnmarshallers() map[string]string {
 	}
 	out["string"] = "%RECV = iohelp.ReadString(r)"
 	out["guid"] = "%RECV = iohelp.ReadGUID(r)"
-	out["date"] = "%RECV = iohelp.ReadTime(r)"
 	for _, en := range f.Enums {
 		out[en.Name] = "%RECV = %TYPE(iohelp.ReadUint32(r))"
 	}
@@ -846,6 +1022,48 @@ func (f File) typeByters() map[string]string {
 	}
 	for _, msg := range f.Messages {
 		out[msg.Name] = "(%ASGN).MarshalBebopTo(buf[at:])\n" +
+			"at += (%ASGN).bodyLen()"
+	}
+	return out
+}
+
+func (f File) typeByteReaders() map[string]string {
+	out := make(map[string]string)
+	for typ, sz := range fixedSizeTypes {
+		out[typ] = "%ASGN = iohelp.Read" + strings.Title(typ) + "Bytes(buf[at:])\n" +
+			"at += " + strconv.Itoa(int(sz))
+	}
+	out["guid"] = "%ASGN = iohelp.ReadGUIDBytes(buf[at:])\n" +
+		"at += 16"
+	out["string"] = "%ASGN = iohelp.MustReadStringBytes(buf[at:])\n" +
+		"at += 4+len(%ASGN)"
+
+	out["string&safe"] = "%ASGN, err = iohelp.ReadStringBytes(buf[at:])\n" +
+		"if err != nil {\n" +
+		"\t return err\n" +
+		"}\n" +
+		"at += 4 + len(%ASGN)"
+
+	for _, en := range f.Enums {
+		out[en.Name] = "%ASGN = %TYPE(iohelp.ReadUint32Bytes(buf[at:]))\n" +
+			"at += 4\n"
+	}
+	for _, st := range f.Structs {
+		out[st.Name] = "%ASGN = mustMake%TYPEFromBytes(buf[at:])\n" +
+			"at += (%ASGN).bodyLen()"
+		out[st.Name+"&safe"] = "%ASGN, err = make%TYPEFromBytes(buf[at:])\n" +
+			"if err != nil {\n" +
+			"\t return err\n" +
+			"}\n" +
+			"at += (%ASGN).bodyLen()"
+	}
+	for _, msg := range f.Messages {
+		out[msg.Name] = "%ASGN = mustMake%TYPEFromBytes(buf[at:])\n" +
+			"at += (%ASGN).bodyLen()"
+		out[msg.Name+"&safe"] = "%ASGN, err = make%TYPEFromBytes(buf[at:])\n" +
+			"if err != nil {\n" +
+			"\t return err\n" +
+			"}\n" +
 			"at += (%ASGN).bodyLen()"
 	}
 	return out

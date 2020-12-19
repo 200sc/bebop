@@ -88,7 +88,14 @@ func BenchmarkMarshalUnmarshalBasicArrays(b *testing.B) {
 func BenchmarkUnmarshalBasicArrays(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		benchArray2 = &generated.BasicArrays{}
-		benchArray2.DecodeBebop(bytes.NewBuffer(benchArrayBytes))
+		benchArray2.MustUnmarshalBebop(benchArrayBytes)
+	}
+}
+
+func BenchmarkUnmarshalSafeBasicArrays(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		benchArray2 = &generated.BasicArrays{}
+		benchArray2.UnmarshalBebop(benchArrayBytes)
 	}
 }
 
@@ -163,6 +170,34 @@ var out []byte
 func BenchmarkMarshalBasicArraysProto(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		out, _ = proto.Marshal(basicArraysProto)
+	}
+}
+
+var basicArraysProtoBytes = []byte{10, 4, 1, 0, 1, 0, 18, 9, 0, 1, 2, 3, 4, 5, 6, 7,
+	8, 26, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 34, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 42, 13,
+	0, 1, 249, 237, 228, 111, 3, 4, 5, 250, 4, 7, 8, 50, 14, 0, 1, 2, 254, 235, 249,
+	15, 4, 5, 138, 222, 38, 7, 8, 58, 29, 202, 188, 208, 230, 12, 227, 171, 170, 158,
+	138, 10, 140, 182, 192, 243, 12, 3, 4, 129, 131, 171, 245, 19, 198, 246, 193, 16,
+	7, 8, 66, 18, 0, 1, 2, 3, 254, 254, 133, 131, 129, 1, 5, 234, 167, 197, 204, 23, 7,
+	8, 74, 36, 0, 0, 0, 0, 0, 128, 170, 67, 0, 0, 0, 64, 95, 217, 3, 76, 0, 0, 128, 064,
+	0, 0, 160, 64, 0, 0, 192, 64, 0, 0, 224, 64, 0, 0, 0, 65, 82, 72, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 240, 63, 0, 0, 0, 0, 0, 0, 0, 64, 0, 0, 0, 0, 252, 19, 21, 65,
+	0, 0, 0, 0, 12, 89, 74, 65, 0, 0, 96, 168, 240, 186, 233, 65, 0, 0, 0, 144, 69, 17,
+	181, 65, 0, 0, 0, 0, 0, 0, 28, 64, 0, 0, 48, 174, 54, 223, 255, 65, 90, 16, 48, 49,
+	50, 51, 49, 53, 49, 50, 51, 52, 49, 50, 51, 49, 50, 51, 90, 17, 49, 49, 50, 51, 52, 49,
+	50, 53, 49, 50, 51, 52, 49, 53, 49, 50, 52, 90, 21, 50, 50, 51, 52, 49, 50, 53, 49, 50,
+	51, 52, 49, 53, 49, 50, 51, 52, 49, 50, 53, 52, 90, 23, 51, 49, 50, 52, 53, 49, 50, 51,
+	49, 53, 49, 50, 51, 52, 49, 50, 53, 49, 50, 51, 52, 49, 51, 90, 19, 49, 50, 51, 49, 50,
+	53, 49, 50, 51, 49, 53, 49, 50, 51, 49, 53, 49, 50, 52, 90, 21, 49, 50, 52, 49, 50, 51,
+	49, 53, 49, 50, 51, 52, 49, 53, 49, 50, 51, 52, 49, 50, 53, 90, 20, 54, 49, 50, 51, 49,
+	53, 49, 50, 51, 52, 49, 53, 52, 49, 50, 51, 52, 49, 50, 51, 90, 20, 49, 50, 51, 49, 53,
+	49, 50, 51, 52, 49, 50, 53, 49, 50, 51, 52, 49, 50, 53, 55, 90, 23, 56, 49, 50, 51, 49,
+	52, 53, 49, 50, 52, 49, 50, 51, 52, 49, 53, 49, 50, 51, 52, 49, 53, 49}
+var basicArraysProto2 = &protos.BasicArrays{}
+
+func BenchmarkUnmarshalBasicArraysProto(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		proto.Unmarshal(basicArraysProtoBytes, basicArraysProto2)
 	}
 }
 

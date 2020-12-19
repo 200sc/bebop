@@ -28,6 +28,22 @@ func (bbp Foo) MarshalBebopTo(buf []byte) {
 	at += (bbp.Bar).bodyLen()
 }
 
+func (bbp *Foo) UnmarshalBebop(buf []byte) (err error) {
+	at := 0
+	bbp.Bar, err = makeBarFromBytes(buf[at:])
+	if err != nil {
+		 return err
+	}
+	at += (bbp.Bar).bodyLen()
+	return nil
+}
+
+func (bbp *Foo) MustUnmarshalBebop(buf []byte) {
+	at := 0
+	bbp.Bar = mustMakeBarFromBytes(buf[at:])
+	at += (bbp.Bar).bodyLen()
+}
+
 func (bbp Foo) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
 	err = (bbp.Bar).EncodeBebop(w)
@@ -46,7 +62,7 @@ func (bbp *Foo) DecodeBebop(ior io.Reader) (err error) {
 	return r.Err
 }
 
-func (bbp *Foo) bodyLen() int {
+func (bbp Foo) bodyLen() int {
 	bodyLen := 0
 	bodyLen += (bbp.Bar).bodyLen()
 	return bodyLen
@@ -56,6 +72,18 @@ func makeFoo(r iohelp.ErrorReader) (Foo, error) {
 	v := Foo{}
 	err := v.DecodeBebop(r)
 	return v, err
+}
+
+func makeFooFromBytes(buf []byte) (Foo, error) {
+	v := Foo{}
+	err := v.UnmarshalBebop(buf)
+	return v, err
+}
+
+func mustMakeFooFromBytes(buf []byte) Foo {
+	v := Foo{}
+	v.MustUnmarshalBebop(buf)
+	return v
 }
 
 var _ bebop.Record = &Bar{}
@@ -93,6 +121,64 @@ func (bbp Bar) MarshalBebopTo(buf []byte) {
 		at++
 		iohelp.WriteFloat64Bytes(buf[at:], *bbp.Z)
 		at += 8
+	}
+}
+
+func (bbp *Bar) UnmarshalBebop(buf []byte) (err error) {
+	at := 0
+	_ = iohelp.ReadUint32Bytes(buf[at:])
+	buf = buf[4:]
+	for {
+		switch buf[at] {
+		case 1:
+			at += 1
+			bbp.X = new(float64)
+			if len(buf[at:]) < 8 {
+				 return iohelp.ErrTooShort
+			}
+			(*bbp.X) = iohelp.ReadFloat64Bytes(buf[at:])
+			at += 8
+		case 2:
+			at += 1
+			bbp.Y = new(float64)
+			if len(buf[at:]) < 8 {
+				 return iohelp.ErrTooShort
+			}
+			(*bbp.Y) = iohelp.ReadFloat64Bytes(buf[at:])
+			at += 8
+		case 3:
+			at += 1
+			bbp.Z = new(float64)
+			if len(buf[at:]) < 8 {
+				 return iohelp.ErrTooShort
+			}
+			(*bbp.Z) = iohelp.ReadFloat64Bytes(buf[at:])
+			at += 8
+		default:
+			return nil
+		}
+	}
+}
+
+func (bbp *Bar) MustUnmarshalBebop(buf []byte) {
+	at := 0
+	for {
+		switch buf[at] {
+		case 1:
+			bbp.X = new(float64)
+			(*bbp.X) = iohelp.ReadFloat64Bytes(buf[at:])
+			at += 8
+		case 2:
+			bbp.Y = new(float64)
+			(*bbp.Y) = iohelp.ReadFloat64Bytes(buf[at:])
+			at += 8
+		case 3:
+			bbp.Z = new(float64)
+			(*bbp.Z) = iohelp.ReadFloat64Bytes(buf[at:])
+			at += 8
+		default:
+			return
+		}
 	}
 }
 
@@ -138,7 +224,7 @@ func (bbp *Bar) DecodeBebop(ior io.Reader) (err error) {
 	}
 }
 
-func (bbp *Bar) bodyLen() int {
+func (bbp Bar) bodyLen() int {
 	bodyLen := 5
 	if bbp.X != nil {
 		bodyLen += 1
@@ -159,5 +245,17 @@ func makeBar(r iohelp.ErrorReader) (Bar, error) {
 	v := Bar{}
 	err := v.DecodeBebop(r)
 	return v, err
+}
+
+func makeBarFromBytes(buf []byte) (Bar, error) {
+	v := Bar{}
+	err := v.UnmarshalBebop(buf)
+	return v, err
+}
+
+func mustMakeBarFromBytes(buf []byte) Bar {
+	v := Bar{}
+	v.MustUnmarshalBebop(buf)
+	return v
 }
 

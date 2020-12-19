@@ -36,6 +36,36 @@ func (bbp QuotedString) MarshalBebopTo(buf []byte) {
 	at += 4
 }
 
+func (bbp *QuotedString) UnmarshalBebop(buf []byte) (err error) {
+	at := 0
+	if len(buf[at:]) < 4 {
+		 return iohelp.ErrTooShort
+	}
+	bbp.X = iohelp.ReadInt32Bytes(buf[at:])
+	at += 4
+	if len(buf[at:]) < 4 {
+		 return iohelp.ErrTooShort
+	}
+	bbp.Y = iohelp.ReadInt32Bytes(buf[at:])
+	at += 4
+	if len(buf[at:]) < 4 {
+		 return iohelp.ErrTooShort
+	}
+	bbp.Z = iohelp.ReadInt32Bytes(buf[at:])
+	at += 4
+	return nil
+}
+
+func (bbp *QuotedString) MustUnmarshalBebop(buf []byte) {
+	at := 0
+	bbp.X = iohelp.ReadInt32Bytes(buf[at:])
+	at += 4
+	bbp.Y = iohelp.ReadInt32Bytes(buf[at:])
+	at += 4
+	bbp.Z = iohelp.ReadInt32Bytes(buf[at:])
+	at += 4
+}
+
 func (bbp QuotedString) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
 	iohelp.WriteInt32(w, bbp.X)
@@ -52,7 +82,7 @@ func (bbp *QuotedString) DecodeBebop(ior io.Reader) (err error) {
 	return r.Err
 }
 
-func (bbp *QuotedString) bodyLen() int {
+func (bbp QuotedString) bodyLen() int {
 	bodyLen := 0
 	bodyLen += 4
 	bodyLen += 4
@@ -64,5 +94,17 @@ func makeQuotedString(r iohelp.ErrorReader) (QuotedString, error) {
 	v := QuotedString{}
 	err := v.DecodeBebop(r)
 	return v, err
+}
+
+func makeQuotedStringFromBytes(buf []byte) (QuotedString, error) {
+	v := QuotedString{}
+	err := v.UnmarshalBebop(buf)
+	return v, err
+}
+
+func mustMakeQuotedStringFromBytes(buf []byte) QuotedString {
+	v := QuotedString{}
+	v.MustUnmarshalBebop(buf)
+	return v
 }
 

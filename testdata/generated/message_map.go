@@ -42,6 +42,57 @@ func (bbp ReadOnlyMap) MarshalBebopTo(buf []byte) {
 	}
 }
 
+func (bbp *ReadOnlyMap) UnmarshalBebop(buf []byte) (err error) {
+	at := 0
+	_ = iohelp.ReadUint32Bytes(buf[at:])
+	buf = buf[4:]
+	for {
+		switch buf[at] {
+		case 1:
+			at += 1
+			bbp.vals = new(map[string]uint8)
+			ln17 := iohelp.ReadUint32Bytes(buf[at:])
+			at += 4
+			(*bbp.vals) = make(map[string]uint8,ln17)
+			for i := uint32(0); i < ln17; i++ {
+				k3, err := iohelp.ReadStringBytes(buf[at:])
+				if err != nil {
+					 return err
+				}
+				at += 4 + len(k3)
+				if len(buf[at:]) < 1 {
+					 return iohelp.ErrTooShort
+				}
+				((*bbp.vals))[k3] = iohelp.ReadUint8Bytes(buf[at:])
+				at += 1
+			}
+		default:
+			return nil
+		}
+	}
+}
+
+func (bbp *ReadOnlyMap) MustUnmarshalBebop(buf []byte) {
+	at := 0
+	for {
+		switch buf[at] {
+		case 1:
+			bbp.vals = new(map[string]uint8)
+			ln18 := iohelp.ReadUint32Bytes(buf[at:])
+			at += 4
+			(*bbp.vals) = make(map[string]uint8,ln18)
+			for i := uint32(0); i < ln18; i++ {
+				k3 := iohelp.MustReadStringBytes(buf[at:])
+				at += 4+len(k3)
+				((*bbp.vals))[k3] = iohelp.ReadUint8Bytes(buf[at:])
+				at += 1
+			}
+		default:
+			return
+		}
+	}
+}
+
 func (bbp ReadOnlyMap) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
 	iohelp.WriteUint32(w, uint32(bbp.bodyLen()))
@@ -80,7 +131,7 @@ func (bbp *ReadOnlyMap) DecodeBebop(ior io.Reader) (err error) {
 	}
 }
 
-func (bbp *ReadOnlyMap) bodyLen() int {
+func (bbp ReadOnlyMap) bodyLen() int {
 	bodyLen := 5
 	if bbp.vals != nil {
 		bodyLen += 1
@@ -98,6 +149,18 @@ func makeReadOnlyMap(r iohelp.ErrorReader) (ReadOnlyMap, error) {
 	v := ReadOnlyMap{}
 	err := v.DecodeBebop(r)
 	return v, err
+}
+
+func makeReadOnlyMapFromBytes(buf []byte) (ReadOnlyMap, error) {
+	v := ReadOnlyMap{}
+	err := v.UnmarshalBebop(buf)
+	return v, err
+}
+
+func mustMakeReadOnlyMapFromBytes(buf []byte) ReadOnlyMap {
+	v := ReadOnlyMap{}
+	v.MustUnmarshalBebop(buf)
+	return v
 }
 
 func (bbp ReadOnlyMap) GetVals() *map[string]uint8 {

@@ -33,6 +33,33 @@ func (bbp ArrayOfStrings) MarshalBebopTo(buf []byte) {
 	}
 }
 
+func (bbp *ArrayOfStrings) UnmarshalBebop(buf []byte) (err error) {
+	at := 0
+	if len(buf[at:]) < 4 {
+		 return iohelp.ErrTooShort
+	}
+	bbp.Strings = make([]string, iohelp.ReadUint32Bytes(buf[at:]))
+	at += 4
+	for i1 := range bbp.Strings {
+		(bbp.Strings)[i1], err = iohelp.ReadStringBytes(buf[at:])
+		if err != nil {
+			 return err
+		}
+		at += 4 + len((bbp.Strings)[i1])
+	}
+	return nil
+}
+
+func (bbp *ArrayOfStrings) MustUnmarshalBebop(buf []byte) {
+	at := 0
+	bbp.Strings = make([]string, iohelp.ReadUint32Bytes(buf[at:]))
+	at += 4
+	for i1 := range bbp.Strings {
+		(bbp.Strings)[i1] = iohelp.MustReadStringBytes(buf[at:])
+		at += 4+len((bbp.Strings)[i1])
+	}
+}
+
 func (bbp ArrayOfStrings) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
 	iohelp.WriteUint32(w, uint32(len(bbp.Strings)))
@@ -52,7 +79,7 @@ func (bbp *ArrayOfStrings) DecodeBebop(ior io.Reader) (err error) {
 	return r.Err
 }
 
-func (bbp *ArrayOfStrings) bodyLen() int {
+func (bbp ArrayOfStrings) bodyLen() int {
 	bodyLen := 0
 	bodyLen += 4
 	for _, elem := range bbp.Strings {
@@ -66,5 +93,17 @@ func makeArrayOfStrings(r iohelp.ErrorReader) (ArrayOfStrings, error) {
 	v := ArrayOfStrings{}
 	err := v.DecodeBebop(r)
 	return v, err
+}
+
+func makeArrayOfStringsFromBytes(buf []byte) (ArrayOfStrings, error) {
+	v := ArrayOfStrings{}
+	err := v.UnmarshalBebop(buf)
+	return v, err
+}
+
+func mustMakeArrayOfStringsFromBytes(buf []byte) ArrayOfStrings {
+	v := ArrayOfStrings{}
+	v.MustUnmarshalBebop(buf)
+	return v
 }
 

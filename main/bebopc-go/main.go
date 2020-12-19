@@ -13,8 +13,9 @@ var outputFile = flag.String("o", "", "the name of the output file to write")
 var printVersion = flag.String("version", "", "print the version of the compiler")
 var printHelp = flag.String("help", "", "print usage text")
 var packageName = flag.String("package", "bebopgen", "specify the name of the package to generate")
+var generateUnsafeMethods = flag.Bool("generate-unsafe", false, "whether unchecked additional methods should be generated")
 
-const version = "bebopc-go v0.0.3"
+const version = "bebopc-go v0.0.5"
 
 func main() {
 	err := run()
@@ -56,7 +57,8 @@ func run() error {
 	}
 	defer out.Close()
 	settings := bebop.GenerateSettings{
-		PackageName: *packageName,
+		PackageName:           *packageName,
+		GenerateUnsafeMethods: *generateUnsafeMethods,
 	}
 	if err := bopf.Generate(out, settings); err != nil {
 		return fmt.Errorf("failed to generate file: %w", err)

@@ -39,6 +39,33 @@ func (bbp Int32s) MarshalBebopTo(buf []byte) {
 	}
 }
 
+func (bbp *Int32s) UnmarshalBebop(buf []byte) (err error) {
+	at := 0
+	if len(buf[at:]) < 4 {
+		 return iohelp.ErrTooShort
+	}
+	bbp.A = make([]int32, iohelp.ReadUint32Bytes(buf[at:]))
+	at += 4
+	if len(buf[at:]) < len(bbp.A)*4 {
+		 return iohelp.ErrTooShort
+	}
+	for i1 := range bbp.A {
+		(bbp.A)[i1] = iohelp.ReadInt32Bytes(buf[at:])
+		at += 4
+	}
+	return nil
+}
+
+func (bbp *Int32s) MustUnmarshalBebop(buf []byte) {
+	at := 0
+	bbp.A = make([]int32, iohelp.ReadUint32Bytes(buf[at:]))
+	at += 4
+	for i1 := range bbp.A {
+		(bbp.A)[i1] = iohelp.ReadInt32Bytes(buf[at:])
+		at += 4
+	}
+}
+
 func (bbp Int32s) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
 	iohelp.WriteUint32(w, uint32(len(bbp.A)))
@@ -57,7 +84,7 @@ func (bbp *Int32s) DecodeBebop(ior io.Reader) (err error) {
 	return r.Err
 }
 
-func (bbp *Int32s) bodyLen() int {
+func (bbp Int32s) bodyLen() int {
 	bodyLen := 0
 	bodyLen += 4
 	bodyLen += len(bbp.A) * 4
@@ -68,6 +95,18 @@ func makeInt32s(r iohelp.ErrorReader) (Int32s, error) {
 	v := Int32s{}
 	err := v.DecodeBebop(r)
 	return v, err
+}
+
+func makeInt32sFromBytes(buf []byte) (Int32s, error) {
+	v := Int32s{}
+	err := v.UnmarshalBebop(buf)
+	return v, err
+}
+
+func mustMakeInt32sFromBytes(buf []byte) Int32s {
+	v := Int32s{}
+	v.MustUnmarshalBebop(buf)
+	return v
 }
 
 var _ bebop.Record = &Uint32s{}
@@ -92,6 +131,33 @@ func (bbp Uint32s) MarshalBebopTo(buf []byte) {
 	}
 }
 
+func (bbp *Uint32s) UnmarshalBebop(buf []byte) (err error) {
+	at := 0
+	if len(buf[at:]) < 4 {
+		 return iohelp.ErrTooShort
+	}
+	bbp.A = make([]uint32, iohelp.ReadUint32Bytes(buf[at:]))
+	at += 4
+	if len(buf[at:]) < len(bbp.A)*4 {
+		 return iohelp.ErrTooShort
+	}
+	for i1 := range bbp.A {
+		(bbp.A)[i1] = iohelp.ReadUint32Bytes(buf[at:])
+		at += 4
+	}
+	return nil
+}
+
+func (bbp *Uint32s) MustUnmarshalBebop(buf []byte) {
+	at := 0
+	bbp.A = make([]uint32, iohelp.ReadUint32Bytes(buf[at:]))
+	at += 4
+	for i1 := range bbp.A {
+		(bbp.A)[i1] = iohelp.ReadUint32Bytes(buf[at:])
+		at += 4
+	}
+}
+
 func (bbp Uint32s) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
 	iohelp.WriteUint32(w, uint32(len(bbp.A)))
@@ -110,7 +176,7 @@ func (bbp *Uint32s) DecodeBebop(ior io.Reader) (err error) {
 	return r.Err
 }
 
-func (bbp *Uint32s) bodyLen() int {
+func (bbp Uint32s) bodyLen() int {
 	bodyLen := 0
 	bodyLen += 4
 	bodyLen += len(bbp.A) * 4
@@ -121,6 +187,18 @@ func makeUint32s(r iohelp.ErrorReader) (Uint32s, error) {
 	v := Uint32s{}
 	err := v.DecodeBebop(r)
 	return v, err
+}
+
+func makeUint32sFromBytes(buf []byte) (Uint32s, error) {
+	v := Uint32s{}
+	err := v.UnmarshalBebop(buf)
+	return v, err
+}
+
+func mustMakeUint32sFromBytes(buf []byte) Uint32s {
+	v := Uint32s{}
+	v.MustUnmarshalBebop(buf)
+	return v
 }
 
 var _ bebop.Record = &Float32s{}
@@ -145,6 +223,33 @@ func (bbp Float32s) MarshalBebopTo(buf []byte) {
 	}
 }
 
+func (bbp *Float32s) UnmarshalBebop(buf []byte) (err error) {
+	at := 0
+	if len(buf[at:]) < 4 {
+		 return iohelp.ErrTooShort
+	}
+	bbp.A = make([]float32, iohelp.ReadUint32Bytes(buf[at:]))
+	at += 4
+	if len(buf[at:]) < len(bbp.A)*4 {
+		 return iohelp.ErrTooShort
+	}
+	for i1 := range bbp.A {
+		(bbp.A)[i1] = iohelp.ReadFloat32Bytes(buf[at:])
+		at += 4
+	}
+	return nil
+}
+
+func (bbp *Float32s) MustUnmarshalBebop(buf []byte) {
+	at := 0
+	bbp.A = make([]float32, iohelp.ReadUint32Bytes(buf[at:]))
+	at += 4
+	for i1 := range bbp.A {
+		(bbp.A)[i1] = iohelp.ReadFloat32Bytes(buf[at:])
+		at += 4
+	}
+}
+
 func (bbp Float32s) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
 	iohelp.WriteUint32(w, uint32(len(bbp.A)))
@@ -163,7 +268,7 @@ func (bbp *Float32s) DecodeBebop(ior io.Reader) (err error) {
 	return r.Err
 }
 
-func (bbp *Float32s) bodyLen() int {
+func (bbp Float32s) bodyLen() int {
 	bodyLen := 0
 	bodyLen += 4
 	bodyLen += len(bbp.A) * 4
@@ -174,6 +279,18 @@ func makeFloat32s(r iohelp.ErrorReader) (Float32s, error) {
 	v := Float32s{}
 	err := v.DecodeBebop(r)
 	return v, err
+}
+
+func makeFloat32sFromBytes(buf []byte) (Float32s, error) {
+	v := Float32s{}
+	err := v.UnmarshalBebop(buf)
+	return v, err
+}
+
+func mustMakeFloat32sFromBytes(buf []byte) Float32s {
+	v := Float32s{}
+	v.MustUnmarshalBebop(buf)
+	return v
 }
 
 var _ bebop.Record = &Int64s{}
@@ -198,6 +315,33 @@ func (bbp Int64s) MarshalBebopTo(buf []byte) {
 	}
 }
 
+func (bbp *Int64s) UnmarshalBebop(buf []byte) (err error) {
+	at := 0
+	if len(buf[at:]) < 4 {
+		 return iohelp.ErrTooShort
+	}
+	bbp.A = make([]int64, iohelp.ReadUint32Bytes(buf[at:]))
+	at += 4
+	if len(buf[at:]) < len(bbp.A)*8 {
+		 return iohelp.ErrTooShort
+	}
+	for i1 := range bbp.A {
+		(bbp.A)[i1] = iohelp.ReadInt64Bytes(buf[at:])
+		at += 8
+	}
+	return nil
+}
+
+func (bbp *Int64s) MustUnmarshalBebop(buf []byte) {
+	at := 0
+	bbp.A = make([]int64, iohelp.ReadUint32Bytes(buf[at:]))
+	at += 4
+	for i1 := range bbp.A {
+		(bbp.A)[i1] = iohelp.ReadInt64Bytes(buf[at:])
+		at += 8
+	}
+}
+
 func (bbp Int64s) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
 	iohelp.WriteUint32(w, uint32(len(bbp.A)))
@@ -216,7 +360,7 @@ func (bbp *Int64s) DecodeBebop(ior io.Reader) (err error) {
 	return r.Err
 }
 
-func (bbp *Int64s) bodyLen() int {
+func (bbp Int64s) bodyLen() int {
 	bodyLen := 0
 	bodyLen += 4
 	bodyLen += len(bbp.A) * 8
@@ -227,6 +371,18 @@ func makeInt64s(r iohelp.ErrorReader) (Int64s, error) {
 	v := Int64s{}
 	err := v.DecodeBebop(r)
 	return v, err
+}
+
+func makeInt64sFromBytes(buf []byte) (Int64s, error) {
+	v := Int64s{}
+	err := v.UnmarshalBebop(buf)
+	return v, err
+}
+
+func mustMakeInt64sFromBytes(buf []byte) Int64s {
+	v := Int64s{}
+	v.MustUnmarshalBebop(buf)
+	return v
 }
 
 var _ bebop.Record = &Uint64s{}
@@ -251,6 +407,33 @@ func (bbp Uint64s) MarshalBebopTo(buf []byte) {
 	}
 }
 
+func (bbp *Uint64s) UnmarshalBebop(buf []byte) (err error) {
+	at := 0
+	if len(buf[at:]) < 4 {
+		 return iohelp.ErrTooShort
+	}
+	bbp.A = make([]uint64, iohelp.ReadUint32Bytes(buf[at:]))
+	at += 4
+	if len(buf[at:]) < len(bbp.A)*8 {
+		 return iohelp.ErrTooShort
+	}
+	for i1 := range bbp.A {
+		(bbp.A)[i1] = iohelp.ReadUint64Bytes(buf[at:])
+		at += 8
+	}
+	return nil
+}
+
+func (bbp *Uint64s) MustUnmarshalBebop(buf []byte) {
+	at := 0
+	bbp.A = make([]uint64, iohelp.ReadUint32Bytes(buf[at:]))
+	at += 4
+	for i1 := range bbp.A {
+		(bbp.A)[i1] = iohelp.ReadUint64Bytes(buf[at:])
+		at += 8
+	}
+}
+
 func (bbp Uint64s) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
 	iohelp.WriteUint32(w, uint32(len(bbp.A)))
@@ -269,7 +452,7 @@ func (bbp *Uint64s) DecodeBebop(ior io.Reader) (err error) {
 	return r.Err
 }
 
-func (bbp *Uint64s) bodyLen() int {
+func (bbp Uint64s) bodyLen() int {
 	bodyLen := 0
 	bodyLen += 4
 	bodyLen += len(bbp.A) * 8
@@ -280,6 +463,18 @@ func makeUint64s(r iohelp.ErrorReader) (Uint64s, error) {
 	v := Uint64s{}
 	err := v.DecodeBebop(r)
 	return v, err
+}
+
+func makeUint64sFromBytes(buf []byte) (Uint64s, error) {
+	v := Uint64s{}
+	err := v.UnmarshalBebop(buf)
+	return v, err
+}
+
+func mustMakeUint64sFromBytes(buf []byte) Uint64s {
+	v := Uint64s{}
+	v.MustUnmarshalBebop(buf)
+	return v
 }
 
 var _ bebop.Record = &Float64s{}
@@ -304,6 +499,33 @@ func (bbp Float64s) MarshalBebopTo(buf []byte) {
 	}
 }
 
+func (bbp *Float64s) UnmarshalBebop(buf []byte) (err error) {
+	at := 0
+	if len(buf[at:]) < 4 {
+		 return iohelp.ErrTooShort
+	}
+	bbp.A = make([]float64, iohelp.ReadUint32Bytes(buf[at:]))
+	at += 4
+	if len(buf[at:]) < len(bbp.A)*8 {
+		 return iohelp.ErrTooShort
+	}
+	for i1 := range bbp.A {
+		(bbp.A)[i1] = iohelp.ReadFloat64Bytes(buf[at:])
+		at += 8
+	}
+	return nil
+}
+
+func (bbp *Float64s) MustUnmarshalBebop(buf []byte) {
+	at := 0
+	bbp.A = make([]float64, iohelp.ReadUint32Bytes(buf[at:]))
+	at += 4
+	for i1 := range bbp.A {
+		(bbp.A)[i1] = iohelp.ReadFloat64Bytes(buf[at:])
+		at += 8
+	}
+}
+
 func (bbp Float64s) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
 	iohelp.WriteUint32(w, uint32(len(bbp.A)))
@@ -322,7 +544,7 @@ func (bbp *Float64s) DecodeBebop(ior io.Reader) (err error) {
 	return r.Err
 }
 
-func (bbp *Float64s) bodyLen() int {
+func (bbp Float64s) bodyLen() int {
 	bodyLen := 0
 	bodyLen += 4
 	bodyLen += len(bbp.A) * 8
@@ -333,6 +555,18 @@ func makeFloat64s(r iohelp.ErrorReader) (Float64s, error) {
 	v := Float64s{}
 	err := v.DecodeBebop(r)
 	return v, err
+}
+
+func makeFloat64sFromBytes(buf []byte) (Float64s, error) {
+	v := Float64s{}
+	err := v.UnmarshalBebop(buf)
+	return v, err
+}
+
+func mustMakeFloat64sFromBytes(buf []byte) Float64s {
+	v := Float64s{}
+	v.MustUnmarshalBebop(buf)
+	return v
 }
 
 var _ bebop.Record = &VideoData{}
@@ -364,6 +598,50 @@ func (bbp VideoData) MarshalBebopTo(buf []byte) {
 	at += len(bbp.Fragment)
 }
 
+func (bbp *VideoData) UnmarshalBebop(buf []byte) (err error) {
+	at := 0
+	if len(buf[at:]) < 8 {
+		 return iohelp.ErrTooShort
+	}
+	bbp.Time = iohelp.ReadFloat64Bytes(buf[at:])
+	at += 8
+	if len(buf[at:]) < 4 {
+		 return iohelp.ErrTooShort
+	}
+	bbp.Width = iohelp.ReadUint32Bytes(buf[at:])
+	at += 4
+	if len(buf[at:]) < 4 {
+		 return iohelp.ErrTooShort
+	}
+	bbp.Height = iohelp.ReadUint32Bytes(buf[at:])
+	at += 4
+	if len(buf[at:]) < 4 {
+		 return iohelp.ErrTooShort
+	}
+	bbp.Fragment = make([]byte, iohelp.ReadUint32Bytes(buf[at:]))
+	at += 4
+	if len(buf[at:]) < len(bbp.Fragment)*1 {
+		 return iohelp.ErrTooShort
+	}
+	copy(bbp.Fragment, buf[at:at+len(bbp.Fragment)])
+	at += len(bbp.Fragment)
+	return nil
+}
+
+func (bbp *VideoData) MustUnmarshalBebop(buf []byte) {
+	at := 0
+	bbp.Time = iohelp.ReadFloat64Bytes(buf[at:])
+	at += 8
+	bbp.Width = iohelp.ReadUint32Bytes(buf[at:])
+	at += 4
+	bbp.Height = iohelp.ReadUint32Bytes(buf[at:])
+	at += 4
+	bbp.Fragment = make([]byte, iohelp.ReadUint32Bytes(buf[at:]))
+	at += 4
+	copy(bbp.Fragment, buf[at:at+len(bbp.Fragment)])
+	at += len(bbp.Fragment)
+}
+
 func (bbp VideoData) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
 	iohelp.WriteFloat64(w, bbp.Time)
@@ -388,7 +666,7 @@ func (bbp *VideoData) DecodeBebop(ior io.Reader) (err error) {
 	return r.Err
 }
 
-func (bbp *VideoData) bodyLen() int {
+func (bbp VideoData) bodyLen() int {
 	bodyLen := 0
 	bodyLen += 8
 	bodyLen += 4
@@ -402,6 +680,18 @@ func makeVideoData(r iohelp.ErrorReader) (VideoData, error) {
 	v := VideoData{}
 	err := v.DecodeBebop(r)
 	return v, err
+}
+
+func makeVideoDataFromBytes(buf []byte) (VideoData, error) {
+	v := VideoData{}
+	err := v.UnmarshalBebop(buf)
+	return v, err
+}
+
+func mustMakeVideoDataFromBytes(buf []byte) VideoData {
+	v := VideoData{}
+	v.MustUnmarshalBebop(buf)
+	return v
 }
 
 var _ bebop.Record = &MediaMessage{}
@@ -433,6 +723,51 @@ func (bbp MediaMessage) MarshalBebopTo(buf []byte) {
 		at++
 		(*bbp.Data).MarshalBebopTo(buf[at:])
 		at += (*bbp.Data).bodyLen()
+	}
+}
+
+func (bbp *MediaMessage) UnmarshalBebop(buf []byte) (err error) {
+	at := 0
+	_ = iohelp.ReadUint32Bytes(buf[at:])
+	buf = buf[4:]
+	for {
+		switch buf[at] {
+		case 1:
+			at += 1
+			bbp.Codec = new(VideoCodec)
+			(*bbp.Codec) = VideoCodec(iohelp.ReadUint32Bytes(buf[at:]))
+			at += 4
+			
+		case 2:
+			at += 1
+			bbp.Data = new(VideoData)
+			(*bbp.Data), err = makeVideoDataFromBytes(buf[at:])
+			if err != nil {
+				 return err
+			}
+			at += ((*bbp.Data)).bodyLen()
+		default:
+			return nil
+		}
+	}
+}
+
+func (bbp *MediaMessage) MustUnmarshalBebop(buf []byte) {
+	at := 0
+	for {
+		switch buf[at] {
+		case 1:
+			bbp.Codec = new(VideoCodec)
+			(*bbp.Codec) = VideoCodec(iohelp.ReadUint32Bytes(buf[at:]))
+			at += 4
+			
+		case 2:
+			bbp.Data = new(VideoData)
+			(*bbp.Data) = mustMakeVideoDataFromBytes(buf[at:])
+			at += ((*bbp.Data)).bodyLen()
+		default:
+			return
+		}
 	}
 }
 
@@ -477,7 +812,7 @@ func (bbp *MediaMessage) DecodeBebop(ior io.Reader) (err error) {
 	}
 }
 
-func (bbp *MediaMessage) bodyLen() int {
+func (bbp MediaMessage) bodyLen() int {
 	bodyLen := 5
 	if bbp.Codec != nil {
 		bodyLen += 1
@@ -494,6 +829,18 @@ func makeMediaMessage(r iohelp.ErrorReader) (MediaMessage, error) {
 	v := MediaMessage{}
 	err := v.DecodeBebop(r)
 	return v, err
+}
+
+func makeMediaMessageFromBytes(buf []byte) (MediaMessage, error) {
+	v := MediaMessage{}
+	err := v.UnmarshalBebop(buf)
+	return v, err
+}
+
+func mustMakeMediaMessageFromBytes(buf []byte) MediaMessage {
+	v := MediaMessage{}
+	v.MustUnmarshalBebop(buf)
+	return v
 }
 
 var _ bebop.Record = &SkipTestOld{}
@@ -525,6 +872,52 @@ func (bbp SkipTestOld) MarshalBebopTo(buf []byte) {
 		at++
 		iohelp.WriteInt32Bytes(buf[at:], *bbp.Y)
 		at += 4
+	}
+}
+
+func (bbp *SkipTestOld) UnmarshalBebop(buf []byte) (err error) {
+	at := 0
+	_ = iohelp.ReadUint32Bytes(buf[at:])
+	buf = buf[4:]
+	for {
+		switch buf[at] {
+		case 1:
+			at += 1
+			bbp.X = new(int32)
+			if len(buf[at:]) < 4 {
+				 return iohelp.ErrTooShort
+			}
+			(*bbp.X) = iohelp.ReadInt32Bytes(buf[at:])
+			at += 4
+		case 2:
+			at += 1
+			bbp.Y = new(int32)
+			if len(buf[at:]) < 4 {
+				 return iohelp.ErrTooShort
+			}
+			(*bbp.Y) = iohelp.ReadInt32Bytes(buf[at:])
+			at += 4
+		default:
+			return nil
+		}
+	}
+}
+
+func (bbp *SkipTestOld) MustUnmarshalBebop(buf []byte) {
+	at := 0
+	for {
+		switch buf[at] {
+		case 1:
+			bbp.X = new(int32)
+			(*bbp.X) = iohelp.ReadInt32Bytes(buf[at:])
+			at += 4
+		case 2:
+			bbp.Y = new(int32)
+			(*bbp.Y) = iohelp.ReadInt32Bytes(buf[at:])
+			at += 4
+		default:
+			return
+		}
 	}
 }
 
@@ -563,7 +956,7 @@ func (bbp *SkipTestOld) DecodeBebop(ior io.Reader) (err error) {
 	}
 }
 
-func (bbp *SkipTestOld) bodyLen() int {
+func (bbp SkipTestOld) bodyLen() int {
 	bodyLen := 5
 	if bbp.X != nil {
 		bodyLen += 1
@@ -580,6 +973,18 @@ func makeSkipTestOld(r iohelp.ErrorReader) (SkipTestOld, error) {
 	v := SkipTestOld{}
 	err := v.DecodeBebop(r)
 	return v, err
+}
+
+func makeSkipTestOldFromBytes(buf []byte) (SkipTestOld, error) {
+	v := SkipTestOld{}
+	err := v.UnmarshalBebop(buf)
+	return v, err
+}
+
+func mustMakeSkipTestOldFromBytes(buf []byte) SkipTestOld {
+	v := SkipTestOld{}
+	v.MustUnmarshalBebop(buf)
+	return v
 }
 
 var _ bebop.Record = &SkipTestNew{}
@@ -617,6 +1022,64 @@ func (bbp SkipTestNew) MarshalBebopTo(buf []byte) {
 		at++
 		iohelp.WriteInt32Bytes(buf[at:], *bbp.Z)
 		at += 4
+	}
+}
+
+func (bbp *SkipTestNew) UnmarshalBebop(buf []byte) (err error) {
+	at := 0
+	_ = iohelp.ReadUint32Bytes(buf[at:])
+	buf = buf[4:]
+	for {
+		switch buf[at] {
+		case 1:
+			at += 1
+			bbp.X = new(int32)
+			if len(buf[at:]) < 4 {
+				 return iohelp.ErrTooShort
+			}
+			(*bbp.X) = iohelp.ReadInt32Bytes(buf[at:])
+			at += 4
+		case 2:
+			at += 1
+			bbp.Y = new(int32)
+			if len(buf[at:]) < 4 {
+				 return iohelp.ErrTooShort
+			}
+			(*bbp.Y) = iohelp.ReadInt32Bytes(buf[at:])
+			at += 4
+		case 3:
+			at += 1
+			bbp.Z = new(int32)
+			if len(buf[at:]) < 4 {
+				 return iohelp.ErrTooShort
+			}
+			(*bbp.Z) = iohelp.ReadInt32Bytes(buf[at:])
+			at += 4
+		default:
+			return nil
+		}
+	}
+}
+
+func (bbp *SkipTestNew) MustUnmarshalBebop(buf []byte) {
+	at := 0
+	for {
+		switch buf[at] {
+		case 1:
+			bbp.X = new(int32)
+			(*bbp.X) = iohelp.ReadInt32Bytes(buf[at:])
+			at += 4
+		case 2:
+			bbp.Y = new(int32)
+			(*bbp.Y) = iohelp.ReadInt32Bytes(buf[at:])
+			at += 4
+		case 3:
+			bbp.Z = new(int32)
+			(*bbp.Z) = iohelp.ReadInt32Bytes(buf[at:])
+			at += 4
+		default:
+			return
+		}
 	}
 }
 
@@ -662,7 +1125,7 @@ func (bbp *SkipTestNew) DecodeBebop(ior io.Reader) (err error) {
 	}
 }
 
-func (bbp *SkipTestNew) bodyLen() int {
+func (bbp SkipTestNew) bodyLen() int {
 	bodyLen := 5
 	if bbp.X != nil {
 		bodyLen += 1
@@ -683,6 +1146,18 @@ func makeSkipTestNew(r iohelp.ErrorReader) (SkipTestNew, error) {
 	v := SkipTestNew{}
 	err := v.DecodeBebop(r)
 	return v, err
+}
+
+func makeSkipTestNewFromBytes(buf []byte) (SkipTestNew, error) {
+	v := SkipTestNew{}
+	err := v.UnmarshalBebop(buf)
+	return v, err
+}
+
+func mustMakeSkipTestNewFromBytes(buf []byte) SkipTestNew {
+	v := SkipTestNew{}
+	v.MustUnmarshalBebop(buf)
+	return v
 }
 
 var _ bebop.Record = &SkipTestOldContainer{}
@@ -713,6 +1188,52 @@ func (bbp SkipTestOldContainer) MarshalBebopTo(buf []byte) {
 		at++
 		iohelp.WriteInt32Bytes(buf[at:], *bbp.After)
 		at += 4
+	}
+}
+
+func (bbp *SkipTestOldContainer) UnmarshalBebop(buf []byte) (err error) {
+	at := 0
+	_ = iohelp.ReadUint32Bytes(buf[at:])
+	buf = buf[4:]
+	for {
+		switch buf[at] {
+		case 1:
+			at += 1
+			bbp.S = new(SkipTestOld)
+			(*bbp.S), err = makeSkipTestOldFromBytes(buf[at:])
+			if err != nil {
+				 return err
+			}
+			at += ((*bbp.S)).bodyLen()
+		case 2:
+			at += 1
+			bbp.After = new(int32)
+			if len(buf[at:]) < 4 {
+				 return iohelp.ErrTooShort
+			}
+			(*bbp.After) = iohelp.ReadInt32Bytes(buf[at:])
+			at += 4
+		default:
+			return nil
+		}
+	}
+}
+
+func (bbp *SkipTestOldContainer) MustUnmarshalBebop(buf []byte) {
+	at := 0
+	for {
+		switch buf[at] {
+		case 1:
+			bbp.S = new(SkipTestOld)
+			(*bbp.S) = mustMakeSkipTestOldFromBytes(buf[at:])
+			at += ((*bbp.S)).bodyLen()
+		case 2:
+			bbp.After = new(int32)
+			(*bbp.After) = iohelp.ReadInt32Bytes(buf[at:])
+			at += 4
+		default:
+			return
+		}
 	}
 }
 
@@ -757,7 +1278,7 @@ func (bbp *SkipTestOldContainer) DecodeBebop(ior io.Reader) (err error) {
 	}
 }
 
-func (bbp *SkipTestOldContainer) bodyLen() int {
+func (bbp SkipTestOldContainer) bodyLen() int {
 	bodyLen := 5
 	if bbp.S != nil {
 		bodyLen += 1
@@ -774,6 +1295,18 @@ func makeSkipTestOldContainer(r iohelp.ErrorReader) (SkipTestOldContainer, error
 	v := SkipTestOldContainer{}
 	err := v.DecodeBebop(r)
 	return v, err
+}
+
+func makeSkipTestOldContainerFromBytes(buf []byte) (SkipTestOldContainer, error) {
+	v := SkipTestOldContainer{}
+	err := v.UnmarshalBebop(buf)
+	return v, err
+}
+
+func mustMakeSkipTestOldContainerFromBytes(buf []byte) SkipTestOldContainer {
+	v := SkipTestOldContainer{}
+	v.MustUnmarshalBebop(buf)
+	return v
 }
 
 var _ bebop.Record = &SkipTestNewContainer{}
@@ -804,6 +1337,52 @@ func (bbp SkipTestNewContainer) MarshalBebopTo(buf []byte) {
 		at++
 		iohelp.WriteInt32Bytes(buf[at:], *bbp.After)
 		at += 4
+	}
+}
+
+func (bbp *SkipTestNewContainer) UnmarshalBebop(buf []byte) (err error) {
+	at := 0
+	_ = iohelp.ReadUint32Bytes(buf[at:])
+	buf = buf[4:]
+	for {
+		switch buf[at] {
+		case 1:
+			at += 1
+			bbp.S = new(SkipTestNew)
+			(*bbp.S), err = makeSkipTestNewFromBytes(buf[at:])
+			if err != nil {
+				 return err
+			}
+			at += ((*bbp.S)).bodyLen()
+		case 2:
+			at += 1
+			bbp.After = new(int32)
+			if len(buf[at:]) < 4 {
+				 return iohelp.ErrTooShort
+			}
+			(*bbp.After) = iohelp.ReadInt32Bytes(buf[at:])
+			at += 4
+		default:
+			return nil
+		}
+	}
+}
+
+func (bbp *SkipTestNewContainer) MustUnmarshalBebop(buf []byte) {
+	at := 0
+	for {
+		switch buf[at] {
+		case 1:
+			bbp.S = new(SkipTestNew)
+			(*bbp.S) = mustMakeSkipTestNewFromBytes(buf[at:])
+			at += ((*bbp.S)).bodyLen()
+		case 2:
+			bbp.After = new(int32)
+			(*bbp.After) = iohelp.ReadInt32Bytes(buf[at:])
+			at += 4
+		default:
+			return
+		}
 	}
 }
 
@@ -848,7 +1427,7 @@ func (bbp *SkipTestNewContainer) DecodeBebop(ior io.Reader) (err error) {
 	}
 }
 
-func (bbp *SkipTestNewContainer) bodyLen() int {
+func (bbp SkipTestNewContainer) bodyLen() int {
 	bodyLen := 5
 	if bbp.S != nil {
 		bodyLen += 1
@@ -865,5 +1444,17 @@ func makeSkipTestNewContainer(r iohelp.ErrorReader) (SkipTestNewContainer, error
 	v := SkipTestNewContainer{}
 	err := v.DecodeBebop(r)
 	return v, err
+}
+
+func makeSkipTestNewContainerFromBytes(buf []byte) (SkipTestNewContainer, error) {
+	v := SkipTestNewContainer{}
+	err := v.UnmarshalBebop(buf)
+	return v, err
+}
+
+func mustMakeSkipTestNewContainerFromBytes(buf []byte) SkipTestNewContainer {
+	v := SkipTestNewContainer{}
+	v.MustUnmarshalBebop(buf)
+	return v
 }
 

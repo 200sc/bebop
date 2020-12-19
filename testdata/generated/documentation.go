@@ -50,6 +50,22 @@ func (bbp DocS) MarshalBebopTo(buf []byte) {
 	at += 4
 }
 
+func (bbp *DocS) UnmarshalBebop(buf []byte) (err error) {
+	at := 0
+	if len(buf[at:]) < 4 {
+		 return iohelp.ErrTooShort
+	}
+	bbp.X = iohelp.ReadInt32Bytes(buf[at:])
+	at += 4
+	return nil
+}
+
+func (bbp *DocS) MustUnmarshalBebop(buf []byte) {
+	at := 0
+	bbp.X = iohelp.ReadInt32Bytes(buf[at:])
+	at += 4
+}
+
 func (bbp DocS) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
 	iohelp.WriteInt32(w, bbp.X)
@@ -62,7 +78,7 @@ func (bbp *DocS) DecodeBebop(ior io.Reader) (err error) {
 	return r.Err
 }
 
-func (bbp *DocS) bodyLen() int {
+func (bbp DocS) bodyLen() int {
 	bodyLen := 0
 	bodyLen += 4
 	return bodyLen
@@ -72,6 +88,18 @@ func makeDocS(r iohelp.ErrorReader) (DocS, error) {
 	v := DocS{}
 	err := v.DecodeBebop(r)
 	return v, err
+}
+
+func makeDocSFromBytes(buf []byte) (DocS, error) {
+	v := DocS{}
+	err := v.UnmarshalBebop(buf)
+	return v, err
+}
+
+func mustMakeDocSFromBytes(buf []byte) DocS {
+	v := DocS{}
+	v.MustUnmarshalBebop(buf)
+	return v
 }
 
 var _ bebop.Record = &DepM{}
@@ -96,6 +124,40 @@ func (bbp DepM) MarshalBebopTo(buf []byte) {
 		at++
 		iohelp.WriteInt32Bytes(buf[at:], *bbp.X)
 		at += 4
+	}
+}
+
+func (bbp *DepM) UnmarshalBebop(buf []byte) (err error) {
+	at := 0
+	_ = iohelp.ReadUint32Bytes(buf[at:])
+	buf = buf[4:]
+	for {
+		switch buf[at] {
+		case 1:
+			at += 1
+			bbp.X = new(int32)
+			if len(buf[at:]) < 4 {
+				 return iohelp.ErrTooShort
+			}
+			(*bbp.X) = iohelp.ReadInt32Bytes(buf[at:])
+			at += 4
+		default:
+			return nil
+		}
+	}
+}
+
+func (bbp *DepM) MustUnmarshalBebop(buf []byte) {
+	at := 0
+	for {
+		switch buf[at] {
+		case 1:
+			bbp.X = new(int32)
+			(*bbp.X) = iohelp.ReadInt32Bytes(buf[at:])
+			at += 4
+		default:
+			return
+		}
 	}
 }
 
@@ -127,7 +189,7 @@ func (bbp *DepM) DecodeBebop(ior io.Reader) (err error) {
 	}
 }
 
-func (bbp *DepM) bodyLen() int {
+func (bbp DepM) bodyLen() int {
 	bodyLen := 5
 	if bbp.X != nil {
 		bodyLen += 1
@@ -140,6 +202,18 @@ func makeDepM(r iohelp.ErrorReader) (DepM, error) {
 	v := DepM{}
 	err := v.DecodeBebop(r)
 	return v, err
+}
+
+func makeDepMFromBytes(buf []byte) (DepM, error) {
+	v := DepM{}
+	err := v.UnmarshalBebop(buf)
+	return v, err
+}
+
+func mustMakeDepMFromBytes(buf []byte) DepM {
+	v := DepM{}
+	v.MustUnmarshalBebop(buf)
+	return v
 }
 
 var _ bebop.Record = &DocM{}
@@ -185,6 +259,64 @@ func (bbp DocM) MarshalBebopTo(buf []byte) {
 	}
 }
 
+func (bbp *DocM) UnmarshalBebop(buf []byte) (err error) {
+	at := 0
+	_ = iohelp.ReadUint32Bytes(buf[at:])
+	buf = buf[4:]
+	for {
+		switch buf[at] {
+		case 1:
+			at += 1
+			bbp.X = new(int32)
+			if len(buf[at:]) < 4 {
+				 return iohelp.ErrTooShort
+			}
+			(*bbp.X) = iohelp.ReadInt32Bytes(buf[at:])
+			at += 4
+		case 2:
+			at += 1
+			bbp.Y = new(int32)
+			if len(buf[at:]) < 4 {
+				 return iohelp.ErrTooShort
+			}
+			(*bbp.Y) = iohelp.ReadInt32Bytes(buf[at:])
+			at += 4
+		case 3:
+			at += 1
+			bbp.Z = new(int32)
+			if len(buf[at:]) < 4 {
+				 return iohelp.ErrTooShort
+			}
+			(*bbp.Z) = iohelp.ReadInt32Bytes(buf[at:])
+			at += 4
+		default:
+			return nil
+		}
+	}
+}
+
+func (bbp *DocM) MustUnmarshalBebop(buf []byte) {
+	at := 0
+	for {
+		switch buf[at] {
+		case 1:
+			bbp.X = new(int32)
+			(*bbp.X) = iohelp.ReadInt32Bytes(buf[at:])
+			at += 4
+		case 2:
+			bbp.Y = new(int32)
+			(*bbp.Y) = iohelp.ReadInt32Bytes(buf[at:])
+			at += 4
+		case 3:
+			bbp.Z = new(int32)
+			(*bbp.Z) = iohelp.ReadInt32Bytes(buf[at:])
+			at += 4
+		default:
+			return
+		}
+	}
+}
+
 func (bbp DocM) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
 	iohelp.WriteUint32(w, uint32(bbp.bodyLen()))
@@ -227,7 +359,7 @@ func (bbp *DocM) DecodeBebop(ior io.Reader) (err error) {
 	}
 }
 
-func (bbp *DocM) bodyLen() int {
+func (bbp DocM) bodyLen() int {
 	bodyLen := 5
 	if bbp.X != nil {
 		bodyLen += 1
@@ -248,5 +380,17 @@ func makeDocM(r iohelp.ErrorReader) (DocM, error) {
 	v := DocM{}
 	err := v.DecodeBebop(r)
 	return v, err
+}
+
+func makeDocMFromBytes(buf []byte) (DocM, error) {
+	v := DocM{}
+	err := v.UnmarshalBebop(buf)
+	return v, err
+}
+
+func mustMakeDocMFromBytes(buf []byte) DocM {
+	v := DocM{}
+	v.MustUnmarshalBebop(buf)
+	return v
 }
 
