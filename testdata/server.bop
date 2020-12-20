@@ -1,0 +1,23 @@
+
+[opcode(0x00000002)]
+message PrintRequest {
+    1 -> Print print; 
+}
+
+struct Print {
+    string printout; 
+}
+
+[opcode(0x00000001)]
+message AddRequest {
+    1 -> Add add;
+}
+
+struct Add {
+    int32 a;
+    int32 b;
+}
+
+struct AddResponse {
+    int32 c;
+}

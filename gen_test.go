@@ -86,6 +86,7 @@ var genTestFiles = []string{
 	"msgpack_comparison",
 	"quoted_string",
 	"request",
+	"server",
 }
 
 func TestGenerateToFile(t *testing.T) {
