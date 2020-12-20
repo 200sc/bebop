@@ -259,7 +259,7 @@ func (bbp RequestCatalog) MarshalBebop() []byte {
 func (bbp RequestCatalog) MarshalBebopTo(buf []byte) {
 	iohelp.WriteUint32Bytes(buf, uint32(RequestCatalogOpCode))
 	at := 4
-	iohelp.WriteUint32Bytes(buf[at:], uint32(bbp.bodyLen()))
+	iohelp.WriteUint32Bytes(buf[at:], uint32(bbp.bodyLen()-8))
 	at += 4
 	if bbp.Family != nil {
 		buf[at] = 1

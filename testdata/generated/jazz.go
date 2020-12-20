@@ -241,7 +241,7 @@ func (bbp Song) MarshalBebop() []byte {
 
 func (bbp Song) MarshalBebopTo(buf []byte) {
 	at := 0
-	iohelp.WriteUint32Bytes(buf[at:], uint32(bbp.bodyLen()))
+	iohelp.WriteUint32Bytes(buf[at:], uint32(bbp.bodyLen()-4))
 	at += 4
 	if bbp.Title != nil {
 		buf[at] = 1

@@ -461,10 +461,11 @@ func (msg Message) Generate(w io.Writer, settings GenerateSettings) {
 	if msg.OpCode != 0 {
 		writeLine(w, "\tiohelp.WriteUint32Bytes(buf, uint32(%sOpCode))", exposedName)
 		writeLine(w, "\tat := 4")
+		writeLine(w, "\tiohelp.WriteUint32Bytes(buf[at:], uint32(bbp.bodyLen()-8))")
 	} else {
 		writeLine(w, "\tat := 0")
+		writeLine(w, "\tiohelp.WriteUint32Bytes(buf[at:], uint32(bbp.bodyLen()-4))")
 	}
-	writeLine(w, "\tiohelp.WriteUint32Bytes(buf[at:], uint32(bbp.bodyLen()))")
 	writeLine(w, "\tat += 4")
 	for _, fd := range fields {
 		name := exposeName(fd.Name)
