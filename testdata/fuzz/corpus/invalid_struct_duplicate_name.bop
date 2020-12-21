@@ -1,0 +1,4 @@
+struct Test {
+	int64 foo;
+	int64 foo;
+}

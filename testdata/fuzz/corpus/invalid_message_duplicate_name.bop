@@ -1,0 +1,4 @@
+message Test {
+	1 -> int64 foo;
+	2 -> int64 foo;
+}

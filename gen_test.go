@@ -39,6 +39,18 @@ func TestValidateError(t *testing.T) {
 	}, {
 		file: "invalid_message_unknown",
 		err:  "type whereisthistype undefined",
+	}, {
+		file: "invalid_enum_duplicate_index",
+		err:  "enum MyEnum has duplicate option value 1",
+	}, {
+		file: "invalid_enum_duplicate_name",
+		err:  "enum MyEnum has duplicate option name A",
+	}, {
+		file: "invalid_message_duplicate_name",
+		err:  "message Test has duplicate field name foo",
+	}, {
+		file: "invalid_struct_duplicate_name",
+		err:  "struct Test has duplicate field name foo",
 	}}
 	for _, tc := range tcs {
 		tc := tc

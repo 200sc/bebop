@@ -1107,6 +1107,7 @@ func TestReadFileError(t *testing.T) {
 		{file: "invalid_enum_reserved", errMessage: "expected (Ident) got Struct"},
 		{file: "invalid_struct_reserved", errMessage: "expected (Ident) got Array"},
 		{file: "invalid_message_reserved", errMessage: "expected (Ident) got Map"},
+		{file: "invalid_message_duplicate_index", errMessage: "message has duplicate field index 1"},
 	}
 	for _, tc := range tcs {
 		tc := tc

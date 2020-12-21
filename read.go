@@ -384,6 +384,9 @@ func readMessage(tr *tokenReader) (Message, error) {
 				return msg, err
 			}
 			fdName := string(toks[0].concrete)
+			if _, ok := msg.Fields[uint8(fdInteger)]; ok {
+				return msg, fmt.Errorf("message has duplicate field index %d", fdInteger)
+			}
 			msg.Fields[uint8(fdInteger)] = Field{
 				Name:              fdName,
 				FieldType:         fdType,

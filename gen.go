@@ -47,6 +47,18 @@ func (f File) Validate() error {
 			return fmt.Errorf("enum has duplicated name %s", en.Name)
 		}
 		customTypes[en.Name] = struct{}{}
+		optionNames := map[string]struct{}{}
+		optionValues := map[int32]struct{}{}
+		for _, opt := range en.Options {
+			if _, ok := optionNames[opt.Name]; ok {
+				return fmt.Errorf("enum %s has duplicate option name %s", en.Name, opt.Name)
+			}
+			if _, ok := optionValues[opt.Value]; ok {
+				return fmt.Errorf("enum %s has duplicate option value %d", en.Name, opt.Value)
+			}
+			optionNames[opt.Name] = struct{}{}
+			optionValues[opt.Value] = struct{}{}
+		}
 	}
 	for _, st := range f.Structs {
 		if _, ok := primitiveTypes[st.Name]; ok {
@@ -60,6 +72,13 @@ func (f File) Validate() error {
 		}
 		customTypes[st.Name] = struct{}{}
 		structTypeUsage[st.Name] = st.usedTypes()
+		stNames := map[string]struct{}{}
+		for _, fd := range st.Fields {
+			if _, ok := stNames[fd.Name]; ok {
+				return fmt.Errorf("struct %s has duplicate field name %s", st.Name, fd.Name)
+			}
+			stNames[fd.Name] = struct{}{}
+		}
 	}
 	for _, msg := range f.Messages {
 		if _, ok := primitiveTypes[msg.Name]; ok {
@@ -72,6 +91,14 @@ func (f File) Validate() error {
 			return fmt.Errorf("message has duplicated name %s", msg.Name)
 		}
 		customTypes[msg.Name] = struct{}{}
+		msgNames := map[string]struct{}{}
+		for _, fd := range msg.Fields {
+			if _, ok := msgNames[fd.Name]; ok {
+				return fmt.Errorf("message %s has duplicate field name %s", msg.Name, fd.Name)
+			}
+
+			msgNames[fd.Name] = struct{}{}
+		}
 	}
 	allTypes := customTypes
 	for typ := range primitiveTypes {
