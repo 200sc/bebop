@@ -16,4 +16,3 @@ struct BasicArrays {
 struct TestInt32Array {
 	int32[] a;
 }
-

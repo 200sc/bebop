@@ -6,4 +6,3 @@ struct QuotedString {
 	[deprecated("escaped\" \"slashes:\\\\\"\" \\")]
 	int32 Z;
 }
-

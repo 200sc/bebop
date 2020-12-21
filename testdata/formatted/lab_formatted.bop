@@ -38,7 +38,6 @@ message MediaMessage {
 	1 -> VideoCodec codec;
 	2 -> VideoData data;
 }
-
 // Should be able to decode a "SkipTestNewContainer" as a "SkipTestOldContainer".
 message SkipTestOld {
 	1 -> int32 x;
@@ -60,4 +59,3 @@ message SkipTestNewContainer {
 	1 -> SkipTestNew s;
 	2 -> int32 after;
 }
-

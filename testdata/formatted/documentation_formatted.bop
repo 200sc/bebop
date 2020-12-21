@@ -7,7 +7,6 @@ message DepM {
 	[deprecated("x in DepM")]
 	1 -> int32 x;
 }
-
 /* Documented enum */
 enum DocE {
 	/* Documented constant */
@@ -18,21 +17,16 @@ enum DocE {
 	[deprecated("Z in DocE")]
 	Z = 3;
 }
-
 /* Documented message */
 message DocM {
-	/* Documented field */
 	1 -> int32 x;
 	[deprecated("y in DocM")]
 	2 -> int32 y;
-	/* Deprecated, documented field */
 	[deprecated("z in DocM")]
 	3 -> int32 z;
 }
-
 /* Documented struct */
 struct DocS {
 	/* Documented field */
 	int32 x;
 }
-

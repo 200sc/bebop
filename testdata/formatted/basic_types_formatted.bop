@@ -13,4 +13,3 @@ struct BasicTypes {
 	guid a_guid;
 	date a_date;
 }
-

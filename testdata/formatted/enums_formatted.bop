@@ -5,4 +5,3 @@ enum Test {
 	[deprecated("who knows")]
 	Beginning = 4;
 }
-

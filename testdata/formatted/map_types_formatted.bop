@@ -15,4 +15,3 @@ struct SomeMaps {
 	array[map[string, array[float32]]] m4;
 	map[guid, M] m5;
 }
-

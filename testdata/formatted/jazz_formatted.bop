@@ -18,4 +18,3 @@ message Song {
 struct Library {
 	map[guid, Song] songs;
 }
-
