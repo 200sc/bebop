@@ -57,6 +57,10 @@ func sendFoo(cn net.Conn) (success bool) {
 At `main/bebobc-go` there is a cli utility to take .bop files and produce .go files from them, what is effectively a
 little more sophisticated version of the first example in this document.
 
+## bebopfmt
+
+At `main/bebopfmt` there is a cli utility to format and rewrite bop files. It takes in a `-w` argument to rewrite files in place, and accepts both direct files and filepaths.
+
 ## Known limitations
 
 The following is a list of known issues with the current version of the project, ordered by approximate priority for addressing them.
@@ -71,8 +75,7 @@ Original bebop does not support one .bop file importing type definitions from an
 
 - This is nontrivial, and requires a lot of design toward the importing / packaging ecosystem.
 
-Original bebop requires semicolons after field definitions, and so do we. It seems practical for the language parser to
-treat newlines as semicolons (as Go does).
+Original bebop requires semicolons after field definitions, and so do we. It seems practical for the language parser to Inject semicolons where required in tokenization.
 
 We should be able to generate server code with handlers given all valid messages have op codes.
 

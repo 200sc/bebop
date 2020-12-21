@@ -10,12 +10,12 @@ import (
 
 var inputFile = flag.String("i", "", "the name of the file to compile")
 var outputFile = flag.String("o", "", "the name of the output file to write")
-var printVersion = flag.String("version", "", "print the version of the compiler")
-var printHelp = flag.String("help", "", "print usage text")
+var printVersion = flag.Bool("version", false, "print the version of the compiler")
+var printHelp = flag.Bool("help", false, "print usage text")
 var packageName = flag.String("package", "bebopgen", "specify the name of the package to generate")
 var generateUnsafeMethods = flag.Bool("generate-unsafe", false, "whether unchecked additional methods should be generated")
 
-const version = "bebopc-go v0.0.5"
+const version = "bebopc-go v0.0.6"
 
 func main() {
 	err := run()
@@ -28,11 +28,11 @@ func main() {
 
 func run() error {
 	flag.Parse()
-	if *printHelp != "" {
+	if *printHelp {
 		flag.Usage()
 		return nil
 	}
-	if *printVersion != "" {
+	if *printVersion {
 		fmt.Println(version)
 		return nil
 	}
