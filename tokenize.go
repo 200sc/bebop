@@ -12,7 +12,24 @@ type tokenReader struct {
 	lastToken     token
 	nextToken     token
 	err           error
+	loc           location
 	keepNextToken bool
+}
+
+type location struct {
+	absoluteChar int
+	lineChar     int
+	line         int
+}
+
+func (l *location) inc(i int) {
+	l.absoluteChar += i
+	l.lineChar += i
+}
+
+func (l *location) incLine() {
+	l.line++
+	l.lineChar = 0
 }
 
 func newTokenReader(r io.Reader) *tokenReader {
@@ -51,6 +68,12 @@ func (tr *tokenReader) setNextToken(tk token) {
 	tr.nextToken = tk
 }
 
+func (tr *tokenReader) readByte() (byte, error) {
+	b, err := tr.r.ReadByte()
+	tr.loc.inc(1)
+	return b, err
+}
+
 // Next attempts to read the next token in the reader.
 // If a token cannot be found, it returns false. If there
 // are no tokens because EOF was reached, Err() will return
@@ -64,11 +87,14 @@ func (tr *tokenReader) Next() bool {
 		return true
 	}
 	for {
-		b, err := tr.r.ReadByte()
+		b, err := tr.readByte()
 		if err == io.EOF {
 			return false
 		}
 		if kind, ok := singleCharTokens[b]; ok {
+			if b == '\n' {
+				tr.loc.incLine()
+			}
 			tr.setNextToken(token{
 				concrete: []byte{b},
 				kind:     kind,
@@ -82,9 +108,9 @@ func (tr *tokenReader) Next() bool {
 			continue
 		// two token sequences
 		case '-':
-			b2, err := tr.r.ReadByte()
+			b2, err := tr.readByte()
 			if err == io.EOF {
-				tr.err = io.ErrUnexpectedEOF
+				tr.err = fmt.Errorf("eof waiting for '>' in '->'")
 				return false
 			}
 			if err != nil {
@@ -92,7 +118,7 @@ func (tr *tokenReader) Next() bool {
 				return false
 			}
 			if b2 != '>' {
-				tr.err = fmt.Errorf("invalid token")
+				tr.err = fmt.Errorf("unexpected token '%v' waiting for '>' in '->'", string(b2))
 				return false
 			}
 			tr.setNextToken(token{
@@ -100,9 +126,9 @@ func (tr *tokenReader) Next() bool {
 				kind:     tokenKindArrow,
 			})
 		case '/':
-			b2, err := tr.r.ReadByte()
+			b2, err := tr.readByte()
 			if err == io.EOF {
-				tr.err = io.ErrUnexpectedEOF
+				tr.err = fmt.Errorf("eof waiting for '[/, *]' after '/'")
 				return false
 			}
 			if err != nil {
@@ -115,6 +141,8 @@ func (tr *tokenReader) Next() bool {
 					tr.err = err
 					return false
 				}
+				tr.loc.inc(len(restOfLine))
+				tr.loc.incLine()
 
 				tr.setNextToken(token{
 					concrete: []byte{b, b2},
@@ -124,7 +152,7 @@ func (tr *tokenReader) Next() bool {
 			} else if b2 == '*' {
 				return tr.nextBlockComment(b, b2)
 			} else {
-				tr.err = fmt.Errorf("invalid token")
+				tr.err = fmt.Errorf("unexpected token '%v' waiting for '[/, *]' after '/'", string(b2))
 				return false
 			}
 		default:
@@ -132,7 +160,8 @@ func (tr *tokenReader) Next() bool {
 				return tr.nextInteger(b)
 			}
 			tr.r.UnreadByte()
-			rn, _, err := tr.r.ReadRune()
+			rn, sz, err := tr.r.ReadRune()
+			tr.loc.inc(sz)
 			if err == io.ErrUnexpectedEOF || err == io.EOF {
 				tr.err = io.ErrUnexpectedEOF
 				return false
@@ -142,7 +171,7 @@ func (tr *tokenReader) Next() bool {
 			} else if unicode.IsLetter(rn) {
 				return tr.nextIdent(rn)
 			}
-			tr.err = fmt.Errorf("invalid token")
+			tr.err = fmt.Errorf("unexpected token '%v', expected integer, letter, or control sequence", string(b))
 			return false
 		}
 		return true
@@ -157,7 +186,7 @@ func (tr *tokenReader) nextInteger(firstByte byte) bool {
 	// second byte is allowed to be 'x'
 	secondByte := true
 	for {
-		b, err := tr.r.ReadByte()
+		b, err := tr.readByte()
 		if err == io.EOF {
 			// stream ended in number
 			tr.setNextToken(tk)
@@ -174,6 +203,7 @@ func (tr *tokenReader) nextInteger(firstByte byte) bool {
 		} else {
 			// something else is here
 			tr.r.UnreadByte()
+			tr.loc.inc(-1)
 			tr.setNextToken(tk)
 			return true
 		}
@@ -202,7 +232,8 @@ func (tr *tokenReader) nextIdent(firstRune rune) bool {
 		kind:     tokenKindIdent,
 	}
 	for {
-		rn, _, err := tr.r.ReadRune()
+		rn, sz, err := tr.r.ReadRune()
+		tr.loc.inc(sz)
 		if err == io.EOF {
 			// stream ended in ident
 			tr.setNextToken(tk)
@@ -218,6 +249,7 @@ func (tr *tokenReader) nextIdent(firstRune rune) bool {
 		case rn == '_':
 		default:
 			tr.r.UnreadRune()
+			tr.loc.inc(-sz)
 			if keywordKind, ok := keywords[string(tk.concrete)]; ok {
 				tk.kind = keywordKind
 			}
@@ -235,9 +267,9 @@ func (tr *tokenReader) nextStringLiteral(firstByte byte) bool {
 	}
 	var escaping bool
 	for {
-		b, err := tr.r.ReadByte()
+		b, err := tr.readByte()
 		if err == io.EOF {
-			tr.err = fmt.Errorf("string literal missing end quote")
+			tr.err = fmt.Errorf("eof waiting for string end quote")
 			return false
 		}
 		if err != nil {
@@ -264,7 +296,7 @@ func (tr *tokenReader) nextBlockComment(b1, b2 byte) bool {
 	}
 	var lastByte byte
 	for {
-		b, err := tr.r.ReadByte()
+		b, err := tr.readByte()
 		if err == io.EOF {
 			tr.err = fmt.Errorf("block comment missing end token")
 			return false
@@ -285,18 +317,25 @@ func (tr *tokenReader) nextBlockComment(b1, b2 byte) bool {
 
 func (tr *tokenReader) skipFollowingWhitespace() {
 	for {
-		b, _ := tr.r.ReadByte()
+		b, _ := tr.readByte()
 		switch b {
-		case ' ', '\r', '\n':
+		case '\n':
+			tr.loc.incLine()
+			fallthrough
+		case ' ', '\r':
 			continue
 		}
 		tr.r.UnreadByte()
+		tr.loc.inc(-1)
 		break
 	}
 }
 
 func (tr *tokenReader) Err() error {
-	return tr.err
+	if tr.err == nil {
+		return nil
+	}
+	return fmt.Errorf("[%d:%d] %s", tr.loc.line, tr.loc.lineChar, tr.err.Error())
 }
 
 var optionalSemicolons = false
