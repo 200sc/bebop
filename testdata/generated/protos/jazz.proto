@@ -1,0 +1,26 @@
+syntax = "proto3";
+package proto;
+
+option go_package = "github.com/200sc/bebop/testdata/generated/protos";
+
+message Musician {
+    string name = 1;
+    Instrument plays = 2;
+}
+
+enum Instrument {
+    Sax = 0;
+    Trumpet = 1;
+    Clarinet = 2;
+}
+
+message Song {
+    string title = 1;
+    uint32 year = 2;
+    repeated Musician performers = 3;
+}
+
+// proto does not support guid/bytes for keys
+// message Library {
+//     map<bytes, Song> songs = 1;
+// }
