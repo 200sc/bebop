@@ -1,0 +1,4 @@
+/* */enum c{/* */X=1;/* */Z=3;}/* */message cM{/* */1->int32 x;
+//]
+2->int32 y;
+/* */3->int32 z;}/* */struct S{/* */int32 x;}

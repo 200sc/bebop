@@ -1,0 +1,6 @@
+enum FurnitureFamily{
+}readonly struct Furniture{
+g e;int32 e;FurnitureFamily y;}[opcode("IKEA")]message g{
+[deprecated("")]
+}[opcode(0x31323334)]readonly struct e{
+Furniture[]e;}

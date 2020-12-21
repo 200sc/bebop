@@ -1,0 +1,1 @@
+message M{[deprecated("")]}message M{[deprecated("")]2->t y;[deprecated("")]}message M{[deprecated("")]

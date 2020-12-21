@@ -1,0 +1,3 @@
+enum t{
+[deprecated("ho knows")]
+g=4;}

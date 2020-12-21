@@ -69,8 +69,6 @@ Tokenization and parsing errors do not currently report locations (line number, 
 
 Benchmarks would benefit from a larger set of messages to compare with.
 
-Much of the code would be well served having a fuzzer thrown at it.
-
 Original bebop does not support one .bop file importing type definitions from another .bop file, and so neither does this, yet.
 
 - This is nontrivial, and requires a lot of design toward the importing / packaging ecosystem.

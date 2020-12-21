@@ -1,0 +1,3 @@
+//
+message SkipTestOld {tN{ 1->int32 x; 2->int32 y; 3->int32 z;}
+message aie { 1->SkipTestOld s;2->int32 r;}

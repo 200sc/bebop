@@ -1,0 +1,1 @@
+struct n{uint8 T;uint8 T;int16 T;uint8 T;int16 T;int16 T;int16 T;int32 T;int32 T;bool E;bool E;float64 T;float64 T;bool E;float64 T;float64 Y;float64 T;}

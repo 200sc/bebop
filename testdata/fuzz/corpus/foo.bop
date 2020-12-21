@@ -1,0 +1,1 @@
+struct Foo{Bar bar;}message Bar{1->float64 x;2->float64 y;3->float64 z;}

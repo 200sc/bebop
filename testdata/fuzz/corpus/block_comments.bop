@@ -1,0 +1,14 @@
+/* block */ // line
+enum BlockComments {
+    /* block */ // line
+    Block = 1;
+}
+
+struct BlockComments2 {
+    /* block */ // line
+    int16 f; /* don't */ /* do */ /* this */
+}
+
+message BlockComments3 {
+    /* block */ // line
+}

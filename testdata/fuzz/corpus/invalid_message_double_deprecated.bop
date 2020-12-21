@@ -1,0 +1,4 @@
+message Test {
+    [deprecated("hello")]
+    [deprecated("world")]
+}

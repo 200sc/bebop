@@ -91,6 +91,9 @@ func (f File) Validate() error {
 			}
 		}
 	}
+	// Todo: within a given struct, enum, or message, a field / option cannot
+	// have a duplicate name
+
 	// Determine which structs include themselves as required fields (which would lead
 	// to the struct taking up infinite size)
 	delta := true

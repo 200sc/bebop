@@ -29,7 +29,7 @@ func TestTokenize(t *testing.T) {
 		filename := filename
 		t.Run(filename, func(t *testing.T) {
 			filename += ".bop"
-			f, err := os.Open(filepath.Join("testdata", filename))
+			f, err := os.Open(filepath.Join("testdata", "base", filename))
 			if err != nil {
 				t.Fatalf("failed to open test file %s: %v", filename, err)
 			}
@@ -64,7 +64,7 @@ func TestTokenizeFormat(t *testing.T) {
 	for _, filename := range testFormatFiles {
 		filename := filename
 		t.Run(filename, func(t *testing.T) {
-			f, err := os.Open(filepath.Join("testdata", filename+".bop"))
+			f, err := os.Open(filepath.Join("testdata", "base", filename+".bop"))
 			if err != nil {
 				t.Fatalf("failed to open test file %s: %v", filename+".bop", err)
 			}
@@ -73,7 +73,7 @@ func TestTokenizeFormat(t *testing.T) {
 				t.Fatalf("can not format unparseable files")
 			}
 			f.Close()
-			f, err = os.Open(filepath.Join("testdata", filename+".bop"))
+			f, err = os.Open(filepath.Join("testdata", "base", filename+".bop"))
 			if err != nil {
 				t.Fatalf("failed to open test file (for format) %s: %v", filename+".bop", err)
 			}
@@ -99,7 +99,7 @@ func TestTokenizeNoSemis(t *testing.T) {
 		filename := filename
 		t.Run(filename, func(t *testing.T) {
 			origfilename := filename + ".bop"
-			f, err := os.Open(filepath.Join("testdata", origfilename))
+			f, err := os.Open(filepath.Join("testdata", "base", origfilename))
 			if err != nil {
 				t.Fatalf("failed to open test file %s: %v", origfilename, err)
 			}
@@ -115,7 +115,7 @@ func TestTokenizeNoSemis(t *testing.T) {
 			}
 
 			noSemiFilepath := filename + "_nosemis.bop"
-			f2, err := os.Open(filepath.Join("testdata", noSemiFilepath))
+			f2, err := os.Open(filepath.Join("testdata", "base", noSemiFilepath))
 			if err != nil {
 				t.Fatalf("failed to open test file %s: %v", noSemiFilepath, err)
 			}

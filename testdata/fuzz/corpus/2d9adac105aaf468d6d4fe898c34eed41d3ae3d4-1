@@ -1,0 +1,1 @@
+message M{1->float32 a;2->float64 b;}struct S{}struct s{map[bool,bool]m;map[string,map[string,guid]]m;map[int32,map[bool,S][]][]m;array[map[string,array[float32]]]m;map[guid,M]m;}

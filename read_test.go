@@ -1046,7 +1046,7 @@ func TestReadFile(t *testing.T) {
 	for _, tc := range tcs {
 		tc := tc
 		t.Run(tc.file, func(t *testing.T) {
-			f, err := os.Open(filepath.Join("testdata", tc.file+".bop"))
+			f, err := os.Open(filepath.Join("testdata", "base", tc.file+".bop"))
 			if err != nil {
 				t.Fatalf("failed to open test file %s: %v", tc.file+".bop", err)
 			}
@@ -1111,7 +1111,7 @@ func TestReadFileError(t *testing.T) {
 	for _, tc := range tcs {
 		tc := tc
 		t.Run(tc.file, func(t *testing.T) {
-			f, err := os.Open(filepath.Join("testdata", tc.file+".bop"))
+			f, err := os.Open(filepath.Join("testdata", "base", tc.file+".bop"))
 			if err != nil {
 				t.Fatalf("failed to open test file %s: %v", tc.file+".bop", err)
 			}

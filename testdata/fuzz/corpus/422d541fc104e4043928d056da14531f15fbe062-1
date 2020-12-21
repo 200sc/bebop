@@ -1,0 +1,18 @@
+struct A {
+    B b;
+}
+
+struct B {C c;
+}
+
+struct C{
+    D d;
+}
+
+struct D{
+    E e;
+}
+
+struct E {
+   A a;
+}

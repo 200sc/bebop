@@ -1,0 +1,3 @@
+message Test {
+    0x1 -> string test;
+}

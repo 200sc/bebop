@@ -1,0 +1,1 @@
+struct Q{[deprecated("\"deprecated\"")]int32 X;[deprecated("escaped slash: \\")]int32 Y;[deprecated("escaped\" \"slashes:\\\\\"\" \\")]int32 Z;}

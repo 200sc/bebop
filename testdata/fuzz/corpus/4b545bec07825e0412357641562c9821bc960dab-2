@@ -1,0 +1,1 @@
+struct Q{[deprecated("")]i X;[deprecated("")]t Y;[deprecated("")]n Y;[deprecated("")]t X;[deprecated("")]

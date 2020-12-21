@@ -1,0 +1,7 @@
+message s{/*/ //e
+    Block =  //e1;
+}
+
+struct BlockComments2 {
+    /* block *//* don't *//* do *//* this */}message s3{/* block */
+}

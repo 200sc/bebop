@@ -1,0 +1,1 @@
+struct A{B b;}struct B{C c;}struct C{D d;}struct D{E e;}struct E{t32[]a;int64[]a;uint64[]a;float32[]a;float64[]a;string[]a;guid[]a;}struct t32{int32[]a;}

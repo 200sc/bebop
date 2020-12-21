@@ -1,0 +1,13 @@
+struct ys {    bool[] a_;
+    byte[] a_;
+    int16[] a_16;
+    uint16[] a_uint16;
+    int32[] a_32;
+    uint32[] a_uint32;
+    int64[] a_64;
+    uint64[] a_uint64;
+    float32[] a_loat32;
+    float64[] a_loat64;
+    string[] a_;
+    guid[] a_;
+}struct t32 { int32[] a; }

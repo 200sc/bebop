@@ -1,0 +1,7 @@
+struct In {int32[] a; }
+struct s { int32[]a; }struct Fls { float32[]a; }struct I{ int64[]a; }
+struct t{uint64[] a; }struct at6 { float64[]a;}
+enum VideoCodec{}
+struct VideoData {float64 t; uint32 w; uint32 hht;byte[]t;}message ge{1 ->VideoCodec c;2 -> VideoData da; }message SkipTestOld {1->int32 x; 2->int32 y; }
+message SkipTestNew { 1->int32 x; 2->int32 y; 3->int32 z;}
+message er { 1->SkipTestOld s;2->int32 fter;}message ane{1->SkipTestNew s; 2->int32 r;}

@@ -1,0 +1,1 @@
+struct Q{[deprecated("\"")]int32 X;[deprecated("\\")]int32 Y;[deprecated("\"")]int32 X;[deprecated("\\")]int32 Z;}

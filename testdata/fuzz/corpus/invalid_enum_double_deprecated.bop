@@ -1,0 +1,5 @@
+enum MyEnum {
+    [deprecated("1")]
+    [deprecated("2")]
+    One = 1;
+}

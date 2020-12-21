@@ -1,0 +1,18 @@
+
+struct PrintRequest {
+    string printout; 
+}
+
+struct AddRequest {
+    int32 a;
+    int32 b;
+}
+
+struct AddResponse {
+    int32 c;
+}
+
+service Server {
+    1 -> PrintRequest print;
+    2 -> AddRequest add -> AddResponse;
+}

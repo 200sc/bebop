@@ -1,0 +1,1 @@
+enum E{[deprecated("")]}enum E{[deprecated("")]Y=2;[deprecated("")]Z=3;[deprecated("")]Z=3;[

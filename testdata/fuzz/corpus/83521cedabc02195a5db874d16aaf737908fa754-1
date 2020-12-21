@@ -1,0 +1,1 @@
+struct Q{[deprecated("\"deprecated\"")]t X;[deprecated("escaped slasuÌäK…ÿ}¶’.Òò>ih: \\")]t Y;[deprecated("escaped\" \"slashes:\\\\\"\" \\")]t

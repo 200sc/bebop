@@ -1,0 +1,1 @@
+message g{3->float64[]a;}enum VideoCodec{}struct VideoData{}message e{1->VideoCodec c;2->VideoData a;}message SkipTestOld{2->int32 y;}message SkipTestNew{3->int32 z;}message r{1->SkipTestOld s;2->int32 r;}message er{1->SkipTestNew s;2->int32 r;}

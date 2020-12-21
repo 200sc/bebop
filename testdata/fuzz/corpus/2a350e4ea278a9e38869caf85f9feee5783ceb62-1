@@ -1,0 +1,7 @@
+enum FurnitureFamily{}
+struct Furniture{}
+[opcode("")]
+2->g l;
+}
+
+]]e;}

@@ -1,0 +1,3 @@
+message t {
+    [deprecated("hello")]
+    [

@@ -1,0 +1,12 @@
+enum E{
+[deprecated("")]
+X=1;}message M{
+[deprecated("")]
+}enum c{
+[deprecated("")]
+Y=2;[deprecated("")]
+Z=3;}message cM{
+[deprecated("")]
+2->int32 y;[deprecated("")]
+}struct S{
+}

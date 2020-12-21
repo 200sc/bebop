@@ -1,0 +1,5 @@
+struct Test {
+    [deprecated("hello")]
+    [deprecated("world")]
+    int64 one;
+}
