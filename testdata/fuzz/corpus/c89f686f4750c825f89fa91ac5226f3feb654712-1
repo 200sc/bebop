@@ -1,0 +1,1 @@
+enum FurnitureFamily{}[opcode("IKEA")]struct Furniture{}[opcode("IKEA")]message g{}[opcode(0x31363334)]struct e{}

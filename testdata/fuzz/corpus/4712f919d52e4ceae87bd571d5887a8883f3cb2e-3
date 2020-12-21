@@ -1,0 +1,1 @@
+[opcode("A")]struct y{}[opcode("A")]struct r{}[opcode("A")]struct g{}[opcode(4)]struct e{}

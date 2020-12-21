@@ -1,0 +1,17 @@
+enum E{
+[deprecated("")]
+}message M{
+[deprecated("")]
+}enum c{
+[deprecated("")]
+Y=2;[deprecated("")]
+}message M{
+[deprecated("")]
+2->t y;[deprecated("")]
+}message M{
+[deprecated("")]
+}enum c{
+[deprecated("")]
+Y=2;[deprecated("")]
+}message M{
+[deprecated("")]

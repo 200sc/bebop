@@ -1,0 +1,1 @@
+enum E{[deprecated("")]}enum c{[deprecated("")]Y=2;[deprecated("")]}enum M{[deprecated("")]}enum c{[deprecated("")]Y=2;[deprecated("")]
