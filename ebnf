@@ -1,0 +1,71 @@
+
+// This is a theoretical EBNF grammar for bebop. 
+
+// literal definitions from the Go spec, potentially slightly off
+
+int_lit        = decimal_lit | hex_lit .
+
+decimal_lit    = "0" | ( "1" … "9" ) [ [ "_" ] decimal_digits ] .
+hex_lit        = "0" ( "x" | "X" ) [ "_" ] hex_digits .
+
+identifier = letter { letter | unicode_digit } .
+
+letter        = unicode_letter | "_" .
+decimal_digit = "0" ... "9" .
+hex_digit     = "0" ... "9" | "A" ... "F" | "a" ... "f" .
+
+newline        = /* the Unicode code point U+000A */ .
+unicode_char   = /* an arbitrary Unicode code point except newline */ .
+unicode_letter = /* a Unicode code point classified as "Letter" */ .
+unicode_digit  = /* a Unicode code point classified as "Number, decimal digit" */ .
+
+
+
+Comment = ( LineComment | BlockComment )
+LineComment = '//' {^newline} newline 
+BlockComment = '/*' {^'*/} '*/ 
+
+// Without Comments 
+
+Root = { Struct | Enum | Message }
+
+Struct = [ OpCode ] ['readonly'] 'struct' identifier '{' { StructField } '}'
+StructField = [ Deprecation ] Type identifier ';'
+
+Enum = 'enum' identifier '{' { EnumOption } '}'
+EnumOption = [ Deprecation ] identifier '=' decimal_lit ';'
+
+Message = [ OpCode ] ['readonly'] 'message' identifier '{' { MessageField } '}'
+MessageField [ Deprecation ] decimal_lit '->' Type identifier ';'
+
+Deprecation = '[' 'deprecated' '(' identifier ')' ']'
+OpCode = '[' opcode '(' ( hex_lit | string_lit ) ')' ']'
+
+Type = ( ArrayType1 | ArrayType2 | MapType | SimpleType )
+ArrayType = ( Type '[' ']') | ( 'array' '[' Type ']' )
+MapType = 'map' '[' SimpleType ',' Type ']' 
+
+SimpleType = identifier 
+
+
+// With Comments 
+
+Root = { Comment | Struct | Enum | Message }
+
+Struct = [ OpCode ] ['readonly'] 'struct' identifier '{' { Comment | StructField } '}'
+StructField = [ Deprecation ] Type identifier ';' [ Comment ]
+
+Enum = 'enum' identifier '{' { Comment | EnumOption } '}'
+EnumOption = [ Deprecation ] identifier '=' decimal_lit ';' [ Comment ]
+
+Message = [ OpCode ] ['readonly'] 'message' identifier '{' { Comment | MessageField } '}'
+MessageField [ Deprecation ] decimal_lit '->' Type identifier ';' [ Comment ]
+
+Deprecation = '[' 'deprecated' '(' identifier ')' ']' [ Comment ]
+OpCode = '[' opcode '(' ( hex_lit | string_lit ) ')' ']' [ Comment ]
+
+Type = ( ArrayType1 | ArrayType2 | MapType | SimpleType )
+ArrayType = ( Type '[' ']') | ( 'array' '[' Type ']' )
+MapType = 'map' '[' SimpleType ',' Type ']' 
+
+SimpleType = identifier 
