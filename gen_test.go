@@ -25,15 +25,6 @@ func TestValidateError(t *testing.T) {
 		file: "invalid_message_primitive",
 		err:  "message shares primitive type name guid",
 	}, {
-		file: "invalid_enum_reserved",
-		err:  "enum shares reserved word name struct",
-	}, {
-		file: "invalid_struct_reserved",
-		err:  "struct shares reserved word name array",
-	}, {
-		file: "invalid_message_reserved",
-		err:  "message shares reserved word name map",
-	}, {
 		file: "invalid_enum_duplicate",
 		err:  "enum has duplicated name myEnum",
 	}, {

@@ -27,6 +27,24 @@ func (tr *tokenReader) UnNext() {
 	tr.keepNextToken = true
 }
 
+var singleCharTokens = map[byte]tokenKind{
+	'=':  tokenKindEquals,
+	'[':  tokenKindOpenSquare,
+	']':  tokenKindCloseSquare,
+	'{':  tokenKindOpenCurly,
+	'}':  tokenKindCloseCurly,
+	'(':  tokenKindOpenParen,
+	')':  tokenKindCloseParen,
+	',':  tokenKindComma,
+	';':  tokenKindSemicolon,
+	'\n': tokenKindNewline,
+}
+
+type nextResp struct {
+	hasNext    bool
+	hasNewline bool
+}
+
 // Next attempts to read the next token in the reader.
 // If a token cannot be found, it returns false. If there
 // are no tokens because EOF was reached, Err() will return
@@ -44,59 +62,16 @@ func (tr *tokenReader) Next() bool {
 		if err == io.EOF {
 			return false
 		}
+		if kind, ok := singleCharTokens[b]; ok {
+			tr.nextToken = token{
+				concrete: []byte{b},
+				kind:     kind,
+			}
+			return true
+		}
 		switch b {
 		case '"':
 			return tr.nextStringLiteral(b)
-		case '=':
-			tr.nextToken = token{
-				concrete: []byte{b},
-				kind:     tokenKindEquals,
-			}
-		case '[':
-			tr.nextToken = token{
-				concrete: []byte{b},
-				kind:     tokenKindOpenSquare,
-			}
-		case ']':
-			tr.nextToken = token{
-				concrete: []byte{b},
-				kind:     tokenKindCloseSquare,
-			}
-		case '(':
-			tr.nextToken = token{
-				concrete: []byte{b},
-				kind:     tokenKindOpenParen,
-			}
-		case ')':
-			tr.nextToken = token{
-				concrete: []byte{b},
-				kind:     tokenKindCloseParen,
-			}
-		case '{':
-			tr.nextToken = token{
-				concrete: []byte{b},
-				kind:     tokenKindOpenCurly,
-			}
-		case '}':
-			tr.nextToken = token{
-				concrete: []byte{b},
-				kind:     tokenKindCloseCurly,
-			}
-		case ',':
-			tr.nextToken = token{
-				concrete: []byte{b},
-				kind:     tokenKindComma,
-			}
-		case ';':
-			tr.nextToken = token{
-				concrete: []byte{b},
-				kind:     tokenKindSemicolon,
-			}
-		case '\n':
-			tr.nextToken = token{
-				concrete: []byte{b},
-				kind:     tokenKindNewline,
-			}
 		case ' ', '\t', '\r':
 			continue
 		// two token sequences
@@ -204,6 +179,17 @@ func isInteger(b byte) bool {
 	return b >= 0x30 && b <= 0x39
 }
 
+var keywords = map[string]tokenKind{
+	"readonly":   tokenKindReadOnly,
+	"message":    tokenKindMessage,
+	"struct":     tokenKindStruct,
+	"enum":       tokenKindEnum,
+	"deprecated": tokenKindDeprecated,
+	"opcode":     tokenKindOpCode,
+	"map":        tokenKindMap,
+	"array":      tokenKindArray,
+}
+
 func (tr *tokenReader) nextIdent(firstRune rune) bool {
 	tk := token{
 		concrete: []byte(string(firstRune)),
@@ -226,6 +212,9 @@ func (tr *tokenReader) nextIdent(firstRune rune) bool {
 		case rn == '_':
 		default:
 			tr.r.UnreadRune()
+			if keywordKind, ok := keywords[string(tk.concrete)]; ok {
+				tk.kind = keywordKind
+			}
 			tr.nextToken = tk
 			return true
 		}
@@ -280,10 +269,23 @@ func (tr *tokenReader) nextBlockComment(b1, b2 byte) bool {
 		}
 		tk.concrete = append(tk.concrete, b)
 		if lastByte == '*' && b == '/' {
+			tr.skipFollowingWhitespace()
 			tr.nextToken = tk
 			return true
 		}
 		lastByte = b
+	}
+}
+
+func (tr *tokenReader) skipFollowingWhitespace() {
+	for {
+		b, _ := tr.r.ReadByte()
+		switch b {
+		case ' ', '\r', '\n':
+			continue
+		}
+		tr.r.UnreadByte()
+		break
 	}
 }
 

@@ -21,110 +21,64 @@ func ReadFile(r io.Reader) (File, error) {
 		case tokenKindNewline:
 			nextCommentLines = []string{}
 			continue
-		// top level:
-		case tokenKindIdent:
-			switch string(tk.concrete) {
-			case "readonly":
-				nextRecordReadOnly = true
-				continue
-			case "enum":
-				if nextRecordOpCode != 0 {
-					return f, fmt.Errorf("enums may not have attached op codes")
-				}
-				en, err := readEnum(tr)
-				if err != nil {
-					return f, err
-				}
-				en.Comment = strings.Join(nextCommentLines, "\n")
-				f.Enums = append(f.Enums, en)
-
-				nextCommentLines = []string{}
-				nextRecordOpCode = 0
-			case "struct":
-				st, err := readStruct(tr)
-				if err != nil {
-					return f, err
-				}
-				st.Comment = strings.Join(nextCommentLines, "\n")
-				st.OpCode = nextRecordOpCode
-				st.ReadOnly = nextRecordReadOnly
-				f.Structs = append(f.Structs, st)
-
-				nextCommentLines = []string{}
-				nextRecordOpCode = 0
-				nextRecordReadOnly = false
-			case "message":
-				msg, err := readMessage(tr)
-				if err != nil {
-					return f, err
-				}
-				msg.Comment = strings.Join(nextCommentLines, "\n")
-				msg.OpCode = nextRecordOpCode
-				msg.ReadOnly = nextRecordReadOnly
-				f.Messages = append(f.Messages, msg)
-
-				nextCommentLines = []string{}
-				nextRecordOpCode = 0
-				nextRecordReadOnly = false
-			}
+		case tokenKindReadOnly:
+			nextRecordReadOnly = true
+			continue
 		case tokenKindBlockComment:
-			nextCommentLines = append(nextCommentLines, string(tk.concrete[2:len(tk.concrete)-2]))
-			if tr.Next() {
-				if tr.Token().kind != tokenKindNewline {
-					tr.UnNext()
-				}
-			}
+			nextCommentLines = append(nextCommentLines, readBlockComment(tr, tk))
+			continue
 		case tokenKindLineComment:
-			nextComment := string(tk.concrete[2:])
-			nextComment = strings.Trim(nextComment, "\r\n")
-			nextCommentLines = append(nextCommentLines, nextComment)
+			nextCommentLines = append(nextCommentLines, sanitizeComment(tk))
+			continue
 		case tokenKindOpenSquare:
-			if err := expectNext(tr, tokenKindIdent); err != nil {
+			var err error
+			nextRecordOpCode, err = readOpCode(tr)
+			if err != nil {
 				return f, err
 			}
-			tk = tr.Token()
-			if string(tk.concrete) != "opcode" {
-				return f, fmt.Errorf("invalid ident after leading '[', got %s, wanted %v", string(tk.concrete), "opcode")
+			continue
+		case tokenKindEnum:
+			if nextRecordOpCode != 0 {
+				return f, fmt.Errorf("enums may not have attached op codes")
 			}
-			if err := expectNext(tr, tokenKindOpenParen); err != nil {
+			en, err := readEnum(tr)
+			if err != nil {
 				return f, err
 			}
-			if err := expectNext(tr, tokenKindInteger, tokenKindStringLiteral); err != nil {
+			en.Comment = strings.Join(nextCommentLines, "\n")
+			f.Enums = append(f.Enums, en)
+		case tokenKindStruct:
+			st, err := readStruct(tr)
+			if err != nil {
 				return f, err
 			}
-			tk = tr.Token()
-			if tk.kind == tokenKindInteger {
-				content := string(tk.concrete)
-				opCode, err := strconv.ParseInt(content, 0, 32)
-				if err != nil {
-					return f, err
-				}
-				nextRecordOpCode = int32(opCode)
-			} else if tk.kind == tokenKindStringLiteral {
-				tk.concrete = bytes.Trim(tk.concrete, "\"")
-				if len(tk.concrete) > 4 {
-					return f, fmt.Errorf("opcode string %s exceeds 4 ascii characters", string(tk.concrete))
-				}
-				nextRecordOpCode = bytesToOpCode(tk.concrete)
-
-			}
-			if err := expectNext(tr, tokenKindCloseParen); err != nil {
+			st.Comment = strings.Join(nextCommentLines, "\n")
+			st.OpCode = nextRecordOpCode
+			st.ReadOnly = nextRecordReadOnly
+			f.Structs = append(f.Structs, st)
+		case tokenKindMessage:
+			msg, err := readMessage(tr)
+			if err != nil {
 				return f, err
 			}
-			if err := expectNext(tr, tokenKindCloseSquare); err != nil {
-				return f, err
-			}
+			msg.Comment = strings.Join(nextCommentLines, "\n")
+			msg.OpCode = nextRecordOpCode
+			msg.ReadOnly = nextRecordReadOnly
+			f.Messages = append(f.Messages, msg)
 		}
+		nextCommentLines = []string{}
+		nextRecordOpCode = 0
+		nextRecordReadOnly = false
 	}
 	return f, nil
 }
 
-func expectNext(tr *tokenReader, kinds ...tokenKind) error {
-	hasNext := tr.Next()
+func expectAnyOfNext(tr *tokenReader, kinds ...tokenKind) error {
+	next := tr.Next()
 	if tr.Err() != nil {
 		return tr.Err()
 	}
-	if !hasNext {
+	if !next {
 		return fmt.Errorf("expected (%v), got no token", kinds)
 	}
 	tk := tr.Token()
@@ -140,20 +94,42 @@ func expectNext(tr *tokenReader, kinds ...tokenKind) error {
 	return nil
 }
 
-func readEnum(tr *tokenReader) (Enum, error) {
-	en := Enum{}
-	if err := expectNext(tr, tokenKindIdent); err != nil {
-		return en, err
+func expectNext(tr *tokenReader, kinds ...tokenKind) ([]token, error) {
+	tokens := make([]token, len(kinds))
+	for i, k := range kinds {
+		next := tr.Next()
+		if tr.Err() != nil {
+			return tokens, tr.Err()
+		}
+		if !next {
+			return tokens, fmt.Errorf("expected (%v), got no token", kinds)
+		}
+		tk := tr.Token()
+		if tk.kind != k {
+			return tokens, fmt.Errorf("expected (%v) got %s", k, tk.kind)
+		}
+		tokens[i] = tk
 	}
-	en.Name = string(tr.Token().concrete)
-	if err := expectNext(tr, tokenKindOpenCurly); err != nil {
-		return en, err
-	}
+	return tokens, nil
+}
+
+func optNewline(tr *tokenReader) {
 	tr.Next()
-	// optional newline
 	if tr.Token().kind != tokenKindNewline {
 		tr.UnNext()
 	}
+}
+
+func readEnum(tr *tokenReader) (Enum, error) {
+	en := Enum{}
+	toks, err := expectNext(tr, tokenKindIdent, tokenKindOpenCurly)
+	if err != nil {
+		return en, err
+	}
+	en.Name = string(toks[0].concrete)
+
+	optNewline(tr)
+
 	nextCommentLines := []string{}
 	nextDeprecatedMessage := ""
 	nextIsDeprecated := false
@@ -167,17 +143,12 @@ func readEnum(tr *tokenReader) (Enum, error) {
 			nextCommentLines = []string{}
 		case tokenKindIdent:
 			optName := string(tk.concrete)
-			if err := expectNext(tr, tokenKindEquals); err != nil {
-				return en, err
-			}
-			if err := expectNext(tr, tokenKindInteger); err != nil {
-				return en, err
-			}
-			optInteger, err := strconv.ParseInt(string(tr.Token().concrete), 10, 32)
+			toks, err = expectNext(tr, tokenKindEquals, tokenKindInteger, tokenKindSemicolon)
 			if err != nil {
 				return en, err
 			}
-			if err := expectNext(tr, tokenKindSemicolon); err != nil {
+			optInteger, err := strconv.ParseInt(string(toks[1].concrete), 10, 32)
+			if err != nil {
 				return en, err
 			}
 			en.Options = append(en.Options, EnumOption{
@@ -202,16 +173,9 @@ func readEnum(tr *tokenReader) (Enum, error) {
 			nextIsDeprecated = true
 			nextDeprecatedMessage = msg
 		case tokenKindBlockComment:
-			nextCommentLines = append(nextCommentLines, string(tk.concrete[2:len(tk.concrete)-2]))
-			if tr.Next() {
-				if tr.Token().kind != tokenKindNewline {
-					tr.UnNext()
-				}
-			}
+			nextCommentLines = append(nextCommentLines, readBlockComment(tr, tk))
 		case tokenKindLineComment:
-			nextComment := string(tk.concrete[2:])
-			nextComment = strings.Trim(nextComment, "\r\n")
-			nextCommentLines = append(nextCommentLines, nextComment)
+			nextCommentLines = append(nextCommentLines, sanitizeComment(tk))
 		}
 	}
 
@@ -219,34 +183,17 @@ func readEnum(tr *tokenReader) (Enum, error) {
 }
 
 func readDeprecated(tr *tokenReader) (string, error) {
-	if err := expectNext(tr, tokenKindIdent); err != nil {
-		return "", err
-	}
-	tk := tr.Token()
-	if string(tk.concrete) != "deprecated" {
-		return "", fmt.Errorf("invalid ident after leading '[', got %s, wanted %v", string(tk.concrete), "deprecated")
-	}
-	if err := expectNext(tr, tokenKindOpenParen); err != nil {
-		return "", err
-	}
-	if err := expectNext(tr, tokenKindStringLiteral); err != nil {
-		return "", err
-	}
-	tk = tr.Token()
-	var err error
-	msg, err := strconv.Unquote(string(tk.concrete))
+	// TODO: can deprecated / op code be followed by a semicolon?
+	toks, err := expectNext(tr, tokenKindDeprecated, tokenKindOpenParen, tokenKindStringLiteral,
+		tokenKindCloseParen, tokenKindCloseSquare)
 	if err != nil {
 		return "", err
 	}
-	if err := expectNext(tr, tokenKindCloseParen); err != nil {
+	msg, err := strconv.Unquote(string(toks[2].concrete))
+	if err != nil {
 		return "", err
 	}
-	if err := expectNext(tr, tokenKindCloseSquare); err != nil {
-		return "", err
-	}
-	if err := expectNext(tr, tokenKindNewline); err != nil {
-		return "", err
-	}
+	optNewline(tr)
 	return msg, nil
 }
 
@@ -265,21 +212,15 @@ func skipEndOfLineComments(tr *tokenReader) {
 		break
 	}
 }
-
 func readStruct(tr *tokenReader) (Struct, error) {
 	st := Struct{}
-	if err := expectNext(tr, tokenKindIdent); err != nil {
+	toks, err := expectNext(tr, tokenKindIdent, tokenKindOpenCurly)
+	if err != nil {
 		return st, err
 	}
-	st.Name = string(tr.Token().concrete)
-	if err := expectNext(tr, tokenKindOpenCurly); err != nil {
-		return st, err
-	}
-	tr.Next()
-	// optional newline
-	if tr.Token().kind != tokenKindNewline {
-		tr.UnNext()
-	}
+	st.Name = string(toks[0].concrete)
+
+	optNewline(tr)
 
 	nextCommentLines := []string{}
 	nextDeprecatedMessage := ""
@@ -292,19 +233,17 @@ func readStruct(tr *tokenReader) (Struct, error) {
 		switch tk.kind {
 		case tokenKindNewline:
 			nextCommentLines = []string{}
-		case tokenKindIdent:
+		case tokenKindIdent, tokenKindArray, tokenKindMap:
 			tr.UnNext()
 			fdType, err := readFieldType(tr)
 			if err != nil {
 				return st, err
 			}
-			if err := expectNext(tr, tokenKindIdent); err != nil {
+			toks, err := expectNext(tr, tokenKindIdent, tokenKindSemicolon)
+			if err != nil {
 				return st, err
 			}
-			fdName := string(tr.Token().concrete)
-			if err := expectNext(tr, tokenKindSemicolon); err != nil {
-				return st, err
-			}
+			fdName := string(toks[0].concrete)
 			st.Fields = append(st.Fields, Field{
 				Name:              fdName,
 				FieldType:         fdType,
@@ -317,7 +256,6 @@ func readStruct(tr *tokenReader) (Struct, error) {
 			nextCommentLines = []string{}
 
 			skipEndOfLineComments(tr)
-
 		case tokenKindOpenSquare:
 			if nextIsDeprecated {
 				return st, fmt.Errorf("expected field following deprecated annotation")
@@ -329,16 +267,9 @@ func readStruct(tr *tokenReader) (Struct, error) {
 			nextIsDeprecated = true
 			nextDeprecatedMessage = msg
 		case tokenKindBlockComment:
-			nextCommentLines = append(nextCommentLines, string(tk.concrete[2:len(tk.concrete)-2]))
-			if tr.Next() {
-				if tr.Token().kind != tokenKindNewline {
-					tr.UnNext()
-				}
-			}
+			nextCommentLines = append(nextCommentLines, readBlockComment(tr, tk))
 		case tokenKindLineComment:
-			nextComment := string(tk.concrete[2:])
-			nextComment = strings.Trim(nextComment, "\r\n")
-			nextCommentLines = append(nextCommentLines, nextComment)
+			nextCommentLines = append(nextCommentLines, sanitizeComment(tk))
 		}
 	}
 
@@ -347,13 +278,14 @@ func readStruct(tr *tokenReader) (Struct, error) {
 
 func readFieldType(tr *tokenReader) (FieldType, error) {
 	ft := FieldType{}
-	if err := expectNext(tr, tokenKindIdent); err != nil {
+	err := expectAnyOfNext(tr, tokenKindIdent, tokenKindArray, tokenKindMap)
+	if err != nil {
 		return ft, err
 	}
 	tk := tr.Token()
-	switch string(tk.concrete) {
-	case "map":
-		if err := expectNext(tr, tokenKindOpenSquare); err != nil {
+	switch tk.kind {
+	case tokenKindMap:
+		if _, err := expectNext(tr, tokenKindOpenSquare); err != nil {
 			return ft, err
 		}
 		keyType, err := readFieldType(tr)
@@ -366,40 +298,40 @@ func readFieldType(tr *tokenReader) (FieldType, error) {
 		if !isPrimitiveType(keyType.Simple) {
 			return ft, fmt.Errorf("map must begin with simple type")
 		}
-		if err := expectNext(tr, tokenKindComma); err != nil {
+		if _, err := expectNext(tr, tokenKindComma); err != nil {
 			return ft, err
 		}
 		valType, err := readFieldType(tr)
 		if err != nil {
 			return ft, err
 		}
-		if err := expectNext(tr, tokenKindCloseSquare); err != nil {
+		if _, err := expectNext(tr, tokenKindCloseSquare); err != nil {
 			return ft, err
 		}
 		ft.Map = &MapType{
 			Key:   keyType.Simple,
 			Value: valType,
 		}
-	case "array":
-		if err := expectNext(tr, tokenKindOpenSquare); err != nil {
+	case tokenKindArray:
+		if _, err := expectNext(tr, tokenKindOpenSquare); err != nil {
 			return ft, err
 		}
 		arType, err := readFieldType(tr)
 		if err != nil {
 			return ft, err
 		}
-		if err := expectNext(tr, tokenKindCloseSquare); err != nil {
+		if _, err := expectNext(tr, tokenKindCloseSquare); err != nil {
 			return ft, err
 		}
 		ft.Array = &arType
-	default:
+	case tokenKindIdent:
 		ft.Simple = string(tk.concrete)
 	}
 	if tr.Next() {
 		// this might have been followed by []
 		nextTk := tr.Token()
 		if nextTk.kind == tokenKindOpenSquare {
-			if err := expectNext(tr, tokenKindCloseSquare); err != nil {
+			if _, err := expectNext(tr, tokenKindCloseSquare); err != nil {
 				return ft, err
 			}
 			return FieldType{
@@ -415,18 +347,13 @@ func readMessage(tr *tokenReader) (Message, error) {
 	msg := Message{
 		Fields: make(map[uint8]Field),
 	}
-	if err := expectNext(tr, tokenKindIdent); err != nil {
+	toks, err := expectNext(tr, tokenKindIdent, tokenKindOpenCurly)
+	if err != nil {
 		return msg, err
 	}
-	msg.Name = string(tr.Token().concrete)
-	if err := expectNext(tr, tokenKindOpenCurly); err != nil {
-		return msg, err
-	}
-	tr.Next()
-	// optional newline
-	if tr.Token().kind != tokenKindNewline {
-		tr.UnNext()
-	}
+	msg.Name = string(toks[0].concrete)
+
+	optNewline(tr)
 
 	nextCommentLines := []string{}
 	nextDeprecatedMessage := ""
@@ -444,7 +371,7 @@ func readMessage(tr *tokenReader) (Message, error) {
 			if err != nil {
 				return msg, err
 			}
-			if err := expectNext(tr, tokenKindArrow); err != nil {
+			if _, err := expectNext(tr, tokenKindArrow); err != nil {
 				return msg, err
 			}
 
@@ -452,13 +379,11 @@ func readMessage(tr *tokenReader) (Message, error) {
 			if err != nil {
 				return msg, err
 			}
-			if err := expectNext(tr, tokenKindIdent); err != nil {
+			toks, err := expectNext(tr, tokenKindIdent, tokenKindSemicolon)
+			if err != nil {
 				return msg, err
 			}
-			fdName := string(tr.Token().concrete)
-			if err := expectNext(tr, tokenKindSemicolon); err != nil {
-				return msg, err
-			}
+			fdName := string(toks[0].concrete)
 			msg.Fields[uint8(fdInteger)] = Field{
 				Name:              fdName,
 				FieldType:         fdType,
@@ -471,7 +396,6 @@ func readMessage(tr *tokenReader) (Message, error) {
 			nextCommentLines = []string{}
 
 			skipEndOfLineComments(tr)
-
 		case tokenKindOpenSquare:
 			if nextIsDeprecated {
 				return msg, fmt.Errorf("expected field following deprecated annotation")
@@ -483,20 +407,52 @@ func readMessage(tr *tokenReader) (Message, error) {
 			nextIsDeprecated = true
 			nextDeprecatedMessage = dpMsg
 		case tokenKindBlockComment:
-			nextCommentLines = append(nextCommentLines, string(tk.concrete[2:len(tk.concrete)-2]))
-			if tr.Next() {
-				if tr.Token().kind != tokenKindNewline {
-					tr.UnNext()
-				}
-			}
+			nextCommentLines = append(nextCommentLines, readBlockComment(tr, tk))
 		case tokenKindLineComment:
-			nextComment := string(tk.concrete[2:])
-			nextComment = strings.Trim(nextComment, "\r\n")
-			nextCommentLines = append(nextCommentLines, nextComment)
+			nextCommentLines = append(nextCommentLines, sanitizeComment(tk))
 		}
 	}
 
 	return msg, nil
+}
+
+func readOpCode(tr *tokenReader) (int32, error) {
+	if _, err := expectNext(tr, tokenKindOpCode, tokenKindOpenParen); err != nil {
+		return 0, err
+	}
+	if err := expectAnyOfNext(tr, tokenKindInteger, tokenKindStringLiteral); err != nil {
+		return 0, err
+	}
+	var opCode int32
+	tk := tr.Token()
+	if tk.kind == tokenKindInteger {
+		content := string(tk.concrete)
+		opc, err := strconv.ParseInt(content, 0, 32)
+		if err != nil {
+			return 0, err
+		}
+		opCode = int32(opc)
+	} else if tk.kind == tokenKindStringLiteral {
+		tk.concrete = bytes.Trim(tk.concrete, "\"")
+		if len(tk.concrete) > 4 {
+			return 0, fmt.Errorf("opcode string %s exceeds 4 ascii characters", string(tk.concrete))
+		}
+		opCode = bytesToOpCode(tk.concrete)
+	}
+	if _, err := expectNext(tr, tokenKindCloseParen, tokenKindCloseSquare); err != nil {
+		return 0, err
+	}
+	return opCode, nil
+}
+
+func readBlockComment(tr *tokenReader, tk token) string {
+	return string(tk.concrete[2 : len(tk.concrete)-2])
+}
+
+func sanitizeComment(tk token) string {
+	comment := string(tk.concrete[2:])
+	comment = strings.Trim(comment, "\r\n")
+	return comment
 }
 
 func bytesToOpCode(data []byte) int32 {
