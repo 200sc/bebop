@@ -1,0 +1,1 @@
+struct t{int32[]a;}struct ts{int32[]a;}struct t2{float32[]a;}struct t4{int64[]a;}struct s{int64[]a;}struct a{float64[]a;}struct ta{float64 e;int32 d;int32 t;byte a;int32 x;int32 y;}message w{1->int32 x;2->int32 y;3->int32 z;}message r{2->int32 r;}message e{2->int32 r;}

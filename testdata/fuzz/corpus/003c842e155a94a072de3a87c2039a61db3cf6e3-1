@@ -1,0 +1,1 @@
+enum Instrument{}struct Musician{}message Song{103->map[guid,Song]s;}

@@ -1,0 +1,1 @@
+readonly struct S{int16[]D;float64[]t;string[]g;guid[]d;int32[]a;}

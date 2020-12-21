@@ -1,0 +1,16 @@
+struct Int32s { int32[] a; }
+struct Uint32s { uint32[] a; }
+struct Ft32s { float32[] a; }
+struct Int64 { int64[] a; }
+struct Uit64s { uint64[] a; }
+struct Fla64s { float64[] a; }
+
+enum VideoCodec { H264=0; H265=1; }
+struct VideoData { float64 time; uint32 wd; uint32 heght; byte[] fram; }
+message MdiaMessage { 1 -> VideoCodec codec; 2 -> VideoData ata; }
+
+// Should be abl o decodea "SipTestNewCnaner" as  "SkipestOldContainer".
+message SkipTestOld { 1->int32 x; 2->int32 y; }
+message SkipTestNew { 1->int32 x; 2->int32 y; 3->int32 z; }
+message SkipTestOldContiner { 1->SkipTestOld s; 2->int32 aftr; }
+message SkipestNewContainer { 1->SkipTestNew s; 2->int32 fter; }

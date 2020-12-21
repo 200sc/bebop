@@ -1,0 +1,22 @@
+struct on{uint8 i0;//
+uint8 i1;//
+int16 i_;//
+uint8 i8;//
+int16 i8_;//
+int16 i6;//
+int16 i6_;//
+int32 i2;//
+int32 i2_;//
+bool tE;//
+bool fE;//
+float64 fT;//
+float64 f_;//
+string s0;//
+string s1;//
+string s4;//
+string s8;//
+string s6;//
+int32[]a0;//
+string[]a1;//
+int32[]a8;//
+}

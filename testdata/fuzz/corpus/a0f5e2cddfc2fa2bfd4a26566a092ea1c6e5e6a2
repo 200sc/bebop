@@ -1,0 +1,7 @@
+//t
+enum T2{t=1;
+//o
+d=2;
+e=3;
+[deprecated("who knows")]g=4;
+}

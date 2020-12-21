@@ -1,0 +1,1 @@
+struct s{map[bool,bool]m;map[string,map[guid,guid]]m2;map[int32,map[bool,guid]]m5;}

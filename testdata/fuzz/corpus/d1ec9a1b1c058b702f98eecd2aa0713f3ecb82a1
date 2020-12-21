@@ -1,0 +1,1 @@
+struct ys{bool[]al;byte[]ae;int16[]a6;uint16[]a1;int32[]a2;uint32[]a3;int64[]a4;uint64[]a64;float32[]a32;float64[]at;string[]ag;guid[]ad;}struct ty{int32[]a;}

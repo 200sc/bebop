@@ -1,0 +1,1 @@
+enum FurnitureFamily{d=0;e=1;o=2;}readonly struct Furniture{string me;int32 ce;FurnitureFamily ly;}[opcode("A")]message og{1->Furniture ly;2->string el;}[opcode(04)]readonly struct se{Furniture[]re;}

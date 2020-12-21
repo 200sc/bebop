@@ -6,6 +6,8 @@ import (
 	"github.com/200sc/bebop"
 )
 
+//go:generate go-fuzz-build
+
 func Fuzz(data []byte) int {
 	bopf, err := bebop.ReadFile(bytes.NewReader(data))
 	if err != nil {

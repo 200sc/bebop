@@ -1,0 +1,1 @@
+enum Instrument{}readonly struct Musician{string me;Instrument ys;}message Song{1->string le;2->int16 ar;3->Musician[]rs;}struct ry{map[guid,Song]gs;}

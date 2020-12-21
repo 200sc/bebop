@@ -1,0 +1,1 @@
+message M{}struct S{}struct s{map[string,map[string,string]]m2;map[int32,map[string,S]]m3;array[map[string,array[float32]]]m5;}
