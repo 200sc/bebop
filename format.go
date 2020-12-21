@@ -194,7 +194,7 @@ tokenLoop:
 		t := tr.Token()
 		switch t.kind {
 		case tokenKindLineComment:
-			msgBytes := append([]byte("\t//"), t.concrete...)
+			msgBytes := append([]byte("\t"), t.concrete...)
 			msgBytes = append(msgBytes, '\n')
 		case tokenKindBlockComment:
 			msgBytes := append([]byte("\t"), t.concrete...)

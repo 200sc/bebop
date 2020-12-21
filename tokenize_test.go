@@ -88,3 +88,62 @@ func TestTokenizeFormat(t *testing.T) {
 		})
 	}
 }
+
+var testNoSemisFiles = []string{
+	"jazz",
+}
+
+func TestTokenizeNoSemis(t *testing.T) {
+	optionalSemicolons = true
+	for _, filename := range testNoSemisFiles {
+		filename := filename
+		t.Run(filename, func(t *testing.T) {
+			origfilename := filename + ".bop"
+			f, err := os.Open(filepath.Join("testdata", origfilename))
+			if err != nil {
+				t.Fatalf("failed to open test file %s: %v", origfilename, err)
+			}
+			defer f.Close()
+
+			tokens := []token{}
+			tr := newTokenReader(f)
+			for tr.Next() {
+				tokens = append(tokens, tr.Token())
+			}
+			if tr.Err() != nil {
+				t.Fatalf("token reader errored: %v", tr.Err())
+			}
+
+			noSemiFilepath := filename + "_nosemis.bop"
+			f2, err := os.Open(filepath.Join("testdata", noSemiFilepath))
+			if err != nil {
+				t.Fatalf("failed to open test file %s: %v", noSemiFilepath, err)
+			}
+			defer f2.Close()
+
+			tokens2 := []token{}
+			tr2 := newTokenReader(f2)
+			for tr2.Next() {
+				tokens2 = append(tokens2, tr2.Token())
+			}
+			if tr2.Err() != nil {
+				t.Fatalf("token reader errored (nosemi): %v", tr.Err())
+			}
+
+			if len(tokens) != len(tokens2) {
+				t.Fatalf("tokens had different lengths: %v vs %v", len(tokens), len(tokens2))
+			}
+
+			for i, tk := range tokens {
+				tk2 := tokens2[i]
+				if tk2.kind != tk.kind {
+					t.Fatalf("tokens at pos %d differed: kind %v vs %v", i, tk.kind, tk2.kind)
+				}
+				if string(tk2.concrete) != string(tk.concrete) {
+					t.Fatalf("tokens at pos %d differed: concrete %v vs %v", i, tk.concrete, tk2.concrete)
+				}
+			}
+		})
+	}
+	optionalSemicolons = false
+}

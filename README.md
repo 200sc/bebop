@@ -75,8 +75,6 @@ Original bebop does not support one .bop file importing type definitions from an
 
 - This is nontrivial, and requires a lot of design toward the importing / packaging ecosystem.
 
-Original bebop requires semicolons after field definitions, and so do we. It seems practical for the language parser to Inject semicolons where required in tokenization.
-
 We should be able to generate server code with handlers given all valid messages have op codes.
 
 ## Credit

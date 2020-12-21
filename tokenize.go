@@ -9,6 +9,7 @@ import (
 
 type tokenReader struct {
 	r             *bufio.Reader
+	lastToken     token
 	nextToken     token
 	err           error
 	keepNextToken bool
@@ -45,6 +46,11 @@ type nextResp struct {
 	hasNewline bool
 }
 
+func (tr *tokenReader) setNextToken(tk token) {
+	tr.lastToken = tr.nextToken
+	tr.nextToken = tk
+}
+
 // Next attempts to read the next token in the reader.
 // If a token cannot be found, it returns false. If there
 // are no tokens because EOF was reached, Err() will return
@@ -63,10 +69,10 @@ func (tr *tokenReader) Next() bool {
 			return false
 		}
 		if kind, ok := singleCharTokens[b]; ok {
-			tr.nextToken = token{
+			tr.setNextToken(token{
 				concrete: []byte{b},
 				kind:     kind,
-			}
+			})
 			return true
 		}
 		switch b {
@@ -89,10 +95,10 @@ func (tr *tokenReader) Next() bool {
 				tr.err = fmt.Errorf("invalid token")
 				return false
 			}
-			tr.nextToken = token{
+			tr.setNextToken(token{
 				concrete: []byte{b, b2},
 				kind:     tokenKindArrow,
-			}
+			})
 		case '/':
 			b2, err := tr.r.ReadByte()
 			if err == io.EOF {
@@ -110,10 +116,10 @@ func (tr *tokenReader) Next() bool {
 					return false
 				}
 
-				tr.nextToken = token{
+				tr.setNextToken(token{
 					concrete: []byte{b, b2},
 					kind:     tokenKindLineComment,
-				}
+				})
 				tr.nextToken.concrete = append(tr.nextToken.concrete, restOfLine...)
 			} else if b2 == '*' {
 				return tr.nextBlockComment(b, b2)
@@ -154,7 +160,7 @@ func (tr *tokenReader) nextInteger(firstByte byte) bool {
 		b, err := tr.r.ReadByte()
 		if err == io.EOF {
 			// stream ended in number
-			tr.nextToken = tk
+			tr.setNextToken(tk)
 			return true
 		}
 		if err != nil {
@@ -168,7 +174,7 @@ func (tr *tokenReader) nextInteger(firstByte byte) bool {
 		} else {
 			// something else is here
 			tr.r.UnreadByte()
-			tr.nextToken = tk
+			tr.setNextToken(tk)
 			return true
 		}
 		secondByte = false
@@ -199,7 +205,7 @@ func (tr *tokenReader) nextIdent(firstRune rune) bool {
 		rn, _, err := tr.r.ReadRune()
 		if err == io.EOF {
 			// stream ended in ident
-			tr.nextToken = tk
+			tr.setNextToken(tk)
 			return true
 		}
 		if err != nil {
@@ -215,7 +221,7 @@ func (tr *tokenReader) nextIdent(firstRune rune) bool {
 			if keywordKind, ok := keywords[string(tk.concrete)]; ok {
 				tk.kind = keywordKind
 			}
-			tr.nextToken = tk
+			tr.setNextToken(tk)
 			return true
 		}
 		tk.concrete = append(tk.concrete, []byte(string(rn))...)
@@ -240,7 +246,7 @@ func (tr *tokenReader) nextStringLiteral(firstByte byte) bool {
 		}
 		tk.concrete = append(tk.concrete, b)
 		if b == '"' && !escaping {
-			tr.nextToken = tk
+			tr.setNextToken(tk)
 			return true
 		}
 		if b == '\\' && !escaping {
@@ -270,7 +276,7 @@ func (tr *tokenReader) nextBlockComment(b1, b2 byte) bool {
 		tk.concrete = append(tk.concrete, b)
 		if lastByte == '*' && b == '/' {
 			tr.skipFollowingWhitespace()
-			tr.nextToken = tk
+			tr.setNextToken(tk)
 			return true
 		}
 		lastByte = b
@@ -293,8 +299,24 @@ func (tr *tokenReader) Err() error {
 	return tr.err
 }
 
+var optionalSemicolons = false
+
 // Token returns the last read token from the underlying reader.
 // If no token has been read, it returns an empty token (token{}).
 func (tr *tokenReader) Token() token {
+	if optionalSemicolons {
+		if tr.nextToken.kind == tokenKindNewline {
+			switch tr.lastToken.kind {
+			case tokenKindIdent, tokenKindInteger:
+				injectedToken := token{
+					kind:     tokenKindSemicolon,
+					concrete: []byte{';'},
+				}
+				tr.keepNextToken = true
+				tr.lastToken = injectedToken
+				return injectedToken
+			}
+		}
+	}
 	return tr.nextToken
 }

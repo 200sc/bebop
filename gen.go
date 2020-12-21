@@ -1131,31 +1131,3 @@ func (ft FieldType) usedTypes() map[string]bool {
 	}
 	return map[string]bool{ft.Simple: true}
 }
-
-func (st Struct) hasLengthedType() bool {
-	for _, fd := range st.Fields {
-		if fd.FieldType.hasLengthedType() {
-			return true
-		}
-	}
-	return false
-}
-
-func (msg Message) hasLengthedType() bool {
-	for _, fd := range msg.Fields {
-		if fd.FieldType.hasLengthedType() {
-			return true
-		}
-	}
-	return false
-}
-
-func (ft FieldType) hasLengthedType() bool {
-	if ft.Array != nil {
-		return true
-	}
-	if ft.Map != nil {
-		return true
-	}
-	return false
-}

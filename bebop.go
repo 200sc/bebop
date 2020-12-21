@@ -27,7 +27,7 @@ type Field struct {
 	FieldType
 	Name    string
 	Comment string
-	// DeprecatedMessage should only be non-empty if Deprecated is true.
+	// DeprecatedMessage is only provided if Deprecated is true.
 	DeprecatedMessage string
 	Deprecated        bool
 }

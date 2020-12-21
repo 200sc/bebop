@@ -1,9 +1,8 @@
 package bebop
 
 type token struct {
-	kind           tokenKind
-	concrete       []byte
-	newlineFollows bool
+	kind     tokenKind
+	concrete []byte
 }
 
 type tokenKind uint8
