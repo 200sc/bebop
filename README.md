@@ -71,6 +71,8 @@ Original bebop does not support one .bop file importing type definitions from an
 
 We should be able to generate server code with handlers given all valid messages have op codes.
 
+Tokenization and parsing could attempt corrective fixes to be able to report more than one error.
+
 ## Credit
 
 Original bebop compiler (C#, Typescript, ...): https://github.com/RainwayApp/bebop

@@ -1,6 +1,9 @@
 // Package bebop provides structures, tokenizing, parsing, and code generation for the bebop file type
 package bebop
 
+// Version is the library version. Should be used by CLI tools when passed a '--version' flag.
+const Version = "v0.0.8"
+
 // A File is a structured representation of a .bop file.
 type File struct {
 	Structs  []Struct

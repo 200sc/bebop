@@ -16,7 +16,7 @@ var printHelp = flag.Bool("help", false, "print usage text")
 var packageName = flag.String("package", "bebopgen", "specify the name of the package to generate")
 var generateUnsafeMethods = flag.Bool("generate-unsafe", false, "whether unchecked additional methods should be generated")
 
-const version = "bebopc-go v0.0.7"
+const version = "bebopc-go " + bebop.Version
 
 func main() {
 	err := run()
