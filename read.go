@@ -39,7 +39,7 @@ func ReadFile(r io.Reader) (File, error) {
 			continue
 		case tokenKindEnum:
 			if nextRecordOpCode != 0 {
-				return f, fmt.Errorf("enums may not have attached op codes")
+				return f, readError(tk, "enums may not have attached op codes")
 			}
 			en, err := readEnum(tr)
 			if err != nil {
@@ -79,7 +79,7 @@ func expectAnyOfNext(tr *tokenReader, kinds ...tokenKind) error {
 		return tr.Err()
 	}
 	if !next {
-		return fmt.Errorf("expected (%v), got no token", kinds)
+		return readError(tr.nextToken, "expected (%v), got no token", kinds)
 	}
 	tk := tr.Token()
 	found := false
@@ -89,7 +89,7 @@ func expectAnyOfNext(tr *tokenReader, kinds ...tokenKind) error {
 		}
 	}
 	if !found {
-		return fmt.Errorf("expected (%v) got %s", kinds, tk.kind)
+		return readError(tk, "expected (%v) got %s", kinds, tk.kind)
 	}
 	return nil
 }
@@ -102,11 +102,11 @@ func expectNext(tr *tokenReader, kinds ...tokenKind) ([]token, error) {
 			return tokens, tr.Err()
 		}
 		if !next {
-			return tokens, fmt.Errorf("expected (%v), got no token", kinds)
+			return tokens, readError(tr.nextToken, "expected (%v), got no token", kinds)
 		}
 		tk := tr.Token()
 		if tk.kind != k {
-			return tokens, fmt.Errorf("expected (%v) got %s", k, tk.kind)
+			return tokens, readError(tk, "expected (%v) got %s", k, tk.kind)
 		}
 		tokens[i] = tk
 	}
@@ -135,7 +135,7 @@ func readEnum(tr *tokenReader) (Enum, error) {
 	nextIsDeprecated := false
 	for tr.Token().kind != tokenKindCloseCurly {
 		if !tr.Next() {
-			return en, fmt.Errorf("enum definition ended early")
+			return en, readError(tr.nextToken, "enum definition ended early")
 		}
 		tk := tr.Token()
 		switch tk.kind {
@@ -149,7 +149,7 @@ func readEnum(tr *tokenReader) (Enum, error) {
 			}
 			optInteger, err := strconv.ParseInt(string(toks[1].concrete), 10, 32)
 			if err != nil {
-				return en, err
+				return en, readError(toks[1], err.Error())
 			}
 			en.Options = append(en.Options, EnumOption{
 				Name:              optName,
@@ -164,7 +164,7 @@ func readEnum(tr *tokenReader) (Enum, error) {
 
 		case tokenKindOpenSquare:
 			if nextIsDeprecated {
-				return en, fmt.Errorf("expected enum option following deprecated annotation")
+				return en, readError(tk, "expected enum option following deprecated annotation")
 			}
 			msg, err := readDeprecated(tr)
 			if err != nil {
@@ -227,7 +227,7 @@ func readStruct(tr *tokenReader) (Struct, error) {
 	nextIsDeprecated := false
 	for tr.Token().kind != tokenKindCloseCurly {
 		if !tr.Next() {
-			return st, fmt.Errorf("struct definition ended early")
+			return st, readError(tr.nextToken, "struct definition ended early")
 		}
 		tk := tr.Token()
 		switch tk.kind {
@@ -258,7 +258,7 @@ func readStruct(tr *tokenReader) (Struct, error) {
 			skipEndOfLineComments(tr)
 		case tokenKindOpenSquare:
 			if nextIsDeprecated {
-				return st, fmt.Errorf("expected field following deprecated annotation")
+				return st, readError(tk, "expected field following deprecated annotation")
 			}
 			msg, err := readDeprecated(tr)
 			if err != nil {
@@ -293,10 +293,10 @@ func readFieldType(tr *tokenReader) (FieldType, error) {
 			return ft, err
 		}
 		if keyType.Map != nil || keyType.Array != nil {
-			return ft, fmt.Errorf("map must begin with simple type")
+			return ft, readError(tk, "map must begin with simple type")
 		}
 		if !isPrimitiveType(keyType.Simple) {
-			return ft, fmt.Errorf("map must begin with simple type")
+			return ft, readError(tk, "map must begin with simple type")
 		}
 		if _, err := expectNext(tr, tokenKindComma); err != nil {
 			return ft, err
@@ -360,7 +360,7 @@ func readMessage(tr *tokenReader) (Message, error) {
 	nextIsDeprecated := false
 	for tr.Token().kind != tokenKindCloseCurly {
 		if !tr.Next() {
-			return msg, fmt.Errorf("message definition ended early")
+			return msg, readError(tr.nextToken, "message definition ended early")
 		}
 		tk := tr.Token()
 		switch tk.kind {
@@ -369,12 +369,14 @@ func readMessage(tr *tokenReader) (Message, error) {
 		case tokenKindInteger:
 			fdInteger, err := strconv.ParseInt(string(tr.Token().concrete), 10, 8)
 			if err != nil {
-				return msg, err
+				return msg, readError(tr.nextToken, err.Error())
+			}
+			if _, ok := msg.Fields[uint8(fdInteger)]; ok {
+				return msg, readError(tr.nextToken, "message has duplicate field index %d", fdInteger)
 			}
 			if _, err := expectNext(tr, tokenKindArrow); err != nil {
 				return msg, err
 			}
-
 			fdType, err := readFieldType(tr)
 			if err != nil {
 				return msg, err
@@ -384,9 +386,7 @@ func readMessage(tr *tokenReader) (Message, error) {
 				return msg, err
 			}
 			fdName := string(toks[0].concrete)
-			if _, ok := msg.Fields[uint8(fdInteger)]; ok {
-				return msg, fmt.Errorf("message has duplicate field index %d", fdInteger)
-			}
+
 			msg.Fields[uint8(fdInteger)] = Field{
 				Name:              fdName,
 				FieldType:         fdType,
@@ -401,7 +401,7 @@ func readMessage(tr *tokenReader) (Message, error) {
 			skipEndOfLineComments(tr)
 		case tokenKindOpenSquare:
 			if nextIsDeprecated {
-				return msg, fmt.Errorf("expected field following deprecated annotation")
+				return msg, readError(tk, "expected field following deprecated annotation")
 			}
 			dpMsg, err := readDeprecated(tr)
 			if err != nil {
@@ -432,13 +432,13 @@ func readOpCode(tr *tokenReader) (int32, error) {
 		content := string(tk.concrete)
 		opc, err := strconv.ParseInt(content, 0, 32)
 		if err != nil {
-			return 0, err
+			return 0, readError(tk, err.Error())
 		}
 		opCode = int32(opc)
 	} else if tk.kind == tokenKindStringLiteral {
 		tk.concrete = bytes.Trim(tk.concrete, "\"")
 		if len(tk.concrete) > 4 {
-			return 0, fmt.Errorf("opcode string %s exceeds 4 ascii characters", string(tk.concrete))
+			return 0, readError(tk, "opcode string %s exceeds 4 ascii characters", string(tk.concrete))
 		}
 		opCode = bytesToOpCode(tk.concrete)
 	}
@@ -465,4 +465,9 @@ func bytesToOpCode(data []byte) int32 {
 		opCode |= int32(b)
 	}
 	return opCode
+}
+
+func readError(tk token, format string, args ...interface{}) error {
+	format = fmt.Sprintf("[%d:%d] ", tk.loc.line, tk.loc.lineChar) + format
+	return fmt.Errorf(format, args...)
 }

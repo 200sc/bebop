@@ -3,6 +3,7 @@ package bebop
 type token struct {
 	kind     tokenKind
 	concrete []byte
+	loc      location
 }
 
 type tokenKind uint8

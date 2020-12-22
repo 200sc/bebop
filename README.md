@@ -65,8 +65,6 @@ At `main/bebopfmt` there is a cli utility to format and rewrite bop files. It ta
 
 The following is a list of known issues with the current version of the project, ordered by approximate priority for addressing them.
 
-Tokenization and parsing errors do not currently report locations (line number, character position / column of the error's source).
-
 Original bebop does not support one .bop file importing type definitions from another .bop file, and so neither does this, yet.
 
 - This is nontrivial, and requires a lot of design toward the importing / packaging ecosystem.

@@ -66,6 +66,7 @@ type nextResp struct {
 func (tr *tokenReader) setNextToken(tk token) {
 	tr.lastToken = tr.nextToken
 	tr.nextToken = tk
+	tr.nextToken.loc = tr.loc
 }
 
 func (tr *tokenReader) readByte() (byte, error) {
@@ -350,6 +351,7 @@ func (tr *tokenReader) Token() token {
 				injectedToken := token{
 					kind:     tokenKindSemicolon,
 					concrete: []byte{';'},
+					loc:      tr.loc,
 				}
 				tr.keepNextToken = true
 				tr.lastToken = injectedToken
