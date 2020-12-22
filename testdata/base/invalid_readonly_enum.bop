@@ -1,0 +1,4 @@
+readonly enum FooEnum {
+    F = 1;
+    O = 2;
+} 

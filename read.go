@@ -41,6 +41,9 @@ func ReadFile(r io.Reader) (File, error) {
 			if nextRecordOpCode != 0 {
 				return f, readError(tk, "enums may not have attached op codes")
 			}
+			if nextRecordReadOnly != false {
+				return f, readError(tk, "enums cannot be readonly")
+			}
 			en, err := readEnum(tr)
 			if err != nil {
 				return f, err
@@ -57,13 +60,15 @@ func ReadFile(r io.Reader) (File, error) {
 			st.ReadOnly = nextRecordReadOnly
 			f.Structs = append(f.Structs, st)
 		case tokenKindMessage:
+			if nextRecordReadOnly != false {
+				return f, readError(tk, "messages cannot be readonly")
+			}
 			msg, err := readMessage(tr)
 			if err != nil {
 				return f, err
 			}
 			msg.Comment = strings.Join(nextCommentLines, "\n")
 			msg.OpCode = nextRecordOpCode
-			msg.ReadOnly = nextRecordReadOnly
 			f.Messages = append(f.Messages, msg)
 		}
 		nextCommentLines = []string{}

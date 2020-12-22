@@ -130,6 +130,18 @@ func (bbp Furniture) GetFamily() FurnitureFamily {
 	return bbp.family
 }
 
+func NewFurniture(
+		name string,
+		price uint32,
+		family FurnitureFamily,
+	) Furniture {
+	return Furniture{
+		name: name,
+		price: price,
+		family: family,
+	}
+}
+
 const RequestResponseOpCode = 0x31323334
 
 var _ bebop.Record = &RequestResponse{}
@@ -238,6 +250,14 @@ func mustMakeRequestResponseFromBytes(buf []byte) RequestResponse {
 
 func (bbp RequestResponse) GetAvailableFurniture() []Furniture {
 	return bbp.availableFurniture
+}
+
+func NewRequestResponse(
+		availableFurniture []Furniture,
+	) RequestResponse {
+	return RequestResponse{
+		availableFurniture: availableFurniture,
+	}
 }
 
 const RequestCatalogOpCode = 0x494b4541

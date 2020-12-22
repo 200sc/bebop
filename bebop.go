@@ -34,11 +34,10 @@ type Field struct {
 
 // A Message is a record type where all fields are optional and keyed to indices.
 type Message struct {
-	Name     string
-	Comment  string
-	Fields   map[uint8]Field
-	OpCode   int32
-	ReadOnly bool
+	Name    string
+	Comment string
+	Fields  map[uint8]Field
+	OpCode  int32
 }
 
 // An Enum is a definition that will generate typed enumerable options.

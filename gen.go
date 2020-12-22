@@ -477,7 +477,7 @@ func (msg Message) Generate(w io.Writer, settings GenerateSettings) {
 		return fields[i].num < fields[j].num
 	})
 	for _, fd := range fields {
-		writeFieldDefinition(fd.Field, w, msg.ReadOnly, true)
+		writeFieldDefinition(fd.Field, w, false, true)
 	}
 	writeLine(w, "}")
 	writeLine(w, "")
@@ -499,9 +499,6 @@ func (msg Message) Generate(w io.Writer, settings GenerateSettings) {
 	writeLine(w, "\tat += 4")
 	for _, fd := range fields {
 		name := exposeName(fd.Name)
-		if msg.ReadOnly {
-			name = unexposeName(fd.Name)
-		}
 		num := strconv.Itoa(int(fd.num))
 		name = "*bbp." + name
 		writeLineWithTabs(w, "if %RECV != nil {", 1, name)
@@ -524,9 +521,6 @@ func (msg Message) Generate(w io.Writer, settings GenerateSettings) {
 	writeLine(w, "\t\tswitch buf[at] {")
 	for _, fd := range fields {
 		name := exposeName(fd.Name)
-		if msg.ReadOnly {
-			name = unexposeName(fd.Name)
-		}
 		writeLine(w, "\t\tcase %d:", fd.num)
 		writeLine(w, "\t\t\tat += 1")
 		writeLine(w, "\t\t\tbbp.%[1]s = new(%[2]s)", name, fd.FieldType.goString())
@@ -549,9 +543,6 @@ func (msg Message) Generate(w io.Writer, settings GenerateSettings) {
 		writeLine(w, "\t\tswitch buf[at] {")
 		for _, fd := range fields {
 			name := exposeName(fd.Name)
-			if msg.ReadOnly {
-				name = unexposeName(fd.Name)
-			}
 			writeLine(w, "\t\tcase %d:", fd.num)
 			writeLine(w, "\t\t\tbbp.%[1]s = new(%[2]s)", name, fd.FieldType.goString())
 			writeFieldReadByter("(*bbp."+name+")", fd.FieldType, w, settings, 3, false)
@@ -569,12 +560,8 @@ func (msg Message) Generate(w io.Writer, settings GenerateSettings) {
 	if msg.OpCode != 0 {
 		writeLine(w, "\tiohelp.WriteUint32(w, uint32(%sOpCode))", exposedName)
 	}
-	writeLine(w, "\tiohelp.WriteUint32(w, uint32(bbp.bodyLen()))")
 	for _, fd := range fields {
 		name := exposeName(fd.Name)
-		if msg.ReadOnly {
-			name = unexposeName(fd.Name)
-		}
 		num := strconv.Itoa(int(fd.num))
 		name = "*bbp." + name
 		writeLineWithTabs(w, "if %RECV != nil {", 1, name)
@@ -602,9 +589,6 @@ func (msg Message) Generate(w io.Writer, settings GenerateSettings) {
 	for _, fd := range fields {
 		writeLine(w, "\t\tcase %d:", fd.num)
 		name := exposeName(fd.Name)
-		if msg.ReadOnly {
-			name = unexposeName(fd.Name)
-		}
 		writeLine(w, "\t\t\tbbp.%[1]s = new(%[2]s)", name, fd.FieldType.goString())
 		writeMessageFieldUnmarshaller("bbp."+name, fd.FieldType, w, settings, 3)
 	}
@@ -628,9 +612,6 @@ func (msg Message) Generate(w io.Writer, settings GenerateSettings) {
 	}
 	for _, fd := range fields {
 		name := exposeName(fd.Name)
-		if msg.ReadOnly {
-			name = unexposeName(fd.Name)
-		}
 		name = "*bbp." + name
 		writeLineWithTabs(w, "if %RECV != nil {", 1, name)
 		writeLineWithTabs(w, "bodyLen += 1", 2)
@@ -659,14 +640,6 @@ func (msg Message) Generate(w io.Writer, settings GenerateSettings) {
 		writeLine(w, "\treturn v")
 		writeLine(w, "}")
 		writeLine(w, "")
-	}
-	if msg.ReadOnly {
-		for _, fd := range msg.Fields {
-			writeLine(w, "func (bbp %s) Get%s() *%s {", exposedName, exposeName(fd.Name), fd.FieldType.goString())
-			writeLine(w, "\treturn bbp.%s", unexposeName(fd.Name))
-			writeLine(w, "}")
-			writeLine(w, "")
-		}
 	}
 }
 

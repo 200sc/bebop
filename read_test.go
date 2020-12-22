@@ -1108,6 +1108,8 @@ func TestReadFileError(t *testing.T) {
 		{file: "invalid_struct_reserved", errMessage: "[0:14] expected (Ident) got Array"},
 		{file: "invalid_message_reserved", errMessage: "[0:13] expected (Ident) got Map"},
 		{file: "invalid_message_duplicate_index", errMessage: "[2:2] message has duplicate field index 1"},
+		{file: "invalid_readonly_enum", errMessage: "[0:15] enums cannot be readonly"},
+		{file: "invalid_readonly_message", errMessage: "[0:18] messages cannot be readonly"},
 	}
 	for _, tc := range tcs {
 		tc := tc
