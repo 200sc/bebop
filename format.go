@@ -15,6 +15,9 @@ func format(tr *tokenReader, w io.Writer) {
 		t := tr.Token()
 		switch t.kind {
 		case tokenKindOpenSquare:
+			if newlineBeforeNextRecord {
+				w.Write([]byte{'\n'})
+			}
 			// opcode, next tokens are 'opcode', '(', hex or string lit, ')', ']'
 			opCodeBytes := t.concrete
 			for j := 0; j < 5; j++ {
