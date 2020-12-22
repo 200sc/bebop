@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/200sc/bebop"
 )
@@ -15,7 +16,7 @@ var printHelp = flag.Bool("help", false, "print usage text")
 var packageName = flag.String("package", "bebopgen", "specify the name of the package to generate")
 var generateUnsafeMethods = flag.Bool("generate-unsafe", false, "whether unchecked additional methods should be generated")
 
-const version = "bebopc-go v0.0.6"
+const version = "bebopc-go v0.0.7"
 
 func main() {
 	err := run()
@@ -49,7 +50,8 @@ func run() error {
 	defer f.Close()
 	bopf, err := bebop.ReadFile(f)
 	if err != nil {
-		return fmt.Errorf("failed to read input file: %w", err)
+		filename := filepath.Base(*inputFile)
+		return fmt.Errorf("parsing input failed: %s%w", filename, err)
 	}
 	out, err := os.Create(*outputFile)
 	if err != nil {

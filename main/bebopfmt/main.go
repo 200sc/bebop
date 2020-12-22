@@ -14,7 +14,7 @@ var writeInPlace = flag.Bool("w", false, "rewrite the file in place instead of p
 var printVersion = flag.Bool("version", false, "print the version of bebopfmt")
 var printHelp = flag.Bool("help", false, "print usage text")
 
-const version = "bebopfmt v0.0.6"
+const version = "bebopfmt v0.0.7"
 
 func main() {
 	err := run()
