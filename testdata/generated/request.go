@@ -346,7 +346,7 @@ func (bbp *RequestCatalog) MustUnmarshalBebop(buf []byte) {
 func (bbp RequestCatalog) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
 	iohelp.WriteUint32(w, uint32(RequestCatalogOpCode))
-	iohelp.WriteUint32(w, uint32(bbp.bodyLen()))
+	iohelp.WriteUint32(w, uint32(bbp.bodyLen()-8))
 	if bbp.Family != nil {
 		w.Write([]byte{1})
 		iohelp.WriteUint32(w, uint32(*bbp.Family))
@@ -362,6 +362,7 @@ func (bbp RequestCatalog) EncodeBebop(iow io.Writer) (err error) {
 
 func (bbp *RequestCatalog) DecodeBebop(ior io.Reader) (err error) {
 	er := iohelp.NewErrorReader(ior)
+	iohelp.ReadUint32(er)
 	bodyLen := iohelp.ReadUint32(er)
 	body := make([]byte, bodyLen)
 	er.Read(body)

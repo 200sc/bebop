@@ -571,6 +571,9 @@ func (msg Message) Generate(w io.Writer, settings GenerateSettings) {
 	writeLine(w, "\tw := iohelp.NewErrorWriter(iow)")
 	if msg.OpCode != 0 {
 		writeLine(w, "\tiohelp.WriteUint32(w, uint32(%sOpCode))", exposedName)
+		writeLine(w, "\tiohelp.WriteUint32(w, uint32(bbp.bodyLen()-8))")
+	} else {
+		writeLine(w, "\tiohelp.WriteUint32(w, uint32(bbp.bodyLen()-4))")
 	}
 	for _, fd := range fields {
 		name := exposeName(fd.Name)
@@ -588,6 +591,9 @@ func (msg Message) Generate(w io.Writer, settings GenerateSettings) {
 	isFirstTopLength = true
 	writeLine(w, "func (bbp *%s) DecodeBebop(ior io.Reader) (err error) {", exposedName)
 	writeLine(w, "\ter := iohelp.NewErrorReader(ior)")
+	if msg.OpCode != 0 {
+		writeLine(w, "\tiohelp.ReadUint32(er)")
+	}
 	writeLine(w, "\tbodyLen := iohelp.ReadUint32(er)")
 	// why read the entire body upfront? Because we're allowed
 	// to exit early, and if we do exit early and this message

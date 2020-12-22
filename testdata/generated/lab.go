@@ -773,7 +773,7 @@ func (bbp *MediaMessage) MustUnmarshalBebop(buf []byte) {
 
 func (bbp MediaMessage) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
-	iohelp.WriteUint32(w, uint32(bbp.bodyLen()))
+	iohelp.WriteUint32(w, uint32(bbp.bodyLen()-4))
 	if bbp.Codec != nil {
 		w.Write([]byte{1})
 		iohelp.WriteUint32(w, uint32(*bbp.Codec))
@@ -923,7 +923,7 @@ func (bbp *SkipTestOld) MustUnmarshalBebop(buf []byte) {
 
 func (bbp SkipTestOld) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
-	iohelp.WriteUint32(w, uint32(bbp.bodyLen()))
+	iohelp.WriteUint32(w, uint32(bbp.bodyLen()-4))
 	if bbp.X != nil {
 		w.Write([]byte{1})
 		iohelp.WriteInt32(w, *bbp.X)
@@ -1085,7 +1085,7 @@ func (bbp *SkipTestNew) MustUnmarshalBebop(buf []byte) {
 
 func (bbp SkipTestNew) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
-	iohelp.WriteUint32(w, uint32(bbp.bodyLen()))
+	iohelp.WriteUint32(w, uint32(bbp.bodyLen()-4))
 	if bbp.X != nil {
 		w.Write([]byte{1})
 		iohelp.WriteInt32(w, *bbp.X)
@@ -1239,7 +1239,7 @@ func (bbp *SkipTestOldContainer) MustUnmarshalBebop(buf []byte) {
 
 func (bbp SkipTestOldContainer) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
-	iohelp.WriteUint32(w, uint32(bbp.bodyLen()))
+	iohelp.WriteUint32(w, uint32(bbp.bodyLen()-4))
 	if bbp.S != nil {
 		w.Write([]byte{1})
 		err = (*bbp.S).EncodeBebop(w)
@@ -1388,7 +1388,7 @@ func (bbp *SkipTestNewContainer) MustUnmarshalBebop(buf []byte) {
 
 func (bbp SkipTestNewContainer) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
-	iohelp.WriteUint32(w, uint32(bbp.bodyLen()))
+	iohelp.WriteUint32(w, uint32(bbp.bodyLen()-4))
 	if bbp.S != nil {
 		w.Write([]byte{1})
 		err = (*bbp.S).EncodeBebop(w)

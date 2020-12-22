@@ -184,7 +184,7 @@ func (bbp *Bar) MustUnmarshalBebop(buf []byte) {
 
 func (bbp Bar) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
-	iohelp.WriteUint32(w, uint32(bbp.bodyLen()))
+	iohelp.WriteUint32(w, uint32(bbp.bodyLen()-4))
 	if bbp.X != nil {
 		w.Write([]byte{1})
 		iohelp.WriteFloat64(w, *bbp.X)

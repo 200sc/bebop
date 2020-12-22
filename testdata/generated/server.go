@@ -301,7 +301,7 @@ func (bbp *PrintRequest) MustUnmarshalBebop(buf []byte) {
 func (bbp PrintRequest) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
 	iohelp.WriteUint32(w, uint32(PrintRequestOpCode))
-	iohelp.WriteUint32(w, uint32(bbp.bodyLen()))
+	iohelp.WriteUint32(w, uint32(bbp.bodyLen()-8))
 	if bbp.Print != nil {
 		w.Write([]byte{1})
 		err = (*bbp.Print).EncodeBebop(w)
@@ -315,6 +315,7 @@ func (bbp PrintRequest) EncodeBebop(iow io.Writer) (err error) {
 
 func (bbp *PrintRequest) DecodeBebop(ior io.Reader) (err error) {
 	er := iohelp.NewErrorReader(ior)
+	iohelp.ReadUint32(er)
 	bodyLen := iohelp.ReadUint32(er)
 	body := make([]byte, bodyLen)
 	er.Read(body)
@@ -425,7 +426,7 @@ func (bbp *AddRequest) MustUnmarshalBebop(buf []byte) {
 func (bbp AddRequest) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
 	iohelp.WriteUint32(w, uint32(AddRequestOpCode))
-	iohelp.WriteUint32(w, uint32(bbp.bodyLen()))
+	iohelp.WriteUint32(w, uint32(bbp.bodyLen()-8))
 	if bbp.Add != nil {
 		w.Write([]byte{1})
 		err = (*bbp.Add).EncodeBebop(w)
@@ -439,6 +440,7 @@ func (bbp AddRequest) EncodeBebop(iow io.Writer) (err error) {
 
 func (bbp *AddRequest) DecodeBebop(ior io.Reader) (err error) {
 	er := iohelp.NewErrorReader(ior)
+	iohelp.ReadUint32(er)
 	bodyLen := iohelp.ReadUint32(er)
 	body := make([]byte, bodyLen)
 	er.Read(body)
