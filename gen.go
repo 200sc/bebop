@@ -447,6 +447,18 @@ func (st Struct) Generate(w io.Writer, settings GenerateSettings) {
 			writeLine(w, "}")
 			writeLine(w, "")
 		}
+		writeLine(w, "func New%s(", exposedName)
+		for _, fd := range st.Fields {
+			writeLine(w, "\t\t%s %s,", unexposeName(fd.Name), fd.FieldType.goString())
+		}
+		writeLine(w, "\t) %s {", exposedName)
+		writeLine(w, "\treturn %s{", exposedName)
+		for _, fd := range st.Fields {
+			writeLine(w, "\t\t%s: %s,", unexposeName(fd.Name), unexposeName(fd.Name))
+		}
+		writeLine(w, "\t}")
+		writeLine(w, "}")
+		writeLine(w, "")
 	}
 }
 

@@ -101,6 +101,16 @@ func (bbp S) GetY() int32 {
 	return bbp.y
 }
 
+func NewS(
+		x int32,
+		y int32,
+	) S {
+	return S{
+		x: x,
+		y: y,
+	}
+}
+
 var _ bebop.Record = &SomeMaps{}
 
 type SomeMaps struct {

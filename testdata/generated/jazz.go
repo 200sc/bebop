@@ -113,6 +113,16 @@ func (bbp Musician) GetPlays() Instrument {
 	return bbp.plays
 }
 
+func NewMusician(
+		name string,
+		plays Instrument,
+	) Musician {
+	return Musician{
+		name: name,
+		plays: plays,
+	}
+}
+
 var _ bebop.Record = &Library{}
 
 type Library struct {
