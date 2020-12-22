@@ -21,9 +21,6 @@ func ReadFile(r io.Reader) (File, error) {
 		case tokenKindNewline:
 			nextCommentLines = []string{}
 			continue
-		case tokenKindReadOnly:
-			nextRecordReadOnly = true
-			continue
 		case tokenKindBlockComment:
 			nextCommentLines = append(nextCommentLines, readBlockComment(tr, tk))
 			continue
@@ -50,6 +47,16 @@ func ReadFile(r io.Reader) (File, error) {
 			}
 			en.Comment = strings.Join(nextCommentLines, "\n")
 			f.Enums = append(f.Enums, en)
+		case tokenKindReadOnly:
+			nextRecordReadOnly = true
+			if !tr.Next() {
+				return f, readError(tk, "expected (Struct) got no token")
+			}
+			tk = tr.Token()
+			if tk.kind != tokenKindStruct {
+				return f, readError(tk, "expected (Struct) got (%v)", tk.kind)
+			}
+			fallthrough
 		case tokenKindStruct:
 			st, err := readStruct(tr)
 			if err != nil {
@@ -59,6 +66,7 @@ func ReadFile(r io.Reader) (File, error) {
 			st.OpCode = nextRecordOpCode
 			st.ReadOnly = nextRecordReadOnly
 			f.Structs = append(f.Structs, st)
+			nextRecordReadOnly = false
 		case tokenKindMessage:
 			if nextRecordReadOnly != false {
 				return f, readError(tk, "messages cannot be readonly")
@@ -73,7 +81,6 @@ func ReadFile(r io.Reader) (File, error) {
 		}
 		nextCommentLines = []string{}
 		nextRecordOpCode = 0
-		nextRecordReadOnly = false
 	}
 	return f, nil
 }
