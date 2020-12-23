@@ -59,7 +59,7 @@ little more sophisticated version of the first example in this document.
 
 ## bebopfmt
 
-At `main/bebopfmt` there is a cli utility to format and rewrite bop files. It takes in a `-w` argument to rewrite files in place, and accepts both direct files and filepaths.
+At `main/bebopfmt` there is a cli utility to format and rewrite bop files. It takes in a `-w` argument to rewrite files in place, and accepts both directories and individual filepaths.
 
 ## Known limitations
 
