@@ -35,7 +35,7 @@ StructField = [ Deprecation ] Type identifier ';'
 Enum = 'enum' identifier '{' { EnumOption } '}'
 EnumOption = [ Deprecation ] identifier '=' decimal_lit ';'
 
-Message = [ OpCode ] ['readonly'] 'message' identifier '{' { MessageField } '}'
+Message = [ OpCode ] 'message' identifier '{' { MessageField } '}'
 MessageField [ Deprecation ] decimal_lit '->' Type identifier ';'
 
 Deprecation = '[' 'deprecated' '(' identifier ')' ']'
@@ -58,7 +58,7 @@ StructField = [ Deprecation ] Type identifier ';' [ Comment ]
 Enum = 'enum' identifier '{' { Comment | EnumOption } '}'
 EnumOption = [ Deprecation ] identifier '=' decimal_lit ';' [ Comment ]
 
-Message = [ OpCode ] ['readonly'] 'message' identifier '{' { Comment | MessageField } '}'
+Message = [ OpCode ] 'message' identifier '{' { Comment | MessageField } '}'
 MessageField [ Deprecation ] decimal_lit '->' Type identifier ';' [ Comment ]
 
 Deprecation = '[' 'deprecated' '(' identifier ')' ']' [ Comment ]
