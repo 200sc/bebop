@@ -41,7 +41,7 @@ MessageField [ Deprecation ] decimal_lit '->' Type identifier ';'
 Deprecation = '[' 'deprecated' '(' identifier ')' ']'
 OpCode = '[' opcode '(' ( hex_lit | string_lit ) ')' ']'
 
-Type = ( ArrayType1 | ArrayType2 | MapType | SimpleType )
+Type = ( ArrayType | MapType | SimpleType )
 ArrayType = ( Type '[' ']') | ( 'array' '[' Type ']' )
 MapType = 'map' '[' SimpleType ',' Type ']' 
 
@@ -64,7 +64,7 @@ MessageField [ Deprecation ] decimal_lit '->' Type identifier ';' [ Comment ]
 Deprecation = '[' 'deprecated' '(' identifier ')' ']' [ Comment ]
 OpCode = '[' opcode '(' ( hex_lit | string_lit ) ')' ']' [ Comment ]
 
-Type = ( ArrayType1 | ArrayType2 | MapType | SimpleType )
+Type = ( ArrayType | MapType | SimpleType )
 ArrayType = ( Type '[' ']') | ( 'array' '[' Type ']' )
 MapType = 'map' '[' SimpleType ',' Type ']' 
 
