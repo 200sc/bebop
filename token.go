@@ -23,6 +23,7 @@ const (
 	tokenKindOpCode
 	tokenKindMap
 	tokenKindArray
+	tokenKindUnion
 
 	tokenKindOpenSquare
 	tokenKindCloseSquare
@@ -48,6 +49,7 @@ var tokenStrings = map[tokenKind]string{
 	tokenKindStruct:        "Struct",
 	tokenKindMessage:       "Message",
 	tokenKindEnum:          "Enum",
+	tokenKindUnion:         "Union",
 	tokenKindDeprecated:    "Deprecated",
 	tokenKindOpCode:        "OpCode",
 	tokenKindMap:           "Map",
