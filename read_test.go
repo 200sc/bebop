@@ -1041,6 +1041,107 @@ func TestReadFile(t *testing.T) {
 					},
 				},
 			},
+		}, {
+			file: "union",
+			expected: File{
+				Unions: []Union{
+					{
+						Name:   "U",
+						OpCode: bytesToOpCode([]byte("yeah")),
+						Fields: map[uint8]UnionField{
+							1: {
+								Message: &Message{
+									Name: "A",
+									Fields: map[uint8]Field{
+										1: {
+											Name: "a",
+											FieldType: FieldType{
+												Simple: "uint32",
+											},
+										},
+									},
+								},
+							},
+							2: {
+								Struct: &Struct{
+									Comment: "*\r\n     * This branch is, too!\r\n     ",
+									Name:    "B",
+									Fields: []Field{
+										{
+											Name: "b",
+											FieldType: FieldType{
+												Simple: "bool",
+											},
+										},
+									},
+								},
+							},
+							3: {
+								Struct: &Struct{
+									Name: "C",
+								},
+							},
+							4: {
+								Union: &Union{
+									Name: "W",
+									Fields: map[uint8]UnionField{
+										1: {
+											Struct: &Struct{
+												Name: "D",
+												Fields: []Field{{
+													Name: "s",
+													FieldType: FieldType{
+														Simple: "string",
+													},
+												}},
+											},
+										},
+										2: {
+											Struct: &Struct{
+												Name: "X",
+												Fields: []Field{{
+													Name: "x",
+													FieldType: FieldType{
+														Simple: "bool",
+													},
+												}},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+					{
+						Name: "List",
+						Fields: map[uint8]UnionField{
+							1: {
+								Struct: &Struct{
+									Name: "Cons",
+									Fields: []Field{
+										{
+											Name: "head",
+											FieldType: FieldType{
+												Simple: "uint32",
+											},
+										}, {
+											Name: "tail",
+											FieldType: FieldType{
+												Simple: "List",
+											},
+										},
+									},
+								},
+							},
+							2: {
+								Struct: &Struct{
+									Name: "Nil",
+								},
+							},
+						},
+					},
+				},
+			},
 		},
 	}
 	for _, tc := range tcs {
@@ -1055,8 +1156,8 @@ func TestReadFile(t *testing.T) {
 			if err != nil {
 				t.Fatalf("read file errored: %v", err)
 			}
-			if !bf.equals(tc.expected) {
-				t.Fatal("parsed file did not match expected")
+			if err := bf.equals(tc.expected); err != nil {
+				t.Fatal("parsed file did not match expected:", err)
 			}
 		})
 	}
