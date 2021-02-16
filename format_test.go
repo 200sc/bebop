@@ -21,6 +21,7 @@ var testFormatFiles = []string{
 	"quoted_string",
 	"request",
 	"server",
+	"union",
 }
 
 func TestTokenizeFormat(t *testing.T) {
