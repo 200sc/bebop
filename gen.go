@@ -197,10 +197,10 @@ func (f File) Generate(w io.Writer, settings GenerateSettings) error {
 	writeLine(w, "package %s", settings.PackageName)
 	writeLine(w, "")
 	writeLine(w, "import (")
-	if len(f.Messages) != 0 {
+	if len(f.Messages)+len(f.Unions) != 0 {
 		writeLine(w, "\t\"bytes\"")
 	}
-	if len(f.Messages)+len(f.Structs) != 0 {
+	if len(f.Messages)+len(f.Structs)+len(f.Unions) != 0 {
 		writeLine(w, "\t\"io\"")
 	}
 	if usedTypes["date"] {
@@ -330,9 +330,13 @@ func (st Struct) Generate(w io.Writer, settings GenerateSettings) {
 	writeLine(w, "func (bbp %s) MarshalBebopTo(buf []byte) {", exposedName)
 	if st.OpCode != 0 {
 		writeLine(w, "\tiohelp.WriteUint32Bytes(buf, uint32(%sOpCode))", exposedName)
-		writeLine(w, "\tat := 4")
+		if len(st.Fields) > 0 {
+			writeLine(w, "\tat := 4")
+		}
 	} else {
-		writeLine(w, "\tat := 0")
+		if len(st.Fields) > 0 {
+			writeLine(w, "\tat := 0")
+		}
 	}
 	for _, fd := range st.Fields {
 		name := exposeName(fd.Name)
@@ -345,9 +349,13 @@ func (st Struct) Generate(w io.Writer, settings GenerateSettings) {
 	writeLine(w, "")
 	writeLine(w, "func (bbp *%s) UnmarshalBebop(buf []byte) (err error) {", exposedName)
 	if st.OpCode != 0 {
-		writeLine(w, "\tat := 4")
+		if len(st.Fields) > 0 {
+			writeLine(w, "\tat := 4")
+		}
 	} else {
-		writeLine(w, "\tat := 0")
+		if len(st.Fields) > 0 {
+			writeLine(w, "\tat := 0")
+		}
 	}
 	for _, fd := range st.Fields {
 		name := exposeName(fd.Name)
@@ -362,9 +370,13 @@ func (st Struct) Generate(w io.Writer, settings GenerateSettings) {
 	if settings.GenerateUnsafeMethods {
 		writeLine(w, "func (bbp *%s) MustUnmarshalBebop(buf []byte) {", exposedName)
 		if st.OpCode != 0 {
-			writeLine(w, "\tat := 4")
+			if len(st.Fields) > 0 {
+				writeLine(w, "\tat := 4")
+			}
 		} else {
-			writeLine(w, "\tat := 0")
+			if len(st.Fields) > 0 {
+				writeLine(w, "\tat := 0")
+			}
 		}
 		for _, fd := range st.Fields {
 			name := exposeName(fd.Name)
@@ -1172,6 +1184,44 @@ func (f File) typeUnmarshallers() map[string]string {
 			"}"
 		out[msg.Name] = format
 	}
+	for _, union := range f.Unions {
+		uout := union.typeUnmarshallers()
+		for k, v := range uout {
+			out[k] = v
+		}
+	}
+	return out
+}
+
+func (u Union) typeUnmarshallers() map[string]string {
+	out := make(map[string]string)
+	format := "(%RECV), err = make%TYPE(r)\n" +
+		"if err != nil {\n" +
+		"\treturn err\n" +
+		"}"
+	out[u.Name] = format
+	for _, ufd := range u.Fields {
+		if ufd.Struct != nil {
+			format := "(%RECV), err = make%TYPE(r)\n" +
+				"if err != nil {\n" +
+				"\treturn err\n" +
+				"}"
+			out[ufd.Struct.Name] = format
+		}
+		if ufd.Message != nil {
+			format := "(%RECV), err = make%TYPE(r)\n" +
+				"if err != nil {\n" +
+				"\treturn err\n" +
+				"}"
+			out[ufd.Message.Name] = format
+		}
+		if ufd.Union != nil {
+			uout := ufd.Union.typeUnmarshallers()
+			for k, v := range uout {
+				out[k] = v
+			}
+		}
+	}
 	return out
 }
 
@@ -1206,27 +1256,40 @@ func (f File) typeMarshallers() map[string]string {
 		out[msg.Name] = format
 	}
 	for _, union := range f.Unions {
-		for _, ufd := range union.Fields {
-			if ufd.Struct != nil {
-				format := "err = (%ASGN).EncodeBebop(w)\n" +
-					"if err != nil {\n" +
-					"\treturn err\n" +
-					"}"
-				out[ufd.Struct.Name] = format
-			}
-			if ufd.Message != nil {
-				format := "err = (%ASGN).EncodeBebop(w)\n" +
-					"if err != nil {\n" +
-					"\treturn err\n" +
-					"}"
-				out[ufd.Message.Name] = format
-			}
-			if ufd.Union != nil {
-				format := "err = (%ASGN).EncodeBebop(w)\n" +
-					"if err != nil {\n" +
-					"\treturn err\n" +
-					"}"
-				out[ufd.Union.Name] = format
+		uout := union.typeMarshallers()
+		for k, v := range uout {
+			out[k] = v
+		}
+	}
+	return out
+}
+
+func (u Union) typeMarshallers() map[string]string {
+	out := make(map[string]string)
+	format := "err = (%ASGN).EncodeBebop(w)\n" +
+		"if err != nil {\n" +
+		"\treturn err\n" +
+		"}"
+	out[u.Name] = format
+	for _, ufd := range u.Fields {
+		if ufd.Struct != nil {
+			format := "err = (%ASGN).EncodeBebop(w)\n" +
+				"if err != nil {\n" +
+				"\treturn err\n" +
+				"}"
+			out[ufd.Struct.Name] = format
+		}
+		if ufd.Message != nil {
+			format := "err = (%ASGN).EncodeBebop(w)\n" +
+				"if err != nil {\n" +
+				"\treturn err\n" +
+				"}"
+			out[ufd.Message.Name] = format
+		}
+		if ufd.Union != nil {
+			uout := ufd.Union.typeMarshallers()
+			for k, v := range uout {
+				out[k] = v
 			}
 		}
 	}
@@ -1243,26 +1306,34 @@ func (f File) typeLengthers() map[string]string {
 		out[en.Name] = "bodyLen += 4"
 	}
 	for _, st := range f.Structs {
-		format := "bodyLen += (%ASGN).bodyLen()"
-		out[st.Name] = format
+		out[st.Name] = "bodyLen += (%ASGN).bodyLen()"
 	}
 	for _, msg := range f.Messages {
-		format := "bodyLen += (%ASGN).bodyLen()"
-		out[msg.Name] = format
+		out[msg.Name] = "bodyLen += (%ASGN).bodyLen()"
 	}
 	for _, union := range f.Unions {
-		for _, ufd := range union.Fields {
-			if ufd.Struct != nil {
-				format := "bodyLen += (%ASGN).bodyLen()"
-				out[ufd.Struct.Name] = format
-			}
-			if ufd.Message != nil {
-				format := "bodyLen += (%ASGN).bodyLen()"
-				out[ufd.Message.Name] = format
-			}
-			if ufd.Union != nil {
-				format := "bodyLen += (%ASGN).bodyLen()"
-				out[ufd.Union.Name] = format
+		uout := union.typeLengthers()
+		for k, v := range uout {
+			out[k] = v
+		}
+	}
+	return out
+}
+
+func (u Union) typeLengthers() map[string]string {
+	out := make(map[string]string)
+	out[u.Name] = "bodyLen += (%ASGN).bodyLen()"
+	for _, ufd := range u.Fields {
+		if ufd.Struct != nil {
+			out[ufd.Struct.Name] = "bodyLen += (%ASGN).bodyLen()"
+		}
+		if ufd.Message != nil {
+			out[ufd.Message.Name] = "bodyLen += (%ASGN).bodyLen()"
+		}
+		if ufd.Union != nil {
+			uout := ufd.Union.typeLengthers()
+			for k, v := range uout {
+				out[k] = v
 			}
 		}
 	}
@@ -1301,21 +1372,33 @@ func (f File) typeByters() map[string]string {
 			"at += (%ASGN).bodyLen()"
 	}
 	for _, union := range f.Unions {
-		for _, ufd := range union.Fields {
-			if ufd.Struct != nil {
-				format := "(%ASGN).MarshalBebopTo(buf[at:])\n" +
-					"at += (%ASGN).bodyLen()"
-				out[ufd.Struct.Name] = format
-			}
-			if ufd.Message != nil {
-				format := "(%ASGN).MarshalBebopTo(buf[at:])\n" +
-					"at += (%ASGN).bodyLen()"
-				out[ufd.Message.Name] = format
-			}
-			if ufd.Union != nil {
-				format := "(%ASGN).MarshalBebopTo(buf[at:])\n" +
-					"at += (%ASGN).bodyLen()"
-				out[ufd.Union.Name] = format
+		uout := union.typeByters()
+		for k, v := range uout {
+			out[k] = v
+		}
+	}
+	return out
+}
+
+func (u Union) typeByters() map[string]string {
+	out := map[string]string{}
+	out[u.Name] = "(%ASGN).MarshalBebopTo(buf[at:])\n" +
+		"at += (%ASGN).bodyLen()"
+	for _, ufd := range u.Fields {
+		if ufd.Struct != nil {
+			format := "(%ASGN).MarshalBebopTo(buf[at:])\n" +
+				"at += (%ASGN).bodyLen()"
+			out[ufd.Struct.Name] = format
+		}
+		if ufd.Message != nil {
+			format := "(%ASGN).MarshalBebopTo(buf[at:])\n" +
+				"at += (%ASGN).bodyLen()"
+			out[ufd.Message.Name] = format
+		}
+		if ufd.Union != nil {
+			uout := ufd.Union.typeByters()
+			for k, v := range uout {
+				out[k] = v
 			}
 		}
 	}
@@ -1362,36 +1445,48 @@ func (f File) typeByteReaders() map[string]string {
 			"at += (%ASGN).bodyLen()"
 	}
 	for _, union := range f.Unions {
-		for _, ufd := range union.Fields {
-			if ufd.Struct != nil {
-				st := ufd.Struct
-				out[st.Name] = "%ASGN = mustMake%TYPEFromBytes(buf[at:])\n" +
-					"at += (%ASGN).bodyLen()"
-				out[st.Name+"&safe"] = "%ASGN, err = make%TYPEFromBytes(buf[at:])\n" +
-					"if err != nil {\n" +
-					"\t return err\n" +
-					"}\n" +
-					"at += (%ASGN).bodyLen()"
-			}
-			if ufd.Message != nil {
-				msg := ufd.Message
-				out[msg.Name] = "%ASGN = mustMake%TYPEFromBytes(buf[at:])\n" +
-					"at += (%ASGN).bodyLen()"
-				out[msg.Name+"&safe"] = "%ASGN, err = make%TYPEFromBytes(buf[at:])\n" +
-					"if err != nil {\n" +
-					"\t return err\n" +
-					"}\n" +
-					"at += (%ASGN).bodyLen()"
-			}
-			if ufd.Union != nil {
-				union := ufd.Union
-				out[union.Name] = "%ASGN = mustMake%TYPEFromBytes(buf[at:])\n" +
-					"at += (%ASGN).bodyLen()"
-				out[union.Name+"&safe"] = "%ASGN, err = make%TYPEFromBytes(buf[at:])\n" +
-					"if err != nil {\n" +
-					"\t return err\n" +
-					"}\n" +
-					"at += (%ASGN).bodyLen()"
+		uout := union.typeByteReaders()
+		for k, v := range uout {
+			out[k] = v
+		}
+	}
+	return out
+}
+
+func (u Union) typeByteReaders() map[string]string {
+	out := map[string]string{}
+	out[u.Name] = "%ASGN = mustMake%TYPEFromBytes(buf[at:])\n" +
+		"at += (%ASGN).bodyLen()"
+	out[u.Name+"&safe"] = "%ASGN, err = make%TYPEFromBytes(buf[at:])\n" +
+		"if err != nil {\n" +
+		"\t return err\n" +
+		"}\n" +
+		"at += (%ASGN).bodyLen()"
+	for _, ufd := range u.Fields {
+		if ufd.Struct != nil {
+			st := ufd.Struct
+			out[st.Name] = "%ASGN = mustMake%TYPEFromBytes(buf[at:])\n" +
+				"at += (%ASGN).bodyLen()"
+			out[st.Name+"&safe"] = "%ASGN, err = make%TYPEFromBytes(buf[at:])\n" +
+				"if err != nil {\n" +
+				"\t return err\n" +
+				"}\n" +
+				"at += (%ASGN).bodyLen()"
+		}
+		if ufd.Message != nil {
+			msg := ufd.Message
+			out[msg.Name] = "%ASGN = mustMake%TYPEFromBytes(buf[at:])\n" +
+				"at += (%ASGN).bodyLen()"
+			out[msg.Name+"&safe"] = "%ASGN, err = make%TYPEFromBytes(buf[at:])\n" +
+				"if err != nil {\n" +
+				"\t return err\n" +
+				"}\n" +
+				"at += (%ASGN).bodyLen()"
+		}
+		if ufd.Union != nil {
+			uout := ufd.Union.typeByteReaders()
+			for k, v := range uout {
+				out[k] = v
 			}
 		}
 	}
@@ -1405,6 +1500,20 @@ func (f File) customRecordTypes() map[string]struct{} {
 	}
 	for _, msg := range f.Messages {
 		out[msg.Name] = struct{}{}
+	}
+	for _, union := range f.Unions {
+		out[union.Name] = struct{}{}
+		for _, ufd := range union.Fields {
+			if ufd.Struct != nil {
+				out[ufd.Struct.Name] = struct{}{}
+			}
+			if ufd.Message != nil {
+				out[ufd.Message.Name] = struct{}{}
+			}
+			if ufd.Union != nil {
+				out[ufd.Union.Name] = struct{}{}
+			}
+		}
 	}
 	return out
 }
@@ -1448,6 +1557,17 @@ func (msg Message) usedTypes() map[string]bool {
 	return out
 }
 
+func (u Union) usedTypes() map[string]bool {
+	out := make(map[string]bool)
+	for _, ufd := range u.Fields {
+		fdTypes := ufd.usedTypes()
+		for k, v := range fdTypes {
+			out[k] = v
+		}
+	}
+	return out
+}
+
 func (ft FieldType) usedTypes() map[string]bool {
 	if ft.Array != nil {
 		return ft.Array.usedTypes()
@@ -1458,4 +1578,17 @@ func (ft FieldType) usedTypes() map[string]bool {
 		return valTypes
 	}
 	return map[string]bool{ft.Simple: true}
+}
+
+func (ufd UnionField) usedTypes() map[string]bool {
+	if ufd.Struct != nil {
+		return ufd.Struct.usedTypes()
+	}
+	if ufd.Message != nil {
+		return ufd.Message.usedTypes()
+	}
+	if ufd.Union != nil {
+		return ufd.Union.usedTypes()
+	}
+	return map[string]bool{}
 }

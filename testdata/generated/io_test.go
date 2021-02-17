@@ -379,6 +379,75 @@ func TestMarshalCycleRecords(t *testing.T) {
 			unmarshalTo:  &generated.ReadOnlyMap{},
 			unmarshalTo2: &generated.ReadOnlyMap{},
 			skipEquality: true,
+		}, {
+			name:         "empty Union U",
+			record:       &generated.U{},
+			unmarshalTo:  &generated.U{},
+			unmarshalTo2: &generated.U{},
+		}, {
+			name: "Union U: A",
+			record: &generated.U{
+				A: &generated.A{
+					A: uint32p(2),
+				},
+			},
+			unmarshalTo:  &generated.U{},
+			unmarshalTo2: &generated.U{},
+		}, {
+			name: "Union U: B",
+			record: &generated.U{
+				B: &generated.B{
+					B: true,
+				},
+			},
+			unmarshalTo:  &generated.U{},
+			unmarshalTo2: &generated.U{},
+		}, {
+			name: "Union U: C",
+			record: &generated.U{
+				C: &generated.C{},
+			},
+			unmarshalTo:  &generated.U{},
+			unmarshalTo2: &generated.U{},
+		}, {
+			name: "Union U: WD",
+			record: &generated.U{
+				W: &generated.W{
+					D: &generated.D{
+						S: "first",
+					},
+				},
+			},
+			unmarshalTo:  &generated.U{},
+			unmarshalTo2: &generated.U{},
+		}, {
+			name: "Union U: WX",
+			record: &generated.U{
+				W: &generated.W{
+					X: &generated.X{
+						X: true,
+					},
+				},
+			},
+			unmarshalTo:  &generated.U{},
+			unmarshalTo2: &generated.U{},
+		}, {
+			name: "Union List",
+			record: &generated.List{
+				Cons: &generated.Cons{
+					Head: 1,
+					Tail: generated.List{
+						Cons: &generated.Cons{
+							Head: 2,
+							Tail: generated.List{
+								Nil: &generated.Nil{},
+							},
+						},
+					},
+				},
+			},
+			unmarshalTo:  &generated.List{},
+			unmarshalTo2: &generated.List{},
 		}}
 	for _, tc := range tcs {
 		tc := tc
@@ -451,5 +520,9 @@ func stringp(s string) *string {
 }
 
 func uint16p(i uint16) *uint16 {
+	return &i
+}
+
+func uint32p(i uint32) *uint32 {
 	return &i
 }
