@@ -90,6 +90,7 @@ var genTestFiles = []string{
 	"quoted_string",
 	"request",
 	"server",
+	"union",
 }
 
 func TestGenerateToFile(t *testing.T) {

@@ -4,6 +4,7 @@ import (
 	"io"
 )
 
+// Format reads a .bop file from r and writes out a formatted version of that file to out.
 func Format(r io.Reader, out io.Writer) {
 	format(newTokenReader(r), out)
 }
@@ -50,13 +51,19 @@ func format(tr *tokenReader, w io.Writer) {
 			if newlineBeforeNextRecord {
 				w.Write([]byte{'\n'})
 			}
-			w.Write(formatStruct(tr, readOnly))
+			w.Write(formatStruct(tr, readOnly, "\t"))
 			newlineBeforeNextRecord = true
 		case tokenKindMessage:
 			if newlineBeforeNextRecord {
 				w.Write([]byte{'\n'})
 			}
-			w.Write(formatMessage(tr, readOnly))
+			w.Write(formatMessage(tr, "\t"))
+			newlineBeforeNextRecord = true
+		case tokenKindUnion:
+			if newlineBeforeNextRecord {
+				w.Write([]byte{'\n'})
+			}
+			w.Write(formatUnion(tr, "\t"))
 			newlineBeforeNextRecord = true
 		}
 		readOnly = false
@@ -114,7 +121,7 @@ tokenLoop:
 	return enumBytes
 }
 
-func formatStruct(tr *tokenReader, readonly bool) []byte {
+func formatStruct(tr *tokenReader, readonly bool, prefix string) []byte {
 	// [readonly] struct <ID> {\n
 
 	structBytes := tr.Token().concrete
@@ -133,16 +140,16 @@ tokenLoop:
 		t := tr.Token()
 		switch t.kind {
 		case tokenKindLineComment:
-			cmt := append([]byte("\t"), t.concrete...)
+			cmt := append([]byte(prefix), t.concrete...)
 			structBytes = append(structBytes, cmt...)
 		case tokenKindBlockComment:
-			cmt := append([]byte("\t"), t.concrete...)
+			cmt := append([]byte(prefix), t.concrete...)
 			cmt = append(cmt, []byte("\n")...)
 			structBytes = append(structBytes, cmt...)
 
 		case tokenKindOpenSquare:
 			// deprecated, next tokens are 'deprecated', '(', string lit, ')', ']'
-			deprecatedBytes := append([]byte{'\t'}, t.concrete...)
+			deprecatedBytes := append([]byte(prefix), t.concrete...)
 			for j := 0; j < 5; j++ {
 				tr.Next()
 				deprecatedBytes = append(deprecatedBytes, tr.Token().concrete...)
@@ -152,7 +159,7 @@ tokenLoop:
 		case tokenKindIdent, tokenKindMap, tokenKindArray:
 			// <TYPE> <ID>;
 			fieldBytes := formatType(tr)
-			fieldBytes = append([]byte{'\t'}, fieldBytes...)
+			fieldBytes = append([]byte(prefix), fieldBytes...)
 			tr.Next()
 			fieldBytes = append(fieldBytes, ' ')
 			fieldBytes = append(fieldBytes, tr.Token().concrete...)
@@ -169,7 +176,7 @@ tokenLoop:
 				structBytes = append(structBytes, '\n')
 			}
 		case tokenKindCloseCurly:
-			structBytes = append(structBytes, t.concrete...)
+			structBytes = append(structBytes, append([]byte(prefix)[:len(prefix)-1], t.concrete...)...)
 			structBytes = append(structBytes, '\n')
 			break tokenLoop
 		}
@@ -178,13 +185,8 @@ tokenLoop:
 	return structBytes
 }
 
-func formatMessage(tr *tokenReader, readonly bool) []byte {
-	// [readonly] message <ID> {\n
-
+func formatMessage(tr *tokenReader, prefix string) []byte {
 	msgBytes := tr.Token().concrete
-	if readonly {
-		msgBytes = append([]byte("readonly "), msgBytes...)
-	}
 	for j := 0; j < 2; j++ {
 		msgBytes = append(msgBytes, ' ')
 		tr.Next()
@@ -197,14 +199,14 @@ tokenLoop:
 		t := tr.Token()
 		switch t.kind {
 		case tokenKindLineComment:
-			msgBytes := append([]byte("\t"), t.concrete...)
+			msgBytes := append([]byte(prefix), t.concrete...)
 			msgBytes = append(msgBytes, '\n')
 		case tokenKindBlockComment:
-			msgBytes := append([]byte("\t"), t.concrete...)
+			msgBytes := append([]byte(prefix), t.concrete...)
 			msgBytes = append(msgBytes, []byte("\n")...)
 		case tokenKindOpenSquare:
 			// deprecated, next tokens are 'deprecated', '(', string lit, ')', ']'
-			deprecatedBytes := append([]byte{'\t'}, t.concrete...)
+			deprecatedBytes := append([]byte(prefix), t.concrete...)
 			for j := 0; j < 5; j++ {
 				tr.Next()
 				deprecatedBytes = append(deprecatedBytes, tr.Token().concrete...)
@@ -213,7 +215,7 @@ tokenLoop:
 			msgBytes = append(msgBytes, deprecatedBytes...)
 		case tokenKindInteger:
 			// <NUM> -> <TYPE> <ID>;
-			fieldBytes := append([]byte{'\t'}, t.concrete...)
+			fieldBytes := append([]byte(prefix), t.concrete...)
 			fieldBytes = append(fieldBytes, ' ')
 			tr.Next()
 			fieldBytes = append(fieldBytes, tr.Token().concrete...)
@@ -228,13 +230,69 @@ tokenLoop:
 			fieldBytes = append(fieldBytes, []byte(";\n")...)
 			msgBytes = append(msgBytes, fieldBytes...)
 		case tokenKindCloseCurly:
-			msgBytes = append(msgBytes, t.concrete...)
+			msgBytes = append(msgBytes, append([]byte(prefix)[:len(prefix)-1], t.concrete...)...)
 			msgBytes = append(msgBytes, '\n')
 			break tokenLoop
 		}
 	}
 
 	return msgBytes
+}
+
+func formatUnion(tr *tokenReader, prefix string) []byte {
+	unionBytes := tr.Token().concrete
+	for j := 0; j < 2; j++ {
+		unionBytes = append(unionBytes, ' ')
+		tr.Next()
+		unionBytes = append(unionBytes, tr.Token().concrete...)
+	}
+	unionBytes = append(unionBytes, '\n')
+
+tokenLoop:
+	for tr.Next() {
+		t := tr.Token()
+		switch t.kind {
+		case tokenKindLineComment:
+			unionBytes := append([]byte(prefix), t.concrete...)
+			unionBytes = append(unionBytes, '\n')
+		case tokenKindBlockComment:
+			unionBytes := append([]byte(prefix), t.concrete...)
+			unionBytes = append(unionBytes, []byte("\n")...)
+		case tokenKindOpenSquare:
+			// deprecated, next tokens are 'deprecated', '(', string lit, ')', ']'
+			deprecatedBytes := append([]byte(prefix), t.concrete...)
+			for j := 0; j < 5; j++ {
+				tr.Next()
+				deprecatedBytes = append(deprecatedBytes, tr.Token().concrete...)
+			}
+			deprecatedBytes = append(deprecatedBytes, '\n')
+			unionBytes = append(unionBytes, deprecatedBytes...)
+		case tokenKindInteger:
+			// <NUM> -> ???;
+			fieldBytes := append([]byte(prefix), t.concrete...)
+			fieldBytes = append(fieldBytes, ' ')
+			tr.Next()
+			fieldBytes = append(fieldBytes, tr.Token().concrete...)
+			tr.Next()
+			fieldBytes = append(fieldBytes, ' ')
+			tk := tr.Token()
+			switch tk.kind {
+			case tokenKindUnion:
+				fieldBytes = append(fieldBytes, formatUnion(tr, prefix+"\t")...)
+			case tokenKindMessage:
+				fieldBytes = append(fieldBytes, formatMessage(tr, prefix+"\t")...)
+			case tokenKindStruct:
+				fieldBytes = append(fieldBytes, formatStruct(tr, false, prefix+"\t")...)
+			}
+			unionBytes = append(unionBytes, fieldBytes...)
+		case tokenKindCloseCurly:
+			unionBytes = append(unionBytes, append([]byte(prefix)[:len(prefix)-1], t.concrete...)...)
+			unionBytes = append(unionBytes, '\n')
+			break tokenLoop
+		}
+	}
+
+	return unionBytes
 }
 
 func formatType(tr *tokenReader) []byte {

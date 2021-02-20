@@ -9,6 +9,7 @@ type File struct {
 	Structs  []Struct
 	Messages []Message
 	Enums    []Enum
+	Unions   []Union
 }
 
 // A Struct is a record type where all fields are required.
@@ -41,6 +42,24 @@ type Message struct {
 	Comment string
 	Fields  map[uint8]Field
 	OpCode  int32
+}
+
+// A Union is like a message where explicitly one field will be provided.
+type Union struct {
+	Name    string
+	Comment string
+	Fields  map[uint8]UnionField
+	OpCode  int32
+}
+
+// A UnionField is either a Message, Struct, or Union, defined inline.
+type UnionField struct {
+	Message *Message
+	Struct  *Struct
+	Union   *Union
+	// DeprecatedMessage is only provided if Deprecated is true.
+	DeprecatedMessage string
+	Deprecated        bool
 }
 
 // An Enum is a definition that will generate typed enumerable options.

@@ -78,6 +78,17 @@ func ReadFile(r io.Reader) (File, error) {
 			msg.Comment = strings.Join(nextCommentLines, "\n")
 			msg.OpCode = nextRecordOpCode
 			f.Messages = append(f.Messages, msg)
+		case tokenKindUnion:
+			if nextRecordReadOnly != false {
+				return f, readError(tk, "unions cannot be readonly")
+			}
+			union, err := readUnion(tr)
+			if err != nil {
+				return f, err
+			}
+			union.Comment = strings.Join(nextCommentLines, "\n")
+			union.OpCode = nextRecordOpCode
+			f.Unions = append(f.Unions, union)
 		}
 		nextCommentLines = []string{}
 		nextRecordOpCode = 0
@@ -429,6 +440,101 @@ func readMessage(tr *tokenReader) (Message, error) {
 	}
 
 	return msg, nil
+}
+
+func readUnion(tr *tokenReader) (Union, error) {
+	union := Union{
+		Fields: make(map[uint8]UnionField),
+	}
+	toks, err := expectNext(tr, tokenKindIdent, tokenKindOpenCurly)
+	if err != nil {
+		return union, err
+	}
+	union.Name = string(toks[0].concrete)
+
+	optNewline(tr)
+
+	nextCommentLines := []string{}
+	nextDeprecatedMessage := ""
+	nextIsDeprecated := false
+	for tr.Token().kind != tokenKindCloseCurly {
+		if !tr.Next() {
+			return union, readError(tr.nextToken, "union definition ended early")
+		}
+		tk := tr.Token()
+		switch tk.kind {
+		case tokenKindNewline:
+			nextCommentLines = []string{}
+		case tokenKindInteger:
+			fdInteger, err := strconv.ParseInt(string(tr.Token().concrete), 10, 8)
+			if err != nil {
+				return union, readError(tr.nextToken, err.Error())
+			}
+			if _, ok := union.Fields[uint8(fdInteger)]; ok {
+				return union, readError(tr.nextToken, "union has duplicate field index %d", fdInteger)
+			}
+			if _, err := expectNext(tr, tokenKindArrow); err != nil {
+				return union, err
+			}
+			if err := expectAnyOfNext(tr, tokenKindMessage, tokenKindStruct, tokenKindUnion); err != nil {
+				return union, readError(tr.nextToken, "union fields must be message, struct, or union")
+			}
+			unionFd := UnionField{}
+			tk := tr.Token()
+			switch tk.kind {
+			case tokenKindMessage:
+				msg, err := readMessage(tr)
+				if err != nil {
+					return union, err
+				}
+				msg.Comment = strings.Join(nextCommentLines, "\n")
+				unionFd.Message = &msg
+			case tokenKindStruct:
+				st, err := readStruct(tr)
+				if err != nil {
+					return union, err
+				}
+				st.Comment = strings.Join(nextCommentLines, "\n")
+				unionFd.Struct = &st
+			case tokenKindUnion:
+				subUnion, err := readUnion(tr)
+				if err != nil {
+					return union, err
+				}
+				subUnion.Comment = strings.Join(nextCommentLines, "\n")
+				unionFd.Union = &subUnion
+			}
+
+			unionFd.Deprecated = nextIsDeprecated
+			unionFd.DeprecatedMessage = nextDeprecatedMessage
+
+			union.Fields[uint8(fdInteger)] = unionFd
+			nextDeprecatedMessage = ""
+			nextIsDeprecated = false
+			nextCommentLines = []string{}
+
+			skipEndOfLineComments(tr)
+			tr.Next()
+			tr.Next()
+
+		case tokenKindOpenSquare:
+			if nextIsDeprecated {
+				return union, readError(tk, "expected field following deprecated annotation")
+			}
+			dpMsg, err := readDeprecated(tr)
+			if err != nil {
+				return union, err
+			}
+			nextIsDeprecated = true
+			nextDeprecatedMessage = dpMsg
+		case tokenKindBlockComment:
+			nextCommentLines = append(nextCommentLines, readBlockComment(tr, tk))
+		case tokenKindLineComment:
+			nextCommentLines = append(nextCommentLines, sanitizeComment(tk))
+		}
+	}
+
+	return union, nil
 }
 
 func readOpCode(tr *tokenReader) (int32, error) {

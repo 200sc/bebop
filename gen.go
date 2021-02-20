@@ -157,6 +157,8 @@ func (f File) Validate() error {
 		}
 	}
 
+	// Todo: union validation
+
 	return nil
 }
 
@@ -195,17 +197,17 @@ func (f File) Generate(w io.Writer, settings GenerateSettings) error {
 	writeLine(w, "package %s", settings.PackageName)
 	writeLine(w, "")
 	writeLine(w, "import (")
-	if len(f.Messages) != 0 {
+	if len(f.Messages)+len(f.Unions) != 0 {
 		writeLine(w, "\t\"bytes\"")
 	}
-	if len(f.Messages)+len(f.Structs) != 0 {
+	if len(f.Messages)+len(f.Structs)+len(f.Unions) != 0 {
 		writeLine(w, "\t\"io\"")
 	}
 	if usedTypes["date"] {
 		writeLine(w, "\t\"time\"")
 	}
 	writeLine(w, "")
-	if len(f.Messages)+len(f.Structs) != 0 {
+	if len(f.Messages)+len(f.Structs)+len(f.Unions) != 0 {
 		writeLine(w, "\t\"github.com/200sc/bebop\"")
 		writeLine(w, "\t\"github.com/200sc/bebop/iohelp\"")
 	}
@@ -220,6 +222,9 @@ func (f File) Generate(w io.Writer, settings GenerateSettings) error {
 	}
 	for _, msg := range f.Messages {
 		msg.Generate(w, settings)
+	}
+	for _, union := range f.Unions {
+		union.Generate(w, settings)
 	}
 	return nil
 }
@@ -325,9 +330,13 @@ func (st Struct) Generate(w io.Writer, settings GenerateSettings) {
 	writeLine(w, "func (bbp %s) MarshalBebopTo(buf []byte) {", exposedName)
 	if st.OpCode != 0 {
 		writeLine(w, "\tiohelp.WriteUint32Bytes(buf, uint32(%sOpCode))", exposedName)
-		writeLine(w, "\tat := 4")
+		if len(st.Fields) > 0 {
+			writeLine(w, "\tat := 4")
+		}
 	} else {
-		writeLine(w, "\tat := 0")
+		if len(st.Fields) > 0 {
+			writeLine(w, "\tat := 0")
+		}
 	}
 	for _, fd := range st.Fields {
 		name := exposeName(fd.Name)
@@ -340,9 +349,13 @@ func (st Struct) Generate(w io.Writer, settings GenerateSettings) {
 	writeLine(w, "")
 	writeLine(w, "func (bbp *%s) UnmarshalBebop(buf []byte) (err error) {", exposedName)
 	if st.OpCode != 0 {
-		writeLine(w, "\tat := 4")
+		if len(st.Fields) > 0 {
+			writeLine(w, "\tat := 4")
+		}
 	} else {
-		writeLine(w, "\tat := 0")
+		if len(st.Fields) > 0 {
+			writeLine(w, "\tat := 0")
+		}
 	}
 	for _, fd := range st.Fields {
 		name := exposeName(fd.Name)
@@ -357,9 +370,13 @@ func (st Struct) Generate(w io.Writer, settings GenerateSettings) {
 	if settings.GenerateUnsafeMethods {
 		writeLine(w, "func (bbp *%s) MustUnmarshalBebop(buf []byte) {", exposedName)
 		if st.OpCode != 0 {
-			writeLine(w, "\tat := 4")
+			if len(st.Fields) > 0 {
+				writeLine(w, "\tat := 4")
+			}
 		} else {
-			writeLine(w, "\tat := 0")
+			if len(st.Fields) > 0 {
+				writeLine(w, "\tat := 0")
+			}
 		}
 		for _, fd := range st.Fields {
 			name := exposeName(fd.Name)
@@ -626,6 +643,214 @@ func (msg Message) Generate(w io.Writer, settings GenerateSettings) {
 	// we know we're done and don't have to unread the byte
 	writeLine(w, "\tbodyLen := 5")
 	if msg.OpCode != 0 {
+		writeLine(w, "\tbodyLen += 4")
+	}
+	for _, fd := range fields {
+		name := exposeName(fd.Name)
+		name = "*bbp." + name
+		writeLineWithTabs(w, "if %RECV != nil {", 1, name)
+		writeLineWithTabs(w, "bodyLen += 1", 2)
+		writeMessageFieldBodyCount(name, fd.FieldType, w, settings, 2)
+		writeLineWithTabs(w, "}", 1)
+	}
+	writeLine(w, "\treturn bodyLen")
+	writeLine(w, "}")
+	writeLine(w, "")
+	writeLine(w, "func make%[1]s(r iohelp.ErrorReader) (%[1]s, error) {", exposedName)
+	writeLine(w, "\tv := %s{}", exposedName)
+	writeLine(w, "\terr := v.DecodeBebop(r)")
+	writeLine(w, "\treturn v, err")
+	writeLine(w, "}")
+	writeLine(w, "")
+	writeLine(w, "func make%[1]sFromBytes(buf []byte) (%[1]s, error) {", exposedName)
+	writeLine(w, "\tv := %s{}", exposedName)
+	writeLine(w, "\terr := v.UnmarshalBebop(buf)")
+	writeLine(w, "\treturn v, err")
+	writeLine(w, "}")
+	writeLine(w, "")
+	if settings.GenerateUnsafeMethods {
+		writeLine(w, "func mustMake%[1]sFromBytes(buf []byte) %[1]s {", exposedName)
+		writeLine(w, "\tv := %s{}", exposedName)
+		writeLine(w, "\tv.MustUnmarshalBebop(buf)")
+		writeLine(w, "\treturn v")
+		writeLine(w, "}")
+		writeLine(w, "")
+	}
+}
+
+// Generate writes a .go union definition out to w.
+func (u Union) Generate(w io.Writer, settings GenerateSettings) {
+	fields := make([]fieldWithNumber, 0, len(u.Fields))
+	for i, ufd := range u.Fields {
+		var fd Field
+		if ufd.Struct != nil {
+			ufd.Struct.Generate(w, settings)
+			fd.FieldType.Simple = ufd.Struct.Name
+		}
+		if ufd.Message != nil {
+			ufd.Message.Generate(w, settings)
+			fd.FieldType.Simple = ufd.Message.Name
+		}
+		if ufd.Union != nil {
+			ufd.Union.Generate(w, settings)
+			fd.FieldType.Simple = ufd.Union.Name
+		}
+		fd.Name = fd.FieldType.Simple
+		fields = append(fields, fieldWithNumber{
+			Field: fd,
+			num:   i,
+		})
+	}
+	sort.Slice(fields, func(i, j int) bool {
+		return fields[i].num < fields[j].num
+	})
+	exposedName := exposeName(u.Name)
+	if u.OpCode != 0 {
+		writeLine(w, "const %sOpCode = 0x%x", exposedName, u.OpCode)
+		writeLine(w, "")
+	}
+	writeLine(w, "var _ bebop.Record = &%s{}", exposedName)
+	writeLine(w, "")
+	writeComment(w, 0, u.Comment)
+	writeLine(w, "type %s struct {", exposedName)
+	for _, fd := range fields {
+		writeFieldDefinition(fd.Field, w, false, true)
+	}
+	writeLine(w, "}")
+	writeLine(w, "")
+	writeLine(w, "func (bbp %s) MarshalBebop() []byte {", exposedName)
+	writeLine(w, "\tbuf := make([]byte, bbp.bodyLen())")
+	writeLine(w, "\tbbp.MarshalBebopTo(buf)")
+	writeLine(w, "\treturn buf")
+	writeLine(w, "}")
+	writeLine(w, "")
+	writeLine(w, "func (bbp %s) MarshalBebopTo(buf []byte) {", exposedName)
+	if u.OpCode != 0 {
+		writeLine(w, "\tiohelp.WriteUint32Bytes(buf, uint32(%sOpCode))", exposedName)
+		writeLine(w, "\tat := 4")
+		writeLine(w, "\tiohelp.WriteUint32Bytes(buf[at:], uint32(bbp.bodyLen()-8))")
+	} else {
+		writeLine(w, "\tat := 0")
+		writeLine(w, "\tiohelp.WriteUint32Bytes(buf[at:], uint32(bbp.bodyLen()-4))")
+	}
+	writeLine(w, "\tat += 4")
+	for _, fd := range fields {
+		name := exposeName(fd.Name)
+		num := strconv.Itoa(int(fd.num))
+		name = "*bbp." + name
+		writeLineWithTabs(w, "if %RECV != nil {", 1, name)
+		writeLineWithTabs(w, "buf[at] = %ASGN", 2, num)
+		writeLineWithTabs(w, "at++", 2)
+		writeFieldByter(name, fd.FieldType, w, settings, 2)
+		writeLineWithTabs(w, "}", 1)
+	}
+	writeLine(w, "}")
+	writeLine(w, "")
+	writeLine(w, "func (bbp *%s) UnmarshalBebop(buf []byte) (err error) {", exposedName)
+	if u.OpCode != 0 {
+		writeLine(w, "\tat := 4")
+	} else {
+		writeLine(w, "\tat := 0")
+	}
+	writeLine(w, "\t_ = iohelp.ReadUint32Bytes(buf[at:])")
+	writeLine(w, "\tbuf = buf[4:]")
+	writeLine(w, "\tfor {")
+	writeLine(w, "\t\tswitch buf[at] {")
+	for _, fd := range fields {
+		name := exposeName(fd.Name)
+		writeLine(w, "\t\tcase %d:", fd.num)
+		writeLine(w, "\t\t\tat += 1")
+		writeLine(w, "\t\t\tbbp.%[1]s = new(%[2]s)", name, fd.FieldType.goString())
+		writeFieldReadByter("(*bbp."+name+")", fd.FieldType, w, settings, 3, true)
+	}
+	writeLine(w, "\t\tdefault:")
+	writeLine(w, "\t\t\treturn nil")
+	writeLine(w, "\t\t}")
+	writeLine(w, "\t}")
+	writeLine(w, "}")
+	writeLine(w, "")
+	if settings.GenerateUnsafeMethods {
+		writeLine(w, "func (bbp *%s) MustUnmarshalBebop(buf []byte) {", exposedName)
+		if u.OpCode != 0 {
+			writeLine(w, "\tat := 4")
+		} else {
+			writeLine(w, "\tat := 0")
+		}
+		writeLine(w, "\tfor {")
+		writeLine(w, "\t\tswitch buf[at] {")
+		for _, fd := range fields {
+			name := exposeName(fd.Name)
+			writeLine(w, "\t\tcase %d:", fd.num)
+			writeLine(w, "\t\t\tbbp.%[1]s = new(%[2]s)", name, fd.FieldType.goString())
+			writeFieldReadByter("(*bbp."+name+")", fd.FieldType, w, settings, 3, false)
+		}
+		writeLine(w, "\t\tdefault:")
+		writeLine(w, "\t\t\treturn")
+		writeLine(w, "\t\t}")
+		writeLine(w, "\t}")
+		writeLine(w, "}")
+		writeLine(w, "")
+	}
+	isFirstTopLength = true
+	writeLine(w, "func (bbp %s) EncodeBebop(iow io.Writer) (err error) {", exposedName)
+	writeLine(w, "\tw := iohelp.NewErrorWriter(iow)")
+	if u.OpCode != 0 {
+		writeLine(w, "\tiohelp.WriteUint32(w, uint32(%sOpCode))", exposedName)
+		writeLine(w, "\tiohelp.WriteUint32(w, uint32(bbp.bodyLen()-8))")
+	} else {
+		writeLine(w, "\tiohelp.WriteUint32(w, uint32(bbp.bodyLen()-4))")
+	}
+	for _, fd := range fields {
+		name := exposeName(fd.Name)
+		num := strconv.Itoa(int(fd.num))
+		name = "*bbp." + name
+		writeLineWithTabs(w, "if %RECV != nil {", 1, name)
+		writeLineWithTabs(w, "w.Write([]byte{%ASGN})", 2, num)
+		writeFieldMarshaller(name, fd.FieldType, w, settings, 2)
+		writeLineWithTabs(w, "}", 1)
+	}
+	writeLine(w, "\tw.Write([]byte{0})")
+	writeLine(w, "\treturn w.Err")
+	writeLine(w, "}")
+	writeLine(w, "")
+	isFirstTopLength = true
+	writeLine(w, "func (bbp *%s) DecodeBebop(ior io.Reader) (err error) {", exposedName)
+	writeLine(w, "\ter := iohelp.NewErrorReader(ior)")
+	if u.OpCode != 0 {
+		writeLine(w, "\tiohelp.ReadUint32(er)")
+	}
+	writeLine(w, "\tbodyLen := iohelp.ReadUint32(er)")
+	// why read the entire body upfront? Because we're allowed
+	// to exit early, and if we do exit early and this message
+	// is a field of another record we need that record to resume
+	// reading at the byte after this entire body.
+	writeLine(w, "\tbody := make([]byte, bodyLen)")
+	writeLine(w, "\ter.Read(body)")
+	writeLine(w, "\tr := iohelp.NewErrorReader(bytes.NewReader(body))")
+	writeLine(w, "\tfor {")
+	writeLine(w, "\t\tswitch iohelp.ReadByte(r) {")
+	for _, fd := range fields {
+		writeLine(w, "\t\tcase %d:", fd.num)
+		name := exposeName(fd.Name)
+		writeLine(w, "\t\t\tbbp.%[1]s = new(%[2]s)", name, fd.FieldType.goString())
+		writeMessageFieldUnmarshaller("bbp."+name, fd.FieldType, w, settings, 3)
+	}
+	// ref: https://github.com/RainwayApp/bebop/wiki/Wire-format#messages, final paragraph
+	// for some reason we're allowed to skip parsing all remaining fields if we see one
+	// that we don't know about.
+	writeLine(w, "\t\tdefault:")
+	writeLine(w, "\t\t\treturn er.Err")
+	writeLine(w, "\t\t}")
+	writeLine(w, "\t}")
+	writeLine(w, "}")
+	writeLine(w, "")
+	writeLine(w, "func (bbp %s) bodyLen() int {", exposedName)
+	// size at front (4) + 0 byte (1)
+	// q: why do messages end in a 0 byte?
+	// a: (I think) because then we can loop reading a single byte for each field, and if we read 0
+	// we know we're done and don't have to unread the byte
+	writeLine(w, "\tbodyLen := 5")
+	if u.OpCode != 0 {
 		writeLine(w, "\tbodyLen += 4")
 	}
 	for _, fd := range fields {
@@ -959,6 +1184,44 @@ func (f File) typeUnmarshallers() map[string]string {
 			"}"
 		out[msg.Name] = format
 	}
+	for _, union := range f.Unions {
+		uout := union.typeUnmarshallers()
+		for k, v := range uout {
+			out[k] = v
+		}
+	}
+	return out
+}
+
+func (u Union) typeUnmarshallers() map[string]string {
+	out := make(map[string]string)
+	format := "(%RECV), err = make%TYPE(r)\n" +
+		"if err != nil {\n" +
+		"\treturn err\n" +
+		"}"
+	out[u.Name] = format
+	for _, ufd := range u.Fields {
+		if ufd.Struct != nil {
+			format := "(%RECV), err = make%TYPE(r)\n" +
+				"if err != nil {\n" +
+				"\treturn err\n" +
+				"}"
+			out[ufd.Struct.Name] = format
+		}
+		if ufd.Message != nil {
+			format := "(%RECV), err = make%TYPE(r)\n" +
+				"if err != nil {\n" +
+				"\treturn err\n" +
+				"}"
+			out[ufd.Message.Name] = format
+		}
+		if ufd.Union != nil {
+			uout := ufd.Union.typeUnmarshallers()
+			for k, v := range uout {
+				out[k] = v
+			}
+		}
+	}
 	return out
 }
 
@@ -992,6 +1255,44 @@ func (f File) typeMarshallers() map[string]string {
 			"}"
 		out[msg.Name] = format
 	}
+	for _, union := range f.Unions {
+		uout := union.typeMarshallers()
+		for k, v := range uout {
+			out[k] = v
+		}
+	}
+	return out
+}
+
+func (u Union) typeMarshallers() map[string]string {
+	out := make(map[string]string)
+	format := "err = (%ASGN).EncodeBebop(w)\n" +
+		"if err != nil {\n" +
+		"\treturn err\n" +
+		"}"
+	out[u.Name] = format
+	for _, ufd := range u.Fields {
+		if ufd.Struct != nil {
+			format := "err = (%ASGN).EncodeBebop(w)\n" +
+				"if err != nil {\n" +
+				"\treturn err\n" +
+				"}"
+			out[ufd.Struct.Name] = format
+		}
+		if ufd.Message != nil {
+			format := "err = (%ASGN).EncodeBebop(w)\n" +
+				"if err != nil {\n" +
+				"\treturn err\n" +
+				"}"
+			out[ufd.Message.Name] = format
+		}
+		if ufd.Union != nil {
+			uout := ufd.Union.typeMarshallers()
+			for k, v := range uout {
+				out[k] = v
+			}
+		}
+	}
 	return out
 }
 
@@ -1005,12 +1306,36 @@ func (f File) typeLengthers() map[string]string {
 		out[en.Name] = "bodyLen += 4"
 	}
 	for _, st := range f.Structs {
-		format := "bodyLen += (%ASGN).bodyLen()"
-		out[st.Name] = format
+		out[st.Name] = "bodyLen += (%ASGN).bodyLen()"
 	}
 	for _, msg := range f.Messages {
-		format := "bodyLen += (%ASGN).bodyLen()"
-		out[msg.Name] = format
+		out[msg.Name] = "bodyLen += (%ASGN).bodyLen()"
+	}
+	for _, union := range f.Unions {
+		uout := union.typeLengthers()
+		for k, v := range uout {
+			out[k] = v
+		}
+	}
+	return out
+}
+
+func (u Union) typeLengthers() map[string]string {
+	out := make(map[string]string)
+	out[u.Name] = "bodyLen += (%ASGN).bodyLen()"
+	for _, ufd := range u.Fields {
+		if ufd.Struct != nil {
+			out[ufd.Struct.Name] = "bodyLen += (%ASGN).bodyLen()"
+		}
+		if ufd.Message != nil {
+			out[ufd.Message.Name] = "bodyLen += (%ASGN).bodyLen()"
+		}
+		if ufd.Union != nil {
+			uout := ufd.Union.typeLengthers()
+			for k, v := range uout {
+				out[k] = v
+			}
+		}
 	}
 	return out
 }
@@ -1045,6 +1370,37 @@ func (f File) typeByters() map[string]string {
 	for _, msg := range f.Messages {
 		out[msg.Name] = "(%ASGN).MarshalBebopTo(buf[at:])\n" +
 			"at += (%ASGN).bodyLen()"
+	}
+	for _, union := range f.Unions {
+		uout := union.typeByters()
+		for k, v := range uout {
+			out[k] = v
+		}
+	}
+	return out
+}
+
+func (u Union) typeByters() map[string]string {
+	out := map[string]string{}
+	out[u.Name] = "(%ASGN).MarshalBebopTo(buf[at:])\n" +
+		"at += (%ASGN).bodyLen()"
+	for _, ufd := range u.Fields {
+		if ufd.Struct != nil {
+			format := "(%ASGN).MarshalBebopTo(buf[at:])\n" +
+				"at += (%ASGN).bodyLen()"
+			out[ufd.Struct.Name] = format
+		}
+		if ufd.Message != nil {
+			format := "(%ASGN).MarshalBebopTo(buf[at:])\n" +
+				"at += (%ASGN).bodyLen()"
+			out[ufd.Message.Name] = format
+		}
+		if ufd.Union != nil {
+			uout := ufd.Union.typeByters()
+			for k, v := range uout {
+				out[k] = v
+			}
+		}
 	}
 	return out
 }
@@ -1088,6 +1444,52 @@ func (f File) typeByteReaders() map[string]string {
 			"}\n" +
 			"at += (%ASGN).bodyLen()"
 	}
+	for _, union := range f.Unions {
+		uout := union.typeByteReaders()
+		for k, v := range uout {
+			out[k] = v
+		}
+	}
+	return out
+}
+
+func (u Union) typeByteReaders() map[string]string {
+	out := map[string]string{}
+	out[u.Name] = "%ASGN = mustMake%TYPEFromBytes(buf[at:])\n" +
+		"at += (%ASGN).bodyLen()"
+	out[u.Name+"&safe"] = "%ASGN, err = make%TYPEFromBytes(buf[at:])\n" +
+		"if err != nil {\n" +
+		"\t return err\n" +
+		"}\n" +
+		"at += (%ASGN).bodyLen()"
+	for _, ufd := range u.Fields {
+		if ufd.Struct != nil {
+			st := ufd.Struct
+			out[st.Name] = "%ASGN = mustMake%TYPEFromBytes(buf[at:])\n" +
+				"at += (%ASGN).bodyLen()"
+			out[st.Name+"&safe"] = "%ASGN, err = make%TYPEFromBytes(buf[at:])\n" +
+				"if err != nil {\n" +
+				"\t return err\n" +
+				"}\n" +
+				"at += (%ASGN).bodyLen()"
+		}
+		if ufd.Message != nil {
+			msg := ufd.Message
+			out[msg.Name] = "%ASGN = mustMake%TYPEFromBytes(buf[at:])\n" +
+				"at += (%ASGN).bodyLen()"
+			out[msg.Name+"&safe"] = "%ASGN, err = make%TYPEFromBytes(buf[at:])\n" +
+				"if err != nil {\n" +
+				"\t return err\n" +
+				"}\n" +
+				"at += (%ASGN).bodyLen()"
+		}
+		if ufd.Union != nil {
+			uout := ufd.Union.typeByteReaders()
+			for k, v := range uout {
+				out[k] = v
+			}
+		}
+	}
 	return out
 }
 
@@ -1098,6 +1500,20 @@ func (f File) customRecordTypes() map[string]struct{} {
 	}
 	for _, msg := range f.Messages {
 		out[msg.Name] = struct{}{}
+	}
+	for _, union := range f.Unions {
+		out[union.Name] = struct{}{}
+		for _, ufd := range union.Fields {
+			if ufd.Struct != nil {
+				out[ufd.Struct.Name] = struct{}{}
+			}
+			if ufd.Message != nil {
+				out[ufd.Message.Name] = struct{}{}
+			}
+			if ufd.Union != nil {
+				out[ufd.Union.Name] = struct{}{}
+			}
+		}
 	}
 	return out
 }
@@ -1141,6 +1557,17 @@ func (msg Message) usedTypes() map[string]bool {
 	return out
 }
 
+func (u Union) usedTypes() map[string]bool {
+	out := make(map[string]bool)
+	for _, ufd := range u.Fields {
+		fdTypes := ufd.usedTypes()
+		for k, v := range fdTypes {
+			out[k] = v
+		}
+	}
+	return out
+}
+
 func (ft FieldType) usedTypes() map[string]bool {
 	if ft.Array != nil {
 		return ft.Array.usedTypes()
@@ -1151,4 +1578,17 @@ func (ft FieldType) usedTypes() map[string]bool {
 		return valTypes
 	}
 	return map[string]bool{ft.Simple: true}
+}
+
+func (ufd UnionField) usedTypes() map[string]bool {
+	if ufd.Struct != nil {
+		return ufd.Struct.usedTypes()
+	}
+	if ufd.Message != nil {
+		return ufd.Message.usedTypes()
+	}
+	if ufd.Union != nil {
+		return ufd.Union.usedTypes()
+	}
+	return map[string]bool{}
 }

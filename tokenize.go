@@ -225,6 +225,7 @@ var keywords = map[string]tokenKind{
 	"opcode":     tokenKindOpCode,
 	"map":        tokenKindMap,
 	"array":      tokenKindArray,
+	"union":      tokenKindUnion,
 }
 
 func (tr *tokenReader) nextIdent(firstRune rune) bool {
@@ -359,5 +360,6 @@ func (tr *tokenReader) Token() token {
 			}
 		}
 	}
+	//fmt.Println("tr:", tr.nextToken.kind.String(), string(tr.nextToken.concrete))
 	return tr.nextToken
 }
