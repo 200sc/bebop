@@ -448,6 +448,16 @@ func TestMarshalCycleRecords(t *testing.T) {
 			},
 			unmarshalTo:  &generated.List{},
 			unmarshalTo2: &generated.List{},
+		}, {
+			name: "Date MyObj",
+			// compilation + empty value tests-- times are rounded down
+			// so comparing them exactly is tricky
+			record: &generated.MyObj{
+				Start: nowP(),
+				End:   nowP(),
+			},
+			unmarshalTo:  &generated.MyObj{},
+			unmarshalTo2: &generated.MyObj{},
 		}}
 	for _, tc := range tcs {
 		tc := tc
@@ -525,4 +535,9 @@ func uint16p(i uint16) *uint16 {
 
 func uint32p(i uint32) *uint32 {
 	return &i
+}
+
+func nowP() *time.Time {
+	t := time.Now()
+	return &t
 }

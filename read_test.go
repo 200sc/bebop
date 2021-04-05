@@ -1064,7 +1064,7 @@ func TestReadFile(t *testing.T) {
 							},
 							2: {
 								Struct: &Struct{
-									Comment: "*\r\n     * This branch is, too!\r\n     ",
+									Comment: "*\n     * This branch is, too!\n     ",
 									Name:    "B",
 									Fields: []Field{
 										{

@@ -1,0 +1,4 @@
+message MyObj {
+    1 -> date Start;
+    2 -> date End;
+}
