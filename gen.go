@@ -1234,7 +1234,7 @@ func (f File) typeMarshallers() map[string]string {
 		"w.Write([]byte(%ASGN))"
 	out["guid"] = "iohelp.WriteGUID(w, %ASGN)"
 	out["date"] = "if %ASGN != (time.Time{}) {\n" +
-		"\tiohelp.WriteInt64(w, (%ASGN.UnixNano()/100))\n" +
+		"\tiohelp.WriteInt64(w, ((%ASGN).UnixNano()/100))\n" +
 		"} else {\n" +
 		"\tiohelp.WriteInt64(w, 0)\n" +
 		"}"
@@ -1354,7 +1354,7 @@ func (f File) typeByters() map[string]string {
 	out["guid"] = "iohelp.WriteGUIDBytes(buf[at:], %ASGN)\n" +
 		"at += 16"
 	out["date"] = "if %ASGN != (time.Time{}) {\n" +
-		"\tiohelp.WriteInt64Bytes(buf[at:], (%ASGN.UnixNano()/100))\n" +
+		"\tiohelp.WriteInt64Bytes(buf[at:], ((%ASGN).UnixNano()/100))\n" +
 		"} else {\n" +
 		"\tiohelp.WriteInt64Bytes(buf[at:], 0)\n" +
 		"}\n" +

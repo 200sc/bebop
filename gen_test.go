@@ -91,6 +91,7 @@ var genTestFiles = []string{
 	"request",
 	"server",
 	"union",
+	"date",
 }
 
 func TestGenerateToFile(t *testing.T) {
