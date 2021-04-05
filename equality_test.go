@@ -162,8 +162,8 @@ func (mt MapType) equals(mt2 MapType) error {
 	if mt.Key != mt2.Key {
 		return fmt.Errorf("key mismatch: %v vs %v", mt.Key, mt2.Key)
 	}
-	if mt.Value != mt2.Value {
-		return fmt.Errorf("value mismatch: %v vs %v", mt.Value, mt2.Value)
+	if err := mt.Value.equals(mt2.Value); err != nil {
+		return fmt.Errorf("value mismatch: %v", err)
 	}
 	return nil
 }
