@@ -2,12 +2,15 @@
 package iohelp
 
 import (
+	"errors"
 	"io"
 	"math"
 	"time"
 )
 
-var ErrTooShort error
+var ErrTooShort error = errors.New("buffer too short")
+
+var UnpopulatedUnion error = errors.New("union has no populated member")
 
 type ErrorReader struct {
 	Reader io.Reader

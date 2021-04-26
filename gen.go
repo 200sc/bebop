@@ -758,6 +758,9 @@ func (u Union) Generate(w io.Writer, settings GenerateSettings) {
 	}
 	writeLine(w, "\t_ = iohelp.ReadUint32Bytes(buf[at:])")
 	writeLine(w, "\tbuf = buf[4:]")
+	writeLine(w, "\tif len(buf) == 0 {")
+	writeLine(w, "\t\treturn iohelp.UnpopulatedUnion")
+	writeLine(w, "\t}")
 	writeLine(w, "\tfor {")
 	writeLine(w, "\t\tswitch buf[at] {")
 	for _, fd := range fields {
