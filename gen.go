@@ -809,7 +809,6 @@ func (u Union) Generate(w io.Writer, settings GenerateSettings) {
 		writeFieldMarshaller(name, fd.FieldType, w, settings, 2)
 		writeLineWithTabs(w, "}", 1)
 	}
-	writeLine(w, "\tw.Write([]byte{0})")
 	writeLine(w, "\treturn w.Err")
 	writeLine(w, "}")
 	writeLine(w, "")
@@ -845,11 +844,8 @@ func (u Union) Generate(w io.Writer, settings GenerateSettings) {
 	writeLine(w, "}")
 	writeLine(w, "")
 	writeLine(w, "func (bbp %s) bodyLen() int {", exposedName)
-	// size at front (4) + 0 byte (1)
-	// q: why do messages end in a 0 byte?
-	// a: (I think) because then we can loop reading a single byte for each field, and if we read 0
-	// we know we're done and don't have to unread the byte
-	writeLine(w, "\tbodyLen := 5")
+	// size at front (4)
+	writeLine(w, "\tbodyLen := 4")
 	if u.OpCode != 0 {
 		writeLine(w, "\tbodyLen += 4")
 	}
@@ -859,6 +855,7 @@ func (u Union) Generate(w io.Writer, settings GenerateSettings) {
 		writeLineWithTabs(w, "if %RECV != nil {", 1, name)
 		writeLineWithTabs(w, "bodyLen += 1", 2)
 		writeMessageFieldBodyCount(name, fd.FieldType, w, settings, 2)
+		writeLineWithTabs(w, "return bodyLen", 2)
 		writeLineWithTabs(w, "}", 1)
 	}
 	writeLine(w, "\treturn bodyLen")
