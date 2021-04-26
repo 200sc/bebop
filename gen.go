@@ -568,11 +568,14 @@ func (msg Message) Generate(w io.Writer, settings GenerateSettings) {
 		} else {
 			writeLine(w, "\tat := 0")
 		}
+		writeLine(w, "\t_ = iohelp.ReadUint32Bytes(buf[at:])")
+		writeLine(w, "\tbuf = buf[4:]")
 		writeLine(w, "\tfor {")
 		writeLine(w, "\t\tswitch buf[at] {")
 		for _, fd := range fields {
 			name := exposeName(fd.Name)
 			writeLine(w, "\t\tcase %d:", fd.num)
+			writeLine(w, "\t\t\tat += 1")
 			writeLine(w, "\t\t\tbbp.%[1]s = new(%[2]s)", name, fd.FieldType.goString())
 			writeFieldReadByter("(*bbp."+name+")", fd.FieldType, w, settings, 3, false)
 		}
@@ -778,11 +781,14 @@ func (u Union) Generate(w io.Writer, settings GenerateSettings) {
 		} else {
 			writeLine(w, "\tat := 0")
 		}
+		writeLine(w, "\t_ = iohelp.ReadUint32Bytes(buf[at:])")
+		writeLine(w, "\tbuf = buf[4:]")
 		writeLine(w, "\tfor {")
 		writeLine(w, "\t\tswitch buf[at] {")
 		for _, fd := range fields {
 			name := exposeName(fd.Name)
 			writeLine(w, "\t\tcase %d:", fd.num)
+			writeLine(w, "\t\t\tat += 1")
 			writeLine(w, "\t\t\tbbp.%[1]s = new(%[2]s)", name, fd.FieldType.goString())
 			writeFieldReadByter("(*bbp."+name+")", fd.FieldType, w, settings, 3, false)
 			writeLine(w, "\t\t\treturn")
