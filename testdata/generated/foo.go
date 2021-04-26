@@ -162,17 +162,22 @@ func (bbp *Bar) UnmarshalBebop(buf []byte) (err error) {
 
 func (bbp *Bar) MustUnmarshalBebop(buf []byte) {
 	at := 0
+	_ = iohelp.ReadUint32Bytes(buf[at:])
+	buf = buf[4:]
 	for {
 		switch buf[at] {
 		case 1:
+			at += 1
 			bbp.X = new(float64)
 			(*bbp.X) = iohelp.ReadFloat64Bytes(buf[at:])
 			at += 8
 		case 2:
+			at += 1
 			bbp.Y = new(float64)
 			(*bbp.Y) = iohelp.ReadFloat64Bytes(buf[at:])
 			at += 8
 		case 3:
+			at += 1
 			bbp.Z = new(float64)
 			(*bbp.Z) = iohelp.ReadFloat64Bytes(buf[at:])
 			at += 8

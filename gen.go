@@ -568,11 +568,14 @@ func (msg Message) Generate(w io.Writer, settings GenerateSettings) {
 		} else {
 			writeLine(w, "\tat := 0")
 		}
+		writeLine(w, "\t_ = iohelp.ReadUint32Bytes(buf[at:])")
+		writeLine(w, "\tbuf = buf[4:]")
 		writeLine(w, "\tfor {")
 		writeLine(w, "\t\tswitch buf[at] {")
 		for _, fd := range fields {
 			name := exposeName(fd.Name)
 			writeLine(w, "\t\tcase %d:", fd.num)
+			writeLine(w, "\t\t\tat += 1")
 			writeLine(w, "\t\t\tbbp.%[1]s = new(%[2]s)", name, fd.FieldType.goString())
 			writeFieldReadByter("(*bbp."+name+")", fd.FieldType, w, settings, 3, false)
 		}
@@ -742,6 +745,7 @@ func (u Union) Generate(w io.Writer, settings GenerateSettings) {
 		writeLineWithTabs(w, "buf[at] = %ASGN", 2, num)
 		writeLineWithTabs(w, "at++", 2)
 		writeFieldByter(name, fd.FieldType, w, settings, 2)
+		writeLineWithTabs(w, "return", 2)
 		writeLineWithTabs(w, "}", 1)
 	}
 	writeLine(w, "}")
@@ -754,6 +758,9 @@ func (u Union) Generate(w io.Writer, settings GenerateSettings) {
 	}
 	writeLine(w, "\t_ = iohelp.ReadUint32Bytes(buf[at:])")
 	writeLine(w, "\tbuf = buf[4:]")
+	writeLine(w, "\tif len(buf) == 0 {")
+	writeLine(w, "\t\treturn iohelp.UnpopulatedUnion")
+	writeLine(w, "\t}")
 	writeLine(w, "\tfor {")
 	writeLine(w, "\t\tswitch buf[at] {")
 	for _, fd := range fields {
@@ -762,6 +769,7 @@ func (u Union) Generate(w io.Writer, settings GenerateSettings) {
 		writeLine(w, "\t\t\tat += 1")
 		writeLine(w, "\t\t\tbbp.%[1]s = new(%[2]s)", name, fd.FieldType.goString())
 		writeFieldReadByter("(*bbp."+name+")", fd.FieldType, w, settings, 3, true)
+		writeLine(w, "\t\t\treturn nil")
 	}
 	writeLine(w, "\t\tdefault:")
 	writeLine(w, "\t\t\treturn nil")
@@ -776,13 +784,17 @@ func (u Union) Generate(w io.Writer, settings GenerateSettings) {
 		} else {
 			writeLine(w, "\tat := 0")
 		}
+		writeLine(w, "\t_ = iohelp.ReadUint32Bytes(buf[at:])")
+		writeLine(w, "\tbuf = buf[4:]")
 		writeLine(w, "\tfor {")
 		writeLine(w, "\t\tswitch buf[at] {")
 		for _, fd := range fields {
 			name := exposeName(fd.Name)
 			writeLine(w, "\t\tcase %d:", fd.num)
+			writeLine(w, "\t\t\tat += 1")
 			writeLine(w, "\t\t\tbbp.%[1]s = new(%[2]s)", name, fd.FieldType.goString())
 			writeFieldReadByter("(*bbp."+name+")", fd.FieldType, w, settings, 3, false)
+			writeLine(w, "\t\t\treturn")
 		}
 		writeLine(w, "\t\tdefault:")
 		writeLine(w, "\t\t\treturn")
@@ -807,9 +819,9 @@ func (u Union) Generate(w io.Writer, settings GenerateSettings) {
 		writeLineWithTabs(w, "if %RECV != nil {", 1, name)
 		writeLineWithTabs(w, "w.Write([]byte{%ASGN})", 2, num)
 		writeFieldMarshaller(name, fd.FieldType, w, settings, 2)
+		writeLineWithTabs(w, "return w.Err", 2)
 		writeLineWithTabs(w, "}", 1)
 	}
-	writeLine(w, "\tw.Write([]byte{0})")
 	writeLine(w, "\treturn w.Err")
 	writeLine(w, "}")
 	writeLine(w, "")
@@ -834,6 +846,7 @@ func (u Union) Generate(w io.Writer, settings GenerateSettings) {
 		name := exposeName(fd.Name)
 		writeLine(w, "\t\t\tbbp.%[1]s = new(%[2]s)", name, fd.FieldType.goString())
 		writeMessageFieldUnmarshaller("bbp."+name, fd.FieldType, w, settings, 3)
+		writeLine(w, "\t\t\treturn er.Err")
 	}
 	// ref: https://github.com/RainwayApp/bebop/wiki/Wire-format#messages, final paragraph
 	// for some reason we're allowed to skip parsing all remaining fields if we see one
@@ -845,11 +858,8 @@ func (u Union) Generate(w io.Writer, settings GenerateSettings) {
 	writeLine(w, "}")
 	writeLine(w, "")
 	writeLine(w, "func (bbp %s) bodyLen() int {", exposedName)
-	// size at front (4) + 0 byte (1)
-	// q: why do messages end in a 0 byte?
-	// a: (I think) because then we can loop reading a single byte for each field, and if we read 0
-	// we know we're done and don't have to unread the byte
-	writeLine(w, "\tbodyLen := 5")
+	// size at front (4)
+	writeLine(w, "\tbodyLen := 4")
 	if u.OpCode != 0 {
 		writeLine(w, "\tbodyLen += 4")
 	}
@@ -859,6 +869,7 @@ func (u Union) Generate(w io.Writer, settings GenerateSettings) {
 		writeLineWithTabs(w, "if %RECV != nil {", 1, name)
 		writeLineWithTabs(w, "bodyLen += 1", 2)
 		writeMessageFieldBodyCount(name, fd.FieldType, w, settings, 2)
+		writeLineWithTabs(w, "return bodyLen", 2)
 		writeLineWithTabs(w, "}", 1)
 	}
 	writeLine(w, "\treturn bodyLen")

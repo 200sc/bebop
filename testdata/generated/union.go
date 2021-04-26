@@ -10,192 +10,6 @@ import (
 	"github.com/200sc/bebop/iohelp"
 )
 
-var _ bebop.Record = &A{}
-
-type A struct {
-	A *uint32
-}
-
-func (bbp A) MarshalBebop() []byte {
-	buf := make([]byte, bbp.bodyLen())
-	bbp.MarshalBebopTo(buf)
-	return buf
-}
-
-func (bbp A) MarshalBebopTo(buf []byte) {
-	at := 0
-	iohelp.WriteUint32Bytes(buf[at:], uint32(bbp.bodyLen()-4))
-	at += 4
-	if bbp.A != nil {
-		buf[at] = 1
-		at++
-		iohelp.WriteUint32Bytes(buf[at:], *bbp.A)
-		at += 4
-	}
-}
-
-func (bbp *A) UnmarshalBebop(buf []byte) (err error) {
-	at := 0
-	_ = iohelp.ReadUint32Bytes(buf[at:])
-	buf = buf[4:]
-	for {
-		switch buf[at] {
-		case 1:
-			at += 1
-			bbp.A = new(uint32)
-			if len(buf[at:]) < 4 {
-				 return iohelp.ErrTooShort
-			}
-			(*bbp.A) = iohelp.ReadUint32Bytes(buf[at:])
-			at += 4
-		default:
-			return nil
-		}
-	}
-}
-
-func (bbp *A) MustUnmarshalBebop(buf []byte) {
-	at := 0
-	for {
-		switch buf[at] {
-		case 1:
-			bbp.A = new(uint32)
-			(*bbp.A) = iohelp.ReadUint32Bytes(buf[at:])
-			at += 4
-		default:
-			return
-		}
-	}
-}
-
-func (bbp A) EncodeBebop(iow io.Writer) (err error) {
-	w := iohelp.NewErrorWriter(iow)
-	iohelp.WriteUint32(w, uint32(bbp.bodyLen()-4))
-	if bbp.A != nil {
-		w.Write([]byte{1})
-		iohelp.WriteUint32(w, *bbp.A)
-	}
-	w.Write([]byte{0})
-	return w.Err
-}
-
-func (bbp *A) DecodeBebop(ior io.Reader) (err error) {
-	er := iohelp.NewErrorReader(ior)
-	bodyLen := iohelp.ReadUint32(er)
-	body := make([]byte, bodyLen)
-	er.Read(body)
-	r := iohelp.NewErrorReader(bytes.NewReader(body))
-	for {
-		switch iohelp.ReadByte(r) {
-		case 1:
-			bbp.A = new(uint32)
-			*bbp.A = iohelp.ReadUint32(r)
-		default:
-			return er.Err
-		}
-	}
-}
-
-func (bbp A) bodyLen() int {
-	bodyLen := 5
-	if bbp.A != nil {
-		bodyLen += 1
-		bodyLen += 4
-	}
-	return bodyLen
-}
-
-func makeA(r iohelp.ErrorReader) (A, error) {
-	v := A{}
-	err := v.DecodeBebop(r)
-	return v, err
-}
-
-func makeAFromBytes(buf []byte) (A, error) {
-	v := A{}
-	err := v.UnmarshalBebop(buf)
-	return v, err
-}
-
-func mustMakeAFromBytes(buf []byte) A {
-	v := A{}
-	v.MustUnmarshalBebop(buf)
-	return v
-}
-
-var _ bebop.Record = &B{}
-
-//*
-//     * This branch is, too!
-//     
-type B struct {
-	B bool
-}
-
-func (bbp B) MarshalBebop() []byte {
-	buf := make([]byte, bbp.bodyLen())
-	bbp.MarshalBebopTo(buf)
-	return buf
-}
-
-func (bbp B) MarshalBebopTo(buf []byte) {
-	at := 0
-	iohelp.WriteBoolBytes(buf[at:], bbp.B)
-	at += 1
-}
-
-func (bbp *B) UnmarshalBebop(buf []byte) (err error) {
-	at := 0
-	if len(buf[at:]) < 1 {
-		 return iohelp.ErrTooShort
-	}
-	bbp.B = iohelp.ReadBoolBytes(buf[at:])
-	at += 1
-	return nil
-}
-
-func (bbp *B) MustUnmarshalBebop(buf []byte) {
-	at := 0
-	bbp.B = iohelp.ReadBoolBytes(buf[at:])
-	at += 1
-}
-
-func (bbp B) EncodeBebop(iow io.Writer) (err error) {
-	w := iohelp.NewErrorWriter(iow)
-	iohelp.WriteBool(w, bbp.B)
-	return w.Err
-}
-
-func (bbp *B) DecodeBebop(ior io.Reader) (err error) {
-	r := iohelp.NewErrorReader(ior)
-	bbp.B = iohelp.ReadBool(r)
-	return r.Err
-}
-
-func (bbp B) bodyLen() int {
-	bodyLen := 0
-	bodyLen += 1
-	return bodyLen
-}
-
-func makeB(r iohelp.ErrorReader) (B, error) {
-	v := B{}
-	err := v.DecodeBebop(r)
-	return v, err
-}
-
-func makeBFromBytes(buf []byte) (B, error) {
-	v := B{}
-	err := v.UnmarshalBebop(buf)
-	return v, err
-}
-
-func mustMakeBFromBytes(buf []byte) B {
-	v := B{}
-	v.MustUnmarshalBebop(buf)
-	return v
-}
-
 var _ bebop.Record = &C{}
 
 type C struct {
@@ -416,12 +230,14 @@ func (bbp W) MarshalBebopTo(buf []byte) {
 		at++
 		(*bbp.D).MarshalBebopTo(buf[at:])
 		at += (*bbp.D).bodyLen()
+		return
 	}
 	if bbp.X != nil {
 		buf[at] = 2
 		at++
 		(*bbp.X).MarshalBebopTo(buf[at:])
 		at += (*bbp.X).bodyLen()
+		return
 	}
 }
 
@@ -429,6 +245,9 @@ func (bbp *W) UnmarshalBebop(buf []byte) (err error) {
 	at := 0
 	_ = iohelp.ReadUint32Bytes(buf[at:])
 	buf = buf[4:]
+	if len(buf) == 0 {
+		return iohelp.UnpopulatedUnion
+	}
 	for {
 		switch buf[at] {
 		case 1:
@@ -439,6 +258,7 @@ func (bbp *W) UnmarshalBebop(buf []byte) (err error) {
 				 return err
 			}
 			at += ((*bbp.D)).bodyLen()
+			return nil
 		case 2:
 			at += 1
 			bbp.X = new(X)
@@ -447,6 +267,7 @@ func (bbp *W) UnmarshalBebop(buf []byte) (err error) {
 				 return err
 			}
 			at += ((*bbp.X)).bodyLen()
+			return nil
 		default:
 			return nil
 		}
@@ -455,16 +276,22 @@ func (bbp *W) UnmarshalBebop(buf []byte) (err error) {
 
 func (bbp *W) MustUnmarshalBebop(buf []byte) {
 	at := 0
+	_ = iohelp.ReadUint32Bytes(buf[at:])
+	buf = buf[4:]
 	for {
 		switch buf[at] {
 		case 1:
+			at += 1
 			bbp.D = new(D)
 			(*bbp.D) = mustMakeDFromBytes(buf[at:])
 			at += ((*bbp.D)).bodyLen()
+			return
 		case 2:
+			at += 1
 			bbp.X = new(X)
 			(*bbp.X) = mustMakeXFromBytes(buf[at:])
 			at += ((*bbp.X)).bodyLen()
+			return
 		default:
 			return
 		}
@@ -480,6 +307,7 @@ func (bbp W) EncodeBebop(iow io.Writer) (err error) {
 		if err != nil {
 			return err
 		}
+		return w.Err
 	}
 	if bbp.X != nil {
 		w.Write([]byte{2})
@@ -487,8 +315,8 @@ func (bbp W) EncodeBebop(iow io.Writer) (err error) {
 		if err != nil {
 			return err
 		}
+		return w.Err
 	}
-	w.Write([]byte{0})
 	return w.Err
 }
 
@@ -506,12 +334,14 @@ func (bbp *W) DecodeBebop(ior io.Reader) (err error) {
 			if err != nil {
 				return err
 			}
+			return er.Err
 		case 2:
 			bbp.X = new(X)
 			(*bbp.X), err = makeX(r)
 			if err != nil {
 				return err
 			}
+			return er.Err
 		default:
 			return er.Err
 		}
@@ -519,14 +349,16 @@ func (bbp *W) DecodeBebop(ior io.Reader) (err error) {
 }
 
 func (bbp W) bodyLen() int {
-	bodyLen := 5
+	bodyLen := 4
 	if bbp.D != nil {
 		bodyLen += 1
 		bodyLen += (*bbp.D).bodyLen()
+		return bodyLen
 	}
 	if bbp.X != nil {
 		bodyLen += 1
 		bodyLen += (*bbp.X).bodyLen()
+		return bodyLen
 	}
 	return bodyLen
 }
@@ -545,6 +377,195 @@ func makeWFromBytes(buf []byte) (W, error) {
 
 func mustMakeWFromBytes(buf []byte) W {
 	v := W{}
+	v.MustUnmarshalBebop(buf)
+	return v
+}
+
+var _ bebop.Record = &A{}
+
+type A struct {
+	A *uint32
+}
+
+func (bbp A) MarshalBebop() []byte {
+	buf := make([]byte, bbp.bodyLen())
+	bbp.MarshalBebopTo(buf)
+	return buf
+}
+
+func (bbp A) MarshalBebopTo(buf []byte) {
+	at := 0
+	iohelp.WriteUint32Bytes(buf[at:], uint32(bbp.bodyLen()-4))
+	at += 4
+	if bbp.A != nil {
+		buf[at] = 1
+		at++
+		iohelp.WriteUint32Bytes(buf[at:], *bbp.A)
+		at += 4
+	}
+}
+
+func (bbp *A) UnmarshalBebop(buf []byte) (err error) {
+	at := 0
+	_ = iohelp.ReadUint32Bytes(buf[at:])
+	buf = buf[4:]
+	for {
+		switch buf[at] {
+		case 1:
+			at += 1
+			bbp.A = new(uint32)
+			if len(buf[at:]) < 4 {
+				 return iohelp.ErrTooShort
+			}
+			(*bbp.A) = iohelp.ReadUint32Bytes(buf[at:])
+			at += 4
+		default:
+			return nil
+		}
+	}
+}
+
+func (bbp *A) MustUnmarshalBebop(buf []byte) {
+	at := 0
+	_ = iohelp.ReadUint32Bytes(buf[at:])
+	buf = buf[4:]
+	for {
+		switch buf[at] {
+		case 1:
+			at += 1
+			bbp.A = new(uint32)
+			(*bbp.A) = iohelp.ReadUint32Bytes(buf[at:])
+			at += 4
+		default:
+			return
+		}
+	}
+}
+
+func (bbp A) EncodeBebop(iow io.Writer) (err error) {
+	w := iohelp.NewErrorWriter(iow)
+	iohelp.WriteUint32(w, uint32(bbp.bodyLen()-4))
+	if bbp.A != nil {
+		w.Write([]byte{1})
+		iohelp.WriteUint32(w, *bbp.A)
+	}
+	w.Write([]byte{0})
+	return w.Err
+}
+
+func (bbp *A) DecodeBebop(ior io.Reader) (err error) {
+	er := iohelp.NewErrorReader(ior)
+	bodyLen := iohelp.ReadUint32(er)
+	body := make([]byte, bodyLen)
+	er.Read(body)
+	r := iohelp.NewErrorReader(bytes.NewReader(body))
+	for {
+		switch iohelp.ReadByte(r) {
+		case 1:
+			bbp.A = new(uint32)
+			*bbp.A = iohelp.ReadUint32(r)
+		default:
+			return er.Err
+		}
+	}
+}
+
+func (bbp A) bodyLen() int {
+	bodyLen := 5
+	if bbp.A != nil {
+		bodyLen += 1
+		bodyLen += 4
+	}
+	return bodyLen
+}
+
+func makeA(r iohelp.ErrorReader) (A, error) {
+	v := A{}
+	err := v.DecodeBebop(r)
+	return v, err
+}
+
+func makeAFromBytes(buf []byte) (A, error) {
+	v := A{}
+	err := v.UnmarshalBebop(buf)
+	return v, err
+}
+
+func mustMakeAFromBytes(buf []byte) A {
+	v := A{}
+	v.MustUnmarshalBebop(buf)
+	return v
+}
+
+var _ bebop.Record = &B{}
+
+//*
+//     * This branch is, too!
+//     
+type B struct {
+	B bool
+}
+
+func (bbp B) MarshalBebop() []byte {
+	buf := make([]byte, bbp.bodyLen())
+	bbp.MarshalBebopTo(buf)
+	return buf
+}
+
+func (bbp B) MarshalBebopTo(buf []byte) {
+	at := 0
+	iohelp.WriteBoolBytes(buf[at:], bbp.B)
+	at += 1
+}
+
+func (bbp *B) UnmarshalBebop(buf []byte) (err error) {
+	at := 0
+	if len(buf[at:]) < 1 {
+		 return iohelp.ErrTooShort
+	}
+	bbp.B = iohelp.ReadBoolBytes(buf[at:])
+	at += 1
+	return nil
+}
+
+func (bbp *B) MustUnmarshalBebop(buf []byte) {
+	at := 0
+	bbp.B = iohelp.ReadBoolBytes(buf[at:])
+	at += 1
+}
+
+func (bbp B) EncodeBebop(iow io.Writer) (err error) {
+	w := iohelp.NewErrorWriter(iow)
+	iohelp.WriteBool(w, bbp.B)
+	return w.Err
+}
+
+func (bbp *B) DecodeBebop(ior io.Reader) (err error) {
+	r := iohelp.NewErrorReader(ior)
+	bbp.B = iohelp.ReadBool(r)
+	return r.Err
+}
+
+func (bbp B) bodyLen() int {
+	bodyLen := 0
+	bodyLen += 1
+	return bodyLen
+}
+
+func makeB(r iohelp.ErrorReader) (B, error) {
+	v := B{}
+	err := v.DecodeBebop(r)
+	return v, err
+}
+
+func makeBFromBytes(buf []byte) (B, error) {
+	v := B{}
+	err := v.UnmarshalBebop(buf)
+	return v, err
+}
+
+func mustMakeBFromBytes(buf []byte) B {
+	v := B{}
 	v.MustUnmarshalBebop(buf)
 	return v
 }
@@ -576,24 +597,28 @@ func (bbp U) MarshalBebopTo(buf []byte) {
 		at++
 		(*bbp.A).MarshalBebopTo(buf[at:])
 		at += (*bbp.A).bodyLen()
+		return
 	}
 	if bbp.B != nil {
 		buf[at] = 2
 		at++
 		(*bbp.B).MarshalBebopTo(buf[at:])
 		at += (*bbp.B).bodyLen()
+		return
 	}
 	if bbp.C != nil {
 		buf[at] = 3
 		at++
 		(*bbp.C).MarshalBebopTo(buf[at:])
 		at += (*bbp.C).bodyLen()
+		return
 	}
 	if bbp.W != nil {
 		buf[at] = 4
 		at++
 		(*bbp.W).MarshalBebopTo(buf[at:])
 		at += (*bbp.W).bodyLen()
+		return
 	}
 }
 
@@ -601,6 +626,9 @@ func (bbp *U) UnmarshalBebop(buf []byte) (err error) {
 	at := 4
 	_ = iohelp.ReadUint32Bytes(buf[at:])
 	buf = buf[4:]
+	if len(buf) == 0 {
+		return iohelp.UnpopulatedUnion
+	}
 	for {
 		switch buf[at] {
 		case 1:
@@ -611,6 +639,7 @@ func (bbp *U) UnmarshalBebop(buf []byte) (err error) {
 				 return err
 			}
 			at += ((*bbp.A)).bodyLen()
+			return nil
 		case 2:
 			at += 1
 			bbp.B = new(B)
@@ -619,6 +648,7 @@ func (bbp *U) UnmarshalBebop(buf []byte) (err error) {
 				 return err
 			}
 			at += ((*bbp.B)).bodyLen()
+			return nil
 		case 3:
 			at += 1
 			bbp.C = new(C)
@@ -627,6 +657,7 @@ func (bbp *U) UnmarshalBebop(buf []byte) (err error) {
 				 return err
 			}
 			at += ((*bbp.C)).bodyLen()
+			return nil
 		case 4:
 			at += 1
 			bbp.W = new(W)
@@ -635,6 +666,7 @@ func (bbp *U) UnmarshalBebop(buf []byte) (err error) {
 				 return err
 			}
 			at += ((*bbp.W)).bodyLen()
+			return nil
 		default:
 			return nil
 		}
@@ -643,24 +675,34 @@ func (bbp *U) UnmarshalBebop(buf []byte) (err error) {
 
 func (bbp *U) MustUnmarshalBebop(buf []byte) {
 	at := 4
+	_ = iohelp.ReadUint32Bytes(buf[at:])
+	buf = buf[4:]
 	for {
 		switch buf[at] {
 		case 1:
+			at += 1
 			bbp.A = new(A)
 			(*bbp.A) = mustMakeAFromBytes(buf[at:])
 			at += ((*bbp.A)).bodyLen()
+			return
 		case 2:
+			at += 1
 			bbp.B = new(B)
 			(*bbp.B) = mustMakeBFromBytes(buf[at:])
 			at += ((*bbp.B)).bodyLen()
+			return
 		case 3:
+			at += 1
 			bbp.C = new(C)
 			(*bbp.C) = mustMakeCFromBytes(buf[at:])
 			at += ((*bbp.C)).bodyLen()
+			return
 		case 4:
+			at += 1
 			bbp.W = new(W)
 			(*bbp.W) = mustMakeWFromBytes(buf[at:])
 			at += ((*bbp.W)).bodyLen()
+			return
 		default:
 			return
 		}
@@ -677,6 +719,7 @@ func (bbp U) EncodeBebop(iow io.Writer) (err error) {
 		if err != nil {
 			return err
 		}
+		return w.Err
 	}
 	if bbp.B != nil {
 		w.Write([]byte{2})
@@ -684,6 +727,7 @@ func (bbp U) EncodeBebop(iow io.Writer) (err error) {
 		if err != nil {
 			return err
 		}
+		return w.Err
 	}
 	if bbp.C != nil {
 		w.Write([]byte{3})
@@ -691,6 +735,7 @@ func (bbp U) EncodeBebop(iow io.Writer) (err error) {
 		if err != nil {
 			return err
 		}
+		return w.Err
 	}
 	if bbp.W != nil {
 		w.Write([]byte{4})
@@ -698,8 +743,8 @@ func (bbp U) EncodeBebop(iow io.Writer) (err error) {
 		if err != nil {
 			return err
 		}
+		return w.Err
 	}
-	w.Write([]byte{0})
 	return w.Err
 }
 
@@ -718,24 +763,28 @@ func (bbp *U) DecodeBebop(ior io.Reader) (err error) {
 			if err != nil {
 				return err
 			}
+			return er.Err
 		case 2:
 			bbp.B = new(B)
 			(*bbp.B), err = makeB(r)
 			if err != nil {
 				return err
 			}
+			return er.Err
 		case 3:
 			bbp.C = new(C)
 			(*bbp.C), err = makeC(r)
 			if err != nil {
 				return err
 			}
+			return er.Err
 		case 4:
 			bbp.W = new(W)
 			(*bbp.W), err = makeW(r)
 			if err != nil {
 				return err
 			}
+			return er.Err
 		default:
 			return er.Err
 		}
@@ -743,23 +792,27 @@ func (bbp *U) DecodeBebop(ior io.Reader) (err error) {
 }
 
 func (bbp U) bodyLen() int {
-	bodyLen := 5
+	bodyLen := 4
 	bodyLen += 4
 	if bbp.A != nil {
 		bodyLen += 1
 		bodyLen += (*bbp.A).bodyLen()
+		return bodyLen
 	}
 	if bbp.B != nil {
 		bodyLen += 1
 		bodyLen += (*bbp.B).bodyLen()
+		return bodyLen
 	}
 	if bbp.C != nil {
 		bodyLen += 1
 		bodyLen += (*bbp.C).bodyLen()
+		return bodyLen
 	}
 	if bbp.W != nil {
 		bodyLen += 1
 		bodyLen += (*bbp.W).bodyLen()
+		return bodyLen
 	}
 	return bodyLen
 }
@@ -947,12 +1000,14 @@ func (bbp List) MarshalBebopTo(buf []byte) {
 		at++
 		(*bbp.Cons).MarshalBebopTo(buf[at:])
 		at += (*bbp.Cons).bodyLen()
+		return
 	}
 	if bbp.Nil != nil {
 		buf[at] = 2
 		at++
 		(*bbp.Nil).MarshalBebopTo(buf[at:])
 		at += (*bbp.Nil).bodyLen()
+		return
 	}
 }
 
@@ -960,6 +1015,9 @@ func (bbp *List) UnmarshalBebop(buf []byte) (err error) {
 	at := 0
 	_ = iohelp.ReadUint32Bytes(buf[at:])
 	buf = buf[4:]
+	if len(buf) == 0 {
+		return iohelp.UnpopulatedUnion
+	}
 	for {
 		switch buf[at] {
 		case 1:
@@ -970,6 +1028,7 @@ func (bbp *List) UnmarshalBebop(buf []byte) (err error) {
 				 return err
 			}
 			at += ((*bbp.Cons)).bodyLen()
+			return nil
 		case 2:
 			at += 1
 			bbp.Nil = new(Nil)
@@ -978,6 +1037,7 @@ func (bbp *List) UnmarshalBebop(buf []byte) (err error) {
 				 return err
 			}
 			at += ((*bbp.Nil)).bodyLen()
+			return nil
 		default:
 			return nil
 		}
@@ -986,16 +1046,22 @@ func (bbp *List) UnmarshalBebop(buf []byte) (err error) {
 
 func (bbp *List) MustUnmarshalBebop(buf []byte) {
 	at := 0
+	_ = iohelp.ReadUint32Bytes(buf[at:])
+	buf = buf[4:]
 	for {
 		switch buf[at] {
 		case 1:
+			at += 1
 			bbp.Cons = new(Cons)
 			(*bbp.Cons) = mustMakeConsFromBytes(buf[at:])
 			at += ((*bbp.Cons)).bodyLen()
+			return
 		case 2:
+			at += 1
 			bbp.Nil = new(Nil)
 			(*bbp.Nil) = mustMakeNilFromBytes(buf[at:])
 			at += ((*bbp.Nil)).bodyLen()
+			return
 		default:
 			return
 		}
@@ -1011,6 +1077,7 @@ func (bbp List) EncodeBebop(iow io.Writer) (err error) {
 		if err != nil {
 			return err
 		}
+		return w.Err
 	}
 	if bbp.Nil != nil {
 		w.Write([]byte{2})
@@ -1018,8 +1085,8 @@ func (bbp List) EncodeBebop(iow io.Writer) (err error) {
 		if err != nil {
 			return err
 		}
+		return w.Err
 	}
-	w.Write([]byte{0})
 	return w.Err
 }
 
@@ -1037,12 +1104,14 @@ func (bbp *List) DecodeBebop(ior io.Reader) (err error) {
 			if err != nil {
 				return err
 			}
+			return er.Err
 		case 2:
 			bbp.Nil = new(Nil)
 			(*bbp.Nil), err = makeNil(r)
 			if err != nil {
 				return err
 			}
+			return er.Err
 		default:
 			return er.Err
 		}
@@ -1050,14 +1119,16 @@ func (bbp *List) DecodeBebop(ior io.Reader) (err error) {
 }
 
 func (bbp List) bodyLen() int {
-	bodyLen := 5
+	bodyLen := 4
 	if bbp.Cons != nil {
 		bodyLen += 1
 		bodyLen += (*bbp.Cons).bodyLen()
+		return bodyLen
 	}
 	if bbp.Nil != nil {
 		bodyLen += 1
 		bodyLen += (*bbp.Nil).bodyLen()
+		return bodyLen
 	}
 	return bodyLen
 }

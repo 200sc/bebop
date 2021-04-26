@@ -149,9 +149,12 @@ func (bbp *DepM) UnmarshalBebop(buf []byte) (err error) {
 
 func (bbp *DepM) MustUnmarshalBebop(buf []byte) {
 	at := 0
+	_ = iohelp.ReadUint32Bytes(buf[at:])
+	buf = buf[4:]
 	for {
 		switch buf[at] {
 		case 1:
+			at += 1
 			bbp.X = new(int32)
 			(*bbp.X) = iohelp.ReadInt32Bytes(buf[at:])
 			at += 4
@@ -297,17 +300,22 @@ func (bbp *DocM) UnmarshalBebop(buf []byte) (err error) {
 
 func (bbp *DocM) MustUnmarshalBebop(buf []byte) {
 	at := 0
+	_ = iohelp.ReadUint32Bytes(buf[at:])
+	buf = buf[4:]
 	for {
 		switch buf[at] {
 		case 1:
+			at += 1
 			bbp.X = new(int32)
 			(*bbp.X) = iohelp.ReadInt32Bytes(buf[at:])
 			at += 4
 		case 2:
+			at += 1
 			bbp.Y = new(int32)
 			(*bbp.Y) = iohelp.ReadInt32Bytes(buf[at:])
 			at += 4
 		case 3:
+			at += 1
 			bbp.Z = new(int32)
 			(*bbp.Z) = iohelp.ReadInt32Bytes(buf[at:])
 			at += 4

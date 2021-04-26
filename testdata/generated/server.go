@@ -286,9 +286,12 @@ func (bbp *PrintRequest) UnmarshalBebop(buf []byte) (err error) {
 
 func (bbp *PrintRequest) MustUnmarshalBebop(buf []byte) {
 	at := 4
+	_ = iohelp.ReadUint32Bytes(buf[at:])
+	buf = buf[4:]
 	for {
 		switch buf[at] {
 		case 1:
+			at += 1
 			bbp.Print = new(Print)
 			(*bbp.Print) = mustMakePrintFromBytes(buf[at:])
 			at += ((*bbp.Print)).bodyLen()
@@ -411,9 +414,12 @@ func (bbp *AddRequest) UnmarshalBebop(buf []byte) (err error) {
 
 func (bbp *AddRequest) MustUnmarshalBebop(buf []byte) {
 	at := 4
+	_ = iohelp.ReadUint32Bytes(buf[at:])
+	buf = buf[4:]
 	for {
 		switch buf[at] {
 		case 1:
+			at += 1
 			bbp.Add = new(Add)
 			(*bbp.Add) = mustMakeAddFromBytes(buf[at:])
 			at += ((*bbp.Add)).bodyLen()

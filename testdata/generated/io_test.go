@@ -379,11 +379,12 @@ func TestMarshalCycleRecords(t *testing.T) {
 			unmarshalTo:  &generated.ReadOnlyMap{},
 			unmarshalTo2: &generated.ReadOnlyMap{},
 			skipEquality: true,
-		}, {
-			name:         "empty Union U",
-			record:       &generated.U{},
-			unmarshalTo:  &generated.U{},
-			unmarshalTo2: &generated.U{},
+			// Empty unions are not supported
+			// }, {
+			// 	name:         "empty Union U",
+			// 	record:       &generated.U{},
+			// 	unmarshalTo:  &generated.U{},
+			// 	unmarshalTo2: &generated.U{},
 		}, {
 			name: "Union U: A",
 			record: &generated.U{
@@ -510,8 +511,22 @@ func TestMarshalCycleRecords(t *testing.T) {
 			marshalData3 := tc.unmarshalTo2.MarshalBebop()
 			if string(marshalData) != string(marshalData3) {
 				fmt.Println(marshalData)
-				fmt.Println(noWriterMarshal)
+				fmt.Println(marshalData3)
 				t.Fatal("no-writer unmarshal did not have same bytes as prior unmarshals")
+			}
+
+			type MustUnmarshaler interface {
+				MustUnmarshalBebop([]byte)
+			}
+
+			if mu, ok := tc.unmarshalTo2.(MustUnmarshaler); ok {
+				mu.MustUnmarshalBebop(marshalData3)
+				marshalData4 := tc.unmarshalTo2.MarshalBebop()
+				if string(marshalData) != string(marshalData4) {
+					fmt.Println(marshalData)
+					fmt.Println(marshalData4)
+					t.Fatal("must unmarshal did not have same bytes as prior unmarshals")
+				}
 			}
 		})
 	}

@@ -80,13 +80,17 @@ func (bbp *MyObj) UnmarshalBebop(buf []byte) (err error) {
 
 func (bbp *MyObj) MustUnmarshalBebop(buf []byte) {
 	at := 0
+	_ = iohelp.ReadUint32Bytes(buf[at:])
+	buf = buf[4:]
 	for {
 		switch buf[at] {
 		case 1:
+			at += 1
 			bbp.Start = new(time.Time)
 			(*bbp.Start) = iohelp.ReadDateBytes(buf[at:])
 			at += 8
 		case 2:
+			at += 1
 			bbp.End = new(time.Time)
 			(*bbp.End) = iohelp.ReadDateBytes(buf[at:])
 			at += 8
