@@ -74,9 +74,12 @@ func (bbp *ReadOnlyMap) UnmarshalBebop(buf []byte) (err error) {
 
 func (bbp *ReadOnlyMap) MustUnmarshalBebop(buf []byte) {
 	at := 0
+	_ = iohelp.ReadUint32Bytes(buf[at:])
+	buf = buf[4:]
 	for {
 		switch buf[at] {
 		case 1:
+			at += 1
 			bbp.Vals = new(map[string]uint8)
 			ln18 := iohelp.ReadUint32Bytes(buf[at:])
 			at += 4

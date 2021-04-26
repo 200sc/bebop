@@ -326,14 +326,18 @@ func (bbp *RequestCatalog) UnmarshalBebop(buf []byte) (err error) {
 
 func (bbp *RequestCatalog) MustUnmarshalBebop(buf []byte) {
 	at := 4
+	_ = iohelp.ReadUint32Bytes(buf[at:])
+	buf = buf[4:]
 	for {
 		switch buf[at] {
 		case 1:
+			at += 1
 			bbp.Family = new(FurnitureFamily)
 			(*bbp.Family) = FurnitureFamily(iohelp.ReadUint32Bytes(buf[at:]))
 			at += 4
 			
 		case 2:
+			at += 1
 			bbp.SecretTunnel = new(string)
 			(*bbp.SecretTunnel) = iohelp.MustReadStringBytes(buf[at:])
 			at += 4+len((*bbp.SecretTunnel))

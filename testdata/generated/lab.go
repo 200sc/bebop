@@ -754,14 +754,18 @@ func (bbp *MediaMessage) UnmarshalBebop(buf []byte) (err error) {
 
 func (bbp *MediaMessage) MustUnmarshalBebop(buf []byte) {
 	at := 0
+	_ = iohelp.ReadUint32Bytes(buf[at:])
+	buf = buf[4:]
 	for {
 		switch buf[at] {
 		case 1:
+			at += 1
 			bbp.Codec = new(VideoCodec)
 			(*bbp.Codec) = VideoCodec(iohelp.ReadUint32Bytes(buf[at:]))
 			at += 4
 			
 		case 2:
+			at += 1
 			bbp.Data = new(VideoData)
 			(*bbp.Data) = mustMakeVideoDataFromBytes(buf[at:])
 			at += ((*bbp.Data)).bodyLen()
@@ -905,13 +909,17 @@ func (bbp *SkipTestOld) UnmarshalBebop(buf []byte) (err error) {
 
 func (bbp *SkipTestOld) MustUnmarshalBebop(buf []byte) {
 	at := 0
+	_ = iohelp.ReadUint32Bytes(buf[at:])
+	buf = buf[4:]
 	for {
 		switch buf[at] {
 		case 1:
+			at += 1
 			bbp.X = new(int32)
 			(*bbp.X) = iohelp.ReadInt32Bytes(buf[at:])
 			at += 4
 		case 2:
+			at += 1
 			bbp.Y = new(int32)
 			(*bbp.Y) = iohelp.ReadInt32Bytes(buf[at:])
 			at += 4
@@ -1063,17 +1071,22 @@ func (bbp *SkipTestNew) UnmarshalBebop(buf []byte) (err error) {
 
 func (bbp *SkipTestNew) MustUnmarshalBebop(buf []byte) {
 	at := 0
+	_ = iohelp.ReadUint32Bytes(buf[at:])
+	buf = buf[4:]
 	for {
 		switch buf[at] {
 		case 1:
+			at += 1
 			bbp.X = new(int32)
 			(*bbp.X) = iohelp.ReadInt32Bytes(buf[at:])
 			at += 4
 		case 2:
+			at += 1
 			bbp.Y = new(int32)
 			(*bbp.Y) = iohelp.ReadInt32Bytes(buf[at:])
 			at += 4
 		case 3:
+			at += 1
 			bbp.Z = new(int32)
 			(*bbp.Z) = iohelp.ReadInt32Bytes(buf[at:])
 			at += 4
@@ -1221,13 +1234,17 @@ func (bbp *SkipTestOldContainer) UnmarshalBebop(buf []byte) (err error) {
 
 func (bbp *SkipTestOldContainer) MustUnmarshalBebop(buf []byte) {
 	at := 0
+	_ = iohelp.ReadUint32Bytes(buf[at:])
+	buf = buf[4:]
 	for {
 		switch buf[at] {
 		case 1:
+			at += 1
 			bbp.S = new(SkipTestOld)
 			(*bbp.S) = mustMakeSkipTestOldFromBytes(buf[at:])
 			at += ((*bbp.S)).bodyLen()
 		case 2:
+			at += 1
 			bbp.After = new(int32)
 			(*bbp.After) = iohelp.ReadInt32Bytes(buf[at:])
 			at += 4
@@ -1370,13 +1387,17 @@ func (bbp *SkipTestNewContainer) UnmarshalBebop(buf []byte) (err error) {
 
 func (bbp *SkipTestNewContainer) MustUnmarshalBebop(buf []byte) {
 	at := 0
+	_ = iohelp.ReadUint32Bytes(buf[at:])
+	buf = buf[4:]
 	for {
 		switch buf[at] {
 		case 1:
+			at += 1
 			bbp.S = new(SkipTestNew)
 			(*bbp.S) = mustMakeSkipTestNewFromBytes(buf[at:])
 			at += ((*bbp.S)).bodyLen()
 		case 2:
+			at += 1
 			bbp.After = new(int32)
 			(*bbp.After) = iohelp.ReadInt32Bytes(buf[at:])
 			at += 4

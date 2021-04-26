@@ -324,17 +324,22 @@ func (bbp *Song) UnmarshalBebop(buf []byte) (err error) {
 
 func (bbp *Song) MustUnmarshalBebop(buf []byte) {
 	at := 0
+	_ = iohelp.ReadUint32Bytes(buf[at:])
+	buf = buf[4:]
 	for {
 		switch buf[at] {
 		case 1:
+			at += 1
 			bbp.Title = new(string)
 			(*bbp.Title) = iohelp.MustReadStringBytes(buf[at:])
 			at += 4+len((*bbp.Title))
 		case 2:
+			at += 1
 			bbp.Year = new(uint16)
 			(*bbp.Year) = iohelp.ReadUint16Bytes(buf[at:])
 			at += 2
 		case 3:
+			at += 1
 			bbp.Performers = new([]Musician)
 			(*bbp.Performers) = make([]Musician, iohelp.ReadUint32Bytes(buf[at:]))
 			at += 4
