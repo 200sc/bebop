@@ -1,0 +1,1 @@
+message ExampleMessage { 1 -> byte x; 2 -> int16 y; 3 -> int32 z; }
