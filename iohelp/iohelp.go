@@ -6,6 +6,7 @@ import (
 	"io"
 	"math"
 	"time"
+	"unsafe"
 )
 
 var ErrTooShort error = errors.New("buffer too short")
@@ -65,6 +66,12 @@ func MustReadStringBytes(buf []byte) string {
 	return string(buf[4 : 4+sz])
 }
 
+func MustReadStringBytesSharedMemory(buf []byte) string {
+	sz := ReadUint32Bytes(buf)
+	cut := buf[4 : 4+sz]
+	return *(*string)(unsafe.Pointer(&cut))
+}
+
 func ReadStringBytes(buf []byte) (string, error) {
 	if len(buf) < 4 {
 		return "", ErrTooShort
@@ -74,6 +81,18 @@ func ReadStringBytes(buf []byte) (string, error) {
 		return "", ErrTooShort
 	}
 	return string(buf[4 : 4+sz]), nil
+}
+
+func ReadStringBytesSharedMemory(buf []byte) (string, error) {
+	if len(buf) < 4 {
+		return "", ErrTooShort
+	}
+	sz := ReadUint32Bytes(buf)
+	if len(buf) < int(sz)+4 {
+		return "", ErrTooShort
+	}
+	cut := buf[4 : 4+sz]
+	return *(*string)(unsafe.Pointer(&cut)), nil
 }
 
 func ReadDate(r ErrorReader) time.Time {

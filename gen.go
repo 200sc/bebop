@@ -21,6 +21,7 @@ type GenerateSettings struct {
 	customRecordTypes map[string]struct{}
 
 	GenerateUnsafeMethods bool
+	SharedMemoryStrings   bool
 }
 
 var reservedWords = map[string]struct{}{
@@ -185,7 +186,7 @@ func (f File) Generate(w io.Writer, settings GenerateSettings) error {
 	}
 	settings.typeMarshallers = f.typeMarshallers()
 	settings.typeByters = f.typeByters()
-	settings.typeByteReaders = f.typeByteReaders()
+	settings.typeByteReaders = f.typeByteReaders(settings)
 	settings.typeUnmarshallers = f.typeUnmarshallers()
 	settings.typeLengthers = f.typeLengthers()
 	settings.customRecordTypes = f.customRecordTypes()
@@ -1423,7 +1424,7 @@ func (u Union) typeByters() map[string]string {
 	return out
 }
 
-func (f File) typeByteReaders() map[string]string {
+func (f File) typeByteReaders(gs GenerateSettings) map[string]string {
 	out := make(map[string]string)
 	for typ, sz := range fixedSizeTypes {
 		out[typ] = "%ASGN = iohelp.Read" + strings.Title(typ) + "Bytes(buf[at:])\n" +
@@ -1431,10 +1432,16 @@ func (f File) typeByteReaders() map[string]string {
 	}
 	out["guid"] = "%ASGN = iohelp.ReadGUIDBytes(buf[at:])\n" +
 		"at += 16"
-	out["string"] = "%ASGN = iohelp.MustReadStringBytes(buf[at:])\n" +
+
+	stringRead := "ReadStringBytes(buf[at:])"
+	if gs.SharedMemoryStrings {
+		stringRead = "ReadStringBytesSharedMemory(buf[at:])"
+	}
+
+	out["string"] = "%ASGN =  iohelp.Must" + stringRead + "\n" +
 		"at += 4+len(%ASGN)"
 
-	out["string&safe"] = "%ASGN, err = iohelp.ReadStringBytes(buf[at:])\n" +
+	out["string&safe"] = "%ASGN, err = iohelp." + stringRead + "\n" +
 		"if err != nil {\n" +
 		"\t return err\n" +
 		"}\n" +
