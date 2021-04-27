@@ -65,7 +65,7 @@ func TestServe(t *testing.T) {
 	}
 
 	resp := AddResponse{}
-	ln := resp.bodyLen()
+	ln := resp.Size()
 	respBytes := make([]byte, ln)
 	io.ReadFull(lhs, respBytes)
 	err = resp.UnmarshalBebop(respBytes)

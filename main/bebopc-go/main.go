@@ -15,6 +15,7 @@ var printVersion = flag.Bool("version", false, "print the version of the compile
 var printHelp = flag.Bool("help", false, "print usage text")
 var packageName = flag.String("package", "bebopgen", "specify the name of the package to generate")
 var generateUnsafeMethods = flag.Bool("generate-unsafe", false, "whether unchecked additional methods should be generated")
+var shareStringMemory = flag.Bool("share-string-memory", false, "whether strings read in unmarshalling should share memory with the original byte slice")
 
 const version = "bebopc-go " + bebop.Version
 
@@ -61,6 +62,7 @@ func run() error {
 	settings := bebop.GenerateSettings{
 		PackageName:           *packageName,
 		GenerateUnsafeMethods: *generateUnsafeMethods,
+		SharedMemoryStrings:   *shareStringMemory,
 	}
 	if err := bopf.Generate(out, settings); err != nil {
 		return fmt.Errorf("failed to generate file: %w", err)

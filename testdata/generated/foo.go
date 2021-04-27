@@ -17,15 +17,16 @@ type Foo struct {
 }
 
 func (bbp Foo) MarshalBebop() []byte {
-	buf := make([]byte, bbp.bodyLen())
+	buf := make([]byte, bbp.Size())
 	bbp.MarshalBebopTo(buf)
 	return buf
 }
 
-func (bbp Foo) MarshalBebopTo(buf []byte) {
+func (bbp Foo) MarshalBebopTo(buf []byte) int {
 	at := 0
 	(bbp.Bar).MarshalBebopTo(buf[at:])
-	at += (bbp.Bar).bodyLen()
+	at += (bbp.Bar).Size()
+	return at
 }
 
 func (bbp *Foo) UnmarshalBebop(buf []byte) (err error) {
@@ -34,14 +35,14 @@ func (bbp *Foo) UnmarshalBebop(buf []byte) (err error) {
 	if err != nil {
 		 return err
 	}
-	at += (bbp.Bar).bodyLen()
+	at += (bbp.Bar).Size()
 	return nil
 }
 
 func (bbp *Foo) MustUnmarshalBebop(buf []byte) {
 	at := 0
 	bbp.Bar = mustMakeBarFromBytes(buf[at:])
-	at += (bbp.Bar).bodyLen()
+	at += (bbp.Bar).Size()
 }
 
 func (bbp Foo) EncodeBebop(iow io.Writer) (err error) {
@@ -62,9 +63,9 @@ func (bbp *Foo) DecodeBebop(ior io.Reader) (err error) {
 	return r.Err
 }
 
-func (bbp Foo) bodyLen() int {
+func (bbp Foo) Size() int {
 	bodyLen := 0
-	bodyLen += (bbp.Bar).bodyLen()
+	bodyLen += (bbp.Bar).Size()
 	return bodyLen
 }
 
@@ -95,14 +96,14 @@ type Bar struct {
 }
 
 func (bbp Bar) MarshalBebop() []byte {
-	buf := make([]byte, bbp.bodyLen())
+	buf := make([]byte, bbp.Size())
 	bbp.MarshalBebopTo(buf)
 	return buf
 }
 
-func (bbp Bar) MarshalBebopTo(buf []byte) {
+func (bbp Bar) MarshalBebopTo(buf []byte) int {
 	at := 0
-	iohelp.WriteUint32Bytes(buf[at:], uint32(bbp.bodyLen()-4))
+	iohelp.WriteUint32Bytes(buf[at:], uint32(bbp.Size()-4))
 	at += 4
 	if bbp.X != nil {
 		buf[at] = 1
@@ -122,6 +123,7 @@ func (bbp Bar) MarshalBebopTo(buf []byte) {
 		iohelp.WriteFloat64Bytes(buf[at:], *bbp.Z)
 		at += 8
 	}
+	return at
 }
 
 func (bbp *Bar) UnmarshalBebop(buf []byte) (err error) {
@@ -189,7 +191,7 @@ func (bbp *Bar) MustUnmarshalBebop(buf []byte) {
 
 func (bbp Bar) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
-	iohelp.WriteUint32(w, uint32(bbp.bodyLen()-4))
+	iohelp.WriteUint32(w, uint32(bbp.Size()-4))
 	if bbp.X != nil {
 		w.Write([]byte{1})
 		iohelp.WriteFloat64(w, *bbp.X)
@@ -229,7 +231,7 @@ func (bbp *Bar) DecodeBebop(ior io.Reader) (err error) {
 	}
 }
 
-func (bbp Bar) bodyLen() int {
+func (bbp Bar) Size() int {
 	bodyLen := 5
 	if bbp.X != nil {
 		bodyLen += 1

@@ -27,12 +27,12 @@ type BasicArrays struct {
 }
 
 func (bbp BasicArrays) MarshalBebop() []byte {
-	buf := make([]byte, bbp.bodyLen())
+	buf := make([]byte, bbp.Size())
 	bbp.MarshalBebopTo(buf)
 	return buf
 }
 
-func (bbp BasicArrays) MarshalBebopTo(buf []byte) {
+func (bbp BasicArrays) MarshalBebopTo(buf []byte) int {
 	at := 0
 	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.A_bool)))
 	at += 4
@@ -106,6 +106,7 @@ func (bbp BasicArrays) MarshalBebopTo(buf []byte) {
 		iohelp.WriteGUIDBytes(buf[at:], v1)
 		at += 16
 	}
+	return at
 }
 
 func (bbp *BasicArrays) UnmarshalBebop(buf []byte) (err error) {
@@ -318,7 +319,7 @@ func (bbp *BasicArrays) MustUnmarshalBebop(buf []byte) {
 	bbp.A_string = make([]string, iohelp.ReadUint32Bytes(buf[at:]))
 	at += 4
 	for i1 := range bbp.A_string {
-		(bbp.A_string)[i1] = iohelp.MustReadStringBytes(buf[at:])
+		(bbp.A_string)[i1] =  iohelp.MustReadStringBytes(buf[at:])
 		at += 4+len((bbp.A_string)[i1])
 	}
 	bbp.A_guid = make([][16]byte, iohelp.ReadUint32Bytes(buf[at:]))
@@ -436,7 +437,7 @@ func (bbp *BasicArrays) DecodeBebop(ior io.Reader) (err error) {
 	return r.Err
 }
 
-func (bbp BasicArrays) bodyLen() int {
+func (bbp BasicArrays) Size() int {
 	bodyLen := 0
 	bodyLen += 4
 	bodyLen += len(bbp.A_bool) * 1
@@ -493,12 +494,12 @@ type TestInt32Array struct {
 }
 
 func (bbp TestInt32Array) MarshalBebop() []byte {
-	buf := make([]byte, bbp.bodyLen())
+	buf := make([]byte, bbp.Size())
 	bbp.MarshalBebopTo(buf)
 	return buf
 }
 
-func (bbp TestInt32Array) MarshalBebopTo(buf []byte) {
+func (bbp TestInt32Array) MarshalBebopTo(buf []byte) int {
 	at := 0
 	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.A)))
 	at += 4
@@ -506,6 +507,7 @@ func (bbp TestInt32Array) MarshalBebopTo(buf []byte) {
 		iohelp.WriteInt32Bytes(buf[at:], v1)
 		at += 4
 	}
+	return at
 }
 
 func (bbp *TestInt32Array) UnmarshalBebop(buf []byte) (err error) {
@@ -553,7 +555,7 @@ func (bbp *TestInt32Array) DecodeBebop(ior io.Reader) (err error) {
 	return r.Err
 }
 
-func (bbp TestInt32Array) bodyLen() int {
+func (bbp TestInt32Array) Size() int {
 	bodyLen := 0
 	bodyLen += 4
 	bodyLen += len(bbp.A) * 4
