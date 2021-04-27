@@ -29,12 +29,12 @@ type BasicTypes struct {
 }
 
 func (bbp BasicTypes) MarshalBebop() []byte {
-	buf := make([]byte, bbp.bodyLen())
+	buf := make([]byte, bbp.Size())
 	bbp.MarshalBebopTo(buf)
 	return buf
 }
 
-func (bbp BasicTypes) MarshalBebopTo(buf []byte) {
+func (bbp BasicTypes) MarshalBebopTo(buf []byte) int {
 	at := 0
 	iohelp.WriteBoolBytes(buf[at:], bbp.A_bool)
 	at += 1
@@ -68,6 +68,7 @@ func (bbp BasicTypes) MarshalBebopTo(buf []byte) {
 		iohelp.WriteInt64Bytes(buf[at:], 0)
 	}
 	at += 8
+	return at
 }
 
 func (bbp *BasicTypes) UnmarshalBebop(buf []byte) (err error) {
@@ -122,7 +123,7 @@ func (bbp *BasicTypes) UnmarshalBebop(buf []byte) (err error) {
 	}
 	bbp.A_float64 = iohelp.ReadFloat64Bytes(buf[at:])
 	at += 8
-	bbp.A_string, err = iohelp.ReadStringBytes(buf[at:])
+	bbp.A_string, err = iohelp.ReadStringBytesSharedMemory(buf[at:])
 	if err != nil {
 		 return err
 	}
@@ -162,7 +163,7 @@ func (bbp *BasicTypes) MustUnmarshalBebop(buf []byte) {
 	at += 4
 	bbp.A_float64 = iohelp.ReadFloat64Bytes(buf[at:])
 	at += 8
-	bbp.A_string = iohelp.MustReadStringBytes(buf[at:])
+	bbp.A_string =  iohelp.MustReadStringBytesSharedMemory(buf[at:])
 	at += 4+len(bbp.A_string)
 	bbp.A_guid = iohelp.ReadGUIDBytes(buf[at:])
 	at += 16
@@ -211,7 +212,7 @@ func (bbp *BasicTypes) DecodeBebop(ior io.Reader) (err error) {
 	return r.Err
 }
 
-func (bbp BasicTypes) bodyLen() int {
+func (bbp BasicTypes) Size() int {
 	bodyLen := 0
 	bodyLen += 1
 	bodyLen += 1

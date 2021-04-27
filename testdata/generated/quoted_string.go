@@ -21,12 +21,12 @@ type QuotedString struct {
 }
 
 func (bbp QuotedString) MarshalBebop() []byte {
-	buf := make([]byte, bbp.bodyLen())
+	buf := make([]byte, bbp.Size())
 	bbp.MarshalBebopTo(buf)
 	return buf
 }
 
-func (bbp QuotedString) MarshalBebopTo(buf []byte) {
+func (bbp QuotedString) MarshalBebopTo(buf []byte) int {
 	at := 0
 	iohelp.WriteInt32Bytes(buf[at:], bbp.X)
 	at += 4
@@ -34,6 +34,7 @@ func (bbp QuotedString) MarshalBebopTo(buf []byte) {
 	at += 4
 	iohelp.WriteInt32Bytes(buf[at:], bbp.Z)
 	at += 4
+	return at
 }
 
 func (bbp *QuotedString) UnmarshalBebop(buf []byte) (err error) {
@@ -82,7 +83,7 @@ func (bbp *QuotedString) DecodeBebop(ior io.Reader) (err error) {
 	return r.Err
 }
 
-func (bbp QuotedString) bodyLen() int {
+func (bbp QuotedString) Size() int {
 	bodyLen := 0
 	bodyLen += 4
 	bodyLen += 4

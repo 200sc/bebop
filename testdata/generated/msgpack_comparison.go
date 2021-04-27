@@ -39,12 +39,12 @@ type MsgpackComparison struct {
 }
 
 func (bbp MsgpackComparison) MarshalBebop() []byte {
-	buf := make([]byte, bbp.bodyLen())
+	buf := make([]byte, bbp.Size())
 	bbp.MarshalBebopTo(buf)
 	return buf
 }
 
-func (bbp MsgpackComparison) MarshalBebopTo(buf []byte) {
+func (bbp MsgpackComparison) MarshalBebopTo(buf []byte) int {
 	at := 0
 	iohelp.WriteUint8Bytes(buf[at:], bbp.INT0)
 	at += 1
@@ -112,6 +112,7 @@ func (bbp MsgpackComparison) MarshalBebopTo(buf []byte) {
 		iohelp.WriteInt32Bytes(buf[at:], v1)
 		at += 4
 	}
+	return at
 }
 
 func (bbp *MsgpackComparison) UnmarshalBebop(buf []byte) (err error) {
@@ -273,15 +274,15 @@ func (bbp *MsgpackComparison) MustUnmarshalBebop(buf []byte) {
 	at += 8
 	bbp.FLOAT_ = iohelp.ReadFloat64Bytes(buf[at:])
 	at += 8
-	bbp.STRING0 = iohelp.MustReadStringBytes(buf[at:])
+	bbp.STRING0 =  iohelp.MustReadStringBytes(buf[at:])
 	at += 4+len(bbp.STRING0)
-	bbp.STRING1 = iohelp.MustReadStringBytes(buf[at:])
+	bbp.STRING1 =  iohelp.MustReadStringBytes(buf[at:])
 	at += 4+len(bbp.STRING1)
-	bbp.STRING4 = iohelp.MustReadStringBytes(buf[at:])
+	bbp.STRING4 =  iohelp.MustReadStringBytes(buf[at:])
 	at += 4+len(bbp.STRING4)
-	bbp.STRING8 = iohelp.MustReadStringBytes(buf[at:])
+	bbp.STRING8 =  iohelp.MustReadStringBytes(buf[at:])
 	at += 4+len(bbp.STRING8)
-	bbp.STRING16 = iohelp.MustReadStringBytes(buf[at:])
+	bbp.STRING16 =  iohelp.MustReadStringBytes(buf[at:])
 	at += 4+len(bbp.STRING16)
 	bbp.ARRAY0 = make([]int32, iohelp.ReadUint32Bytes(buf[at:]))
 	at += 4
@@ -292,7 +293,7 @@ func (bbp *MsgpackComparison) MustUnmarshalBebop(buf []byte) {
 	bbp.ARRAY1 = make([]string, iohelp.ReadUint32Bytes(buf[at:]))
 	at += 4
 	for i1 := range bbp.ARRAY1 {
-		(bbp.ARRAY1)[i1] = iohelp.MustReadStringBytes(buf[at:])
+		(bbp.ARRAY1)[i1] =  iohelp.MustReadStringBytes(buf[at:])
 		at += 4+len((bbp.ARRAY1)[i1])
 	}
 	bbp.ARRAY8 = make([]int32, iohelp.ReadUint32Bytes(buf[at:]))
@@ -379,7 +380,7 @@ func (bbp *MsgpackComparison) DecodeBebop(ior io.Reader) (err error) {
 	return r.Err
 }
 
-func (bbp MsgpackComparison) bodyLen() int {
+func (bbp MsgpackComparison) Size() int {
 	bodyLen := 0
 	bodyLen += 1
 	bodyLen += 1

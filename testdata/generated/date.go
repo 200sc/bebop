@@ -19,14 +19,14 @@ type MyObj struct {
 }
 
 func (bbp MyObj) MarshalBebop() []byte {
-	buf := make([]byte, bbp.bodyLen())
+	buf := make([]byte, bbp.Size())
 	bbp.MarshalBebopTo(buf)
 	return buf
 }
 
-func (bbp MyObj) MarshalBebopTo(buf []byte) {
+func (bbp MyObj) MarshalBebopTo(buf []byte) int {
 	at := 0
-	iohelp.WriteUint32Bytes(buf[at:], uint32(bbp.bodyLen()-4))
+	iohelp.WriteUint32Bytes(buf[at:], uint32(bbp.Size()-4))
 	at += 4
 	if bbp.Start != nil {
 		buf[at] = 1
@@ -48,6 +48,7 @@ func (bbp MyObj) MarshalBebopTo(buf []byte) {
 		}
 		at += 8
 	}
+	return at
 }
 
 func (bbp *MyObj) UnmarshalBebop(buf []byte) (err error) {
@@ -102,7 +103,7 @@ func (bbp *MyObj) MustUnmarshalBebop(buf []byte) {
 
 func (bbp MyObj) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
-	iohelp.WriteUint32(w, uint32(bbp.bodyLen()-4))
+	iohelp.WriteUint32(w, uint32(bbp.Size()-4))
 	if bbp.Start != nil {
 		w.Write([]byte{1})
 		if *bbp.Start != (time.Time{}) {
@@ -143,7 +144,7 @@ func (bbp *MyObj) DecodeBebop(ior io.Reader) (err error) {
 	}
 }
 
-func (bbp MyObj) bodyLen() int {
+func (bbp MyObj) Size() int {
 	bodyLen := 5
 	if bbp.Start != nil {
 		bodyLen += 1

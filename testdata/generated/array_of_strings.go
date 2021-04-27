@@ -16,12 +16,12 @@ type ArrayOfStrings struct {
 }
 
 func (bbp ArrayOfStrings) MarshalBebop() []byte {
-	buf := make([]byte, bbp.bodyLen())
+	buf := make([]byte, bbp.Size())
 	bbp.MarshalBebopTo(buf)
 	return buf
 }
 
-func (bbp ArrayOfStrings) MarshalBebopTo(buf []byte) {
+func (bbp ArrayOfStrings) MarshalBebopTo(buf []byte) int {
 	at := 0
 	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.Strings)))
 	at += 4
@@ -31,6 +31,7 @@ func (bbp ArrayOfStrings) MarshalBebopTo(buf []byte) {
 		copy(buf[at:at+len(v1)], []byte(v1))
 		at += len(v1)
 	}
+	return at
 }
 
 func (bbp *ArrayOfStrings) UnmarshalBebop(buf []byte) (err error) {
@@ -41,7 +42,7 @@ func (bbp *ArrayOfStrings) UnmarshalBebop(buf []byte) (err error) {
 	bbp.Strings = make([]string, iohelp.ReadUint32Bytes(buf[at:]))
 	at += 4
 	for i1 := range bbp.Strings {
-		(bbp.Strings)[i1], err = iohelp.ReadStringBytes(buf[at:])
+		(bbp.Strings)[i1], err = iohelp.ReadStringBytesSharedMemory(buf[at:])
 		if err != nil {
 			 return err
 		}
@@ -55,7 +56,7 @@ func (bbp *ArrayOfStrings) MustUnmarshalBebop(buf []byte) {
 	bbp.Strings = make([]string, iohelp.ReadUint32Bytes(buf[at:]))
 	at += 4
 	for i1 := range bbp.Strings {
-		(bbp.Strings)[i1] = iohelp.MustReadStringBytes(buf[at:])
+		(bbp.Strings)[i1] =  iohelp.MustReadStringBytesSharedMemory(buf[at:])
 		at += 4+len((bbp.Strings)[i1])
 	}
 }
@@ -79,7 +80,7 @@ func (bbp *ArrayOfStrings) DecodeBebop(ior io.Reader) (err error) {
 	return r.Err
 }
 
-func (bbp ArrayOfStrings) bodyLen() int {
+func (bbp ArrayOfStrings) Size() int {
 	bodyLen := 0
 	bodyLen += 4
 	for _, elem := range bbp.Strings {
