@@ -1,10 +1,12 @@
 package bebop
 
 import (
+	"math/rand"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestValidateError(t *testing.T) {
@@ -96,6 +98,7 @@ var genTestFiles = []string{
 }
 
 func TestGenerateToFile(t *testing.T) {
+	rand.Seed(time.Now().UnixNano())
 	for _, filename := range genTestFiles {
 		filename := filename
 		t.Run(filename, func(t *testing.T) {
@@ -117,6 +120,7 @@ func TestGenerateToFile(t *testing.T) {
 			err = bopf.Generate(out, GenerateSettings{
 				PackageName:           "generated",
 				GenerateUnsafeMethods: true,
+				SharedMemoryStrings:   rand.Float64() < .5,
 			})
 			if err != nil {
 				t.Fatalf("generation failed: %v", err)
