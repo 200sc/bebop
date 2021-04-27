@@ -12,7 +12,7 @@ type Record interface {
 	// MarshalBebopTo writes a bebop record to an existing byte slice. It is primarily
 	// used internally, and performs no checks to ensure the given byte slice is large
 	// enough to contain the record.
-	MarshalBebopTo([]byte)
+	MarshalBebopTo([]byte) (n int)
 	// UnmarshalBebop is parallel to Marshal as Decode is to Encode. It has similar
 	// performance improvements.
 	UnmarshalBebop([]byte) error
@@ -21,5 +21,9 @@ type Record interface {
 	// larger than a network packet and able to be acted upon as writer receives the byte
 	// stream, not only after the entire message has been received.
 	EncodeBebop(io.Writer) error
+	// DecodeBebop is to EncodeBebop as UnmarshlBebop is to MarshalBebop
 	DecodeBebop(io.Reader) error
+	// Size reports how many bytes a record takes up. It is only valid for the state of the
+	// record when Size is called.
+	Size() int
 }

@@ -78,11 +78,6 @@ At `main/bebopfmt` there is a cli utility to format and rewrite bop files. It ta
 
 The following is a list of known issues with the current version of the project, ordered by approximate priority for addressing them.
 
-The Record interface could have two changes: 
-
-1. `Size() int`, essentially exposing the existing `bodySize` method. This would enable single allocations if working through and performing checks against each element in a list. 
-2. `MarshalBebopTo([]byte)` could return `n int` for how far into the byte slice the record was written.
-
 Original bebop does not support one .bop file importing type definitions from another .bop file, and so neither does this, yet.
 
 - This is nontrivial, and requires a lot of design toward the importing / packaging ecosystem.
