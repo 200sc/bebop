@@ -45,7 +45,7 @@ func (bbp Musician) MarshalBebopTo(buf []byte) int {
 
 func (bbp *Musician) UnmarshalBebop(buf []byte) (err error) {
 	at := 0
-	bbp.name, err = iohelp.ReadStringBytesSharedMemory(buf[at:])
+	bbp.name, err = iohelp.ReadStringBytes(buf[at:])
 	if err != nil {
 		 return err
 	}
@@ -58,7 +58,7 @@ func (bbp *Musician) UnmarshalBebop(buf []byte) (err error) {
 
 func (bbp *Musician) MustUnmarshalBebop(buf []byte) {
 	at := 0
-	bbp.name =  iohelp.MustReadStringBytesSharedMemory(buf[at:])
+	bbp.name =  iohelp.MustReadStringBytes(buf[at:])
 	at += 4+len(bbp.name)
 	bbp.plays = Instrument(iohelp.ReadUint32Bytes(buf[at:]))
 	at += 4
@@ -291,7 +291,7 @@ func (bbp *Song) UnmarshalBebop(buf []byte) (err error) {
 		case 1:
 			at += 1
 			bbp.Title = new(string)
-			(*bbp.Title), err = iohelp.ReadStringBytesSharedMemory(buf[at:])
+			(*bbp.Title), err = iohelp.ReadStringBytes(buf[at:])
 			if err != nil {
 				 return err
 			}
@@ -334,7 +334,7 @@ func (bbp *Song) MustUnmarshalBebop(buf []byte) {
 		case 1:
 			at += 1
 			bbp.Title = new(string)
-			(*bbp.Title) =  iohelp.MustReadStringBytesSharedMemory(buf[at:])
+			(*bbp.Title) =  iohelp.MustReadStringBytes(buf[at:])
 			at += 4+len((*bbp.Title))
 		case 2:
 			at += 1

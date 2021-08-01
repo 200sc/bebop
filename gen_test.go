@@ -118,9 +118,9 @@ func TestGenerateToFile(t *testing.T) {
 			}
 			defer out.Close()
 			err = bopf.Generate(out, GenerateSettings{
-				PackageName:           "generated",
+				PackageName:         "generated",
 				GenerateUnsafeMethods: true,
-				SharedMemoryStrings:   rand.Float64() < .5,
+				SharedMemoryStrings: false,
 			})
 			if err != nil {
 				t.Fatalf("generation failed: %v", err)
