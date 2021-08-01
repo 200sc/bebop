@@ -1046,8 +1046,9 @@ func TestReadFile(t *testing.T) {
 			expected: File{
 				Unions: []Union{
 					{
-						Name:   "U",
-						OpCode: bytesToOpCode([]byte("yeah")),
+						Comment: "*\n * This union is so documented!\n ",
+						Name:    "U",
+						OpCode:  bytesToOpCode([]byte("yeah")),
 						Fields: map[uint8]UnionField{
 							1: {
 								Message: &Message{

@@ -1557,6 +1557,12 @@ func (f File) usedTypes() map[string]bool {
 			out[k] = v
 		}
 	}
+	for _, union := range f.Unions {
+		unionOut := union.usedTypes()
+		for k, v := range unionOut {
+			out[k] = v
+		}
+	}
 	return out
 }
 

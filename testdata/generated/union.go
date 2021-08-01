@@ -10,6 +10,197 @@ import (
 	"github.com/200sc/bebop/iohelp"
 )
 
+var _ bebop.Record = &A{}
+
+type A struct {
+	A *uint32
+}
+
+func (bbp A) MarshalBebop() []byte {
+	buf := make([]byte, bbp.Size())
+	bbp.MarshalBebopTo(buf)
+	return buf
+}
+
+func (bbp A) MarshalBebopTo(buf []byte) int {
+	at := 0
+	iohelp.WriteUint32Bytes(buf[at:], uint32(bbp.Size()-4))
+	at += 4
+	if bbp.A != nil {
+		buf[at] = 1
+		at++
+		iohelp.WriteUint32Bytes(buf[at:], *bbp.A)
+		at += 4
+	}
+	return at
+}
+
+func (bbp *A) UnmarshalBebop(buf []byte) (err error) {
+	at := 0
+	_ = iohelp.ReadUint32Bytes(buf[at:])
+	buf = buf[4:]
+	for {
+		switch buf[at] {
+		case 1:
+			at += 1
+			bbp.A = new(uint32)
+			if len(buf[at:]) < 4 {
+				 return iohelp.ErrTooShort
+			}
+			(*bbp.A) = iohelp.ReadUint32Bytes(buf[at:])
+			at += 4
+		default:
+			return nil
+		}
+	}
+}
+
+func (bbp *A) MustUnmarshalBebop(buf []byte) {
+	at := 0
+	_ = iohelp.ReadUint32Bytes(buf[at:])
+	buf = buf[4:]
+	for {
+		switch buf[at] {
+		case 1:
+			at += 1
+			bbp.A = new(uint32)
+			(*bbp.A) = iohelp.ReadUint32Bytes(buf[at:])
+			at += 4
+		default:
+			return
+		}
+	}
+}
+
+func (bbp A) EncodeBebop(iow io.Writer) (err error) {
+	w := iohelp.NewErrorWriter(iow)
+	iohelp.WriteUint32(w, uint32(bbp.Size()-4))
+	if bbp.A != nil {
+		w.Write([]byte{1})
+		iohelp.WriteUint32(w, *bbp.A)
+	}
+	w.Write([]byte{0})
+	return w.Err
+}
+
+func (bbp *A) DecodeBebop(ior io.Reader) (err error) {
+	er := iohelp.NewErrorReader(ior)
+	bodyLen := iohelp.ReadUint32(er)
+	body := make([]byte, bodyLen)
+	er.Read(body)
+	r := iohelp.NewErrorReader(bytes.NewReader(body))
+	for {
+		switch iohelp.ReadByte(r) {
+		case 1:
+			bbp.A = new(uint32)
+			*bbp.A = iohelp.ReadUint32(r)
+		default:
+			return er.Err
+		}
+	}
+}
+
+func (bbp A) Size() int {
+	bodyLen := 5
+	if bbp.A != nil {
+		bodyLen += 1
+		bodyLen += 4
+	}
+	return bodyLen
+}
+
+func makeA(r iohelp.ErrorReader) (A, error) {
+	v := A{}
+	err := v.DecodeBebop(r)
+	return v, err
+}
+
+func makeAFromBytes(buf []byte) (A, error) {
+	v := A{}
+	err := v.UnmarshalBebop(buf)
+	return v, err
+}
+
+func mustMakeAFromBytes(buf []byte) A {
+	v := A{}
+	v.MustUnmarshalBebop(buf)
+	return v
+}
+
+var _ bebop.Record = &B{}
+
+//*
+//     * This branch is, too!
+//     
+type B struct {
+	B bool
+}
+
+func (bbp B) MarshalBebop() []byte {
+	buf := make([]byte, bbp.Size())
+	bbp.MarshalBebopTo(buf)
+	return buf
+}
+
+func (bbp B) MarshalBebopTo(buf []byte) int {
+	at := 0
+	iohelp.WriteBoolBytes(buf[at:], bbp.B)
+	at += 1
+	return at
+}
+
+func (bbp *B) UnmarshalBebop(buf []byte) (err error) {
+	at := 0
+	if len(buf[at:]) < 1 {
+		 return iohelp.ErrTooShort
+	}
+	bbp.B = iohelp.ReadBoolBytes(buf[at:])
+	at += 1
+	return nil
+}
+
+func (bbp *B) MustUnmarshalBebop(buf []byte) {
+	at := 0
+	bbp.B = iohelp.ReadBoolBytes(buf[at:])
+	at += 1
+}
+
+func (bbp B) EncodeBebop(iow io.Writer) (err error) {
+	w := iohelp.NewErrorWriter(iow)
+	iohelp.WriteBool(w, bbp.B)
+	return w.Err
+}
+
+func (bbp *B) DecodeBebop(ior io.Reader) (err error) {
+	r := iohelp.NewErrorReader(ior)
+	bbp.B = iohelp.ReadBool(r)
+	return r.Err
+}
+
+func (bbp B) Size() int {
+	bodyLen := 0
+	bodyLen += 1
+	return bodyLen
+}
+
+func makeB(r iohelp.ErrorReader) (B, error) {
+	v := B{}
+	err := v.DecodeBebop(r)
+	return v, err
+}
+
+func makeBFromBytes(buf []byte) (B, error) {
+	v := B{}
+	err := v.UnmarshalBebop(buf)
+	return v, err
+}
+
+func mustMakeBFromBytes(buf []byte) B {
+	v := B{}
+	v.MustUnmarshalBebop(buf)
+	return v
+}
+
 var _ bebop.Record = &C{}
 
 type C struct {
@@ -385,201 +576,13 @@ func mustMakeWFromBytes(buf []byte) W {
 	return v
 }
 
-var _ bebop.Record = &A{}
-
-type A struct {
-	A *uint32
-}
-
-func (bbp A) MarshalBebop() []byte {
-	buf := make([]byte, bbp.Size())
-	bbp.MarshalBebopTo(buf)
-	return buf
-}
-
-func (bbp A) MarshalBebopTo(buf []byte) int {
-	at := 0
-	iohelp.WriteUint32Bytes(buf[at:], uint32(bbp.Size()-4))
-	at += 4
-	if bbp.A != nil {
-		buf[at] = 1
-		at++
-		iohelp.WriteUint32Bytes(buf[at:], *bbp.A)
-		at += 4
-	}
-	return at
-}
-
-func (bbp *A) UnmarshalBebop(buf []byte) (err error) {
-	at := 0
-	_ = iohelp.ReadUint32Bytes(buf[at:])
-	buf = buf[4:]
-	for {
-		switch buf[at] {
-		case 1:
-			at += 1
-			bbp.A = new(uint32)
-			if len(buf[at:]) < 4 {
-				 return iohelp.ErrTooShort
-			}
-			(*bbp.A) = iohelp.ReadUint32Bytes(buf[at:])
-			at += 4
-		default:
-			return nil
-		}
-	}
-}
-
-func (bbp *A) MustUnmarshalBebop(buf []byte) {
-	at := 0
-	_ = iohelp.ReadUint32Bytes(buf[at:])
-	buf = buf[4:]
-	for {
-		switch buf[at] {
-		case 1:
-			at += 1
-			bbp.A = new(uint32)
-			(*bbp.A) = iohelp.ReadUint32Bytes(buf[at:])
-			at += 4
-		default:
-			return
-		}
-	}
-}
-
-func (bbp A) EncodeBebop(iow io.Writer) (err error) {
-	w := iohelp.NewErrorWriter(iow)
-	iohelp.WriteUint32(w, uint32(bbp.Size()-4))
-	if bbp.A != nil {
-		w.Write([]byte{1})
-		iohelp.WriteUint32(w, *bbp.A)
-	}
-	w.Write([]byte{0})
-	return w.Err
-}
-
-func (bbp *A) DecodeBebop(ior io.Reader) (err error) {
-	er := iohelp.NewErrorReader(ior)
-	bodyLen := iohelp.ReadUint32(er)
-	body := make([]byte, bodyLen)
-	er.Read(body)
-	r := iohelp.NewErrorReader(bytes.NewReader(body))
-	for {
-		switch iohelp.ReadByte(r) {
-		case 1:
-			bbp.A = new(uint32)
-			*bbp.A = iohelp.ReadUint32(r)
-		default:
-			return er.Err
-		}
-	}
-}
-
-func (bbp A) Size() int {
-	bodyLen := 5
-	if bbp.A != nil {
-		bodyLen += 1
-		bodyLen += 4
-	}
-	return bodyLen
-}
-
-func makeA(r iohelp.ErrorReader) (A, error) {
-	v := A{}
-	err := v.DecodeBebop(r)
-	return v, err
-}
-
-func makeAFromBytes(buf []byte) (A, error) {
-	v := A{}
-	err := v.UnmarshalBebop(buf)
-	return v, err
-}
-
-func mustMakeAFromBytes(buf []byte) A {
-	v := A{}
-	v.MustUnmarshalBebop(buf)
-	return v
-}
-
-var _ bebop.Record = &B{}
-
-//*
-//     * This branch is, too!
-//     
-type B struct {
-	B bool
-}
-
-func (bbp B) MarshalBebop() []byte {
-	buf := make([]byte, bbp.Size())
-	bbp.MarshalBebopTo(buf)
-	return buf
-}
-
-func (bbp B) MarshalBebopTo(buf []byte) int {
-	at := 0
-	iohelp.WriteBoolBytes(buf[at:], bbp.B)
-	at += 1
-	return at
-}
-
-func (bbp *B) UnmarshalBebop(buf []byte) (err error) {
-	at := 0
-	if len(buf[at:]) < 1 {
-		 return iohelp.ErrTooShort
-	}
-	bbp.B = iohelp.ReadBoolBytes(buf[at:])
-	at += 1
-	return nil
-}
-
-func (bbp *B) MustUnmarshalBebop(buf []byte) {
-	at := 0
-	bbp.B = iohelp.ReadBoolBytes(buf[at:])
-	at += 1
-}
-
-func (bbp B) EncodeBebop(iow io.Writer) (err error) {
-	w := iohelp.NewErrorWriter(iow)
-	iohelp.WriteBool(w, bbp.B)
-	return w.Err
-}
-
-func (bbp *B) DecodeBebop(ior io.Reader) (err error) {
-	r := iohelp.NewErrorReader(ior)
-	bbp.B = iohelp.ReadBool(r)
-	return r.Err
-}
-
-func (bbp B) Size() int {
-	bodyLen := 0
-	bodyLen += 1
-	return bodyLen
-}
-
-func makeB(r iohelp.ErrorReader) (B, error) {
-	v := B{}
-	err := v.DecodeBebop(r)
-	return v, err
-}
-
-func makeBFromBytes(buf []byte) (B, error) {
-	v := B{}
-	err := v.UnmarshalBebop(buf)
-	return v, err
-}
-
-func mustMakeBFromBytes(buf []byte) B {
-	v := B{}
-	v.MustUnmarshalBebop(buf)
-	return v
-}
-
 const UOpCode = 0x79656168
 
 var _ bebop.Record = &U{}
 
+//*
+// * This union is so documented!
+// 
 type U struct {
 	A *A
 	B *B
