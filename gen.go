@@ -486,6 +486,7 @@ func (st Struct) Generate(w io.Writer, settings GenerateSettings) {
 }
 
 type fieldWithNumber struct {
+	UnionField UnionField
 	Field
 	num uint8
 }
@@ -694,26 +695,35 @@ func (u Union) Generate(w io.Writer, settings GenerateSettings) {
 	for i, ufd := range u.Fields {
 		var fd Field
 		if ufd.Struct != nil {
-			ufd.Struct.Generate(w, settings)
 			fd.FieldType.Simple = ufd.Struct.Name
 		}
 		if ufd.Message != nil {
-			ufd.Message.Generate(w, settings)
 			fd.FieldType.Simple = ufd.Message.Name
 		}
 		if ufd.Union != nil {
-			ufd.Union.Generate(w, settings)
 			fd.FieldType.Simple = ufd.Union.Name
 		}
 		fd.Name = fd.FieldType.Simple
 		fields = append(fields, fieldWithNumber{
-			Field: fd,
-			num:   i,
+			UnionField: ufd,
+			Field:      fd,
+			num:        i,
 		})
 	}
 	sort.Slice(fields, func(i, j int) bool {
 		return fields[i].num < fields[j].num
 	})
+	for _, field := range fields {
+		if field.UnionField.Struct != nil {
+			field.UnionField.Struct.Generate(w, settings)
+		}
+		if field.UnionField.Message != nil {
+			field.UnionField.Message.Generate(w, settings)
+		}
+		if field.UnionField.Union != nil {
+			field.UnionField.Union.Generate(w, settings)
+		}
+	}
 	exposedName := exposeName(u.Name)
 	if u.OpCode != 0 {
 		writeLine(w, "const %sOpCode = 0x%x", exposedName, u.OpCode)
