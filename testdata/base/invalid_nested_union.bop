@@ -1,0 +1,5 @@
+union U1 {
+    1 -> union U2 {
+        1 -> struct S1 { string s; }
+    }
+}

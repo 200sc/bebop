@@ -476,8 +476,8 @@ func readUnion(tr *tokenReader) (Union, error) {
 			if _, err := expectNext(tr, tokenKindArrow); err != nil {
 				return union, err
 			}
-			if err := expectAnyOfNext(tr, tokenKindMessage, tokenKindStruct, tokenKindUnion); err != nil {
-				return union, readError(tr.nextToken, "union fields must be message, struct, or union")
+			if err := expectAnyOfNext(tr, tokenKindMessage, tokenKindStruct); err != nil {
+				return union, readError(tr.nextToken, "union fields must be messages or structs")
 			}
 			unionFd := UnionField{}
 			tk := tr.Token()
@@ -496,13 +496,6 @@ func readUnion(tr *tokenReader) (Union, error) {
 				}
 				st.Comment = strings.Join(nextCommentLines, "\n")
 				unionFd.Struct = &st
-			case tokenKindUnion:
-				subUnion, err := readUnion(tr)
-				if err != nil {
-					return union, err
-				}
-				subUnion.Comment = strings.Join(nextCommentLines, "\n")
-				unionFd.Union = &subUnion
 			}
 
 			unionFd.Deprecated = nextIsDeprecated

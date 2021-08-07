@@ -9,10 +9,6 @@ union U {
      */
     2 -> struct B { bool b; }
     3 -> struct C { }
-    4 -> union W {
-        1 -> struct D { string s; }
-        2 -> struct X { bool x; }
-    }
 }
 
 union List {

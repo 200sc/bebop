@@ -1082,35 +1082,6 @@ func TestReadFile(t *testing.T) {
 									Name: "C",
 								},
 							},
-							4: {
-								Union: &Union{
-									Name: "W",
-									Fields: map[uint8]UnionField{
-										1: {
-											Struct: &Struct{
-												Name: "D",
-												Fields: []Field{{
-													Name: "s",
-													FieldType: FieldType{
-														Simple: "string",
-													},
-												}},
-											},
-										},
-										2: {
-											Struct: &Struct{
-												Name: "X",
-												Fields: []Field{{
-													Name: "x",
-													FieldType: FieldType{
-														Simple: "bool",
-													},
-												}},
-											},
-										},
-									},
-								},
-							},
 						},
 					},
 					{
@@ -1213,6 +1184,7 @@ func TestReadFileError(t *testing.T) {
 		{file: "invalid_readonly_enum", errMessage: "[0:15] expected (Struct) got (Enum)"},
 		{file: "invalid_readonly_message", errMessage: "[0:18] expected (Struct) got (Message)"},
 		{file: "invalid_readonly_comment", errMessage: "[0:20] expected (Struct) got (Block Comment)"},
+		{file: "invalid_nested_union", errMessage: "[1:15] union fields must be messages or structs"},
 	}
 	for _, tc := range tcs {
 		tc := tc
