@@ -279,8 +279,6 @@ tokenLoop:
 			fieldBytes = append(fieldBytes, ' ')
 			tk := tr.Token()
 			switch tk.kind {
-			case tokenKindUnion:
-				fieldBytes = append(fieldBytes, formatUnion(tr, prefix+"\t")...)
 			case tokenKindMessage:
 				fieldBytes = append(fieldBytes, formatMessage(tr, prefix+"\t")...)
 			case tokenKindStruct:
