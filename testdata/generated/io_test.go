@@ -411,28 +411,6 @@ func TestMarshalCycleRecords(t *testing.T) {
 			unmarshalTo:  &generated.U{},
 			unmarshalTo2: &generated.U{},
 		}, {
-			name: "Union U: WD",
-			record: &generated.U{
-				W: &generated.W{
-					D: &generated.D{
-						S: "first",
-					},
-				},
-			},
-			unmarshalTo:  &generated.U{},
-			unmarshalTo2: &generated.U{},
-		}, {
-			name: "Union U: WX",
-			record: &generated.U{
-				W: &generated.W{
-					X: &generated.X{
-						X: true,
-					},
-				},
-			},
-			unmarshalTo:  &generated.U{},
-			unmarshalTo2: &generated.U{},
-		}, {
 			name: "Union List",
 			record: &generated.List{
 				Cons: &generated.Cons{
