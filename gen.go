@@ -486,6 +486,7 @@ func (st Struct) Generate(w io.Writer, settings GenerateSettings) {
 }
 
 type fieldWithNumber struct {
+	UnionField UnionField
 	Field
 	num uint8
 }
@@ -694,26 +695,29 @@ func (u Union) Generate(w io.Writer, settings GenerateSettings) {
 	for i, ufd := range u.Fields {
 		var fd Field
 		if ufd.Struct != nil {
-			ufd.Struct.Generate(w, settings)
 			fd.FieldType.Simple = ufd.Struct.Name
 		}
 		if ufd.Message != nil {
-			ufd.Message.Generate(w, settings)
 			fd.FieldType.Simple = ufd.Message.Name
-		}
-		if ufd.Union != nil {
-			ufd.Union.Generate(w, settings)
-			fd.FieldType.Simple = ufd.Union.Name
 		}
 		fd.Name = fd.FieldType.Simple
 		fields = append(fields, fieldWithNumber{
-			Field: fd,
-			num:   i,
+			UnionField: ufd,
+			Field:      fd,
+			num:        i,
 		})
 	}
 	sort.Slice(fields, func(i, j int) bool {
 		return fields[i].num < fields[j].num
 	})
+	for _, field := range fields {
+		if field.UnionField.Struct != nil {
+			field.UnionField.Struct.Generate(w, settings)
+		}
+		if field.UnionField.Message != nil {
+			field.UnionField.Message.Generate(w, settings)
+		}
+	}
 	exposedName := exposeName(u.Name)
 	if u.OpCode != 0 {
 		writeLine(w, "const %sOpCode = 0x%x", exposedName, u.OpCode)
@@ -1234,12 +1238,6 @@ func (u Union) typeUnmarshallers() map[string]string {
 				"}"
 			out[ufd.Message.Name] = format
 		}
-		if ufd.Union != nil {
-			uout := ufd.Union.typeUnmarshallers()
-			for k, v := range uout {
-				out[k] = v
-			}
-		}
 	}
 	return out
 }
@@ -1305,12 +1303,6 @@ func (u Union) typeMarshallers() map[string]string {
 				"}"
 			out[ufd.Message.Name] = format
 		}
-		if ufd.Union != nil {
-			uout := ufd.Union.typeMarshallers()
-			for k, v := range uout {
-				out[k] = v
-			}
-		}
 	}
 	return out
 }
@@ -1348,12 +1340,6 @@ func (u Union) typeLengthers() map[string]string {
 		}
 		if ufd.Message != nil {
 			out[ufd.Message.Name] = "bodyLen += (%ASGN).Size()"
-		}
-		if ufd.Union != nil {
-			uout := ufd.Union.typeLengthers()
-			for k, v := range uout {
-				out[k] = v
-			}
 		}
 	}
 	return out
@@ -1413,12 +1399,6 @@ func (u Union) typeByters() map[string]string {
 			format := "(%ASGN).MarshalBebopTo(buf[at:])\n" +
 				"at += (%ASGN).Size()"
 			out[ufd.Message.Name] = format
-		}
-		if ufd.Union != nil {
-			uout := ufd.Union.typeByters()
-			for k, v := range uout {
-				out[k] = v
-			}
 		}
 	}
 	return out
@@ -1508,12 +1488,6 @@ func (u Union) typeByteReaders() map[string]string {
 				"}\n" +
 				"at += (%ASGN).Size()"
 		}
-		if ufd.Union != nil {
-			uout := ufd.Union.typeByteReaders()
-			for k, v := range uout {
-				out[k] = v
-			}
-		}
 	}
 	return out
 }
@@ -1535,9 +1509,6 @@ func (f File) customRecordTypes() map[string]struct{} {
 			if ufd.Message != nil {
 				out[ufd.Message.Name] = struct{}{}
 			}
-			if ufd.Union != nil {
-				out[ufd.Union.Name] = struct{}{}
-			}
 		}
 	}
 	return out
@@ -1554,6 +1525,12 @@ func (f File) usedTypes() map[string]bool {
 	for _, msg := range f.Messages {
 		msgOut := msg.usedTypes()
 		for k, v := range msgOut {
+			out[k] = v
+		}
+	}
+	for _, union := range f.Unions {
+		unionOut := union.usedTypes()
+		for k, v := range unionOut {
 			out[k] = v
 		}
 	}
@@ -1611,9 +1588,6 @@ func (ufd UnionField) usedTypes() map[string]bool {
 	}
 	if ufd.Message != nil {
 		return ufd.Message.usedTypes()
-	}
-	if ufd.Union != nil {
-		return ufd.Union.usedTypes()
 	}
 	return map[string]bool{}
 }

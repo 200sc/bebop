@@ -38,7 +38,7 @@ func ReadFile(r io.Reader) (File, error) {
 			if nextRecordOpCode != 0 {
 				return f, readError(tk, "enums may not have attached op codes")
 			}
-			if nextRecordReadOnly != false {
+			if nextRecordReadOnly {
 				return f, readError(tk, "enums cannot be readonly")
 			}
 			en, err := readEnum(tr)
@@ -68,7 +68,7 @@ func ReadFile(r io.Reader) (File, error) {
 			f.Structs = append(f.Structs, st)
 			nextRecordReadOnly = false
 		case tokenKindMessage:
-			if nextRecordReadOnly != false {
+			if nextRecordReadOnly {
 				return f, readError(tk, "messages cannot be readonly")
 			}
 			msg, err := readMessage(tr)
@@ -79,7 +79,7 @@ func ReadFile(r io.Reader) (File, error) {
 			msg.OpCode = nextRecordOpCode
 			f.Messages = append(f.Messages, msg)
 		case tokenKindUnion:
-			if nextRecordReadOnly != false {
+			if nextRecordReadOnly {
 				return f, readError(tk, "unions cannot be readonly")
 			}
 			union, err := readUnion(tr)
@@ -476,8 +476,8 @@ func readUnion(tr *tokenReader) (Union, error) {
 			if _, err := expectNext(tr, tokenKindArrow); err != nil {
 				return union, err
 			}
-			if err := expectAnyOfNext(tr, tokenKindMessage, tokenKindStruct, tokenKindUnion); err != nil {
-				return union, readError(tr.nextToken, "union fields must be message, struct, or union")
+			if err := expectAnyOfNext(tr, tokenKindMessage, tokenKindStruct); err != nil {
+				return union, readError(tr.nextToken, "union fields must be messages or structs")
 			}
 			unionFd := UnionField{}
 			tk := tr.Token()
@@ -496,13 +496,6 @@ func readUnion(tr *tokenReader) (Union, error) {
 				}
 				st.Comment = strings.Join(nextCommentLines, "\n")
 				unionFd.Struct = &st
-			case tokenKindUnion:
-				subUnion, err := readUnion(tr)
-				if err != nil {
-					return union, err
-				}
-				subUnion.Comment = strings.Join(nextCommentLines, "\n")
-				unionFd.Union = &subUnion
 			}
 
 			unionFd.Deprecated = nextIsDeprecated
@@ -563,6 +556,9 @@ func readOpCode(tr *tokenReader) (int32, error) {
 	if _, err := expectNext(tr, tokenKindCloseParen, tokenKindCloseSquare); err != nil {
 		return 0, err
 	}
+
+	optNewline(tr)
+
 	return opCode, nil
 }
 

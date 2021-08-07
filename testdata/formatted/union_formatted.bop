@@ -6,18 +6,13 @@ union U {
 	1 -> message A {
 		1 -> uint32 a;
 	}
+	/**
+     * This branch is, too!
+     */
 	2 -> struct B {
 		bool b;
 	}
 	3 -> struct C {
-	}
-	4 -> union W {
-		1 -> struct D {
-			string s;
-		}
-		2 -> struct X {
-			bool x;
-		}
 	}
 }
 

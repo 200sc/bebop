@@ -199,11 +199,12 @@ tokenLoop:
 		t := tr.Token()
 		switch t.kind {
 		case tokenKindLineComment:
-			msgBytes := append([]byte(prefix), t.concrete...)
-			msgBytes = append(msgBytes, '\n')
+			cmt := append([]byte(prefix), t.concrete...)
+			msgBytes = append(msgBytes, cmt...)
 		case tokenKindBlockComment:
-			msgBytes := append([]byte(prefix), t.concrete...)
-			msgBytes = append(msgBytes, []byte("\n")...)
+			cmt := append([]byte(prefix), t.concrete...)
+			cmt = append(cmt, []byte("\n")...)
+			msgBytes = append(msgBytes, cmt...)
 		case tokenKindOpenSquare:
 			// deprecated, next tokens are 'deprecated', '(', string lit, ')', ']'
 			deprecatedBytes := append([]byte(prefix), t.concrete...)
@@ -253,11 +254,12 @@ tokenLoop:
 		t := tr.Token()
 		switch t.kind {
 		case tokenKindLineComment:
-			unionBytes := append([]byte(prefix), t.concrete...)
-			unionBytes = append(unionBytes, '\n')
+			cmt := append([]byte(prefix), t.concrete...)
+			unionBytes = append(unionBytes, cmt...)
 		case tokenKindBlockComment:
-			unionBytes := append([]byte(prefix), t.concrete...)
-			unionBytes = append(unionBytes, []byte("\n")...)
+			cmt := append([]byte(prefix), t.concrete...)
+			cmt = append(cmt, []byte("\n")...)
+			unionBytes = append(unionBytes, cmt...)
 		case tokenKindOpenSquare:
 			// deprecated, next tokens are 'deprecated', '(', string lit, ')', ']'
 			deprecatedBytes := append([]byte(prefix), t.concrete...)
@@ -277,8 +279,6 @@ tokenLoop:
 			fieldBytes = append(fieldBytes, ' ')
 			tk := tr.Token()
 			switch tk.kind {
-			case tokenKindUnion:
-				fieldBytes = append(fieldBytes, formatUnion(tr, prefix+"\t")...)
 			case tokenKindMessage:
 				fieldBytes = append(fieldBytes, formatMessage(tr, prefix+"\t")...)
 			case tokenKindStruct:

@@ -207,12 +207,6 @@ func (uf UnionField) equals(uf2 UnionField) error {
 	if uf.Struct != nil && uf2.Struct != nil {
 		return uf.Struct.equals(*uf2.Struct)
 	}
-	if (uf.Union == nil) != (uf2.Union == nil) {
-		return fmt.Errorf("field is union type mismatch: %v vs %v", uf.Union != nil, uf2.Union != nil)
-	}
-	if uf.Union != nil && uf2.Union != nil {
-		return uf.Union.equals(*uf2.Union)
-	}
 	if (uf.Message == nil) != (uf2.Message == nil) {
 		return fmt.Errorf("field is message type mismatch: %v vs %v", uf.Message != nil, uf2.Message != nil)
 	}

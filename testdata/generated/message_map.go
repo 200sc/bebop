@@ -56,7 +56,7 @@ func (bbp *ReadOnlyMap) UnmarshalBebop(buf []byte) (err error) {
 			at += 4
 			(*bbp.Vals) = make(map[string]uint8,ln17)
 			for i := uint32(0); i < ln17; i++ {
-				k3, err := iohelp.ReadStringBytesSharedMemory(buf[at:])
+				k3, err := iohelp.ReadStringBytes(buf[at:])
 				if err != nil {
 					 return err
 				}
@@ -86,7 +86,7 @@ func (bbp *ReadOnlyMap) MustUnmarshalBebop(buf []byte) {
 			at += 4
 			(*bbp.Vals) = make(map[string]uint8,ln18)
 			for i := uint32(0); i < ln18; i++ {
-				k3 :=  iohelp.MustReadStringBytesSharedMemory(buf[at:])
+				k3 :=  iohelp.MustReadStringBytes(buf[at:])
 				at += 4+len(k3)
 				((*bbp.Vals))[k3] = iohelp.ReadUint8Bytes(buf[at:])
 				at += 1

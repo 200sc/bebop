@@ -33,7 +33,7 @@ func (bbp Print) MarshalBebopTo(buf []byte) int {
 
 func (bbp *Print) UnmarshalBebop(buf []byte) (err error) {
 	at := 0
-	bbp.Printout, err = iohelp.ReadStringBytesSharedMemory(buf[at:])
+	bbp.Printout, err = iohelp.ReadStringBytes(buf[at:])
 	if err != nil {
 		 return err
 	}
@@ -43,7 +43,7 @@ func (bbp *Print) UnmarshalBebop(buf []byte) (err error) {
 
 func (bbp *Print) MustUnmarshalBebop(buf []byte) {
 	at := 0
-	bbp.Printout =  iohelp.MustReadStringBytesSharedMemory(buf[at:])
+	bbp.Printout =  iohelp.MustReadStringBytes(buf[at:])
 	at += 4+len(bbp.Printout)
 }
 

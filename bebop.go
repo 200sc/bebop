@@ -56,7 +56,6 @@ type Union struct {
 type UnionField struct {
 	Message *Message
 	Struct  *Struct
-	Union   *Union
 	// DeprecatedMessage is only provided if Deprecated is true.
 	DeprecatedMessage string
 	Deprecated        bool
