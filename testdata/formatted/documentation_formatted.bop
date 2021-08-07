@@ -19,9 +19,11 @@ enum DocE {
 }
 /* Documented message */
 message DocM {
+	/* Documented field */
 	1 -> int32 x;
 	[deprecated("y in DocM")]
 	2 -> int32 y;
+	/* Deprecated, documented field */
 	[deprecated("z in DocM")]
 	3 -> int32 z;
 }
