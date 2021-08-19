@@ -99,7 +99,7 @@ func TestReadFile(t *testing.T) {
 					{
 						SimpleType: "float64",
 						Name:       "float64const",
-						FloatValue: floatPointer(1),
+						FloatValue: floatPointer(1.5),
 					},
 					{
 						SimpleType: "float64",
@@ -1245,6 +1245,8 @@ func TestReadFileError(t *testing.T) {
 		errMessage string
 	}
 	tcs := []testCase{
+		{file: "invalid_const_no_semi", errMessage: "[0:34] expected (Semicolon), got no token"},
+		{file: "invalid_const_float_no_semi", errMessage: "[0:37] expected (Semicolon), got no token"},
 		{file: "invalid_enum_with_op_code", errMessage: "[1:4] enums may not have attached op codes"},
 		{file: "invalid_op_code_1", errMessage: "[0:2] expected (OpCode) got Close Square"},
 		{file: "invalid_op_code_2", errMessage: "[0:6] expected (OpCode) got Ident"},
@@ -1289,6 +1291,7 @@ func TestReadFileError(t *testing.T) {
 		{file: "invalid_readonly_message", errMessage: "[0:16] expected (Struct) got (Message)"},
 		{file: "invalid_readonly_comment", errMessage: "[0:19] expected (Struct) got (Block Comment)"},
 		{file: "invalid_nested_union", errMessage: "[1:14] union fields must be messages or structs"},
+		{file: "invalid_readonly_eof", errMessage: "[0:8] expected (Struct) got no token"},
 	}
 	for _, tc := range tcs {
 		tc := tc

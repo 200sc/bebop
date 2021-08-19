@@ -39,9 +39,6 @@ func ReadFile(r io.Reader) (File, error) {
 			if nextRecordOpCode != 0 {
 				return f, readError(tk, "enums may not have attached op codes")
 			}
-			if nextRecordReadOnly {
-				return f, readError(tk, "enums cannot be readonly")
-			}
 			en, err := readEnum(tr)
 			if err != nil {
 				return f, err
@@ -69,9 +66,6 @@ func ReadFile(r io.Reader) (File, error) {
 			f.Structs = append(f.Structs, st)
 			nextRecordReadOnly = false
 		case tokenKindMessage:
-			if nextRecordReadOnly {
-				return f, readError(tk, "messages cannot be readonly")
-			}
 			msg, err := readMessage(tr)
 			if err != nil {
 				return f, err
@@ -80,9 +74,6 @@ func ReadFile(r io.Reader) (File, error) {
 			msg.OpCode = nextRecordOpCode
 			f.Messages = append(f.Messages, msg)
 		case tokenKindUnion:
-			if nextRecordReadOnly {
-				return f, readError(tk, "unions cannot be readonly")
-			}
 			union, err := readUnion(tr)
 			if err != nil {
 				return f, err
@@ -91,9 +82,6 @@ func ReadFile(r io.Reader) (File, error) {
 			union.OpCode = nextRecordOpCode
 			f.Unions = append(f.Unions, union)
 		case tokenKindConst:
-			if nextRecordReadOnly {
-				return f, readError(tk, "consts cannot be declared readonly")
-			}
 			if nextRecordOpCode != 0 {
 				return f, readError(tk, "consts may not have attached op codes")
 			}
@@ -130,7 +118,7 @@ func expectAnyOfNext(tr *tokenReader, kinds ...tokenKind) error {
 		for i, k := range kinds {
 			kindsStrs[i] = k.String()
 		}
-		return readError(tk, "expected (%v) got %s", strings.Join(kindsStrs, ", "), tk.kind)
+		return readError(tk, "expected (%v) got %s", kindsStr(kinds), tk.kind)
 	}
 	return nil
 }
@@ -143,7 +131,7 @@ func expectNext(tr *tokenReader, kinds ...tokenKind) ([]token, error) {
 			return tokens, tr.Err()
 		}
 		if !next {
-			return tokens, readError(tr.nextToken, "expected (%v), got no token", kinds)
+			return tokens, readError(tr.nextToken, "expected (%v), got no token", kindsStr(kinds))
 		}
 		tk := tr.Token()
 		if tk.kind != k {
@@ -558,7 +546,6 @@ func readConst(tr *tokenReader) (Const, error) {
 	cons.Name = string(toks[1].concrete)
 
 	// TODO: should booleans be their own token kind?
-	// TODO: float tokens
 	// TODO: should we error here if the type is invalid, or later?
 
 	if err := expectAnyOfNext(tr, tokenKindIntegerLiteral, tokenKindFloatLiteral, tokenKindIdent, tokenKindStringLiteral); err != nil {
@@ -612,9 +599,28 @@ func readConst(tr *tokenReader) (Const, error) {
 			return cons, readError(tk, "expected ([true, false, nan, -inf, inf]) got %s", string(tk.concrete))
 		}
 	} else if tk.kind == tokenKindFloatLiteral {
-
+		content := string(tk.concrete)
+		val, err := strconv.ParseFloat(content, 64)
+		if err != nil {
+			return cons, readError(tk, err.Error())
+		}
+		switch {
+		case strings.HasPrefix(cons.SimpleType, "float"):
+			cons.FloatValue = &val
+		case strings.HasPrefix(cons.SimpleType, "uint"):
+			fallthrough
+		case strings.HasPrefix(cons.SimpleType, "int"):
+			return cons, readError(tk, "expected (%v) got %v", tokenKindIntegerLiteral, tokenKindFloatLiteral)
+		case cons.SimpleType == "guid" || cons.SimpleType == "string":
+			return cons, readError(tk, "expected (%v) got %v", tokenKindStringLiteral, tokenKindFloatLiteral)
+		case cons.SimpleType == "bool":
+			return cons, readError(tk, "expected (%v) got %v", tokenKindIdent, tokenKindFloatLiteral)
+		}
 	}
-
+	_, err = expectNext(tr, tokenKindSemicolon)
+	if err != nil {
+		return cons, err
+	}
 	skipEndOfLineComments(tr)
 	optNewline(tr)
 	return cons, nil
@@ -674,4 +680,12 @@ func bytesToOpCode(data []byte) int32 {
 func readError(tk token, format string, args ...interface{}) error {
 	format = fmt.Sprintf("[%d:%d] ", tk.loc.line, tk.loc.lineChar) + format
 	return fmt.Errorf(format, args...)
+}
+
+func kindsStr(ks []tokenKind) string {
+	kindsStrs := make([]string, len(ks))
+	for i, k := range ks {
+		kindsStrs[i] = k.String()
+	}
+	return strings.Join(kindsStrs, ", ")
 }

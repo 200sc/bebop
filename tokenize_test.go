@@ -117,6 +117,12 @@ func TestTokenizeError(t *testing.T) {
 		{file: "invalid_token_comment", err: "[0:2] unexpected token 'p' waiting for '[/, *]' after '/'"},
 		{file: "invalid_token_string", err: "[0:14] eof waiting for string end quote"},
 		{file: "invalid_token_unknown", err: "[0:1] unexpected token '*', expected number, letter, or control sequence"},
+		{file: "invalid_token_block_comment_eof", err: "[0:29] block comment missing end token"},
+		{file: "invalid_token_float_literal", err: "[0:4] unexpected token ' ', expected number following \"-1.\""},
+		{file: "invalid_token_float_literal_eof", err: "[0:4] unexpected eof, expected number following \"-1.\""},
+		{file: "invalid_token_ninf_1", err: "[0:4] eof waiting for 'f' in '-inf'"},
+		{file: "invalid_token_ninf_2", err: "[0:3] eof waiting for 'n' in '-inf'"},
+		{file: "invalid_token_ninf_3", err: "[0:4] unexpected token ii in '-inf'"},
 	}
 	for _, tc := range tcs {
 		tc := tc

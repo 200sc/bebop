@@ -188,15 +188,15 @@ func (tr *tokenReader) Next() bool {
 				return true
 			}
 			// number case
-			if isNumeric(b) {
-				return tr.nextNumber(b)
+			if isNumeric(b2) {
+				return tr.nextNumber([]byte{b, b2})
 			}
 
 			tr.err = fmt.Errorf("unexpected token '%v' waiting for (['>', number]) after '-'", string(b2))
 			return false
 		default:
 			if isNumeric(b) {
-				return tr.nextNumber(b)
+				return tr.nextNumber([]byte{b})
 			}
 			tr.unreadByte()
 			rn, sz, err := tr.r.ReadRune()
@@ -217,9 +217,9 @@ func (tr *tokenReader) Next() bool {
 	}
 }
 
-func (tr *tokenReader) nextNumber(firstByte byte) bool {
+func (tr *tokenReader) nextNumber(firstBytes []byte) bool {
 	tk := token{
-		concrete: []byte{firstByte},
+		concrete: firstBytes,
 		kind:     tokenKindIntegerLiteral,
 	}
 	// second byte is allowed to be 'x' for hex or '.' for floats
@@ -229,8 +229,7 @@ func (tr *tokenReader) nextNumber(firstByte byte) bool {
 		if err == io.EOF {
 			finalByte := tk.concrete[len(tk.concrete)-1]
 			if finalByte == 'x' || finalByte == '.' {
-				tr.err = fmt.Errorf("unexpected token '%v', expected number following %v",
-					finalByte, string(tk.concrete))
+				tr.err = fmt.Errorf("unexpected eof, expected number following %q", string(tk.concrete))
 				return false
 			}
 			// stream ended in number
@@ -251,8 +250,8 @@ func (tr *tokenReader) nextNumber(firstByte byte) bool {
 		} else {
 			finalByte := tk.concrete[len(tk.concrete)-1]
 			if finalByte == 'x' || finalByte == '.' {
-				tr.err = fmt.Errorf("unexpected token '%v', expected number following %v",
-					finalByte, string(tk.concrete))
+				tr.err = fmt.Errorf("unexpected token '%v', expected number following %q",
+					string(b), string(tk.concrete))
 				return false
 			}
 			// something else is here
@@ -291,6 +290,9 @@ func (tr *tokenReader) nextIdent(firstRune rune) bool {
 		tr.loc.inc(sz)
 		if err == io.EOF {
 			// stream ended in ident
+			if keywordKind, ok := keywords[string(tk.concrete)]; ok {
+				tk.kind = keywordKind
+			}
 			tr.setNextToken(tk)
 			return true
 		}
