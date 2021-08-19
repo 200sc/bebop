@@ -58,11 +58,6 @@ var singleCharTokens = map[byte]tokenKind{
 	'\n': tokenKindNewline,
 }
 
-type nextResp struct {
-	hasNext    bool
-	hasNewline bool
-}
-
 func (tr *tokenReader) setNextToken(tk token) {
 	tr.lastToken = tr.nextToken
 	tr.nextToken = tk
@@ -73,6 +68,11 @@ func (tr *tokenReader) readByte() (byte, error) {
 	b, err := tr.r.ReadByte()
 	tr.loc.inc(1)
 	return b, err
+}
+
+func (tr *tokenReader) unreadByte() {
+	tr.r.UnreadByte()
+	tr.loc.inc(-1)
 }
 
 // Next attempts to read the next token in the reader.
@@ -141,7 +141,7 @@ func (tr *tokenReader) Next() bool {
 		case '-':
 			b2, err := tr.readByte()
 			if err == io.EOF {
-				tr.err = fmt.Errorf("eof waiting for (['>', integer, float]) after '-'")
+				tr.err = fmt.Errorf("eof waiting for (['>', number]) after '-'")
 				return false
 			}
 			if err != nil {
@@ -188,17 +188,17 @@ func (tr *tokenReader) Next() bool {
 				return true
 			}
 			// number case
-			if isInteger(b) {
+			if isNumeric(b) {
 				return tr.nextNumber(b)
 			}
 
-			tr.err = fmt.Errorf("unexpected token '%v' waiting for (['>', integer, float]) after '-'", string(b2))
+			tr.err = fmt.Errorf("unexpected token '%v' waiting for (['>', number]) after '-'", string(b2))
 			return false
 		default:
-			if isInteger(b) {
+			if isNumeric(b) {
 				return tr.nextNumber(b)
 			}
-			tr.r.UnreadByte()
+			tr.unreadByte()
 			rn, sz, err := tr.r.ReadRune()
 			tr.loc.inc(sz)
 			if err == io.ErrUnexpectedEOF || err == io.EOF {
@@ -210,7 +210,7 @@ func (tr *tokenReader) Next() bool {
 			} else if unicode.IsLetter(rn) {
 				return tr.nextIdent(rn)
 			}
-			tr.err = fmt.Errorf("unexpected token '%v', expected integer, letter, or control sequence", string(b))
+			tr.err = fmt.Errorf("unexpected token '%v', expected number, letter, or control sequence", string(b))
 			return false
 		}
 		return true
@@ -218,16 +218,21 @@ func (tr *tokenReader) Next() bool {
 }
 
 func (tr *tokenReader) nextNumber(firstByte byte) bool {
-	// TODO: float literals
 	tk := token{
 		concrete: []byte{firstByte},
 		kind:     tokenKindIntegerLiteral,
 	}
-	// second byte is allowed to be 'x'
+	// second byte is allowed to be 'x' for hex or '.' for floats
 	secondByte := true
 	for {
 		b, err := tr.readByte()
 		if err == io.EOF {
+			finalByte := tk.concrete[len(tk.concrete)-1]
+			if finalByte == 'x' || finalByte == '.' {
+				tr.err = fmt.Errorf("unexpected token '%v', expected number following %v",
+					finalByte, string(tk.concrete))
+				return false
+			}
 			// stream ended in number
 			tr.setNextToken(tk)
 			return true
@@ -238,12 +243,20 @@ func (tr *tokenReader) nextNumber(firstByte byte) bool {
 		}
 		if secondByte && b == 'x' {
 			tk.concrete = append(tk.concrete, b)
-		} else if isInteger(b) {
+		} else if secondByte && b == '.' {
+			tk.concrete = append(tk.concrete, b)
+			tk.kind = tokenKindFloatLiteral
+		} else if isNumeric(b) {
 			tk.concrete = append(tk.concrete, b)
 		} else {
+			finalByte := tk.concrete[len(tk.concrete)-1]
+			if finalByte == 'x' || finalByte == '.' {
+				tr.err = fmt.Errorf("unexpected token '%v', expected number following %v",
+					finalByte, string(tk.concrete))
+				return false
+			}
 			// something else is here
-			tr.r.UnreadByte()
-			tr.loc.inc(-1)
+			tr.unreadByte()
 			tr.setNextToken(tk)
 			return true
 		}
@@ -251,7 +264,7 @@ func (tr *tokenReader) nextNumber(firstByte byte) bool {
 	}
 }
 
-func isInteger(b byte) bool {
+func isNumeric(b byte) bool {
 	return b >= 0x30 && b <= 0x39
 }
 
@@ -367,8 +380,7 @@ func (tr *tokenReader) skipFollowingWhitespace() {
 		case ' ', '\r':
 			continue
 		}
-		tr.r.UnreadByte()
-		tr.loc.inc(-1)
+		tr.unreadByte()
 		break
 	}
 }

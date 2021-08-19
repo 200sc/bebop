@@ -111,12 +111,12 @@ func TestTokenizeError(t *testing.T) {
 		err  string
 	}
 	tcs := []testCase{
-		{file: "invalid_token_arrow_eof", err: "[0:2] eof waiting for '>' in '->'"},
-		{file: "invalid_token_arrow", err: "[0:2] unexpected token '-' waiting for '>' in '->'"},
+		{file: "invalid_token_arrow_eof", err: "[0:2] eof waiting for (['>', number]) after '-'"},
+		{file: "invalid_token_arrow", err: "[0:2] unexpected token '-' waiting for (['>', number]) after '-'"},
 		{file: "invalid_token_comment_eof", err: "[0:2] eof waiting for '[/, *]' after '/'"},
 		{file: "invalid_token_comment", err: "[0:2] unexpected token 'p' waiting for '[/, *]' after '/'"},
 		{file: "invalid_token_string", err: "[0:14] eof waiting for string end quote"},
-		{file: "invalid_token_unknown", err: "[0:2] unexpected token '*', expected integer, letter, or control sequence"},
+		{file: "invalid_token_unknown", err: "[0:1] unexpected token '*', expected number, letter, or control sequence"},
 	}
 	for _, tc := range tcs {
 		tc := tc

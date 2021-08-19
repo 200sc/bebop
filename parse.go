@@ -126,7 +126,11 @@ func expectAnyOfNext(tr *tokenReader, kinds ...tokenKind) error {
 		}
 	}
 	if !found {
-		return readError(tk, "expected (%v) got %s", kinds, tk.kind)
+		kindsStrs := make([]string, len(kinds))
+		for i, k := range kinds {
+			kindsStrs[i] = k.String()
+		}
+		return readError(tk, "expected (%v) got %s", strings.Join(kindsStrs, ", "), tk.kind)
 	}
 	return nil
 }
@@ -635,7 +639,7 @@ func readOpCode(tr *tokenReader) (int32, error) {
 	} else if tk.kind == tokenKindStringLiteral {
 		tk.concrete = bytes.Trim(tk.concrete, "\"")
 		if len(tk.concrete) > 4 {
-			return 0, readError(tk, "opcode string %s exceeds 4 ascii characters", string(tk.concrete))
+			return 0, readError(tk, "opcode string %q exceeds 4 ascii characters", string(tk.concrete))
 		}
 		opCode = bytesToOpCode(tk.concrete)
 	}
