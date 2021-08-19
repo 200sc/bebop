@@ -108,24 +108,6 @@ func (tr *tokenReader) Next() bool {
 		case ' ', '\t', '\r':
 			continue
 		// two token sequences
-		case '-':
-			b2, err := tr.readByte()
-			if err == io.EOF {
-				tr.err = fmt.Errorf("eof waiting for '>' in '->'")
-				return false
-			}
-			if err != nil {
-				tr.err = err
-				return false
-			}
-			if b2 != '>' {
-				tr.err = fmt.Errorf("unexpected token '%v' waiting for '>' in '->'", string(b2))
-				return false
-			}
-			tr.setNextToken(token{
-				concrete: []byte{b, b2},
-				kind:     tokenKindArrow,
-			})
 		case '/':
 			b2, err := tr.readByte()
 			if err == io.EOF {
@@ -156,9 +138,65 @@ func (tr *tokenReader) Next() bool {
 				tr.err = fmt.Errorf("unexpected token '%v' waiting for '[/, *]' after '/'", string(b2))
 				return false
 			}
+		case '-':
+			b2, err := tr.readByte()
+			if err == io.EOF {
+				tr.err = fmt.Errorf("eof waiting for (['>', integer, float]) after '-'")
+				return false
+			}
+			if err != nil {
+				tr.err = err
+				return false
+			}
+			if b2 == '>' {
+				tr.setNextToken(token{
+					concrete: []byte{b, b2},
+					kind:     tokenKindArrow,
+				})
+				return true
+			}
+
+			// 'inf' case
+			if b2 == 'i' {
+				b3, err := tr.readByte()
+				if err == io.EOF {
+					tr.err = fmt.Errorf("eof waiting for 'n' in '-inf'")
+					return false
+				}
+				if err != nil {
+					tr.err = err
+					return false
+				}
+				b4, err := tr.readByte()
+				if err == io.EOF {
+					tr.err = fmt.Errorf("eof waiting for 'f' in '-inf'")
+					return false
+				}
+				if err != nil {
+					tr.err = err
+					return false
+				}
+				if b3 != 'n' || b4 != 'f' {
+					tr.err = fmt.Errorf("unexpected token %v in '-inf'", string([]byte{b3, b4}))
+					return false
+				}
+				tr.setNextToken(token{
+					concrete: []byte{b, b2, b3, b4},
+					// TODO: should this be a uniqe token type?
+					kind: tokenKindIdent,
+				})
+				return true
+			}
+			// number case
+			if isInteger(b) {
+				return tr.nextNumber(b)
+			}
+
+			tr.err = fmt.Errorf("unexpected token '%v' waiting for (['>', integer, float]) after '-'", string(b2))
+			return false
 		default:
 			if isInteger(b) {
-				return tr.nextInteger(b)
+				return tr.nextNumber(b)
 			}
 			tr.r.UnreadByte()
 			rn, sz, err := tr.r.ReadRune()
@@ -179,10 +217,11 @@ func (tr *tokenReader) Next() bool {
 	}
 }
 
-func (tr *tokenReader) nextInteger(firstByte byte) bool {
+func (tr *tokenReader) nextNumber(firstByte byte) bool {
+	// TODO: float literals
 	tk := token{
 		concrete: []byte{firstByte},
-		kind:     tokenKindInteger,
+		kind:     tokenKindIntegerLiteral,
 	}
 	// second byte is allowed to be 'x'
 	secondByte := true
@@ -226,6 +265,7 @@ var keywords = map[string]tokenKind{
 	"map":        tokenKindMap,
 	"array":      tokenKindArray,
 	"union":      tokenKindUnion,
+	"const":      tokenKindConst,
 }
 
 func (tr *tokenReader) nextIdent(firstRune rune) bool {
@@ -348,7 +388,7 @@ func (tr *tokenReader) Token() token {
 	if optionalSemicolons {
 		if tr.nextToken.kind == tokenKindNewline {
 			switch tr.lastToken.kind {
-			case tokenKindIdent, tokenKindInteger:
+			case tokenKindIdent, tokenKindIntegerLiteral:
 				injectedToken := token{
 					kind:     tokenKindSemicolon,
 					concrete: []byte{';'},

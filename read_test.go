@@ -1,10 +1,27 @@
 package bebop
 
 import (
+	"math"
 	"os"
 	"path/filepath"
 	"testing"
 )
+
+func int64pointer(i int64) *int64 {
+	return &i
+}
+
+func stringPointer(s string) *string {
+	return &s
+}
+
+func boolPointer(b bool) *bool {
+	return &b
+}
+
+func floatPointer(f float64) *float64 {
+	return &f
+}
 
 func TestReadFile(t *testing.T) {
 	type testCase struct {
@@ -26,6 +43,93 @@ func TestReadFile(t *testing.T) {
 								},
 							},
 						},
+					},
+				},
+			},
+		},
+		{
+			file: "all_consts",
+			expected: File{
+				Consts: []Const{
+					{
+						SimpleType: "uint8",
+						Name:       "uint8const",
+						IntValue:   int64pointer(1),
+					},
+					{
+						SimpleType: "uint16",
+						Name:       "uint16const",
+						IntValue:   int64pointer(1),
+					},
+					{
+						SimpleType: "uint32",
+						Name:       "uint32const",
+						IntValue:   int64pointer(1),
+					},
+					{
+						SimpleType: "uint64",
+						Name:       "uint64const",
+						IntValue:   int64pointer(1),
+					},
+					{
+						SimpleType: "int8",
+						Name:       "int8const",
+						IntValue:   int64pointer(1),
+					},
+					{
+						SimpleType: "int16",
+						Name:       "int16const",
+						IntValue:   int64pointer(1),
+					},
+					{
+						SimpleType: "int32",
+						Name:       "int32const",
+						IntValue:   int64pointer(1),
+					},
+					{
+						SimpleType: "int64",
+						Name:       "int64const",
+						IntValue:   int64pointer(1),
+					},
+					{
+						SimpleType: "float32",
+						Name:       "float32const",
+						FloatValue: floatPointer(1),
+					},
+					{
+						SimpleType: "float64",
+						Name:       "float64const",
+						FloatValue: floatPointer(1),
+					},
+					{
+						SimpleType: "float64",
+						Name:       "float64infconst",
+						FloatValue: floatPointer(math.Inf(1)),
+					},
+					{
+						SimpleType: "float64",
+						Name:       "float64ninfconst",
+						FloatValue: floatPointer(math.Inf(-1)),
+					},
+					{
+						SimpleType: "float64",
+						Name:       "float64nanconst",
+						FloatValue: floatPointer(math.NaN()),
+					},
+					{
+						SimpleType: "bool",
+						Name:       "boolconst",
+						BoolValue:  boolPointer(true),
+					},
+					{
+						SimpleType:  "string",
+						Name:        "stringconst",
+						StringValue: stringPointer("1"),
+					},
+					{
+						SimpleType:  "guid",
+						Name:        "guidconst",
+						StringValue: stringPointer("e2722bf7-022a-496a-9f01-7029d7d5563d"),
 					},
 				},
 			},

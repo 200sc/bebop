@@ -1,0 +1,17 @@
+
+const uint8 uint8const = 1;
+const uint16 uint16const = 1;
+const uint32 uint32const = 1;
+const uint64 uint64const = 1;
+const int8 int8const = 1;
+const int16 int16const = 1;
+const int32 int32const = 1;
+const int64 int64const = 1;
+const float32 float32const = 1;
+const float64 float64const = 1;
+const float64 float64infconst = inf;
+const float64 float64ninfconst = -inf;
+const float64 float64nanconst = nan;
+const bool boolconst = true;
+const string stringconst = "1";
+const guid guidconst = "e2722bf7-022a-496a-9f01-7029d7d5563d";

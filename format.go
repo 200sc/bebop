@@ -214,7 +214,7 @@ tokenLoop:
 			}
 			deprecatedBytes = append(deprecatedBytes, '\n')
 			msgBytes = append(msgBytes, deprecatedBytes...)
-		case tokenKindInteger:
+		case tokenKindIntegerLiteral:
 			// <NUM> -> <TYPE> <ID>;
 			fieldBytes := append([]byte(prefix), t.concrete...)
 			fieldBytes = append(fieldBytes, ' ')
@@ -269,7 +269,7 @@ tokenLoop:
 			}
 			deprecatedBytes = append(deprecatedBytes, '\n')
 			unionBytes = append(unionBytes, deprecatedBytes...)
-		case tokenKindInteger:
+		case tokenKindIntegerLiteral:
 			// <NUM> -> ???;
 			fieldBytes := append([]byte(prefix), t.concrete...)
 			fieldBytes = append(fieldBytes, ' ')

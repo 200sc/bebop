@@ -10,6 +10,7 @@ type File struct {
 	Messages []Message
 	Enums    []Enum
 	Unions   []Union
+	Consts   []Const
 }
 
 // A Struct is a record type where all fields are required.
@@ -92,4 +93,19 @@ type MapType struct {
 	// Keys may only be named types
 	Key   string
 	Value FieldType
+}
+
+// A const is a simple type - value pair that is compiled as
+// a constant into generated code.
+type Const struct {
+	// Consts do not support map or array types
+	SimpleType string
+	Comment    string
+	Name string
+	// GUIDs also use string values
+	StringValue *string
+	// All integer types will store their value here
+	IntValue   *int64
+	FloatValue *float64
+	BoolValue  *bool
 }

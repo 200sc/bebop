@@ -8,6 +8,7 @@ import (
 
 var testFiles = []string{
 	"array_of_strings",
+	"all_consts",
 	"basic_arrays",
 	"basic_types",
 	"documentation",

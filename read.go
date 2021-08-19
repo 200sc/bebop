@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"math"
 	"strconv"
 	"strings"
 )
@@ -89,6 +90,19 @@ func ReadFile(r io.Reader) (File, error) {
 			union.Comment = strings.Join(nextCommentLines, "\n")
 			union.OpCode = nextRecordOpCode
 			f.Unions = append(f.Unions, union)
+		case tokenKindConst:
+			if nextRecordReadOnly {
+				return f, readError(tk, "consts cannot be declared readonly")
+			}
+			if nextRecordOpCode != 0 {
+				return f, readError(tk, "consts may not have attached op codes")
+			}
+			cons, err := readConst(tr)
+			if err != nil {
+				return f, err
+			}
+			cons.Comment = strings.Join(nextCommentLines, "\n")
+			f.Consts = append(f.Consts, cons)
 		}
 		nextCommentLines = []string{}
 		nextRecordOpCode = 0
@@ -166,7 +180,7 @@ func readEnum(tr *tokenReader) (Enum, error) {
 			nextCommentLines = []string{}
 		case tokenKindIdent:
 			optName := string(tk.concrete)
-			toks, err = expectNext(tr, tokenKindEquals, tokenKindInteger, tokenKindSemicolon)
+			toks, err = expectNext(tr, tokenKindEquals, tokenKindIntegerLiteral, tokenKindSemicolon)
 			if err != nil {
 				return en, err
 			}
@@ -389,7 +403,7 @@ func readMessage(tr *tokenReader) (Message, error) {
 		switch tk.kind {
 		case tokenKindNewline:
 			nextCommentLines = []string{}
-		case tokenKindInteger:
+		case tokenKindIntegerLiteral:
 			fdInteger, err := strconv.ParseInt(string(tr.Token().concrete), 10, 8)
 			if err != nil {
 				return msg, readError(tr.nextToken, err.Error())
@@ -465,7 +479,7 @@ func readUnion(tr *tokenReader) (Union, error) {
 		switch tk.kind {
 		case tokenKindNewline:
 			nextCommentLines = []string{}
-		case tokenKindInteger:
+		case tokenKindIntegerLiteral:
 			fdInteger, err := strconv.ParseInt(string(tr.Token().concrete), 10, 8)
 			if err != nil {
 				return union, readError(tr.nextToken, err.Error())
@@ -530,16 +544,88 @@ func readUnion(tr *tokenReader) (Union, error) {
 	return union, nil
 }
 
+func readConst(tr *tokenReader) (Const, error) {
+	cons := Const{}
+	toks, err := expectNext(tr, tokenKindIdent, tokenKindIdent, tokenKindEquals)
+	if err != nil {
+		return cons, err
+	}
+	cons.SimpleType = string(toks[0].concrete)
+	cons.Name = string(toks[1].concrete)
+
+	// TODO: should booleans be their own token kind?
+	// TODO: float tokens
+	// TODO: should we error here if the type is invalid, or later?
+
+	if err := expectAnyOfNext(tr, tokenKindIntegerLiteral, tokenKindFloatLiteral, tokenKindIdent, tokenKindStringLiteral); err != nil {
+		return cons, err
+	}
+	tk := tr.Token()
+	if tk.kind == tokenKindIntegerLiteral {
+		content := string(tk.concrete)
+		val, err := strconv.ParseInt(content, 0, 64)
+		if err != nil {
+			return cons, readError(tk, err.Error())
+		}
+		// ints may be provided as flaot constants (todo: check if this is valid in rainway)
+		switch {
+		case strings.HasPrefix(cons.SimpleType, "uint"):
+			// todo: if value is negative, error
+			fallthrough
+		case strings.HasPrefix(cons.SimpleType, "int"):
+			cons.IntValue = &val
+		case strings.HasPrefix(cons.SimpleType, "float"):
+			fVal := float64(val)
+			cons.FloatValue = &fVal
+		case cons.SimpleType == "guid" || cons.SimpleType == "string":
+			return cons, readError(tk, "expected (%v) got %v", tokenKindStringLiteral, tokenKindIntegerLiteral)
+		case cons.SimpleType == "bool":
+			return cons, readError(tk, "expected (%v) got %v", tokenKindIdent, tokenKindIntegerLiteral)
+		}
+	} else if tk.kind == tokenKindStringLiteral {
+		tk.concrete = bytes.Trim(tk.concrete, "\"")
+		val := string(tk.concrete)
+		cons.StringValue = &val
+	} else if tk.kind == tokenKindIdent {
+		// bool or float inf/nan
+		switch string(tk.concrete) {
+		case "true":
+			val := true
+			cons.BoolValue = &val
+		case "false":
+			val := false
+			cons.BoolValue = &val
+		case "nan":
+			val := math.NaN()
+			cons.FloatValue = &val
+		case "-inf":
+			val := math.Inf(-1)
+			cons.FloatValue = &val
+		case "inf":
+			val := math.Inf(1)
+			cons.FloatValue = &val
+		default:
+			return cons, readError(tk, "expected ([true, false, nan, -inf, inf]) got %s", string(tk.concrete))
+		}
+	} else if tk.kind == tokenKindFloatLiteral {
+
+	}
+
+	skipEndOfLineComments(tr)
+	optNewline(tr)
+	return cons, nil
+}
+
 func readOpCode(tr *tokenReader) (int32, error) {
 	if _, err := expectNext(tr, tokenKindOpCode, tokenKindOpenParen); err != nil {
 		return 0, err
 	}
-	if err := expectAnyOfNext(tr, tokenKindInteger, tokenKindStringLiteral); err != nil {
+	if err := expectAnyOfNext(tr, tokenKindIntegerLiteral, tokenKindStringLiteral); err != nil {
 		return 0, err
 	}
 	var opCode int32
 	tk := tr.Token()
-	if tk.kind == tokenKindInteger {
+	if tk.kind == tokenKindIntegerLiteral {
 		content := string(tk.concrete)
 		opc, err := strconv.ParseInt(content, 0, 32)
 		if err != nil {
