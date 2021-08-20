@@ -11,6 +11,10 @@ func int64pointer(i int64) *int64 {
 	return &i
 }
 
+func uint64pointer(i uint64) *uint64 {
+	return &i
+}
+
 func stringPointer(s string) *string {
 	return &s
 }
@@ -54,22 +58,22 @@ func TestReadFile(t *testing.T) {
 					{
 						SimpleType: "uint8",
 						Name:       "uint8const",
-						IntValue:   int64pointer(1),
+						UIntValue:  uint64pointer(1),
 					},
 					{
 						SimpleType: "uint16",
 						Name:       "uint16const",
-						IntValue:   int64pointer(1),
+						UIntValue:  uint64pointer(1),
 					},
 					{
 						SimpleType: "uint32",
 						Name:       "uint32const",
-						IntValue:   int64pointer(1),
+						UIntValue:  uint64pointer(1),
 					},
 					{
 						SimpleType: "uint64",
 						Name:       "uint64const",
-						IntValue:   int64pointer(1),
+						UIntValue:  uint64pointer(1),
 					},
 					{
 						SimpleType: "int8",
@@ -1292,6 +1296,20 @@ func TestReadFileError(t *testing.T) {
 		{file: "invalid_readonly_comment", errMessage: "[0:19] expected (Struct) got (Block Comment)"},
 		{file: "invalid_nested_union", errMessage: "[1:14] union fields must be messages or structs"},
 		{file: "invalid_readonly_eof", errMessage: "[0:8] expected (Struct) got no token"},
+		{file: "invalid_const_eof", errMessage: "[0:14] expected (Ident, Ident, Equals), got no token"},
+		{file: "invalid_const_eof_2", errMessage: "[0:17] expected value following const type"},
+		{file: "invalid_const_unassignable_uint", errMessage: "[0:30] String Literal unassignable to uint32"},
+		{file: "invalid_const_unparseable_uint", errMessage: "[0:81] strconv.ParseUint: parsing \"2222222222222222222222222222222222222222222222222222222222222222\": value out of range"},
+		{file: "invalid_const_unassignable_int", errMessage: "[0:21] Floating Point Literal unassignable to int64"},
+		{file: "invalid_const_unparseable_int", errMessage: "[0:80] strconv.ParseInt: parsing \"33333333333333333333333333333333333333333333333333333333333333333\": value out of range"},
+		{file: "invalid_const_unassignable_float", errMessage: "[0:23] String Literal unassignable to float32"},
+		{file: "invalid_const_unparseable_float_2", errMessage: "[0:103] strconv.ParseInt: parsing \"6666666666666666666666666666666666666666666666666666666666666666666666666666666666666\": value out of range"},
+		{file: "invalid_const_unassignable_guid", errMessage: "[0:16] Integer Literal unassignable to guid"},
+		{file: "invalid_const_invalid_guid", errMessage: "[0:31] \"guid-guid-guid\" has wrong length for guid"},
+		{file: "invalid_const_unassignable_string", errMessage: "[0:19] Integer Literal unassignable to string"},
+		{file: "invalid_const_unassignable_bool", errMessage: "[0:21] String Literal unassignable to bool"},
+		{file: "invalid_const_invalid_const_type", errMessage: "[0:24] invalid type for const date"},
+		{file: "invalid_const_opcode", errMessage: "[1:5] consts may not have attached op codes"},
 	}
 	for _, tc := range tcs {
 		tc := tc

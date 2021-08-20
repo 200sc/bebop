@@ -182,8 +182,7 @@ func (tr *tokenReader) Next() bool {
 				}
 				tr.setNextToken(token{
 					concrete: []byte{b, b2, b3, b4},
-					// TODO: should this be a uniqe token type?
-					kind: tokenKindIdent,
+					kind:     tokenKindNegativeInf,
 				})
 				return true
 			}
@@ -242,7 +241,7 @@ func (tr *tokenReader) nextNumber(firstBytes []byte) bool {
 		}
 		if secondByte && b == 'x' {
 			tk.concrete = append(tk.concrete, b)
-		} else if secondByte && b == '.' {
+		} else if b == '.' {
 			tk.concrete = append(tk.concrete, b)
 			tk.kind = tokenKindFloatLiteral
 		} else if isNumeric(b) {
@@ -278,6 +277,10 @@ var keywords = map[string]tokenKind{
 	"array":      tokenKindArray,
 	"union":      tokenKindUnion,
 	"const":      tokenKindConst,
+	"inf":        tokenKindInf,
+	"nan":        tokenKindNaN,
+	"true":       tokenKindTrue,
+	"false":      tokenKindFalse,
 }
 
 func (tr *tokenReader) nextIdent(firstRune rune) bool {

@@ -545,77 +545,85 @@ func readConst(tr *tokenReader) (Const, error) {
 	cons.SimpleType = string(toks[0].concrete)
 	cons.Name = string(toks[1].concrete)
 
-	// TODO: should booleans be their own token kind?
-	// TODO: should we error here if the type is invalid, or later?
-
-	if err := expectAnyOfNext(tr, tokenKindIntegerLiteral, tokenKindFloatLiteral, tokenKindIdent, tokenKindStringLiteral); err != nil {
-		return cons, err
+	if !tr.Next() {
+		return cons, readError(toks[2], "expected value following const type")
 	}
 	tk := tr.Token()
-	if tk.kind == tokenKindIntegerLiteral {
-		content := string(tk.concrete)
-		val, err := strconv.ParseInt(content, 0, 64)
+	switch {
+	case isUintPrimitive(cons.SimpleType):
+		if tk.kind != tokenKindIntegerLiteral {
+			return cons, readError(tk, "%v unassignable to %v", tk.kind, cons.SimpleType)
+		}
+		val, err := strconv.ParseUint(string(tk.concrete), 0, 64)
 		if err != nil {
 			return cons, readError(tk, err.Error())
 		}
-		// ints may be provided as flaot constants (todo: check if this is valid in rainway)
-		switch {
-		case strings.HasPrefix(cons.SimpleType, "uint"):
-			// todo: if value is negative, error
-			fallthrough
-		case strings.HasPrefix(cons.SimpleType, "int"):
-			cons.IntValue = &val
-		case strings.HasPrefix(cons.SimpleType, "float"):
-			fVal := float64(val)
-			cons.FloatValue = &fVal
-		case cons.SimpleType == "guid" || cons.SimpleType == "string":
-			return cons, readError(tk, "expected (%v) got %v", tokenKindStringLiteral, tokenKindIntegerLiteral)
-		case cons.SimpleType == "bool":
-			return cons, readError(tk, "expected (%v) got %v", tokenKindIdent, tokenKindIntegerLiteral)
+		cons.UIntValue = &val
+	case isIntPrimitive(cons.SimpleType):
+		if tk.kind != tokenKindIntegerLiteral {
+			return cons, readError(tk, "%v unassignable to %v", tk.kind, cons.SimpleType)
 		}
-	} else if tk.kind == tokenKindStringLiteral {
-		tk.concrete = bytes.Trim(tk.concrete, "\"")
-		val := string(tk.concrete)
-		cons.StringValue = &val
-	} else if tk.kind == tokenKindIdent {
-		// bool or float inf/nan
-		switch string(tk.concrete) {
-		case "true":
-			val := true
-			cons.BoolValue = &val
-		case "false":
-			val := false
-			cons.BoolValue = &val
-		case "nan":
-			val := math.NaN()
-			cons.FloatValue = &val
-		case "-inf":
-			val := math.Inf(-1)
-			cons.FloatValue = &val
-		case "inf":
+		val, err := strconv.ParseInt(string(tk.concrete), 0, 64)
+		if err != nil {
+			return cons, readError(tk, err.Error())
+		}
+		cons.IntValue = &val
+	case isFloatPrimitive(cons.SimpleType):
+		switch tk.kind {
+		case tokenKindInf:
 			val := math.Inf(1)
 			cons.FloatValue = &val
+		case tokenKindNegativeInf:
+			val := math.Inf(-1)
+			cons.FloatValue = &val
+		case tokenKindNaN:
+			val := math.NaN()
+			cons.FloatValue = &val
+		case tokenKindIntegerLiteral:
+			val, err := strconv.ParseInt(string(tk.concrete), 0, 64)
+			if err != nil {
+				return cons, readError(tk, err.Error())
+			}
+			fVal := float64(val)
+			cons.FloatValue = &fVal
+		case tokenKindFloatLiteral:
+			fVal, err := strconv.ParseFloat(string(tk.concrete), 64)
+			if err != nil {
+				return cons, readError(tk, err.Error())
+			}
+			cons.FloatValue = &fVal
 		default:
-			return cons, readError(tk, "expected ([true, false, nan, -inf, inf]) got %s", string(tk.concrete))
+			return cons, readError(tk, "%v unassignable to %v", tk.kind, cons.SimpleType)
 		}
-	} else if tk.kind == tokenKindFloatLiteral {
-		content := string(tk.concrete)
-		val, err := strconv.ParseFloat(content, 64)
+	case cons.SimpleType == "guid":
+		if tk.kind != tokenKindStringLiteral {
+			return cons, readError(tk, "%v unassignable to %v", tk.kind, cons.SimpleType)
+		}
+		tk.concrete = bytes.Trim(tk.concrete, "\"")
+		s := string(tk.concrete)
+		// TODO: what guid formats does rainway support?
+		if len(strings.ReplaceAll(s, "-", "")) != 32 {
+			return cons, readError(tk, "%q has wrong length for guid", s)
+		}
+		cons.StringValue = &s
+	case cons.SimpleType == "string":
+		if tk.kind != tokenKindStringLiteral {
+			return cons, readError(tk, "%v unassignable to %v", tk.kind, cons.SimpleType)
+		}
+		tk.concrete = bytes.Trim(tk.concrete, "\"")
+		s := string(tk.concrete)
+		cons.StringValue = &s
+	case cons.SimpleType == "bool":
+		if tk.kind != tokenKindTrue && tk.kind != tokenKindFalse {
+			return cons, readError(tk, "%v unassignable to %v", tk.kind, cons.SimpleType)
+		}
+		b, err := strconv.ParseBool(string(tk.concrete))
 		if err != nil {
 			return cons, readError(tk, err.Error())
 		}
-		switch {
-		case strings.HasPrefix(cons.SimpleType, "float"):
-			cons.FloatValue = &val
-		case strings.HasPrefix(cons.SimpleType, "uint"):
-			fallthrough
-		case strings.HasPrefix(cons.SimpleType, "int"):
-			return cons, readError(tk, "expected (%v) got %v", tokenKindIntegerLiteral, tokenKindFloatLiteral)
-		case cons.SimpleType == "guid" || cons.SimpleType == "string":
-			return cons, readError(tk, "expected (%v) got %v", tokenKindStringLiteral, tokenKindFloatLiteral)
-		case cons.SimpleType == "bool":
-			return cons, readError(tk, "expected (%v) got %v", tokenKindIdent, tokenKindFloatLiteral)
-		}
+		cons.BoolValue = &b
+	default:
+		return cons, readError(tk, "invalid type for const %v", cons.SimpleType)
 	}
 	_, err = expectNext(tr, tokenKindSemicolon)
 	if err != nil {

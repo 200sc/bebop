@@ -243,6 +243,14 @@ func (c Const) equals(c2 Const) error {
 			return fmt.Errorf("int value mismatch: %v vs %v", *c.IntValue, *c2.IntValue)
 		}
 	}
+	if (c.UIntValue == nil) != (c2.UIntValue == nil) {
+		return fmt.Errorf("const has uint value type mismatch: %v vs %v", c.UIntValue != nil, c2.UIntValue != nil)
+	}
+	if c.UIntValue != nil && c2.UIntValue != nil {
+		if *c.UIntValue != *c2.UIntValue {
+			return fmt.Errorf("uint value mismatch: %v vs %v", *c.UIntValue, *c2.UIntValue)
+		}
+	}
 	if (c.FloatValue == nil) != (c2.FloatValue == nil) {
 		return fmt.Errorf("const has float value type mismatch: %v vs %v", c.FloatValue != nil, c2.FloatValue != nil)
 	}

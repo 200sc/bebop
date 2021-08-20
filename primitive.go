@@ -9,6 +9,7 @@ var primitiveTypes = map[string]struct{}{
 	"bool":    {},
 	"byte":    {},
 	"uint8":   {},
+	"int8":    {},
 	"uint16":  {},
 	"int16":   {},
 	"uint32":  {},
@@ -20,4 +21,39 @@ var primitiveTypes = map[string]struct{}{
 	"string":  {},
 	"guid":    {},
 	"date":    {},
+}
+
+func isFloatPrimitive(simpleType string) bool {
+	_, ok := floatTypes[simpleType]
+	return ok
+}
+
+var floatTypes = map[string]struct{}{
+	"float32": {},
+	"float64": {},
+}
+
+func isUintPrimitive(simpleType string) bool {
+	_, ok := uintTypes[simpleType]
+	return ok
+}
+
+var uintTypes = map[string]struct{}{
+	"uint8":  {},
+	"uint16": {},
+	"uint32": {},
+	"uint64": {},
+}
+
+func isIntPrimitive(simpleType string) bool {
+	_, ok := intTypes[simpleType]
+	return ok
+}
+
+var intTypes = map[string]struct{}{
+	"byte":  {},
+	"int8":  {},
+	"int16": {},
+	"int32": {},
+	"int64": {},
 }

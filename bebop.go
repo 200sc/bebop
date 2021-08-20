@@ -98,14 +98,14 @@ type MapType struct {
 // A const is a simple type - value pair that is compiled as
 // a constant into generated code.
 type Const struct {
-	// Consts do not support map or array types
+	// Consts do not support map or array (or record) types
 	SimpleType string
 	Comment    string
-	Name string
+	Name       string
 	// GUIDs also use string values
 	StringValue *string
-	// All integer types will store their value here
-	IntValue   *int64
-	FloatValue *float64
-	BoolValue  *bool
+	IntValue    *int64
+	UIntValue   *uint64
+	FloatValue  *float64
+	BoolValue   *bool
 }

@@ -15,8 +15,6 @@ const (
 	tokenKindIntegerLiteral
 	tokenKindFloatLiteral
 	tokenKindStringLiteral
-	//tokenKindInf
-	//tokenKindNegativeInf
 
 	tokenKindReadOnly
 	tokenKindStruct
@@ -28,6 +26,11 @@ const (
 	tokenKindArray
 	tokenKindUnion
 	tokenKindConst
+	tokenKindInf
+	tokenKindNegativeInf
+	tokenKindNaN
+	tokenKindTrue
+	tokenKindFalse
 
 	tokenKindOpenSquare
 	tokenKindCloseSquare
@@ -43,6 +46,8 @@ const (
 	tokenKindBlockComment
 
 	tokenKindNewline
+
+	tokenKindFinal
 )
 
 var tokenStrings = map[tokenKind]string{
@@ -74,6 +79,11 @@ var tokenStrings = map[tokenKind]string{
 	tokenKindNewline:        "Newline",
 	tokenKindConst:          "Const",
 	tokenKindFloatLiteral:   "Floating Point Literal",
+	tokenKindInf:            "Infinity",
+	tokenKindNegativeInf:    "Negative Infinity",
+	tokenKindNaN:            "NaN",
+	tokenKindTrue:           "True",
+	tokenKindFalse:          "False",
 }
 
 func (tk tokenKind) String() string {
