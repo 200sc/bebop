@@ -1,0 +1,4 @@
+union U {
+    1 -> struct A{}; 
+    1 -> struct B{};
+}

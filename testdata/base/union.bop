@@ -13,5 +13,6 @@ union U {
 
 union List {
     1 -> struct Cons { uint32 head; List tail; }
+    // nil is empty
     2 -> struct Nil {}
 }

@@ -21,6 +21,7 @@ union List {
 		uint32 head;
 		List tail;
 	}
+	// nil is empty
 	2 -> struct Nil {
 	}
 }

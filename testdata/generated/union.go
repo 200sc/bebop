@@ -574,6 +574,7 @@ func mustMakeConsFromBytes(buf []byte) Cons {
 
 var _ bebop.Record = &Nil{}
 
+// nil is empty
 type Nil struct {
 }
 

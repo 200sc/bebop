@@ -1,0 +1,5 @@
+union U {
+    1 -> message unknownField {
+        -1 -> whereisthistype x;
+    }
+}

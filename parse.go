@@ -396,7 +396,7 @@ func readMessage(tr *tokenReader) (Message, error) {
 		case tokenKindNewline:
 			nextCommentLines = []string{}
 		case tokenKindIntegerLiteral:
-			fdInteger, err := strconv.ParseInt(string(tr.Token().concrete), 10, 8)
+			fdInteger, err := strconv.ParseUint(string(tr.Token().concrete), 10, 8)
 			if err != nil {
 				return msg, readError(tr.nextToken, err.Error())
 			}
@@ -472,7 +472,7 @@ func readUnion(tr *tokenReader) (Union, error) {
 		case tokenKindNewline:
 			nextCommentLines = []string{}
 		case tokenKindIntegerLiteral:
-			fdInteger, err := strconv.ParseInt(string(tr.Token().concrete), 10, 8)
+			fdInteger, err := strconv.ParseUint(string(tr.Token().concrete), 10, 8)
 			if err != nil {
 				return union, readError(tr.nextToken, err.Error())
 			}

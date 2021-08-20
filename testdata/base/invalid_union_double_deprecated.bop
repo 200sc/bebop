@@ -1,0 +1,4 @@
+union U {
+    [deprecated("1")]
+    [deprecated("2")]
+}

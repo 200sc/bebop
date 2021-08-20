@@ -223,11 +223,11 @@ func (tr *tokenReader) nextNumber(firstBytes []byte) bool {
 	}
 	// second byte is allowed to be 'x' for hex or '.' for floats
 	secondByte := true
+	invalidLastChar := false
 	for {
 		b, err := tr.readByte()
 		if err == io.EOF {
-			finalByte := tk.concrete[len(tk.concrete)-1]
-			if finalByte == 'x' || finalByte == '.' {
+			if invalidLastChar {
 				tr.err = fmt.Errorf("unexpected eof, expected number following %q", string(tk.concrete))
 				return false
 			}
@@ -240,15 +240,22 @@ func (tr *tokenReader) nextNumber(firstBytes []byte) bool {
 			return false
 		}
 		if secondByte && b == 'x' {
+			invalidLastChar = true
 			tk.concrete = append(tk.concrete, b)
 		} else if b == '.' {
+			invalidLastChar = true
 			tk.concrete = append(tk.concrete, b)
 			tk.kind = tokenKindFloatLiteral
 		} else if isNumeric(b) {
+			invalidLastChar = false
+			tk.concrete = append(tk.concrete, b)
+		} else if b == 'e' {
+			invalidLastChar = true
+			// this is allowed if its not the last character, i.e.
+			// 1.6e442
 			tk.concrete = append(tk.concrete, b)
 		} else {
-			finalByte := tk.concrete[len(tk.concrete)-1]
-			if finalByte == 'x' || finalByte == '.' {
+			if invalidLastChar {
 				tr.err = fmt.Errorf("unexpected token '%v', expected number following %q",
 					string(b), string(tk.concrete))
 				return false

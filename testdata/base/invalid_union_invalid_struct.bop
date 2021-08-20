@@ -1,0 +1,5 @@
+union U {
+    1 -> struct badfieldtype {
+        nonamehere;
+    }
+}
