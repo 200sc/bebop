@@ -9,7 +9,6 @@ var primitiveTypes = map[string]struct{}{
 	"bool":    {},
 	"byte":    {},
 	"uint8":   {},
-	"int8":    {},
 	"uint16":  {},
 	"int16":   {},
 	"uint32":  {},
@@ -39,6 +38,7 @@ func isUintPrimitive(simpleType string) bool {
 }
 
 var uintTypes = map[string]struct{}{
+	"byte":   {},
 	"uint8":  {},
 	"uint16": {},
 	"uint32": {},
@@ -51,8 +51,6 @@ func isIntPrimitive(simpleType string) bool {
 }
 
 var intTypes = map[string]struct{}{
-	"byte":  {},
-	"int8":  {},
 	"int16": {},
 	"int32": {},
 	"int64": {},
