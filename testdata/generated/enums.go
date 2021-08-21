@@ -2,10 +2,6 @@
 
 package generated
 
-import (
-
-)
-
 type Test uint32
 
 const (

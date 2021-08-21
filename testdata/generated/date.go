@@ -6,7 +6,6 @@ import (
 	"bytes"
 	"io"
 	"time"
-
 	"github.com/200sc/bebop"
 	"github.com/200sc/bebop/iohelp"
 )

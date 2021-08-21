@@ -5,7 +5,6 @@ package generated
 import (
 	"bytes"
 	"io"
-
 	"github.com/200sc/bebop"
 	"github.com/200sc/bebop/iohelp"
 )
