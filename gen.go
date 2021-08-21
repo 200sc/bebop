@@ -328,16 +328,18 @@ func (en Enum) Generate(w io.Writer, settings GenerateSettings) {
 	writeComment(w, 0, en.Comment)
 	writeLine(w, "type %s uint32", exposedName)
 	writeLine(w, "")
-	writeLine(w, "const (")
-	for _, opt := range en.Options {
-		writeComment(w, 1, opt.Comment)
-		if opt.Deprecated {
-			writeLine(w, "\t// Deprecated: %s", opt.DeprecatedMessage)
+	if len(en.Options) != 0 {
+		writeLine(w, "const (")
+		for _, opt := range en.Options {
+			writeComment(w, 1, opt.Comment)
+			if opt.Deprecated {
+				writeLine(w, "\t// Deprecated: %s", opt.DeprecatedMessage)
+			}
+			writeLine(w, "\t%s_%s %s = %d", exposedName, opt.Name, exposedName, opt.Value)
 		}
-		writeLine(w, "\t%s_%s %s = %d", exposedName, opt.Name, exposedName, opt.Value)
+		writeLine(w, ")")
+		writeLine(w, "")
 	}
-	writeLine(w, ")")
-	writeLine(w, "")
 }
 
 // Generate writes a .go struct definition out to w.
