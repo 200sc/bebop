@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"math"
 	"sort"
 	"strconv"
 	"strings"
@@ -197,24 +198,57 @@ func (f File) Generate(w io.Writer, settings GenerateSettings) error {
 	writeLine(w, "")
 	writeLine(w, "package %s", settings.PackageName)
 	writeLine(w, "")
-	writeLine(w, "import (")
+	imports := []string{}
 	if len(f.Messages)+len(f.Unions) != 0 {
-		writeLine(w, "\t\"bytes\"")
+		imports = append(imports, "bytes")
 	}
 	if len(f.Messages)+len(f.Structs)+len(f.Unions) != 0 {
-		writeLine(w, "\t\"io\"")
+		imports = append(imports, "io")
+	}
+	for _, c := range f.Consts {
+		if c.impossibleGoConst() {
+			imports = append(imports, "math")
+			break
+		}
 	}
 	if usedTypes["date"] {
-		writeLine(w, "\t\"time\"")
+		imports = append(imports, "time")
 	}
-	writeLine(w, "")
 	if len(f.Messages)+len(f.Structs)+len(f.Unions) != 0 {
-		writeLine(w, "\t\"github.com/200sc/bebop\"")
-		writeLine(w, "\t\"github.com/200sc/bebop/iohelp\"")
+		imports = append(imports, "github.com/200sc/bebop")
+		imports = append(imports, "github.com/200sc/bebop/iohelp")
 	}
-	writeLine(w, ")")
-	writeLine(w, "")
+	if len(imports) != 0 {
+		writeLine(w, "import (")
+		for _, i := range imports {
+			writeLine(w, "\t%q", i)
+		}
+		writeLine(w, ")")
+		writeLine(w, "")
+	}
 
+	impossibleGoConsts := []Const{}
+
+	if len(f.Consts) != 0 {
+		writeLine(w, "const (")
+		for _, con := range f.Consts {
+			if con.impossibleGoConst() {
+				impossibleGoConsts = append(impossibleGoConsts, con)
+			} else {
+				con.Generate(w, settings)
+			}
+		}
+		writeLine(w, ")")
+		writeLine(w, "")
+	}
+	if len(impossibleGoConsts) != 0 {
+		writeLine(w, "var (")
+		for _, con := range impossibleGoConsts {
+			con.Generate(w, settings)
+		}
+		writeLine(w, ")")
+		writeLine(w, "")
+	}
 	for _, en := range f.Enums {
 		en.Generate(w, settings)
 	}
@@ -907,6 +941,51 @@ func (u Union) Generate(w io.Writer, settings GenerateSettings) {
 		writeLine(w, "}")
 		writeLine(w, "")
 	}
+}
+
+func (con Const) impossibleGoConst() bool {
+	// unique floating point values (inf, nan) cannot be represented as consts in go,
+	// at least not intuitively. This probagbly doesn't matter-- its rare to
+	// rely on inf or nan floating points anyway, and even if you could get these as
+	// consts you would need to use math.IsInf or math.IsNaN for many use cases.
+	if con.FloatValue != nil {
+		switch {
+		case math.IsInf(*con.FloatValue, 1):
+			return true
+		case math.IsInf(*con.FloatValue, -1):
+			return true
+		case math.IsNaN(*con.FloatValue):
+			return true
+		}
+	}
+	return false
+}
+
+func (con Const) Generate(w io.Writer, settings GenerateSettings) {
+	writeComment(w, 0, con.Comment)
+	var val interface{}
+	switch {
+	case con.BoolValue != nil:
+		val = *con.BoolValue
+	case con.FloatValue != nil:
+		switch {
+		case math.IsInf(*con.FloatValue, 1):
+			val = "math.Inf(1)"
+		case math.IsInf(*con.FloatValue, -1):
+			val = "math.Inf(-1)"
+		case math.IsNaN(*con.FloatValue):
+			val = "math.NaN()"
+		default:
+			val = strconv.FormatFloat(*con.FloatValue, 'g', -1, 64)
+		}
+	case con.IntValue != nil:
+		val = *con.IntValue
+	case con.UIntValue != nil:
+		val = *con.UIntValue
+	case con.StringValue != nil:
+		val = fmt.Sprintf("%q", *con.StringValue)
+	}
+	writeLine(w, "\t%s = %v", exposeName(con.Name), val)
 }
 
 func writeFieldDefinition(fd Field, w io.Writer, readOnly bool, message bool) {

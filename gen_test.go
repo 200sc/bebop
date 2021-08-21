@@ -78,6 +78,7 @@ func TestValidateError(t *testing.T) {
 }
 
 var genTestFiles = []string{
+	"all_consts",
 	"array_of_strings",
 	"basic_arrays",
 	"basic_types",
@@ -118,9 +119,9 @@ func TestGenerateToFile(t *testing.T) {
 			}
 			defer out.Close()
 			err = bopf.Generate(out, GenerateSettings{
-				PackageName:         "generated",
+				PackageName:           "generated",
 				GenerateUnsafeMethods: true,
-				SharedMemoryStrings: false,
+				SharedMemoryStrings:   false,
 			})
 			if err != nil {
 				t.Fatalf("generation failed: %v", err)
