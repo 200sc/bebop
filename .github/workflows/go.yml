@@ -24,4 +24,5 @@ jobs:
     - name: Test
       run: |
         go test -v ./...
+        go get github.com/google/go-cmp/cmp
         go test -v ./testdata/generated
