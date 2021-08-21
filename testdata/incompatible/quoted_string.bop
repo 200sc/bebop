@@ -1,3 +1,5 @@
+// we support escaped quotes inside of deprecated stings. rainway does not as of 2.2.6
+
 struct QuotedString {
     [deprecated("\"deprecated\"")]
     int32 X; 

@@ -15,13 +15,10 @@ var testFiles = []string{
 	"enums",
 	"enums_doc",
 	"foo",
-	"invalid_map_keys",
-	"invalid_syntax",
 	"jazz",
 	"lab",
 	"map_types",
 	"msgpack_comparison",
-	"quoted_string",
 	"request",
 	"union",
 }
@@ -32,6 +29,51 @@ func TestTokenize(t *testing.T) {
 		t.Run(filename, func(t *testing.T) {
 			filename += ".bop"
 			f, err := os.Open(filepath.Join("testdata", "base", filename))
+			if err != nil {
+				t.Fatalf("failed to open test file %s: %v", filename, err)
+			}
+			defer f.Close()
+			tr := newTokenReader(f)
+			for tr.Next() {
+			}
+			if tr.Err() != nil {
+				t.Fatalf("token reader errored: %v", tr.Err())
+			}
+		})
+	}
+}
+
+func TestTokenizeIncompatible(t *testing.T) {
+	for _, filename := range testIncompatibleFiles {
+		filename := filename
+		t.Run(filename, func(t *testing.T) {
+			filename += ".bop"
+			f, err := os.Open(filepath.Join("testdata", "incompatible", filename))
+			if err != nil {
+				t.Fatalf("failed to open test file %s: %v", filename, err)
+			}
+			defer f.Close()
+			tr := newTokenReader(f)
+			for tr.Next() {
+			}
+			if tr.Err() != nil {
+				t.Fatalf("token reader errored: %v", tr.Err())
+			}
+		})
+	}
+}
+
+var testFilesInvalidNoError = []string{
+	"invalid_map_keys",
+	"invalid_syntax",
+}
+
+func TestTokenizeInvalidNoError(t *testing.T) {
+	for _, filename := range testFilesInvalidNoError {
+		filename := filename
+		t.Run(filename, func(t *testing.T) {
+			filename += ".bop"
+			f, err := os.Open(filepath.Join("testdata", "invalid", filename))
 			if err != nil {
 				t.Fatalf("failed to open test file %s: %v", filename, err)
 			}
@@ -72,7 +114,7 @@ func TestTokenizeNoSemis(t *testing.T) {
 			}
 
 			noSemiFilepath := filename + "_nosemis.bop"
-			f2, err := os.Open(filepath.Join("testdata", "base", noSemiFilepath))
+			f2, err := os.Open(filepath.Join("testdata", "invalid", noSemiFilepath))
 			if err != nil {
 				t.Fatalf("failed to open test file %s: %v", noSemiFilepath, err)
 			}
@@ -128,7 +170,7 @@ func TestTokenizeError(t *testing.T) {
 		tc := tc
 		t.Run(tc.file, func(t *testing.T) {
 			origfilename := tc.file + ".bop"
-			f, err := os.Open(filepath.Join("testdata", "base", origfilename))
+			f, err := os.Open(filepath.Join("testdata", "invalid", origfilename))
 			if err != nil {
 				t.Fatalf("failed to open test file %s: %v", origfilename, err)
 			}

@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-func TestValidateError(t *testing.T) {
+func TestValidateIncompatibleError(t *testing.T) {
 	type testCase struct {
 		file string
 		err  string
@@ -26,7 +26,36 @@ func TestValidateError(t *testing.T) {
 	}, {
 		file: "invalid_message_primitive",
 		err:  "message shares primitive type name guid",
-	}, {
+	}}
+	for _, tc := range tcs {
+		tc := tc
+		t.Run(tc.file, func(t *testing.T) {
+			f, err := os.Open(filepath.Join("testdata", "incompatible", tc.file+".bop"))
+			if err != nil {
+				t.Fatalf("failed to open test file %s: %v", tc.file+".bop", err)
+			}
+			defer f.Close()
+			bopf, err := ReadFile(f)
+			if err != nil {
+				t.Fatalf("failed to read file %s: %v", tc.file+".bop", err)
+			}
+			err = bopf.Validate()
+			if err == nil {
+				t.Fatalf("validation did not fail")
+			}
+			if !strings.Contains(err.Error(), tc.err) {
+				t.Fatalf("validation did not have expected error: got %q expected %q", err.Error(), tc.err)
+			}
+		})
+	}
+}
+
+func TestValidateError(t *testing.T) {
+	type testCase struct {
+		file string
+		err  string
+	}
+	tcs := []testCase{{
 		file: "invalid_enum_duplicate",
 		err:  "enum has duplicated name myEnum",
 	}, {
@@ -57,7 +86,7 @@ func TestValidateError(t *testing.T) {
 	for _, tc := range tcs {
 		tc := tc
 		t.Run(tc.file, func(t *testing.T) {
-			f, err := os.Open(filepath.Join("testdata", "base", tc.file+".bop"))
+			f, err := os.Open(filepath.Join("testdata", "invalid", tc.file+".bop"))
 			if err != nil {
 				t.Fatalf("failed to open test file %s: %v", tc.file+".bop", err)
 			}
@@ -90,7 +119,6 @@ var genTestFiles = []string{
 	"map_types",
 	"message_map",
 	"msgpack_comparison",
-	"quoted_string",
 	"request",
 	"server",
 	"union",
@@ -104,6 +132,38 @@ func TestGenerateToFile(t *testing.T) {
 		filename := filename
 		t.Run(filename, func(t *testing.T) {
 			f, err := os.Open(filepath.Join("testdata", "base", filename+".bop"))
+			if err != nil {
+				t.Fatalf("failed to open test file %s: %v", filename+".bop", err)
+			}
+			defer f.Close()
+			bopf, err := ReadFile(f)
+			if err != nil {
+				t.Fatalf("failed to read file %s: %v", filename+".bop", err)
+			}
+			outFile := filepath.Join("testdata", "generated", filename+".go")
+			out, err := os.Create(outFile)
+			if err != nil {
+				t.Fatalf("failed to open out file %s: %v", outFile, err)
+			}
+			defer out.Close()
+			err = bopf.Generate(out, GenerateSettings{
+				PackageName:           "generated",
+				GenerateUnsafeMethods: true,
+				SharedMemoryStrings:   false,
+			})
+			if err != nil {
+				t.Fatalf("generation failed: %v", err)
+			}
+		})
+	}
+}
+
+func TestGenerateToFileIncompatible(t *testing.T) {
+	rand.Seed(time.Now().UnixNano())
+	for _, filename := range testIncompatibleFiles {
+		filename := filename
+		t.Run(filename, func(t *testing.T) {
+			f, err := os.Open(filepath.Join("testdata", "incompatible", filename+".bop"))
 			if err != nil {
 				t.Fatalf("failed to open test file %s: %v", filename+".bop", err)
 			}

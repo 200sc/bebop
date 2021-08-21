@@ -4,13 +4,13 @@
 [opcode("yeah")]
 union U {
 	1 -> message A {
-		1 -> uint32 a;
+		1 -> uint32 b;
 	}
 	/**
      * This branch is, too!
      */
 	2 -> struct B {
-		bool b;
+		bool c;
 	}
 	3 -> struct C {
 	}

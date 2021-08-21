@@ -34,6 +34,22 @@ func TestReadFile(t *testing.T) {
 	}
 	tcs := []testCase{
 		{
+			file: "enum_hex_int",
+			expected: File{
+				Enums: []Enum{
+					{
+						Name: "MyEnum",
+						Options: []EnumOption{
+							{
+								Name:  "One",
+								Value: 1,
+							},
+						},
+					},
+				},
+			},
+		},
+		{
 			file: "array_of_strings",
 			expected: File{
 				Structs: []Struct{
@@ -76,9 +92,9 @@ func TestReadFile(t *testing.T) {
 						UIntValue:  uint64pointer(1),
 					},
 					{
-						SimpleType: "int8",
+						SimpleType: "byte",
 						Name:       "int8const",
-						IntValue:   int64pointer(1),
+						UIntValue:  uint64pointer(1),
 					},
 					{
 						SimpleType: "int16",
@@ -1163,7 +1179,7 @@ func TestReadFile(t *testing.T) {
 									Name: "A",
 									Fields: map[uint8]Field{
 										1: {
-											Name: "a",
+											Name: "b",
 											FieldType: FieldType{
 												Simple: "uint32",
 											},
@@ -1177,7 +1193,7 @@ func TestReadFile(t *testing.T) {
 									Name:    "B",
 									Fields: []Field{
 										{
-											Name: "b",
+											Name: "c",
 											FieldType: FieldType{
 												Simple: "bool",
 											},
@@ -1244,6 +1260,36 @@ func TestReadFile(t *testing.T) {
 	}
 }
 
+func TestReadFileErrorIncompatible(t *testing.T) {
+	type testCase struct {
+		file       string
+		errMessage string
+	}
+	tcs := []testCase{
+		{file: "invalid_const_unparseable_uint", errMessage: "[0:81] strconv.ParseUint: parsing \"2222222222222222222222222222222222222222222222222222222222222222\": value out of range"},
+		{file: "invalid_const_unparseable_int", errMessage: "[0:81] strconv.ParseInt: parsing \"33333333333333333333333333333333333333333333333333333333333333333\": value out of range"},
+		{file: "invalid_const_unparseable_float", errMessage: "[0:45] strconv.ParseFloat: parsing \"1.7976931348623159e308\": value out of range"},
+		{file: "invalid_const_unparseable_float_2", errMessage: "[0:103] strconv.ParseInt: parsing \"6666666666666666666666666666666666666666666666666666666666666666666666666666666666666\": value out of range"},
+	}
+	for _, tc := range tcs {
+		tc := tc
+		t.Run(tc.file, func(t *testing.T) {
+			f, err := os.Open(filepath.Join("testdata", "incompatible", tc.file+".bop"))
+			if err != nil {
+				t.Fatalf("failed to open test file %s: %v", tc.file+".bop", err)
+			}
+			defer f.Close()
+			_, err = ReadFile(f)
+			if err == nil {
+				t.Fatalf("read file should have errored")
+			}
+			if err.Error() != tc.errMessage {
+				t.Fatalf("read file had wrong error: got %q, expected %q", err.Error(), tc.errMessage)
+			}
+		})
+	}
+}
+
 func TestReadFileError(t *testing.T) {
 	type testCase struct {
 		file       string
@@ -1263,7 +1309,6 @@ func TestReadFileError(t *testing.T) {
 		{file: "invalid_op_code_8", errMessage: "[0:13] expected (Integer Literal, String Literal) got Ident"},
 		{file: "invalid_enum_bad_deprecated", errMessage: "[1:17] expected (String Literal) got Equals"},
 		{file: "invalid_enum_double_deprecated", errMessage: "[2:5] expected enum option following deprecated annotation"},
-		{file: "invalid_enum_hex_int", errMessage: "[1:13] strconv.ParseInt: parsing \"0x1\": invalid syntax"},
 		{file: "invalid_enum_no_close", errMessage: "[2:0] enum definition ended early"},
 		{file: "invalid_enum_no_curly", errMessage: "[1:0] expected (Open Curly) got Newline"},
 		{file: "invalid_enum_no_eq", errMessage: "[1:9] expected (Equals) got Integer Literal"},
@@ -1309,12 +1354,8 @@ func TestReadFileError(t *testing.T) {
 		{file: "invalid_const_eof", errMessage: "[0:14] expected (Ident, Ident, Equals), got no token"},
 		{file: "invalid_const_eof_2", errMessage: "[0:17] expected value following const type"},
 		{file: "invalid_const_unassignable_uint", errMessage: "[0:30] String Literal unassignable to uint32"},
-		{file: "invalid_const_unparseable_uint", errMessage: "[0:81] strconv.ParseUint: parsing \"2222222222222222222222222222222222222222222222222222222222222222\": value out of range"},
 		{file: "invalid_const_unassignable_int", errMessage: "[0:21] Floating Point Literal unassignable to int64"},
-		{file: "invalid_const_unparseable_int", errMessage: "[0:80] strconv.ParseInt: parsing \"33333333333333333333333333333333333333333333333333333333333333333\": value out of range"},
 		{file: "invalid_const_unassignable_float", errMessage: "[0:23] String Literal unassignable to float32"},
-		{file: "invalid_const_unparseable_float", errMessage: "[0:45] strconv.ParseFloat: parsing \"1.7976931348623159e308\": value out of range"},
-		{file: "invalid_const_unparseable_float_2", errMessage: "[0:103] strconv.ParseInt: parsing \"6666666666666666666666666666666666666666666666666666666666666666666666666666666666666\": value out of range"},
 		{file: "invalid_const_unassignable_guid", errMessage: "[0:16] Integer Literal unassignable to guid"},
 		{file: "invalid_const_invalid_guid", errMessage: "[0:31] \"guid-guid-guid\" has wrong length for guid"},
 		{file: "invalid_const_unassignable_string", errMessage: "[0:19] Integer Literal unassignable to string"},
@@ -1335,7 +1376,7 @@ func TestReadFileError(t *testing.T) {
 	for _, tc := range tcs {
 		tc := tc
 		t.Run(tc.file, func(t *testing.T) {
-			f, err := os.Open(filepath.Join("testdata", "base", tc.file+".bop"))
+			f, err := os.Open(filepath.Join("testdata", "invalid", tc.file+".bop"))
 			if err != nil {
 				t.Fatalf("failed to open test file %s: %v", tc.file+".bop", err)
 			}

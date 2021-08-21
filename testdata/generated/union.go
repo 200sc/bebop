@@ -12,7 +12,7 @@ import (
 var _ bebop.Record = &A{}
 
 type A struct {
-	A *uint32
+	B *uint32
 }
 
 func (bbp A) MarshalBebop() []byte {
@@ -25,10 +25,10 @@ func (bbp A) MarshalBebopTo(buf []byte) int {
 	at := 0
 	iohelp.WriteUint32Bytes(buf[at:], uint32(bbp.Size()-4))
 	at += 4
-	if bbp.A != nil {
+	if bbp.B != nil {
 		buf[at] = 1
 		at++
-		iohelp.WriteUint32Bytes(buf[at:], *bbp.A)
+		iohelp.WriteUint32Bytes(buf[at:], *bbp.B)
 		at += 4
 	}
 	return at
@@ -42,11 +42,11 @@ func (bbp *A) UnmarshalBebop(buf []byte) (err error) {
 		switch buf[at] {
 		case 1:
 			at += 1
-			bbp.A = new(uint32)
+			bbp.B = new(uint32)
 			if len(buf[at:]) < 4 {
 				 return iohelp.ErrTooShort
 			}
-			(*bbp.A) = iohelp.ReadUint32Bytes(buf[at:])
+			(*bbp.B) = iohelp.ReadUint32Bytes(buf[at:])
 			at += 4
 		default:
 			return nil
@@ -62,8 +62,8 @@ func (bbp *A) MustUnmarshalBebop(buf []byte) {
 		switch buf[at] {
 		case 1:
 			at += 1
-			bbp.A = new(uint32)
-			(*bbp.A) = iohelp.ReadUint32Bytes(buf[at:])
+			bbp.B = new(uint32)
+			(*bbp.B) = iohelp.ReadUint32Bytes(buf[at:])
 			at += 4
 		default:
 			return
@@ -74,9 +74,9 @@ func (bbp *A) MustUnmarshalBebop(buf []byte) {
 func (bbp A) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
 	iohelp.WriteUint32(w, uint32(bbp.Size()-4))
-	if bbp.A != nil {
+	if bbp.B != nil {
 		w.Write([]byte{1})
-		iohelp.WriteUint32(w, *bbp.A)
+		iohelp.WriteUint32(w, *bbp.B)
 	}
 	w.Write([]byte{0})
 	return w.Err
@@ -91,8 +91,8 @@ func (bbp *A) DecodeBebop(ior io.Reader) (err error) {
 	for {
 		switch iohelp.ReadByte(r) {
 		case 1:
-			bbp.A = new(uint32)
-			*bbp.A = iohelp.ReadUint32(r)
+			bbp.B = new(uint32)
+			*bbp.B = iohelp.ReadUint32(r)
 		default:
 			return er.Err
 		}
@@ -101,7 +101,7 @@ func (bbp *A) DecodeBebop(ior io.Reader) (err error) {
 
 func (bbp A) Size() int {
 	bodyLen := 5
-	if bbp.A != nil {
+	if bbp.B != nil {
 		bodyLen += 1
 		bodyLen += 4
 	}
@@ -132,7 +132,7 @@ var _ bebop.Record = &B{}
 //     * This branch is, too!
 //     
 type B struct {
-	B bool
+	C bool
 }
 
 func (bbp B) MarshalBebop() []byte {
@@ -143,7 +143,7 @@ func (bbp B) MarshalBebop() []byte {
 
 func (bbp B) MarshalBebopTo(buf []byte) int {
 	at := 0
-	iohelp.WriteBoolBytes(buf[at:], bbp.B)
+	iohelp.WriteBoolBytes(buf[at:], bbp.C)
 	at += 1
 	return at
 }
@@ -153,26 +153,26 @@ func (bbp *B) UnmarshalBebop(buf []byte) (err error) {
 	if len(buf[at:]) < 1 {
 		 return iohelp.ErrTooShort
 	}
-	bbp.B = iohelp.ReadBoolBytes(buf[at:])
+	bbp.C = iohelp.ReadBoolBytes(buf[at:])
 	at += 1
 	return nil
 }
 
 func (bbp *B) MustUnmarshalBebop(buf []byte) {
 	at := 0
-	bbp.B = iohelp.ReadBoolBytes(buf[at:])
+	bbp.C = iohelp.ReadBoolBytes(buf[at:])
 	at += 1
 }
 
 func (bbp B) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
-	iohelp.WriteBool(w, bbp.B)
+	iohelp.WriteBool(w, bbp.C)
 	return w.Err
 }
 
 func (bbp *B) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
-	bbp.B = iohelp.ReadBool(r)
+	bbp.C = iohelp.ReadBool(r)
 	return r.Err
 }
 
