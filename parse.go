@@ -176,7 +176,7 @@ func readEnum(tr *tokenReader) (Enum, error) {
 			if err != nil {
 				return en, err
 			}
-			optInteger, err := strconv.ParseInt(string(toks[1].concrete), 10, 32)
+			optInteger, err := strconv.ParseInt(string(toks[1].concrete), 0, 32)
 			if err != nil {
 				return en, readError(toks[1], err.Error())
 			}
