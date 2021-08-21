@@ -78,13 +78,13 @@ At `main/bebopfmt` there is a cli utility to format and rewrite bop files. It ta
 
 The following is a list of known issues with the current version of the project, ordered by approximate priority for addressing them.
 
-Original bebop does not support one .bop file importing type definitions from another .bop file, and so neither does this, yet.
+- Support for importing relative .bop files is in progress.
 
-- This is nontrivial, and requires a lot of design toward the importing / packaging ecosystem.
+- We should be able to generate server code with handlers given all valid messages have op codes.
 
-We should be able to generate server code with handlers given all valid messages have op codes.
+- Tokenization and parsing could attempt corrective fixes to be able to report more than one error.
 
-Tokenization and parsing could attempt corrective fixes to be able to report more than one error.
+- There are several incompatibilities between this compiler and the original compiler. These incompatibilities are documented (see testdata/incompatible), but we should attempt to resolve them. Trivially resolvable incompatibilities have been resolved already, remaining notes should involve raising upstream issues. 
 
 ## Credit
 
