@@ -7,6 +7,7 @@ import (
 )
 
 var testFormatFiles = []string{
+	"all_consts",
 	"array_of_strings",
 	"basic_arrays",
 	"basic_types",
