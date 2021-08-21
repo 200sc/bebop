@@ -1,0 +1,2 @@
+[opcode("test")]
+const string p = "string";

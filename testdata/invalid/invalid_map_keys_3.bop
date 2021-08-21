@@ -1,0 +1,3 @@
+struct Wrong {
+    map[string, map[no]] fred;
+}

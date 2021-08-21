@@ -2,7 +2,7 @@
 package bebop
 
 // Version is the library version. Should be used by CLI tools when passed a '--version' flag.
-const Version = "v0.1.2"
+const Version = "v0.1.4"
 
 // A File is a structured representation of a .bop file.
 type File struct {
@@ -10,6 +10,7 @@ type File struct {
 	Messages []Message
 	Enums    []Enum
 	Unions   []Union
+	Consts   []Const
 }
 
 // A Struct is a record type where all fields are required.
@@ -92,4 +93,19 @@ type MapType struct {
 	// Keys may only be named types
 	Key   string
 	Value FieldType
+}
+
+// A const is a simple type - value pair that is compiled as
+// a constant into generated code.
+type Const struct {
+	// Consts do not support map or array (or record) types
+	SimpleType string
+	Comment    string
+	Name       string
+	// GUIDs also use string values
+	StringValue *string
+	IntValue    *int64
+	UIntValue   *uint64
+	FloatValue  *float64
+	BoolValue   *bool
 }

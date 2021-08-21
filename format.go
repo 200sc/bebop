@@ -47,6 +47,12 @@ func format(tr *tokenReader, w io.Writer) {
 			}
 			w.Write(formatEnum(tr))
 			newlineBeforeNextRecord = true
+		case tokenKindConst:
+			if newlineBeforeNextRecord {
+				w.Write([]byte{'\n'})
+			}
+			w.Write(formatConst(tr))
+			newlineBeforeNextRecord = true
 		case tokenKindStruct:
 			if newlineBeforeNextRecord {
 				w.Write([]byte{'\n'})
@@ -119,6 +125,19 @@ tokenLoop:
 	}
 
 	return enumBytes
+}
+
+func formatConst(tr *tokenReader) []byte {
+	// const <type> <ID> = val;\n
+	constBytes := tr.Token().concrete
+	for j := 0; j < 4; j++ {
+		constBytes = append(constBytes, ' ')
+		tr.Next()
+		constBytes = append(constBytes, tr.Token().concrete...)
+	}
+	tr.Next()
+	constBytes = append(constBytes, ';')
+	return constBytes
 }
 
 func formatStruct(tr *tokenReader, readonly bool, prefix string) []byte {
@@ -214,7 +233,7 @@ tokenLoop:
 			}
 			deprecatedBytes = append(deprecatedBytes, '\n')
 			msgBytes = append(msgBytes, deprecatedBytes...)
-		case tokenKindInteger:
+		case tokenKindIntegerLiteral:
 			// <NUM> -> <TYPE> <ID>;
 			fieldBytes := append([]byte(prefix), t.concrete...)
 			fieldBytes = append(fieldBytes, ' ')
@@ -269,7 +288,7 @@ tokenLoop:
 			}
 			deprecatedBytes = append(deprecatedBytes, '\n')
 			unionBytes = append(unionBytes, deprecatedBytes...)
-		case tokenKindInteger:
+		case tokenKindIntegerLiteral:
 			// <NUM> -> ???;
 			fieldBytes := append([]byte(prefix), t.concrete...)
 			fieldBytes = append(fieldBytes, ' ')

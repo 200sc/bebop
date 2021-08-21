@@ -12,7 +12,8 @@ const (
 	tokenKindInvalid tokenKind = iota
 
 	tokenKindIdent
-	tokenKindInteger
+	tokenKindIntegerLiteral
+	tokenKindFloatLiteral
 	tokenKindStringLiteral
 
 	tokenKindReadOnly
@@ -24,6 +25,12 @@ const (
 	tokenKindMap
 	tokenKindArray
 	tokenKindUnion
+	tokenKindConst
+	tokenKindInf
+	tokenKindNegativeInf
+	tokenKindNaN
+	tokenKindTrue
+	tokenKindFalse
 
 	tokenKindOpenSquare
 	tokenKindCloseSquare
@@ -39,35 +46,44 @@ const (
 	tokenKindBlockComment
 
 	tokenKindNewline
+
+	tokenKindFinal
 )
 
 var tokenStrings = map[tokenKind]string{
-	tokenKindInvalid:       "Invalid",
-	tokenKindIdent:         "Ident",
-	tokenKindInteger:       "Integer",
-	tokenKindReadOnly:      "Readonly",
-	tokenKindStruct:        "Struct",
-	tokenKindMessage:       "Message",
-	tokenKindEnum:          "Enum",
-	tokenKindUnion:         "Union",
-	tokenKindDeprecated:    "Deprecated",
-	tokenKindOpCode:        "OpCode",
-	tokenKindMap:           "Map",
-	tokenKindArray:         "Array",
-	tokenKindStringLiteral: "String Literal",
-	tokenKindOpenSquare:    "Open Square",
-	tokenKindCloseSquare:   "Close Square",
-	tokenKindOpenParen:     "Open Paren",
-	tokenKindCloseParen:    "Close Paren",
-	tokenKindSemicolon:     "Semicolon",
-	tokenKindOpenCurly:     "Open Curly",
-	tokenKindCloseCurly:    "Close Curly",
-	tokenKindComma:         "Comma",
-	tokenKindEquals:        "Equals",
-	tokenKindArrow:         "Arrow",
-	tokenKindLineComment:   "Line Comment",
-	tokenKindBlockComment:  "Block Comment",
-	tokenKindNewline:       "Newline",
+	tokenKindInvalid:        "Invalid",
+	tokenKindIdent:          "Ident",
+	tokenKindIntegerLiteral: "Integer Literal",
+	tokenKindReadOnly:       "Readonly",
+	tokenKindStruct:         "Struct",
+	tokenKindMessage:        "Message",
+	tokenKindEnum:           "Enum",
+	tokenKindUnion:          "Union",
+	tokenKindDeprecated:     "Deprecated",
+	tokenKindOpCode:         "OpCode",
+	tokenKindMap:            "Map",
+	tokenKindArray:          "Array",
+	tokenKindStringLiteral:  "String Literal",
+	tokenKindOpenSquare:     "Open Square",
+	tokenKindCloseSquare:    "Close Square",
+	tokenKindOpenParen:      "Open Paren",
+	tokenKindCloseParen:     "Close Paren",
+	tokenKindSemicolon:      "Semicolon",
+	tokenKindOpenCurly:      "Open Curly",
+	tokenKindCloseCurly:     "Close Curly",
+	tokenKindComma:          "Comma",
+	tokenKindEquals:         "Equals",
+	tokenKindArrow:          "Arrow",
+	tokenKindLineComment:    "Line Comment",
+	tokenKindBlockComment:   "Block Comment",
+	tokenKindNewline:        "Newline",
+	tokenKindConst:          "Const",
+	tokenKindFloatLiteral:   "Floating Point Literal",
+	tokenKindInf:            "Infinity",
+	tokenKindNegativeInf:    "Negative Infinity",
+	tokenKindNaN:            "NaN",
+	tokenKindTrue:           "True",
+	tokenKindFalse:          "False",
 }
 
 func (tk tokenKind) String() string {

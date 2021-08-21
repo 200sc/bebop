@@ -1,0 +1,21 @@
+// rainway does not support unions where fields inside of the union cases are named the same, case insensitive, 
+// as the union option themselves-- so (A { a }) or (B { b }) are both invalid. TODO: why? 
+
+/**
+ * This union is so documented!
+ */
+[opcode("yeah")]
+union U {
+    1 -> message A { 1 -> uint32 a; }
+    /**
+     * This branch is, too!
+     */
+    2 -> struct B { bool b; }
+    3 -> struct C { }
+}
+
+union List {
+    1 -> struct Cons { uint32 head; List tail; }
+    // nil is empty
+    2 -> struct Nil {}
+}

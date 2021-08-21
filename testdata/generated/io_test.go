@@ -389,7 +389,7 @@ func TestMarshalCycleRecords(t *testing.T) {
 			name: "Union U: A",
 			record: &generated.U{
 				A: &generated.A{
-					A: uint32p(2),
+					B: uint32p(2),
 				},
 			},
 			unmarshalTo:  &generated.U{},
@@ -398,7 +398,7 @@ func TestMarshalCycleRecords(t *testing.T) {
 			name: "Union U: B",
 			record: &generated.U{
 				B: &generated.B{
-					B: true,
+					C: true,
 				},
 			},
 			unmarshalTo:  &generated.U{},

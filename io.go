@@ -21,7 +21,7 @@ type Record interface {
 	// larger than a network packet and able to be acted upon as writer receives the byte
 	// stream, not only after the entire message has been received.
 	EncodeBebop(io.Writer) error
-	// DecodeBebop is to EncodeBebop as UnmarshlBebop is to MarshalBebop
+	// DecodeBebop is to EncodeBebop as UnmarshalBebop is to MarshalBebop
 	DecodeBebop(io.Reader) error
 	// Size reports how many bytes a record takes up. It is only valid for the state of the
 	// record when Size is called.
