@@ -11,6 +11,7 @@ type File struct {
 	Enums    []Enum
 	Unions   []Union
 	Consts   []Const
+	Imports  []string
 }
 
 // A Struct is a record type where all fields are required.

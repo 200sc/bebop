@@ -15,6 +15,8 @@ var testFiles = []string{
 	"enums",
 	"enums_doc",
 	"foo",
+	"import",
+	"import_b",
 	"jazz",
 	"lab",
 	"map_types",

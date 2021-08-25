@@ -1,0 +1,7 @@
+import "./jazz.bop"
+import "./lab.bop"
+
+struct Hello {
+    int32 Yes; 
+    string No;
+}

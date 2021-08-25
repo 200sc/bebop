@@ -19,6 +19,17 @@ func ReadFile(r io.Reader) (File, error) {
 	for tr.Next() {
 		tk := tr.Token()
 		switch tk.kind {
+		case tokenKindImport:
+			toks, err := expectNext(tr, tokenKindStringLiteral)
+			if err != nil {
+				return f, err
+			}
+			imported, err := strconv.Unquote(string(toks[0].concrete))
+			if err != nil {
+				return f, err
+			}
+			f.Imports = append(f.Imports, imported)
+			continue
 		case tokenKindNewline:
 			nextCommentLines = []string{}
 			continue

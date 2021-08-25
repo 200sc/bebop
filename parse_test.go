@@ -34,6 +34,48 @@ func TestReadFile(t *testing.T) {
 	}
 	tcs := []testCase{
 		{
+			file: "import",
+			expected: File{
+				Structs: []Struct{
+					{
+						Name: "Hello",
+						Fields: []Field{
+							{
+								Name: "Yes",
+								FieldType: FieldType{
+									Simple: "int32",
+								},
+							},
+							{
+								Name: "No",
+								FieldType: FieldType{
+									Simple: "string",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			file: "import_b",
+			expected: File{
+				Structs: []Struct{
+					{
+						Name: "Test22",
+						Fields: []Field{
+							{
+								Name: "noisemaker",
+								FieldType: FieldType{
+									Simple: "Instrument",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
 			file: "enum_hex_int",
 			expected: File{
 				Enums: []Enum{
@@ -1296,6 +1338,7 @@ func TestReadFileError(t *testing.T) {
 		errMessage string
 	}
 	tcs := []testCase{
+		{file: "invalid_import_no_file", errMessage: "[0:6] expected (String Literal), got no token"},
 		{file: "invalid_const_no_semi", errMessage: "[0:34] expected (Semicolon), got no token"},
 		{file: "invalid_const_float_no_semi", errMessage: "[0:37] expected (Semicolon), got no token"},
 		{file: "invalid_enum_with_op_code", errMessage: "[1:4] enums may not have attached op codes"},
