@@ -36,6 +36,13 @@ var reservedWords = map[string]struct{}{
 
 // Validate verifies a File can be successfully generated.
 func (f File) Validate() error {
+	allConsts := map[string]struct{}{}
+	for _, c := range f.Consts {
+		if _, ok := allConsts[c.Name]; ok {
+			return fmt.Errorf("const has duplicated name %s", c.Name)
+		}
+		allConsts[c.Name] = struct{}{}
+	}
 	customTypes := map[string]struct{}{}
 	structTypeUsage := map[string]map[string]bool{}
 	for _, en := range f.Enums {

@@ -82,6 +82,9 @@ func TestValidateError(t *testing.T) {
 	}, {
 		file: "invalid_struct_duplicate_name",
 		err:  "struct Test has duplicate field name foo",
+	}, {
+		file: "invalid_const_duplicate_name",
+		err:  "const has duplicated name hello",
 	}}
 	for _, tc := range tcs {
 		tc := tc
