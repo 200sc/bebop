@@ -9,9 +9,17 @@ import (
 	"strings"
 )
 
-// ReadFile reads out a bebop file.
+type FileNamer interface {
+	Name() string
+}
+
+// ReadFile reads out a bebop file. If r is a FileNamer, like an *os.File,
+// the output's FileName will be populated.
 func ReadFile(r io.Reader) (File, error) {
 	f := File{}
+	if fnamer, ok := r.(FileNamer); ok {
+		f.FileName = fnamer.Name()
+	}
 	tr := newTokenReader(r)
 	nextCommentLines := []string{}
 	nextRecordOpCode := int32(0)
@@ -101,6 +109,9 @@ func ReadFile(r io.Reader) (File, error) {
 				return f, err
 			}
 			cons.Comment = strings.Join(nextCommentLines, "\n")
+			if cons.Name == goPackage && cons.StringValue != nil {
+				f.GoPackage = *cons.StringValue
+			}
 			f.Consts = append(f.Consts, cons)
 		}
 		nextCommentLines = []string{}

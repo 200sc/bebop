@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"io"
 	"math"
+	"os"
+	"path"
+	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
@@ -12,6 +15,8 @@ import (
 
 // GenerateSettings holds customization options for what Generate should do.
 type GenerateSettings struct {
+	// PackageName is optional if the target bebop file defines a go_package
+	// constant. If both are provided, PackageName will take precedence.
 	PackageName string
 
 	typeByters        map[string]string
@@ -21,8 +26,31 @@ type GenerateSettings struct {
 	typeLengthers     map[string]string
 	customRecordTypes map[string]struct{}
 
+	ImportGenerationMode
+	imported []File
+
 	GenerateUnsafeMethods bool
 	SharedMemoryStrings   bool
+}
+
+type ImportGenerationMode uint8
+
+const (
+	// ImportGenerationModeSeparate will generate separate go files for
+	// every bebop file, and will assume that imported files are
+	// already generated. If imported file types are used and their containing
+	// files do not contain a go_package constant, this mode will fail.
+	//ImportGenerationModeSeparate ImportGenerationMode = iota
+
+	// ImportGenerationModeCombined will generate one go file including
+	// all definitions from all imports. This does not require go_package
+	// is defined anywhere, and maintains compatibility with files compilable
+	// by the original bebopc compiler.
+	ImportGenerationModeCombined ImportGenerationMode = iota
+)
+
+var allImportModes = map[ImportGenerationMode]struct{}{
+	ImportGenerationModeCombined: {},
 }
 
 var reservedWords = map[string]struct{}{
@@ -32,6 +60,13 @@ var reservedWords = map[string]struct{}{
 	"message":  {},
 	"enum":     {},
 	"readonly": {},
+}
+
+func (gs GenerateSettings) Validate() error {
+	if _, ok := allImportModes[gs.ImportGenerationMode]; !ok {
+		return fmt.Errorf("unknown import mode: %d", gs.ImportGenerationMode)
+	}
+	return nil
 }
 
 // Validate verifies a File can be successfully generated.
@@ -127,6 +162,7 @@ func (f File) Validate() error {
 			}
 		}
 	}
+
 	// Todo: within a given struct, enum, or message, a field / option cannot
 	// have a duplicate name
 
@@ -187,8 +223,65 @@ func typeDefined(ft FieldType, allTypes map[string]struct{}) error {
 	return nil
 }
 
-// Generate writes a .go file out to w.
+// Generate writes a .go file out to w. If f has imports, it will
+// parse the files at those imports and generate them according to
+// settings.
 func (f File) Generate(w io.Writer, settings GenerateSettings) error {
+	if err := settings.Validate(); err != nil {
+		return fmt.Errorf("invalid generation settings: %w", err)
+	}
+
+	if len(f.Imports) != 0 {
+		thisFilePath := f.FileName
+		if !path.IsAbs(f.FileName) {
+			// assume relative to our current directory
+			wd, err := os.Getwd()
+			if err != nil {
+				return fmt.Errorf("cannot determine working directory for import lookup: %v", err)
+			}
+			thisFilePath = filepath.Join(wd, thisFilePath)
+		}
+		thisDir := filepath.Dir(thisFilePath)
+		// imports cause all elements of the imported file to be exported, so we
+		// must follow imports infinitely deep.
+		imports := make([]string, len(f.Imports))
+		copy(imports, f.Imports)
+		// TODO: should we forbid recursive imports?
+		// TODO: why are imports not scoped to a namespace?
+		imported := map[string]struct{}{}
+		for i := 0; i < len(imports); i++ {
+			imp := imports[i]
+			impPath := filepath.Join(thisDir, imp)
+			if _, ok := imported[impPath]; ok {
+				continue
+			}
+			impF, err := os.Open(impPath)
+			if err != nil {
+				return fmt.Errorf("failed to open imported file %s: %w", imp, err)
+			}
+			impFile, err := ReadFile(impF)
+			if err != nil {
+				impF.Close()
+				return fmt.Errorf("failed to parse imported file %s: %w", imp, err)
+			}
+			impF.Close()
+			settings.imported = append(settings.imported, impFile)
+			imports = append(imports, impFile.Imports...)
+			imported[impPath] = struct{}{}
+		}
+	}
+	switch settings.ImportGenerationMode {
+	case ImportGenerationModeCombined:
+		// treat all imported files as a part of this file. Do not observe GoPackage.
+		for _, imp := range settings.imported {
+			f.Consts = append(f.Consts, imp.Consts...)
+			f.Structs = append(f.Structs, imp.Structs...)
+			f.Unions = append(f.Unions, imp.Unions...)
+			f.Messages = append(f.Messages, imp.Messages...)
+			f.Enums = append(f.Enums, imp.Enums...)
+		}
+	}
+
 	if err := f.Validate(); err != nil {
 		return fmt.Errorf("cannot generate file: %w", err)
 	}

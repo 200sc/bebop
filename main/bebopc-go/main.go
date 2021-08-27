@@ -52,7 +52,7 @@ func run() error {
 	bopf, err := bebop.ReadFile(f)
 	if err != nil {
 		filename := filepath.Base(*inputFile)
-		return fmt.Errorf("parsing input failed: %s%w", filename, err)
+		return fmt.Errorf("parsing input %s failed: %w", filename, err)
 	}
 	out, err := os.Create(*outputFile)
 	if err != nil {

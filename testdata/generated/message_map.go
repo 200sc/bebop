@@ -51,10 +51,10 @@ func (bbp *ReadOnlyMap) UnmarshalBebop(buf []byte) (err error) {
 		case 1:
 			at += 1
 			bbp.Vals = new(map[string]uint8)
-			ln17 := iohelp.ReadUint32Bytes(buf[at:])
+			ln19 := iohelp.ReadUint32Bytes(buf[at:])
 			at += 4
-			(*bbp.Vals) = make(map[string]uint8,ln17)
-			for i := uint32(0); i < ln17; i++ {
+			(*bbp.Vals) = make(map[string]uint8,ln19)
+			for i := uint32(0); i < ln19; i++ {
 				k3, err := iohelp.ReadStringBytes(buf[at:])
 				if err != nil {
 					 return err
@@ -81,10 +81,10 @@ func (bbp *ReadOnlyMap) MustUnmarshalBebop(buf []byte) {
 		case 1:
 			at += 1
 			bbp.Vals = new(map[string]uint8)
-			ln18 := iohelp.ReadUint32Bytes(buf[at:])
+			ln20 := iohelp.ReadUint32Bytes(buf[at:])
 			at += 4
-			(*bbp.Vals) = make(map[string]uint8,ln18)
-			for i := uint32(0); i < ln18; i++ {
+			(*bbp.Vals) = make(map[string]uint8,ln20)
+			for i := uint32(0); i < ln20; i++ {
 				k3 :=  iohelp.MustReadStringBytes(buf[at:])
 				at += 4+len(k3)
 				((*bbp.Vals))[k3] = iohelp.ReadUint8Bytes(buf[at:])
