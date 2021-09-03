@@ -1,0 +1,7 @@
+const string go_package = "github.com/200sc/bebop/testdata/incompatible/generated";
+
+import "./import_separate_b.bop"
+
+struct UsesImport {
+    ImportedType imported; 
+}

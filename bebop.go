@@ -29,7 +29,7 @@ type File struct {
 // goPackage defines the constant used in bebop files as a hint to
 // our compiler for which package a file should belong to. E.g.
 // defining 'const go_package = github.com/user/repo/schema' will
-// cause the file to define itself under the "schema" package and 
+// cause the file to define itself under the "schema" package and
 // other bebop files will import it as github.com/user/repo/schema.
 const goPackage = "go_package"
 
@@ -41,6 +41,9 @@ type Struct struct {
 	// If OpCode is defined, wire encodings of the struct will be
 	// preceded by the OpCode.
 	OpCode int32
+	// Namespace is only provided for imported types, and only
+	// used in code generation.
+	Namespace string
 	// If ReadOnly is true, generated code for the struct will
 	// provide field getters instead of exporting fields.
 	ReadOnly bool
@@ -63,6 +66,9 @@ type Message struct {
 	Comment string
 	Fields  map[uint8]Field
 	OpCode  int32
+	// Namespace is only provided for imported types, and only
+	// used in code generation.
+	Namespace string
 }
 
 // A Union is like a message where explicitly one field will be provided.
@@ -71,6 +77,9 @@ type Union struct {
 	Comment string
 	Fields  map[uint8]UnionField
 	OpCode  int32
+	// Namespace is only provided for imported types, and only
+	// used in code generation.
+	Namespace string
 }
 
 // A UnionField is either a Message, Struct, or Union, defined inline.
@@ -87,6 +96,9 @@ type Enum struct {
 	Name    string
 	Comment string
 	Options []EnumOption
+	// Namespace is only provided for imported types, and only
+	// used in code generation.
+	Namespace string
 }
 
 // An EnumOption is one possible value for a field typed as a specific Enum.

@@ -1,0 +1,5 @@
+const string go_package = "github.com/200sc/bebop/testdata/incompatible/generatedtwo";
+
+struct ImportedType {
+    string foobar; 
+}

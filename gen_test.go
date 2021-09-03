@@ -145,6 +145,53 @@ func TestGenerate_Error(t *testing.T) {
 	}
 }
 
+func TestGenerateToFile_SeperateImports(t *testing.T) {
+	type file struct {
+		filename string
+		outfile  string
+	}
+	files := []file{
+		{
+			filename: "import_separate_a",
+			outfile:  filepath.Join("generated", "import_separate_a.go"),
+		}, {
+			filename: "import_separate_b",
+			outfile:  filepath.Join("generatedtwo", "import_separate_b.go"),
+		},
+	}
+	for _, filedef := range files {
+		filedef := filedef
+		t.Run(filedef.filename, func(t *testing.T) {
+			f, err := os.Open(filepath.Join("testdata", "incompatible", filedef.filename+".bop"))
+			if err != nil {
+				t.Fatalf("failed to open test file %s: %v", filedef.filename+".bop", err)
+			}
+			defer f.Close()
+			bopf, err := ReadFile(f)
+			if err != nil {
+				t.Fatalf("failed to read file %s: %v", filedef.filename+".bop", err)
+			}
+			// use a separate directory to ensure duplicate definitions in combined mode
+			// do not cause complation failures
+			os.MkdirAll(filepath.Join("testdata", "incompatible", filepath.Dir(filedef.outfile)), 777)
+			outFile := filepath.Join("testdata", "incompatible", filedef.outfile)
+			out, err := os.Create(outFile)
+			if err != nil {
+				t.Fatalf("failed to open out file %s: %v", outFile, err)
+			}
+			defer out.Close()
+			err = bopf.Generate(out, GenerateSettings{
+				GenerateUnsafeMethods: true,
+				SharedMemoryStrings:   false,
+				ImportGenerationMode:  ImportGenerationModeSeparate,
+			})
+			if err != nil {
+				t.Fatalf("generation failed: %v", err)
+			}
+		})
+	}
+}
+
 var importFiles = []string{
 	"import_b",
 }
@@ -176,6 +223,7 @@ func TestGenerateToFile_Imports(t *testing.T) {
 				PackageName:           "filename",
 				GenerateUnsafeMethods: true,
 				SharedMemoryStrings:   false,
+				ImportGenerationMode:  ImportGenerationModeCombined,
 			})
 			if err != nil {
 				t.Fatalf("generation failed: %v", err)

@@ -27,7 +27,8 @@ type GenerateSettings struct {
 	customRecordTypes map[string]struct{}
 
 	ImportGenerationMode
-	imported []File
+	imported          []File
+	importTypeAliases map[string]string
 
 	GenerateUnsafeMethods bool
 	SharedMemoryStrings   bool
@@ -40,7 +41,7 @@ const (
 	// every bebop file, and will assume that imported files are
 	// already generated. If imported file types are used and their containing
 	// files do not contain a go_package constant, this mode will fail.
-	//ImportGenerationModeSeparate ImportGenerationMode = iota
+	ImportGenerationModeSeparate ImportGenerationMode = iota
 
 	// ImportGenerationModeCombined will generate one go file including
 	// all definitions from all imports. This does not require go_package
@@ -50,6 +51,7 @@ const (
 )
 
 var allImportModes = map[ImportGenerationMode]struct{}{
+	ImportGenerationModeSeparate: {},
 	ImportGenerationModeCombined: {},
 }
 
@@ -90,6 +92,10 @@ func (f File) Validate() error {
 		if _, ok := customTypes[en.Name]; ok {
 			return fmt.Errorf("enum has duplicated name %s", en.Name)
 		}
+		if en.Namespace != "" {
+			nameWithoutPrefix := strings.TrimPrefix(en.Name, en.Namespace+".")
+			customTypes[nameWithoutPrefix] = struct{}{}
+		}
 		customTypes[en.Name] = struct{}{}
 		optionNames := map[string]struct{}{}
 		optionValues := map[int32]struct{}{}
@@ -114,6 +120,11 @@ func (f File) Validate() error {
 		if _, ok := customTypes[st.Name]; ok {
 			return fmt.Errorf("struct has duplicated name %s", st.Name)
 		}
+		if st.Namespace != "" {
+			nameWithoutPrefix := strings.TrimPrefix(st.Name, st.Namespace+".")
+			customTypes[nameWithoutPrefix] = struct{}{}
+			structTypeUsage[nameWithoutPrefix] = st.usedTypes()
+		}
 		customTypes[st.Name] = struct{}{}
 		structTypeUsage[st.Name] = st.usedTypes()
 		stNames := map[string]struct{}{}
@@ -133,6 +144,10 @@ func (f File) Validate() error {
 		}
 		if _, ok := customTypes[msg.Name]; ok {
 			return fmt.Errorf("message has duplicated name %s", msg.Name)
+		}
+		if msg.Namespace != "" {
+			nameWithoutPrefix := strings.TrimPrefix(msg.Name, msg.Namespace+".")
+			customTypes[nameWithoutPrefix] = struct{}{}
 		}
 		customTypes[msg.Name] = struct{}{}
 		msgNames := map[string]struct{}{}
@@ -246,7 +261,7 @@ func (f File) Generate(w io.Writer, settings GenerateSettings) error {
 		// must follow imports infinitely deep.
 		imports := make([]string, len(f.Imports))
 		copy(imports, f.Imports)
-		// TODO: should we forbid recursive imports?
+		// TODO: should we forbid recursive imports? Yes, in non-combined mode
 		// TODO: why are imports not scoped to a namespace?
 		imported := map[string]struct{}{}
 		for i := 0; i < len(imports); i++ {
@@ -270,7 +285,47 @@ func (f File) Generate(w io.Writer, settings GenerateSettings) error {
 			imported[impPath] = struct{}{}
 		}
 	}
+	imports := []string{}
+	settings.importTypeAliases = make(map[string]string)
 	switch settings.ImportGenerationMode {
+	case ImportGenerationModeSeparate:
+		for _, imp := range settings.imported {
+			if imp.GoPackage == "" {
+				return fmt.Errorf("cannot import %s: file has no %s const", imp.FileName, goPackage)
+			}
+			packageName := imp.GoPackage
+			packageNamespace := path.Base(packageName)
+			for _, st := range imp.Structs {
+				st.Namespace = packageNamespace
+				namespacedName := packageNamespace + "." + st.Name
+				settings.importTypeAliases[st.Name] = namespacedName
+				st.Name = namespacedName
+				f.Structs = append(f.Structs, st)
+			}
+			for _, un := range imp.Unions {
+				un.Namespace = packageNamespace
+				namespacedName := packageNamespace + "." + un.Name
+				settings.importTypeAliases[un.Name] = namespacedName
+				un.Name = namespacedName
+				f.Unions = append(f.Unions, un)
+			}
+			for _, msg := range imp.Messages {
+				msg.Namespace = packageNamespace
+				namespacedName := packageNamespace + "." + msg.Name
+				settings.importTypeAliases[msg.Name] = namespacedName
+				msg.Name = namespacedName
+				f.Messages = append(f.Messages, msg)
+			}
+			for _, enm := range imp.Enums {
+				enm.Namespace = packageNamespace
+				namespacedName := packageNamespace + "." + enm.Name
+				settings.importTypeAliases[enm.Name] = namespacedName
+				enm.Name = namespacedName
+				f.Enums = append(f.Enums, enm)
+			}
+			// TODO: only import if we actually use a type from this package
+			imports = append(imports, packageName)
+		}
 	case ImportGenerationModeCombined:
 		// treat all imported files as a part of this file. Do not observe GoPackage.
 		for _, imp := range settings.imported {
@@ -293,12 +348,16 @@ func (f File) Generate(w io.Writer, settings GenerateSettings) error {
 	settings.customRecordTypes = f.customRecordTypes()
 
 	usedTypes := f.usedTypes()
+	if settings.PackageName == "" && f.GoPackage != "" {
+		settings.PackageName = path.Base(f.GoPackage)
+	} else if settings.PackageName == "" {
+		return fmt.Errorf("no package name is defined, provide a %s const or an explicit package name setting", goPackage)
+	}
 
 	writeLine(w, "// Code generated by bebopc-go; DO NOT EDIT.")
 	writeLine(w, "")
 	writeLine(w, "package %s", settings.PackageName)
 	writeLine(w, "")
-	imports := []string{}
 	if len(f.Messages)+len(f.Unions) != 0 {
 		imports = append(imports, "bytes")
 	}
@@ -350,15 +409,27 @@ func (f File) Generate(w io.Writer, settings GenerateSettings) error {
 		writeLine(w, "")
 	}
 	for _, en := range f.Enums {
+		if en.Namespace != "" {
+			continue
+		}
 		en.Generate(w, settings)
 	}
 	for _, st := range f.Structs {
+		if st.Namespace != "" {
+			continue
+		}
 		st.Generate(w, settings)
 	}
 	for _, msg := range f.Messages {
+		if msg.Namespace != "" {
+			continue
+		}
 		msg.Generate(w, settings)
 	}
 	for _, union := range f.Unions {
+		if union.Namespace != "" {
+			continue
+		}
 		union.Generate(w, settings)
 	}
 	return nil
@@ -372,6 +443,8 @@ func writeLineWithTabs(w io.Writer, format string, depth int, args ...string) {
 	var assigner string
 	var receiver string
 	var typename string
+	var namespace string
+	var baretype string
 	if len(args) > 0 {
 		assigner = args[0]
 		if assigner[0] == '&' || assigner[0] == '*' {
@@ -386,6 +459,13 @@ func writeLineWithTabs(w io.Writer, format string, depth int, args ...string) {
 	}
 	if len(args) > 1 {
 		typename = args[1]
+		if strings.Contains(typename, ".") {
+			splitType := strings.Split(typename, ".")
+			if len(splitType) == 2 {
+				namespace = splitType[0]
+				baretype = splitType[1]
+			}
+		}
 	}
 	// add tabs
 	tbs := strings.Repeat("\t", depth)
@@ -395,9 +475,13 @@ func writeLineWithTabs(w io.Writer, format string, depth int, args ...string) {
 	// %RECV = receiver
 	// %ASGN = assigner
 	// %TYPE = typename
+	// %NAMESPACE = namespace
+	// %BARETYPE = type name without namespace
 	format = strings.Replace(format, "%RECV", receiver, -1)
 	format = strings.Replace(format, "%ASGN", assigner, -1)
 	format = strings.Replace(format, "%TYPE", typename, -1)
+	format = strings.Replace(format, "%BARETYPE", baretype, -1)
+	format = strings.Replace(format, "%NAMESPACE", namespace, -1)
 	format = strings.Replace(format, "%KNAME", depthName("k", depth), -1)
 	format = strings.Replace(format, "%VNAME", depthName("v", depth), -1)
 
@@ -454,7 +538,7 @@ func (st Struct) Generate(w io.Writer, settings GenerateSettings) {
 	writeComment(w, 0, st.Comment)
 	writeLine(w, "type %s struct {", exposedName)
 	for _, fd := range st.Fields {
-		writeFieldDefinition(fd, w, st.ReadOnly, false)
+		writeFieldDefinition(fd, w, st.ReadOnly, false, settings)
 	}
 	writeLine(w, "}")
 	writeLine(w, "")
@@ -578,20 +662,20 @@ func (st Struct) Generate(w io.Writer, settings GenerateSettings) {
 	writeLine(w, "\treturn bodyLen")
 	writeLine(w, "}")
 	writeLine(w, "")
-	writeLine(w, "func make%[1]s(r iohelp.ErrorReader) (%[1]s, error) {", exposedName)
+	writeLine(w, "func Make%[1]s(r iohelp.ErrorReader) (%[1]s, error) {", exposedName)
 	writeLine(w, "\tv := %s{}", exposedName)
 	writeLine(w, "\terr := v.DecodeBebop(r)")
 	writeLine(w, "\treturn v, err")
 	writeLine(w, "}")
 	writeLine(w, "")
-	writeLine(w, "func make%[1]sFromBytes(buf []byte) (%[1]s, error) {", exposedName)
+	writeLine(w, "func Make%[1]sFromBytes(buf []byte) (%[1]s, error) {", exposedName)
 	writeLine(w, "\tv := %s{}", exposedName)
 	writeLine(w, "\terr := v.UnmarshalBebop(buf)")
 	writeLine(w, "\treturn v, err")
 	writeLine(w, "}")
 	writeLine(w, "")
 	if settings.GenerateUnsafeMethods {
-		writeLine(w, "func mustMake%[1]sFromBytes(buf []byte) %[1]s {", exposedName)
+		writeLine(w, "func MustMake%[1]sFromBytes(buf []byte) %[1]s {", exposedName)
 		writeLine(w, "\tv := %s{}", exposedName)
 		writeLine(w, "\tv.MustUnmarshalBebop(buf)")
 		writeLine(w, "\treturn v")
@@ -601,14 +685,14 @@ func (st Struct) Generate(w io.Writer, settings GenerateSettings) {
 	// TODO: slices are not really readonly, we need to return a copy.
 	if st.ReadOnly {
 		for _, fd := range st.Fields {
-			writeLine(w, "func (bbp %s) Get%s() %s {", exposedName, exposeName(fd.Name), fd.FieldType.goString())
+			writeLine(w, "func (bbp %s) Get%s() %s {", exposedName, exposeName(fd.Name), fd.FieldType.goString(settings))
 			writeLine(w, "\treturn bbp.%s", unexposeName(fd.Name))
 			writeLine(w, "}")
 			writeLine(w, "")
 		}
 		writeLine(w, "func New%s(", exposedName)
 		for _, fd := range st.Fields {
-			writeLine(w, "\t\t%s %s,", unexposeName(fd.Name), fd.FieldType.goString())
+			writeLine(w, "\t\t%s %s,", unexposeName(fd.Name), fd.FieldType.goString(settings))
 		}
 		writeLine(w, "\t) %s {", exposedName)
 		writeLine(w, "\treturn %s{", exposedName)
@@ -649,7 +733,7 @@ func (msg Message) Generate(w io.Writer, settings GenerateSettings) {
 		return fields[i].num < fields[j].num
 	})
 	for _, fd := range fields {
-		writeFieldDefinition(fd.Field, w, false, true)
+		writeFieldDefinition(fd.Field, w, false, true, settings)
 	}
 	writeLine(w, "}")
 	writeLine(w, "")
@@ -696,7 +780,7 @@ func (msg Message) Generate(w io.Writer, settings GenerateSettings) {
 		name := exposeName(fd.Name)
 		writeLine(w, "\t\tcase %d:", fd.num)
 		writeLine(w, "\t\t\tat += 1")
-		writeLine(w, "\t\t\tbbp.%[1]s = new(%[2]s)", name, fd.FieldType.goString())
+		writeLine(w, "\t\t\tbbp.%[1]s = new(%[2]s)", name, fd.FieldType.goString(settings))
 		writeFieldReadByter("(*bbp."+name+")", fd.FieldType, w, settings, 3, true)
 	}
 	writeLine(w, "\t\tdefault:")
@@ -720,7 +804,7 @@ func (msg Message) Generate(w io.Writer, settings GenerateSettings) {
 			name := exposeName(fd.Name)
 			writeLine(w, "\t\tcase %d:", fd.num)
 			writeLine(w, "\t\t\tat += 1")
-			writeLine(w, "\t\t\tbbp.%[1]s = new(%[2]s)", name, fd.FieldType.goString())
+			writeLine(w, "\t\t\tbbp.%[1]s = new(%[2]s)", name, fd.FieldType.goString(settings))
 			writeFieldReadByter("(*bbp."+name+")", fd.FieldType, w, settings, 3, false)
 		}
 		writeLine(w, "\t\tdefault:")
@@ -771,7 +855,7 @@ func (msg Message) Generate(w io.Writer, settings GenerateSettings) {
 	for _, fd := range fields {
 		writeLine(w, "\t\tcase %d:", fd.num)
 		name := exposeName(fd.Name)
-		writeLine(w, "\t\t\tbbp.%[1]s = new(%[2]s)", name, fd.FieldType.goString())
+		writeLine(w, "\t\t\tbbp.%[1]s = new(%[2]s)", name, fd.FieldType.goString(settings))
 		writeMessageFieldUnmarshaller("bbp."+name, fd.FieldType, w, settings, 3)
 	}
 	// ref: https://github.com/RainwayApp/bebop/wiki/Wire-format#messages, final paragraph
@@ -803,20 +887,20 @@ func (msg Message) Generate(w io.Writer, settings GenerateSettings) {
 	writeLine(w, "\treturn bodyLen")
 	writeLine(w, "}")
 	writeLine(w, "")
-	writeLine(w, "func make%[1]s(r iohelp.ErrorReader) (%[1]s, error) {", exposedName)
+	writeLine(w, "func Make%[1]s(r iohelp.ErrorReader) (%[1]s, error) {", exposedName)
 	writeLine(w, "\tv := %s{}", exposedName)
 	writeLine(w, "\terr := v.DecodeBebop(r)")
 	writeLine(w, "\treturn v, err")
 	writeLine(w, "}")
 	writeLine(w, "")
-	writeLine(w, "func make%[1]sFromBytes(buf []byte) (%[1]s, error) {", exposedName)
+	writeLine(w, "func Make%[1]sFromBytes(buf []byte) (%[1]s, error) {", exposedName)
 	writeLine(w, "\tv := %s{}", exposedName)
 	writeLine(w, "\terr := v.UnmarshalBebop(buf)")
 	writeLine(w, "\treturn v, err")
 	writeLine(w, "}")
 	writeLine(w, "")
 	if settings.GenerateUnsafeMethods {
-		writeLine(w, "func mustMake%[1]sFromBytes(buf []byte) %[1]s {", exposedName)
+		writeLine(w, "func MustMake%[1]sFromBytes(buf []byte) %[1]s {", exposedName)
 		writeLine(w, "\tv := %s{}", exposedName)
 		writeLine(w, "\tv.MustUnmarshalBebop(buf)")
 		writeLine(w, "\treturn v")
@@ -864,7 +948,7 @@ func (u Union) Generate(w io.Writer, settings GenerateSettings) {
 	writeComment(w, 0, u.Comment)
 	writeLine(w, "type %s struct {", exposedName)
 	for _, fd := range fields {
-		writeFieldDefinition(fd.Field, w, false, true)
+		writeFieldDefinition(fd.Field, w, false, true, settings)
 	}
 	writeLine(w, "}")
 	writeLine(w, "")
@@ -915,7 +999,7 @@ func (u Union) Generate(w io.Writer, settings GenerateSettings) {
 		name := exposeName(fd.Name)
 		writeLine(w, "\t\tcase %d:", fd.num)
 		writeLine(w, "\t\t\tat += 1")
-		writeLine(w, "\t\t\tbbp.%[1]s = new(%[2]s)", name, fd.FieldType.goString())
+		writeLine(w, "\t\t\tbbp.%[1]s = new(%[2]s)", name, fd.FieldType.goString(settings))
 		writeFieldReadByter("(*bbp."+name+")", fd.FieldType, w, settings, 3, true)
 		writeLine(w, "\t\t\treturn nil")
 	}
@@ -940,7 +1024,7 @@ func (u Union) Generate(w io.Writer, settings GenerateSettings) {
 			name := exposeName(fd.Name)
 			writeLine(w, "\t\tcase %d:", fd.num)
 			writeLine(w, "\t\t\tat += 1")
-			writeLine(w, "\t\t\tbbp.%[1]s = new(%[2]s)", name, fd.FieldType.goString())
+			writeLine(w, "\t\t\tbbp.%[1]s = new(%[2]s)", name, fd.FieldType.goString(settings))
 			writeFieldReadByter("(*bbp."+name+")", fd.FieldType, w, settings, 3, false)
 			writeLine(w, "\t\t\treturn")
 		}
@@ -992,7 +1076,7 @@ func (u Union) Generate(w io.Writer, settings GenerateSettings) {
 	for _, fd := range fields {
 		writeLine(w, "\t\tcase %d:", fd.num)
 		name := exposeName(fd.Name)
-		writeLine(w, "\t\t\tbbp.%[1]s = new(%[2]s)", name, fd.FieldType.goString())
+		writeLine(w, "\t\t\tbbp.%[1]s = new(%[2]s)", name, fd.FieldType.goString(settings))
 		writeMessageFieldUnmarshaller("bbp."+name, fd.FieldType, w, settings, 3)
 		writeLine(w, "\t\t\treturn er.Err")
 	}
@@ -1023,20 +1107,20 @@ func (u Union) Generate(w io.Writer, settings GenerateSettings) {
 	writeLine(w, "\treturn bodyLen")
 	writeLine(w, "}")
 	writeLine(w, "")
-	writeLine(w, "func make%[1]s(r iohelp.ErrorReader) (%[1]s, error) {", exposedName)
+	writeLine(w, "func Make%[1]s(r iohelp.ErrorReader) (%[1]s, error) {", exposedName)
 	writeLine(w, "\tv := %s{}", exposedName)
 	writeLine(w, "\terr := v.DecodeBebop(r)")
 	writeLine(w, "\treturn v, err")
 	writeLine(w, "}")
 	writeLine(w, "")
-	writeLine(w, "func make%[1]sFromBytes(buf []byte) (%[1]s, error) {", exposedName)
+	writeLine(w, "func Make%[1]sFromBytes(buf []byte) (%[1]s, error) {", exposedName)
 	writeLine(w, "\tv := %s{}", exposedName)
 	writeLine(w, "\terr := v.UnmarshalBebop(buf)")
 	writeLine(w, "\treturn v, err")
 	writeLine(w, "}")
 	writeLine(w, "")
 	if settings.GenerateUnsafeMethods {
-		writeLine(w, "func mustMake%[1]sFromBytes(buf []byte) %[1]s {", exposedName)
+		writeLine(w, "func MustMake%[1]sFromBytes(buf []byte) %[1]s {", exposedName)
 		writeLine(w, "\tv := %s{}", exposedName)
 		writeLine(w, "\tv.MustUnmarshalBebop(buf)")
 		writeLine(w, "\treturn v")
@@ -1090,7 +1174,7 @@ func (con Const) Generate(w io.Writer, settings GenerateSettings) {
 	writeLine(w, "\t%s = %v", exposeName(con.Name), val)
 }
 
-func writeFieldDefinition(fd Field, w io.Writer, readOnly bool, message bool) {
+func writeFieldDefinition(fd Field, w io.Writer, readOnly bool, message bool, settings GenerateSettings) {
 	writeComment(w, 1, fd.Comment)
 	if fd.Deprecated {
 		writeLine(w, "\t// Deprecated: %s", fd.DeprecatedMessage)
@@ -1100,7 +1184,7 @@ func writeFieldDefinition(fd Field, w io.Writer, readOnly bool, message bool) {
 	if readOnly {
 		name = unexposeName(fd.Name)
 	}
-	typ := fd.FieldType.goString()
+	typ := fd.FieldType.goString(settings)
 	if message {
 		typ = "*" + typ
 	}
@@ -1138,7 +1222,11 @@ func writeFieldByter(name string, typ FieldType, w io.Writer, settings GenerateS
 		writeFieldByter(depthName("v", depth), typ.Map.Value, w, settings, depth+1)
 		writeLineWithTabs(w, "}", depth)
 	} else {
-		writeLineWithTabs(w, settings.typeByters[typ.Simple], depth, name, typ.goString())
+		simpleTyp := typ.Simple
+		if alias, ok := settings.importTypeAliases[simpleTyp]; ok {
+			simpleTyp = alias
+		}
+		writeLineWithTabs(w, settings.typeByters[simpleTyp], depth, name, typ.goString(settings))
 	}
 }
 
@@ -1154,7 +1242,7 @@ func writeFieldReadByter(name string, typ FieldType, w io.Writer, settings Gener
 			writeLengthCheck(w, "4", depth)
 		}
 
-		writeLineWithTabs(w, "%ASGN = make([]%TYPE, iohelp.ReadUint32Bytes(buf[at:]))", depth, name, typ.Array.goString())
+		writeLineWithTabs(w, "%ASGN = make([]%TYPE, iohelp.ReadUint32Bytes(buf[at:]))", depth, name, typ.Array.goString(settings))
 		writeLineWithTabs(w, "at += 4", depth)
 		if safe {
 			if sz, ok := fixedSizeTypes[typ.Array.Simple]; ok {
@@ -1175,28 +1263,32 @@ func writeFieldReadByter(name string, typ FieldType, w io.Writer, settings Gener
 		lnName := lengthName()
 		writeLineWithTabs(w, lnName+" := iohelp.ReadUint32Bytes(buf[at:])", depth)
 		writeLineWithTabs(w, "at += 4", depth)
-		writeLineWithTabs(w, "%ASGN = make(%TYPE,"+lnName+")", depth, name, typ.Map.goString())
+		writeLineWithTabs(w, "%ASGN = make(%TYPE,"+lnName+")", depth, name, typ.Map.goString(settings))
 		writeLineWithTabs(w, "for i := uint32(0); i < "+lnName+"; i++ {", depth, name)
 		var ln string
 		if format, ok := settings.typeByteReaders[typ.Map.Key+"&safe"]; ok && safe {
-			ln = getLineWithTabs(format, depth+1, depthName("k", depth), simpleGoString(typ.Map.Key))
+			ln = getLineWithTabs(format, depth+1, depthName("k", depth), simpleGoString(typ.Map.Key, settings))
 		} else {
 			if sz, ok := fixedSizeTypes[typ.Map.Key]; ok && safe {
 				writeLengthCheck(w, strconv.Itoa(int(sz)), depth+1, depthName("k", depth))
 			}
-			ln = getLineWithTabs(settings.typeByteReaders[typ.Map.Key], depth+1, depthName("k", depth), typ.goString())
+			ln = getLineWithTabs(settings.typeByteReaders[typ.Map.Key], depth+1, depthName("k", depth), typ.goString(settings))
 		}
 		w.Write([]byte(strings.Replace(ln, "=", ":=", 1)))
 		writeFieldReadByter("("+name+")["+depthName("k", depth)+"]", typ.Map.Value, w, settings, depth+1, safe)
 		writeLineWithTabs(w, "}", depth)
 	} else {
-		if format, ok := settings.typeByteReaders[typ.Simple+"&safe"]; ok && safe {
-			writeLineWithTabs(w, format, depth, name, typ.goString())
+		simpleTyp := typ.Simple
+		if alias, ok := settings.importTypeAliases[simpleTyp]; ok {
+			simpleTyp = alias
+		}
+		if format, ok := settings.typeByteReaders[simpleTyp+"&safe"]; ok && safe {
+			writeLineWithTabs(w, format, depth, name, typ.goString(settings))
 		} else {
-			if sz, ok := fixedSizeTypes[typ.Simple]; ok && safe {
+			if sz, ok := fixedSizeTypes[simpleTyp]; ok && safe {
 				writeLengthCheck(w, strconv.Itoa(int(sz)), depth, name)
 			}
-			writeLineWithTabs(w, settings.typeByteReaders[typ.Simple], depth, name, typ.goString())
+			writeLineWithTabs(w, settings.typeByteReaders[simpleTyp], depth, name, typ.goString(settings))
 		}
 	}
 }
@@ -1214,7 +1306,11 @@ func writeFieldMarshaller(name string, typ FieldType, w io.Writer, settings Gene
 		writeFieldMarshaller(depthName("v", depth), typ.Map.Value, w, settings, depth+1)
 		writeLineWithTabs(w, "}", depth)
 	} else {
-		writeLineWithTabs(w, settings.typeMarshallers[typ.Simple], depth, name, typ.goString())
+		simpleTyp := typ.Simple
+		if alias, ok := settings.importTypeAliases[simpleTyp]; ok {
+			simpleTyp = alias
+		}
+		writeLineWithTabs(w, settings.typeMarshallers[simpleTyp], depth, name, typ.goString(settings))
 	}
 }
 
@@ -1223,7 +1319,7 @@ var isFirstTopLength = true
 func writeStructFieldUnmarshaller(name string, typ FieldType, w io.Writer, settings GenerateSettings, depth int) {
 	iName := "i" + strconv.Itoa(depth)
 	if typ.Array != nil {
-		writeLineWithTabs(w, "%RECV = make([]%TYPE, iohelp.ReadUint32(r))", depth, name, typ.Array.goString())
+		writeLineWithTabs(w, "%RECV = make([]%TYPE, iohelp.ReadUint32(r))", depth, name, typ.Array.goString(settings))
 		writeLineWithTabs(w, "for "+iName+" := range %RECV {", depth, name)
 		if name[0] == '&' {
 			name = "&(" + name[1:] + "[" + iName + "])"
@@ -1242,7 +1338,7 @@ func writeStructFieldUnmarshaller(name string, typ FieldType, w io.Writer, setti
 		} else {
 			writeLineWithTabs(w, lnName+" := iohelp.ReadUint32(r)", depth)
 		}
-		writeLineWithTabs(w, "%RECV = make(%TYPE, "+lnName+")", depth, name, typ.Map.goString())
+		writeLineWithTabs(w, "%RECV = make(%TYPE, "+lnName+")", depth, name, typ.Map.goString(settings))
 		writeLineWithTabs(w, "for "+iName+" := uint32(0); "+iName+" < "+lnName+"; "+iName+"++ {", depth, name)
 		ln := getLineWithTabs(settings.typeUnmarshallers[typ.Map.Key], depth+1, "&"+depthName("k", depth))
 		w.Write([]byte(strings.Replace(ln, "=", ":=", 1)))
@@ -1254,27 +1350,35 @@ func writeStructFieldUnmarshaller(name string, typ FieldType, w io.Writer, setti
 		writeStructFieldUnmarshaller(name, typ.Map.Value, w, settings, depth+1)
 		writeLineWithTabs(w, "}", depth)
 	} else {
-		writeLineWithTabs(w, settings.typeUnmarshallers[typ.Simple], depth, name, typ.goString())
+		simpleTyp := typ.Simple
+		if alias, ok := settings.importTypeAliases[simpleTyp]; ok {
+			simpleTyp = alias
+		}
+		writeLineWithTabs(w, settings.typeUnmarshallers[simpleTyp], depth, name, typ.goString(settings))
 	}
 }
 
 func writeMessageFieldUnmarshaller(name string, typ FieldType, w io.Writer, settings GenerateSettings, depth int) {
 	if typ.Array != nil {
-		writeLineWithTabs(w, "%RECV = make([]%TYPE, iohelp.ReadUint32(r))", depth, name, typ.Array.goString())
+		writeLineWithTabs(w, "%RECV = make([]%TYPE, iohelp.ReadUint32(r))", depth, name, typ.Array.goString(settings))
 		writeLineWithTabs(w, "for i := range %RECV {", depth, name)
 		writeMessageFieldUnmarshaller("("+name+")[i]", *typ.Array, w, settings, depth+1)
 		writeLineWithTabs(w, "}", depth)
 	} else if typ.Map != nil {
 		lnName := depthName("ln", depth)
 		writeLineWithTabs(w, lnName+" := iohelp.ReadUint32(r)", depth)
-		writeLineWithTabs(w, "%RECV = make("+typ.Map.goString()+")", depth, name)
+		writeLineWithTabs(w, "%RECV = make("+typ.Map.goString(settings)+")", depth, name)
 		writeLineWithTabs(w, "for i := uint32(0); i < "+lnName+"; i++ {", depth, name)
 		ln := getLineWithTabs(settings.typeUnmarshallers[typ.Map.Key], depth+1, "&"+depthName("k", depth))
 		w.Write([]byte(strings.Replace(ln, "=", ":=", 1)))
 		writeMessageFieldUnmarshaller("("+name+")["+depthName("k", depth)+"]", typ.Map.Value, w, settings, depth+1)
 		writeLineWithTabs(w, "}", depth)
 	} else {
-		writeLineWithTabs(w, settings.typeUnmarshallers[typ.Simple], depth, name, typ.goString())
+		simpleTyp := typ.Simple
+		if alias, ok := settings.importTypeAliases[simpleTyp]; ok {
+			simpleTyp = alias
+		}
+		writeLineWithTabs(w, settings.typeUnmarshallers[simpleTyp], depth, name, typ.goString(settings))
 	}
 }
 
@@ -1324,7 +1428,11 @@ func writeMessageFieldBodyCount(name string, typ FieldType, w io.Writer, setting
 		writeMessageFieldBodyCount(depthName("v", depth), typ.Map.Value, w, settings, depth+1)
 		writeLineWithTabs(w, "}", depth)
 	} else {
-		writeLineWithTabs(w, settings.typeLengthers[typ.Simple], depth, name, typ.goString())
+		simpleTyp := typ.Simple
+		if alias, ok := settings.importTypeAliases[simpleTyp]; ok {
+			simpleTyp = alias
+		}
+		writeLineWithTabs(w, settings.typeLengthers[simpleTyp], depth, name, typ.goString(settings))
 	}
 }
 
@@ -1375,17 +1483,33 @@ func (f File) typeUnmarshallers() map[string]string {
 		out[en.Name] = "%RECV = %TYPE(iohelp.ReadUint32(r))"
 	}
 	for _, st := range f.Structs {
-		format := "(%RECV), err = make%TYPE(r)\n" +
-			"if err != nil {\n" +
-			"\treturn err\n" +
-			"}"
+		var format string
+		if st.Namespace != "" {
+			format = "(%RECV), err = %NAMESPACE.Make%BARETYPE(r)\n" +
+				"if err != nil {\n" +
+				"\treturn err\n" +
+				"}"
+		} else {
+			format = "(%RECV), err = make%TYPE(r)\n" +
+				"if err != nil {\n" +
+				"\treturn err\n" +
+				"}"
+		}
 		out[st.Name] = format
 	}
 	for _, msg := range f.Messages {
-		format := "(%RECV), err = make%TYPE(r)\n" +
-			"if err != nil {\n" +
-			"\treturn err\n" +
-			"}"
+		var format string
+		if msg.Namespace != "" {
+			format = "(%RECV), err = %NAMEPSACE.Make%BARETYPE(r)\n" +
+				"if err != nil {\n" +
+				"\treturn err\n" +
+				"}"
+		} else {
+			format = "(%RECV), err = Make%TYPE(r)\n" +
+				"if err != nil {\n" +
+				"\treturn err\n" +
+				"}"
+		}
 		out[msg.Name] = format
 	}
 	for _, union := range f.Unions {
@@ -1613,22 +1737,42 @@ func (f File) typeByteReaders(gs GenerateSettings) map[string]string {
 			"at += 4\n"
 	}
 	for _, st := range f.Structs {
-		out[st.Name] = "%ASGN = mustMake%TYPEFromBytes(buf[at:])\n" +
-			"at += (%ASGN).Size()"
-		out[st.Name+"&safe"] = "%ASGN, err = make%TYPEFromBytes(buf[at:])\n" +
-			"if err != nil {\n" +
-			"\t return err\n" +
-			"}\n" +
-			"at += (%ASGN).Size()"
+		if st.Namespace != "" {
+			out[st.Name] = "%ASGN = %NAMESPACE.MustMake%BARETYPEFromBytes(buf[at:])\n" +
+				"at += (%ASGN).Size()"
+			out[st.Name+"&safe"] = "%ASGN, err = %NAMESPACE.Make%BARETYPEFromBytes(buf[at:])\n" +
+				"if err != nil {\n" +
+				"\t return err\n" +
+				"}\n" +
+				"at += (%ASGN).Size()"
+		} else {
+			out[st.Name] = "%ASGN = MustMake%TYPEFromBytes(buf[at:])\n" +
+				"at += (%ASGN).Size()"
+			out[st.Name+"&safe"] = "%ASGN, err = Make%TYPEFromBytes(buf[at:])\n" +
+				"if err != nil {\n" +
+				"\t return err\n" +
+				"}\n" +
+				"at += (%ASGN).Size()"
+		}
 	}
 	for _, msg := range f.Messages {
-		out[msg.Name] = "%ASGN = mustMake%TYPEFromBytes(buf[at:])\n" +
-			"at += (%ASGN).Size()"
-		out[msg.Name+"&safe"] = "%ASGN, err = make%TYPEFromBytes(buf[at:])\n" +
-			"if err != nil {\n" +
-			"\t return err\n" +
-			"}\n" +
-			"at += (%ASGN).Size()"
+		if msg.Namespace != "" {
+			out[msg.Name] = "%ASGN = %NAMESPACE.MustMake%BARETYPEFromBytes(buf[at:])\n" +
+				"at += (%ASGN).Size()"
+			out[msg.Name+"&safe"] = "%ASGN, err = %NAMESPACE.Make%BARETYPEFromBytes(buf[at:])\n" +
+				"if err != nil {\n" +
+				"\t return err\n" +
+				"}\n" +
+				"at += (%ASGN).Size()"
+		} else {
+			out[msg.Name] = "%ASGN = MustMake%TYPEFromBytes(buf[at:])\n" +
+				"at += (%ASGN).Size()"
+			out[msg.Name+"&safe"] = "%ASGN, err = Make%TYPEFromBytes(buf[at:])\n" +
+				"if err != nil {\n" +
+				"\t return err\n" +
+				"}\n" +
+				"at += (%ASGN).Size()"
+		}
 	}
 	for _, union := range f.Unions {
 		uout := union.typeByteReaders()
@@ -1641,33 +1785,63 @@ func (f File) typeByteReaders(gs GenerateSettings) map[string]string {
 
 func (u Union) typeByteReaders() map[string]string {
 	out := map[string]string{}
-	out[u.Name] = "%ASGN = mustMake%TYPEFromBytes(buf[at:])\n" +
-		"at += (%ASGN).Size()"
-	out[u.Name+"&safe"] = "%ASGN, err = make%TYPEFromBytes(buf[at:])\n" +
-		"if err != nil {\n" +
-		"\t return err\n" +
-		"}\n" +
-		"at += (%ASGN).Size()"
+	if u.Namespace != "" {
+		out[u.Name] = "%ASGN = %NAMESPACE.MustMake%BARETYPEFromBytes(buf[at:])\n" +
+			"at += (%ASGN).Size()"
+		out[u.Name+"&safe"] = "%ASGN, err = %NAMESPACE.Make%BARETYPEFromBytes(buf[at:])\n" +
+			"if err != nil {\n" +
+			"\t return err\n" +
+			"}\n" +
+			"at += (%ASGN).Size()"
+	} else {
+		out[u.Name] = "%ASGN = %NAMESPACE.MustMake%TYPEFromBytes(buf[at:])\n" +
+			"at += (%ASGN).Size()"
+		out[u.Name+"&safe"] = "%ASGN, err = %NAMESPACE.Make%TYPEFromBytes(buf[at:])\n" +
+			"if err != nil {\n" +
+			"\t return err\n" +
+			"}\n" +
+			"at += (%ASGN).Size()"
+	}
 	for _, ufd := range u.Fields {
 		if ufd.Struct != nil {
 			st := ufd.Struct
-			out[st.Name] = "%ASGN = mustMake%TYPEFromBytes(buf[at:])\n" +
-				"at += (%ASGN).Size()"
-			out[st.Name+"&safe"] = "%ASGN, err = make%TYPEFromBytes(buf[at:])\n" +
-				"if err != nil {\n" +
-				"\t return err\n" +
-				"}\n" +
-				"at += (%ASGN).Size()"
+			if st.Namespace != "" {
+				out[st.Name] = "%ASGN = %NAMESPACE.MustMake%BARETYPEFromBytes(buf[at:])\n" +
+					"at += (%ASGN).Size()"
+				out[st.Name+"&safe"] = "%ASGN, err = %NAMESPACE.Make%BARETYPEFromBytes(buf[at:])\n" +
+					"if err != nil {\n" +
+					"\t return err\n" +
+					"}\n" +
+					"at += (%ASGN).Size()"
+			} else {
+				out[st.Name] = "%ASGN = MustMake%TYPEFromBytes(buf[at:])\n" +
+					"at += (%ASGN).Size()"
+				out[st.Name+"&safe"] = "%ASGN, err = Make%TYPEFromBytes(buf[at:])\n" +
+					"if err != nil {\n" +
+					"\t return err\n" +
+					"}\n" +
+					"at += (%ASGN).Size()"
+			}
 		}
 		if ufd.Message != nil {
 			msg := ufd.Message
-			out[msg.Name] = "%ASGN = mustMake%TYPEFromBytes(buf[at:])\n" +
-				"at += (%ASGN).Size()"
-			out[msg.Name+"&safe"] = "%ASGN, err = make%TYPEFromBytes(buf[at:])\n" +
-				"if err != nil {\n" +
-				"\t return err\n" +
-				"}\n" +
-				"at += (%ASGN).Size()"
+			if msg.Namespace != "" {
+				out[msg.Name] = "%ASGN = %NAMESPACE.MustMake%BARETYPEFromBytes(buf[at:])\n" +
+					"at += (%ASGN).Size()"
+				out[msg.Name+"&safe"] = "%ASGN, err = %NAMESPACE.Make%BARETYPEFromBytes(buf[at:])\n" +
+					"if err != nil {\n" +
+					"\t return err\n" +
+					"}\n" +
+					"at += (%ASGN).Size()"
+			} else {
+				out[msg.Name] = "%ASGN = MustMake%TYPEFromBytes(buf[at:])\n" +
+					"at += (%ASGN).Size()"
+				out[msg.Name+"&safe"] = "%ASGN, err = Make%TYPEFromBytes(buf[at:])\n" +
+					"if err != nil {\n" +
+					"\t return err\n" +
+					"}\n" +
+					"at += (%ASGN).Size()"
+			}
 		}
 	}
 	return out

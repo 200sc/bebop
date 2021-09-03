@@ -645,7 +645,7 @@ func readConst(tr *tokenReader) (Const, error) {
 		}
 		cons.BoolValue = &b
 	default:
-		return cons, readError(tk, "invalid type for const %v", cons.SimpleType)
+		return cons, readError(tk, "invalid type %q for const", cons.SimpleType)
 	}
 	_, err = expectNext(tr, tokenKindSemicolon)
 	if err != nil {
