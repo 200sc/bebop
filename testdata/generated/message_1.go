@@ -170,19 +170,19 @@ func (bbp ExampleMessage) Size() int {
 	return bodyLen
 }
 
-func makeExampleMessage(r iohelp.ErrorReader) (ExampleMessage, error) {
+func MakeExampleMessage(r iohelp.ErrorReader) (ExampleMessage, error) {
 	v := ExampleMessage{}
 	err := v.DecodeBebop(r)
 	return v, err
 }
 
-func makeExampleMessageFromBytes(buf []byte) (ExampleMessage, error) {
+func MakeExampleMessageFromBytes(buf []byte) (ExampleMessage, error) {
 	v := ExampleMessage{}
 	err := v.UnmarshalBebop(buf)
 	return v, err
 }
 
-func mustMakeExampleMessageFromBytes(buf []byte) ExampleMessage {
+func MustMakeExampleMessageFromBytes(buf []byte) ExampleMessage {
 	v := ExampleMessage{}
 	v.MustUnmarshalBebop(buf)
 	return v

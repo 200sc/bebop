@@ -3,10 +3,10 @@
 package generated
 
 import (
-	"github.com/200sc/bebop"
-	"github.com/200sc/bebop/iohelp"
 	"github.com/200sc/bebop/testdata/incompatible/generatedtwo"
 	"io"
+	"github.com/200sc/bebop"
+	"github.com/200sc/bebop/iohelp"
 )
 
 const (
@@ -35,7 +35,7 @@ func (bbp UsesImport) MarshalBebopTo(buf []byte) int {
 func (bbp *UsesImport) UnmarshalBebop(buf []byte) (err error) {
 	at := 0
 	bbp.Imported, err = generatedtwo.MakeImportedTypeFromBytes(buf[at:])
-	if err != nil {
+	if err != nil{
 		return err
 	}
 	at += (bbp.Imported).Size()
@@ -51,7 +51,7 @@ func (bbp *UsesImport) MustUnmarshalBebop(buf []byte) {
 func (bbp UsesImport) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
 	err = (bbp.Imported).EncodeBebop(w)
-	if err != nil {
+	if err != nil{
 		return err
 	}
 	return w.Err
@@ -60,7 +60,7 @@ func (bbp UsesImport) EncodeBebop(iow io.Writer) (err error) {
 func (bbp *UsesImport) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
 	(bbp.Imported), err = generatedtwo.MakeImportedType(r)
-	if err != nil {
+	if err != nil{
 		return err
 	}
 	return r.Err
@@ -89,3 +89,4 @@ func MustMakeUsesImportFromBytes(buf []byte) UsesImport {
 	v.MustUnmarshalBebop(buf)
 	return v
 }
+

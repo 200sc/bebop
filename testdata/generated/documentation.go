@@ -84,19 +84,19 @@ func (bbp DocS) Size() int {
 	return bodyLen
 }
 
-func makeDocS(r iohelp.ErrorReader) (DocS, error) {
+func MakeDocS(r iohelp.ErrorReader) (DocS, error) {
 	v := DocS{}
 	err := v.DecodeBebop(r)
 	return v, err
 }
 
-func makeDocSFromBytes(buf []byte) (DocS, error) {
+func MakeDocSFromBytes(buf []byte) (DocS, error) {
 	v := DocS{}
 	err := v.UnmarshalBebop(buf)
 	return v, err
 }
 
-func mustMakeDocSFromBytes(buf []byte) DocS {
+func MustMakeDocSFromBytes(buf []byte) DocS {
 	v := DocS{}
 	v.MustUnmarshalBebop(buf)
 	return v
@@ -202,19 +202,19 @@ func (bbp DepM) Size() int {
 	return bodyLen
 }
 
-func makeDepM(r iohelp.ErrorReader) (DepM, error) {
+func MakeDepM(r iohelp.ErrorReader) (DepM, error) {
 	v := DepM{}
 	err := v.DecodeBebop(r)
 	return v, err
 }
 
-func makeDepMFromBytes(buf []byte) (DepM, error) {
+func MakeDepMFromBytes(buf []byte) (DepM, error) {
 	v := DepM{}
 	err := v.UnmarshalBebop(buf)
 	return v, err
 }
 
-func mustMakeDepMFromBytes(buf []byte) DepM {
+func MustMakeDepMFromBytes(buf []byte) DepM {
 	v := DepM{}
 	v.MustUnmarshalBebop(buf)
 	return v
@@ -386,19 +386,19 @@ func (bbp DocM) Size() int {
 	return bodyLen
 }
 
-func makeDocM(r iohelp.ErrorReader) (DocM, error) {
+func MakeDocM(r iohelp.ErrorReader) (DocM, error) {
 	v := DocM{}
 	err := v.DecodeBebop(r)
 	return v, err
 }
 
-func makeDocMFromBytes(buf []byte) (DocM, error) {
+func MakeDocMFromBytes(buf []byte) (DocM, error) {
 	v := DocM{}
 	err := v.UnmarshalBebop(buf)
 	return v, err
 }
 
-func mustMakeDocMFromBytes(buf []byte) DocM {
+func MustMakeDocMFromBytes(buf []byte) DocM {
 	v := DocM{}
 	v.MustUnmarshalBebop(buf)
 	return v

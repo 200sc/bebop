@@ -1,25 +1,42 @@
 package bebop
 
+const (
+	typeBool    = "bool"
+	typeByte    = "byte"
+	typeUint8   = "uint8"
+	typeUint16  = "uint16"
+	typeInt16   = "int16"
+	typeUint32  = "uint32"
+	typeInt32   = "int32"
+	typeUint64  = "uint64"
+	typeInt64   = "int64"
+	typeFloat32 = "float32"
+	typeFloat64 = "float64"
+	typeString  = "string"
+	typeGUID    = "guid"
+	typeDate    = "date"
+)
+
 func isPrimitiveType(simpleType string) bool {
 	_, ok := primitiveTypes[simpleType]
 	return ok
 }
 
 var primitiveTypes = map[string]struct{}{
-	"bool":    {},
-	"byte":    {},
-	"uint8":   {},
-	"uint16":  {},
-	"int16":   {},
-	"uint32":  {},
-	"int32":   {},
-	"uint64":  {},
-	"int64":   {},
-	"float32": {},
-	"float64": {},
-	"string":  {},
-	"guid":    {},
-	"date":    {},
+	typeBool:    {},
+	typeByte:    {},
+	typeUint8:   {},
+	typeUint16:  {},
+	typeInt16:   {},
+	typeUint32:  {},
+	typeInt32:   {},
+	typeUint64:  {},
+	typeInt64:   {},
+	typeFloat32: {},
+	typeFloat64: {},
+	typeString:  {},
+	typeGUID:    {},
+	typeDate:    {},
 }
 
 func isFloatPrimitive(simpleType string) bool {
@@ -28,8 +45,8 @@ func isFloatPrimitive(simpleType string) bool {
 }
 
 var floatTypes = map[string]struct{}{
-	"float32": {},
-	"float64": {},
+	typeFloat32: {},
+	typeFloat64: {},
 }
 
 func isUintPrimitive(simpleType string) bool {
@@ -38,11 +55,11 @@ func isUintPrimitive(simpleType string) bool {
 }
 
 var uintTypes = map[string]struct{}{
-	"byte":   {},
-	"uint8":  {},
-	"uint16": {},
-	"uint32": {},
-	"uint64": {},
+	typeByte:   {},
+	typeUint8:  {},
+	typeUint16: {},
+	typeUint32: {},
+	typeUint64: {},
 }
 
 func isIntPrimitive(simpleType string) bool {
@@ -51,7 +68,7 @@ func isIntPrimitive(simpleType string) bool {
 }
 
 var intTypes = map[string]struct{}{
-	"int16": {},
-	"int32": {},
-	"int64": {},
+	typeInt16: {},
+	typeInt32: {},
+	typeInt64: {},
 }

@@ -72,25 +72,20 @@ func (bbp MsgpackComparison) MarshalBebopTo(buf []byte) int {
 	iohelp.WriteFloat64Bytes(buf[at:], bbp.FLOAT_)
 	at += 8
 	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.STRING0)))
-	at += 4
-	copy(buf[at:at+len(bbp.STRING0)], []byte(bbp.STRING0))
-	at += len(bbp.STRING0)
+	copy(buf[at+4:at+4+len(bbp.STRING0)], []byte(bbp.STRING0))
+	at += 4 + len(bbp.STRING0)
 	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.STRING1)))
-	at += 4
-	copy(buf[at:at+len(bbp.STRING1)], []byte(bbp.STRING1))
-	at += len(bbp.STRING1)
+	copy(buf[at+4:at+4+len(bbp.STRING1)], []byte(bbp.STRING1))
+	at += 4 + len(bbp.STRING1)
 	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.STRING4)))
-	at += 4
-	copy(buf[at:at+len(bbp.STRING4)], []byte(bbp.STRING4))
-	at += len(bbp.STRING4)
+	copy(buf[at+4:at+4+len(bbp.STRING4)], []byte(bbp.STRING4))
+	at += 4 + len(bbp.STRING4)
 	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.STRING8)))
-	at += 4
-	copy(buf[at:at+len(bbp.STRING8)], []byte(bbp.STRING8))
-	at += len(bbp.STRING8)
+	copy(buf[at+4:at+4+len(bbp.STRING8)], []byte(bbp.STRING8))
+	at += 4 + len(bbp.STRING8)
 	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.STRING16)))
-	at += 4
-	copy(buf[at:at+len(bbp.STRING16)], []byte(bbp.STRING16))
-	at += len(bbp.STRING16)
+	copy(buf[at+4:at+4+len(bbp.STRING16)], []byte(bbp.STRING16))
+	at += 4 + len(bbp.STRING16)
 	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.ARRAY0)))
 	at += 4
 	for _, v1 := range bbp.ARRAY0 {
@@ -101,9 +96,8 @@ func (bbp MsgpackComparison) MarshalBebopTo(buf []byte) int {
 	at += 4
 	for _, v1 := range bbp.ARRAY1 {
 		iohelp.WriteUint32Bytes(buf[at:], uint32(len(v1)))
-		at += 4
-		copy(buf[at:at+len(v1)], []byte(v1))
-		at += len(v1)
+		copy(buf[at+4:at+4+len(v1)], []byte(v1))
+		at += 4 + len(v1)
 	}
 	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.ARRAY8)))
 	at += 4
@@ -182,28 +176,28 @@ func (bbp *MsgpackComparison) UnmarshalBebop(buf []byte) (err error) {
 	bbp.FLOAT_ = iohelp.ReadFloat64Bytes(buf[at:])
 	at += 8
 	bbp.STRING0, err = iohelp.ReadStringBytes(buf[at:])
-	if err != nil {
-		 return err
+	if err != nil{
+		return err
 	}
 	at += 4 + len(bbp.STRING0)
 	bbp.STRING1, err = iohelp.ReadStringBytes(buf[at:])
-	if err != nil {
-		 return err
+	if err != nil{
+		return err
 	}
 	at += 4 + len(bbp.STRING1)
 	bbp.STRING4, err = iohelp.ReadStringBytes(buf[at:])
-	if err != nil {
-		 return err
+	if err != nil{
+		return err
 	}
 	at += 4 + len(bbp.STRING4)
 	bbp.STRING8, err = iohelp.ReadStringBytes(buf[at:])
-	if err != nil {
-		 return err
+	if err != nil{
+		return err
 	}
 	at += 4 + len(bbp.STRING8)
 	bbp.STRING16, err = iohelp.ReadStringBytes(buf[at:])
-	if err != nil {
-		 return err
+	if err != nil{
+		return err
 	}
 	at += 4 + len(bbp.STRING16)
 	if len(buf[at:]) < 4 {
@@ -225,8 +219,8 @@ func (bbp *MsgpackComparison) UnmarshalBebop(buf []byte) (err error) {
 	at += 4
 	for i1 := range bbp.ARRAY1 {
 		(bbp.ARRAY1)[i1], err = iohelp.ReadStringBytes(buf[at:])
-		if err != nil {
-			 return err
+		if err != nil{
+			return err
 		}
 		at += 4 + len((bbp.ARRAY1)[i1])
 	}
@@ -274,15 +268,15 @@ func (bbp *MsgpackComparison) MustUnmarshalBebop(buf []byte) {
 	bbp.FLOAT_ = iohelp.ReadFloat64Bytes(buf[at:])
 	at += 8
 	bbp.STRING0 =  iohelp.MustReadStringBytes(buf[at:])
-	at += 4+len(bbp.STRING0)
+	at += 4 + len(bbp.STRING0)
 	bbp.STRING1 =  iohelp.MustReadStringBytes(buf[at:])
-	at += 4+len(bbp.STRING1)
+	at += 4 + len(bbp.STRING1)
 	bbp.STRING4 =  iohelp.MustReadStringBytes(buf[at:])
-	at += 4+len(bbp.STRING4)
+	at += 4 + len(bbp.STRING4)
 	bbp.STRING8 =  iohelp.MustReadStringBytes(buf[at:])
-	at += 4+len(bbp.STRING8)
+	at += 4 + len(bbp.STRING8)
 	bbp.STRING16 =  iohelp.MustReadStringBytes(buf[at:])
-	at += 4+len(bbp.STRING16)
+	at += 4 + len(bbp.STRING16)
 	bbp.ARRAY0 = make([]int32, iohelp.ReadUint32Bytes(buf[at:]))
 	at += 4
 	for i1 := range bbp.ARRAY0 {
@@ -293,7 +287,7 @@ func (bbp *MsgpackComparison) MustUnmarshalBebop(buf []byte) {
 	at += 4
 	for i1 := range bbp.ARRAY1 {
 		(bbp.ARRAY1)[i1] =  iohelp.MustReadStringBytes(buf[at:])
-		at += 4+len((bbp.ARRAY1)[i1])
+		at += 4 + len((bbp.ARRAY1)[i1])
 	}
 	bbp.ARRAY8 = make([]int32, iohelp.ReadUint32Bytes(buf[at:]))
 	at += 4
@@ -394,41 +388,35 @@ func (bbp MsgpackComparison) Size() int {
 	bodyLen += 1
 	bodyLen += 8
 	bodyLen += 8
-	bodyLen += 4
-	bodyLen += len(bbp.STRING0)
-	bodyLen += 4
-	bodyLen += len(bbp.STRING1)
-	bodyLen += 4
-	bodyLen += len(bbp.STRING4)
-	bodyLen += 4
-	bodyLen += len(bbp.STRING8)
-	bodyLen += 4
-	bodyLen += len(bbp.STRING16)
+	bodyLen += 4 + len(bbp.STRING0)
+	bodyLen += 4 + len(bbp.STRING1)
+	bodyLen += 4 + len(bbp.STRING4)
+	bodyLen += 4 + len(bbp.STRING8)
+	bodyLen += 4 + len(bbp.STRING16)
 	bodyLen += 4
 	bodyLen += len(bbp.ARRAY0) * 4
 	bodyLen += 4
 	for _, elem := range bbp.ARRAY1 {
-		bodyLen += 4
-		bodyLen += len(elem)
+		bodyLen += 4 + len(elem)
 	}
 	bodyLen += 4
 	bodyLen += len(bbp.ARRAY8) * 4
 	return bodyLen
 }
 
-func makeMsgpackComparison(r iohelp.ErrorReader) (MsgpackComparison, error) {
+func MakeMsgpackComparison(r iohelp.ErrorReader) (MsgpackComparison, error) {
 	v := MsgpackComparison{}
 	err := v.DecodeBebop(r)
 	return v, err
 }
 
-func makeMsgpackComparisonFromBytes(buf []byte) (MsgpackComparison, error) {
+func MakeMsgpackComparisonFromBytes(buf []byte) (MsgpackComparison, error) {
 	v := MsgpackComparison{}
 	err := v.UnmarshalBebop(buf)
 	return v, err
 }
 
-func mustMakeMsgpackComparisonFromBytes(buf []byte) MsgpackComparison {
+func MustMakeMsgpackComparisonFromBytes(buf []byte) MsgpackComparison {
 	v := MsgpackComparison{}
 	v.MustUnmarshalBebop(buf)
 	return v

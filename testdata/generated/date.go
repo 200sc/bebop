@@ -156,19 +156,19 @@ func (bbp MyObj) Size() int {
 	return bodyLen
 }
 
-func makeMyObj(r iohelp.ErrorReader) (MyObj, error) {
+func MakeMyObj(r iohelp.ErrorReader) (MyObj, error) {
 	v := MyObj{}
 	err := v.DecodeBebop(r)
 	return v, err
 }
 
-func makeMyObjFromBytes(buf []byte) (MyObj, error) {
+func MakeMyObjFromBytes(buf []byte) (MyObj, error) {
 	v := MyObj{}
 	err := v.UnmarshalBebop(buf)
 	return v, err
 }
 
-func mustMakeMyObjFromBytes(buf []byte) MyObj {
+func MustMakeMyObjFromBytes(buf []byte) MyObj {
 	v := MyObj{}
 	v.MustUnmarshalBebop(buf)
 	return v

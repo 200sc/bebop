@@ -34,22 +34,20 @@ func (bbp Furniture) MarshalBebop() []byte {
 func (bbp Furniture) MarshalBebopTo(buf []byte) int {
 	at := 0
 	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.name)))
-	at += 4
-	copy(buf[at:at+len(bbp.name)], []byte(bbp.name))
-	at += len(bbp.name)
+	copy(buf[at+4:at+4+len(bbp.name)], []byte(bbp.name))
+	at += 4 + len(bbp.name)
 	iohelp.WriteUint32Bytes(buf[at:], bbp.price)
 	at += 4
 	iohelp.WriteUint32Bytes(buf[at:], uint32(bbp.family))
 	at += 4
-	
 	return at
 }
 
 func (bbp *Furniture) UnmarshalBebop(buf []byte) (err error) {
 	at := 0
 	bbp.name, err = iohelp.ReadStringBytes(buf[at:])
-	if err != nil {
-		 return err
+	if err != nil{
+		return err
 	}
 	at += 4 + len(bbp.name)
 	if len(buf[at:]) < 4 {
@@ -59,19 +57,17 @@ func (bbp *Furniture) UnmarshalBebop(buf []byte) (err error) {
 	at += 4
 	bbp.family = FurnitureFamily(iohelp.ReadUint32Bytes(buf[at:]))
 	at += 4
-	
 	return nil
 }
 
 func (bbp *Furniture) MustUnmarshalBebop(buf []byte) {
 	at := 0
 	bbp.name =  iohelp.MustReadStringBytes(buf[at:])
-	at += 4+len(bbp.name)
+	at += 4 + len(bbp.name)
 	bbp.price = iohelp.ReadUint32Bytes(buf[at:])
 	at += 4
 	bbp.family = FurnitureFamily(iohelp.ReadUint32Bytes(buf[at:]))
 	at += 4
-	
 }
 
 func (bbp Furniture) EncodeBebop(iow io.Writer) (err error) {
@@ -93,26 +89,25 @@ func (bbp *Furniture) DecodeBebop(ior io.Reader) (err error) {
 
 func (bbp Furniture) Size() int {
 	bodyLen := 0
-	bodyLen += 4
-	bodyLen += len(bbp.name)
+	bodyLen += 4 + len(bbp.name)
 	bodyLen += 4
 	bodyLen += 4
 	return bodyLen
 }
 
-func makeFurniture(r iohelp.ErrorReader) (Furniture, error) {
+func MakeFurniture(r iohelp.ErrorReader) (Furniture, error) {
 	v := Furniture{}
 	err := v.DecodeBebop(r)
 	return v, err
 }
 
-func makeFurnitureFromBytes(buf []byte) (Furniture, error) {
+func MakeFurnitureFromBytes(buf []byte) (Furniture, error) {
 	v := Furniture{}
 	err := v.UnmarshalBebop(buf)
 	return v, err
 }
 
-func mustMakeFurnitureFromBytes(buf []byte) Furniture {
+func MustMakeFurnitureFromBytes(buf []byte) Furniture {
 	v := Furniture{}
 	v.MustUnmarshalBebop(buf)
 	return v
@@ -176,9 +171,9 @@ func (bbp *RequestResponse) UnmarshalBebop(buf []byte) (err error) {
 	bbp.availableFurniture = make([]Furniture, iohelp.ReadUint32Bytes(buf[at:]))
 	at += 4
 	for i1 := range bbp.availableFurniture {
-		(bbp.availableFurniture)[i1], err = makeFurnitureFromBytes(buf[at:])
-		if err != nil {
-			 return err
+		(bbp.availableFurniture)[i1], err = MakeFurnitureFromBytes(buf[at:])
+		if err != nil{
+			return err
 		}
 		at += ((bbp.availableFurniture)[i1]).Size()
 	}
@@ -190,7 +185,7 @@ func (bbp *RequestResponse) MustUnmarshalBebop(buf []byte) {
 	bbp.availableFurniture = make([]Furniture, iohelp.ReadUint32Bytes(buf[at:]))
 	at += 4
 	for i1 := range bbp.availableFurniture {
-		(bbp.availableFurniture)[i1] = mustMakeFurnitureFromBytes(buf[at:])
+		(bbp.availableFurniture)[i1] = MustMakeFurnitureFromBytes(buf[at:])
 		at += ((bbp.availableFurniture)[i1]).Size()
 	}
 }
@@ -201,7 +196,7 @@ func (bbp RequestResponse) EncodeBebop(iow io.Writer) (err error) {
 	iohelp.WriteUint32(w, uint32(len(bbp.availableFurniture)))
 	for _, elem := range bbp.availableFurniture {
 		err = (elem).EncodeBebop(w)
-		if err != nil {
+		if err != nil{
 			return err
 		}
 	}
@@ -213,8 +208,8 @@ func (bbp *RequestResponse) DecodeBebop(ior io.Reader) (err error) {
 	r.Read(make([]byte, 4))
 	bbp.availableFurniture = make([]Furniture, iohelp.ReadUint32(r))
 	for i1 := range bbp.availableFurniture {
-		((bbp.availableFurniture[i1])), err = makeFurniture(r)
-		if err != nil {
+		((bbp.availableFurniture[i1])), err = MakeFurniture(r)
+		if err != nil{
 			return err
 		}
 	}
@@ -231,19 +226,19 @@ func (bbp RequestResponse) Size() int {
 	return bodyLen
 }
 
-func makeRequestResponse(r iohelp.ErrorReader) (RequestResponse, error) {
+func MakeRequestResponse(r iohelp.ErrorReader) (RequestResponse, error) {
 	v := RequestResponse{}
 	err := v.DecodeBebop(r)
 	return v, err
 }
 
-func makeRequestResponseFromBytes(buf []byte) (RequestResponse, error) {
+func MakeRequestResponseFromBytes(buf []byte) (RequestResponse, error) {
 	v := RequestResponse{}
 	err := v.UnmarshalBebop(buf)
 	return v, err
 }
 
-func mustMakeRequestResponseFromBytes(buf []byte) RequestResponse {
+func MustMakeRequestResponseFromBytes(buf []byte) RequestResponse {
 	v := RequestResponse{}
 	v.MustUnmarshalBebop(buf)
 	return v
@@ -287,15 +282,13 @@ func (bbp RequestCatalog) MarshalBebopTo(buf []byte) int {
 		at++
 		iohelp.WriteUint32Bytes(buf[at:], uint32(*bbp.Family))
 		at += 4
-		
 	}
 	if bbp.SecretTunnel != nil {
 		buf[at] = 2
 		at++
 		iohelp.WriteUint32Bytes(buf[at:], uint32(len(*bbp.SecretTunnel)))
-		at += 4
-		copy(buf[at:at+len(*bbp.SecretTunnel)], []byte(*bbp.SecretTunnel))
-		at += len(*bbp.SecretTunnel)
+		copy(buf[at+4:at+4+len(*bbp.SecretTunnel)], []byte(*bbp.SecretTunnel))
+		at += 4 + len(*bbp.SecretTunnel)
 	}
 	return at
 }
@@ -311,13 +304,12 @@ func (bbp *RequestCatalog) UnmarshalBebop(buf []byte) (err error) {
 			bbp.Family = new(FurnitureFamily)
 			(*bbp.Family) = FurnitureFamily(iohelp.ReadUint32Bytes(buf[at:]))
 			at += 4
-			
 		case 2:
 			at += 1
 			bbp.SecretTunnel = new(string)
 			(*bbp.SecretTunnel), err = iohelp.ReadStringBytes(buf[at:])
-			if err != nil {
-				 return err
+			if err != nil{
+				return err
 			}
 			at += 4 + len((*bbp.SecretTunnel))
 		default:
@@ -337,12 +329,11 @@ func (bbp *RequestCatalog) MustUnmarshalBebop(buf []byte) {
 			bbp.Family = new(FurnitureFamily)
 			(*bbp.Family) = FurnitureFamily(iohelp.ReadUint32Bytes(buf[at:]))
 			at += 4
-			
 		case 2:
 			at += 1
 			bbp.SecretTunnel = new(string)
 			(*bbp.SecretTunnel) =  iohelp.MustReadStringBytes(buf[at:])
-			at += 4+len((*bbp.SecretTunnel))
+			at += 4 + len((*bbp.SecretTunnel))
 		default:
 			return
 		}
@@ -396,25 +387,24 @@ func (bbp RequestCatalog) Size() int {
 	}
 	if bbp.SecretTunnel != nil {
 		bodyLen += 1
-		bodyLen += 4
-		bodyLen += len(*bbp.SecretTunnel)
+		bodyLen += 4 + len(*bbp.SecretTunnel)
 	}
 	return bodyLen
 }
 
-func makeRequestCatalog(r iohelp.ErrorReader) (RequestCatalog, error) {
+func MakeRequestCatalog(r iohelp.ErrorReader) (RequestCatalog, error) {
 	v := RequestCatalog{}
 	err := v.DecodeBebop(r)
 	return v, err
 }
 
-func makeRequestCatalogFromBytes(buf []byte) (RequestCatalog, error) {
+func MakeRequestCatalogFromBytes(buf []byte) (RequestCatalog, error) {
 	v := RequestCatalog{}
 	err := v.UnmarshalBebop(buf)
 	return v, err
 }
 
-func mustMakeRequestCatalogFromBytes(buf []byte) RequestCatalog {
+func MustMakeRequestCatalogFromBytes(buf []byte) RequestCatalog {
 	v := RequestCatalog{}
 	v.MustUnmarshalBebop(buf)
 	return v

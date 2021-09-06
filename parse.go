@@ -617,7 +617,7 @@ func readConst(tr *tokenReader) (Const, error) {
 		default:
 			return cons, readError(tk, "%v unassignable to %v", tk.kind, cons.SimpleType)
 		}
-	case cons.SimpleType == "guid":
+	case cons.SimpleType == typeGUID:
 		if tk.kind != tokenKindStringLiteral {
 			return cons, readError(tk, "%v unassignable to %v", tk.kind, cons.SimpleType)
 		}
@@ -628,14 +628,14 @@ func readConst(tr *tokenReader) (Const, error) {
 			return cons, readError(tk, "%q has wrong length for guid", s)
 		}
 		cons.StringValue = &s
-	case cons.SimpleType == "string":
+	case cons.SimpleType == typeString:
 		if tk.kind != tokenKindStringLiteral {
 			return cons, readError(tk, "%v unassignable to %v", tk.kind, cons.SimpleType)
 		}
 		tk.concrete = bytes.Trim(tk.concrete, "\"")
 		s := string(tk.concrete)
 		cons.StringValue = &s
-	case cons.SimpleType == "bool":
+	case cons.SimpleType == typeBool:
 		if tk.kind != tokenKindTrue && tk.kind != tokenKindFalse {
 			return cons, readError(tk, "%v unassignable to %v", tk.kind, cons.SimpleType)
 		}

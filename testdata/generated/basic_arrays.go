@@ -95,9 +95,8 @@ func (bbp BasicArrays) MarshalBebopTo(buf []byte) int {
 	at += 4
 	for _, v1 := range bbp.A_string {
 		iohelp.WriteUint32Bytes(buf[at:], uint32(len(v1)))
-		at += 4
-		copy(buf[at:at+len(v1)], []byte(v1))
-		at += len(v1)
+		copy(buf[at+4:at+4+len(v1)], []byte(v1))
+		at += 4 + len(v1)
 	}
 	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.A_guid)))
 	at += 4
@@ -235,8 +234,8 @@ func (bbp *BasicArrays) UnmarshalBebop(buf []byte) (err error) {
 	at += 4
 	for i1 := range bbp.A_string {
 		(bbp.A_string)[i1], err = iohelp.ReadStringBytes(buf[at:])
-		if err != nil {
-			 return err
+		if err != nil{
+			return err
 		}
 		at += 4 + len((bbp.A_string)[i1])
 	}
@@ -319,7 +318,7 @@ func (bbp *BasicArrays) MustUnmarshalBebop(buf []byte) {
 	at += 4
 	for i1 := range bbp.A_string {
 		(bbp.A_string)[i1] =  iohelp.MustReadStringBytes(buf[at:])
-		at += 4+len((bbp.A_string)[i1])
+		at += 4 + len((bbp.A_string)[i1])
 	}
 	bbp.A_guid = make([][16]byte, iohelp.ReadUint32Bytes(buf[at:]))
 	at += 4
@@ -460,27 +459,26 @@ func (bbp BasicArrays) Size() int {
 	bodyLen += len(bbp.A_float64) * 8
 	bodyLen += 4
 	for _, elem := range bbp.A_string {
-		bodyLen += 4
-		bodyLen += len(elem)
+		bodyLen += 4 + len(elem)
 	}
 	bodyLen += 4
 	bodyLen += len(bbp.A_guid) * 16
 	return bodyLen
 }
 
-func makeBasicArrays(r iohelp.ErrorReader) (BasicArrays, error) {
+func MakeBasicArrays(r iohelp.ErrorReader) (BasicArrays, error) {
 	v := BasicArrays{}
 	err := v.DecodeBebop(r)
 	return v, err
 }
 
-func makeBasicArraysFromBytes(buf []byte) (BasicArrays, error) {
+func MakeBasicArraysFromBytes(buf []byte) (BasicArrays, error) {
 	v := BasicArrays{}
 	err := v.UnmarshalBebop(buf)
 	return v, err
 }
 
-func mustMakeBasicArraysFromBytes(buf []byte) BasicArrays {
+func MustMakeBasicArraysFromBytes(buf []byte) BasicArrays {
 	v := BasicArrays{}
 	v.MustUnmarshalBebop(buf)
 	return v
@@ -561,19 +559,19 @@ func (bbp TestInt32Array) Size() int {
 	return bodyLen
 }
 
-func makeTestInt32Array(r iohelp.ErrorReader) (TestInt32Array, error) {
+func MakeTestInt32Array(r iohelp.ErrorReader) (TestInt32Array, error) {
 	v := TestInt32Array{}
 	err := v.DecodeBebop(r)
 	return v, err
 }
 
-func makeTestInt32ArrayFromBytes(buf []byte) (TestInt32Array, error) {
+func MakeTestInt32ArrayFromBytes(buf []byte) (TestInt32Array, error) {
 	v := TestInt32Array{}
 	err := v.UnmarshalBebop(buf)
 	return v, err
 }
 
-func mustMakeTestInt32ArrayFromBytes(buf []byte) TestInt32Array {
+func MustMakeTestInt32ArrayFromBytes(buf []byte) TestInt32Array {
 	v := TestInt32Array{}
 	v.MustUnmarshalBebop(buf)
 	return v

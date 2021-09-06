@@ -75,19 +75,19 @@ func (bbp S) Size() int {
 	return bodyLen
 }
 
-func makeS(r iohelp.ErrorReader) (S, error) {
+func MakeS(r iohelp.ErrorReader) (S, error) {
 	v := S{}
 	err := v.DecodeBebop(r)
 	return v, err
 }
 
-func makeSFromBytes(buf []byte) (S, error) {
+func MakeSFromBytes(buf []byte) (S, error) {
 	v := S{}
 	err := v.UnmarshalBebop(buf)
 	return v, err
 }
 
-func mustMakeSFromBytes(buf []byte) S {
+func MustMakeSFromBytes(buf []byte) S {
 	v := S{}
 	v.MustUnmarshalBebop(buf)
 	return v
@@ -141,20 +141,17 @@ func (bbp SomeMaps) MarshalBebopTo(buf []byte) int {
 	at += 4
 	for k1, v1 := range bbp.M2 {
 		iohelp.WriteUint32Bytes(buf[at:], uint32(len(k1)))
-		at += 4
-		copy(buf[at:at+len(k1)], []byte(k1))
-		at += len(k1)
+		copy(buf[at+4:at+4+len(k1)], []byte(k1))
+		at += 4 + len(k1)
 		iohelp.WriteUint32Bytes(buf[at:], uint32(len(v1)))
 		at += 4
 		for k2, v2 := range v1 {
 			iohelp.WriteUint32Bytes(buf[at:], uint32(len(k2)))
-			at += 4
-			copy(buf[at:at+len(k2)], []byte(k2))
-			at += len(k2)
+			copy(buf[at+4:at+4+len(k2)], []byte(k2))
+			at += 4 + len(k2)
 			iohelp.WriteUint32Bytes(buf[at:], uint32(len(v2)))
-			at += 4
-			copy(buf[at:at+len(v2)], []byte(v2))
-			at += len(v2)
+			copy(buf[at+4:at+4+len(v2)], []byte(v2))
+			at += 4 + len(v2)
 		}
 	}
 	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.M3)))
@@ -186,9 +183,8 @@ func (bbp SomeMaps) MarshalBebopTo(buf []byte) int {
 		at += 4
 		for k2, v2 := range v1 {
 			iohelp.WriteUint32Bytes(buf[at:], uint32(len(k2)))
-			at += 4
-			copy(buf[at:at+len(k2)], []byte(k2))
-			at += len(k2)
+			copy(buf[at+4:at+4+len(k2)], []byte(k2))
+			at += 4 + len(k2)
 			iohelp.WriteUint32Bytes(buf[at:], uint32(len(v2)))
 			at += 4
 			for _, v3 := range v2 {
@@ -230,8 +226,8 @@ func (bbp *SomeMaps) UnmarshalBebop(buf []byte) (err error) {
 	bbp.M2 = make(map[string]map[string]string,ln6)
 	for i := uint32(0); i < ln6; i++ {
 		k1, err := iohelp.ReadStringBytes(buf[at:])
-		if err != nil {
-			 return err
+		if err != nil{
+			return err
 		}
 		at += 4 + len(k1)
 		ln7 := iohelp.ReadUint32Bytes(buf[at:])
@@ -239,13 +235,13 @@ func (bbp *SomeMaps) UnmarshalBebop(buf []byte) (err error) {
 		(bbp.M2)[k1] = make(map[string]string,ln7)
 		for i := uint32(0); i < ln7; i++ {
 			k2, err := iohelp.ReadStringBytes(buf[at:])
-			if err != nil {
-				 return err
+			if err != nil{
+				return err
 			}
 			at += 4 + len(k2)
 			((bbp.M2)[k1])[k2], err = iohelp.ReadStringBytes(buf[at:])
-			if err != nil {
-				 return err
+			if err != nil{
+				return err
 			}
 			at += 4 + len(((bbp.M2)[k1])[k2])
 		}
@@ -280,9 +276,9 @@ func (bbp *SomeMaps) UnmarshalBebop(buf []byte) (err error) {
 					}
 					k4 := iohelp.ReadBoolBytes(buf[at:])
 					at += 1
-					((((bbp.M3)[i1])[k2])[i3])[k4], err = makeSFromBytes(buf[at:])
-					if err != nil {
-						 return err
+					((((bbp.M3)[i1])[k2])[i3])[k4], err = MakeSFromBytes(buf[at:])
+					if err != nil{
+						return err
 					}
 					at += (((((bbp.M3)[i1])[k2])[i3])[k4]).Size()
 				}
@@ -300,8 +296,8 @@ func (bbp *SomeMaps) UnmarshalBebop(buf []byte) (err error) {
 		(bbp.M4)[i1] = make(map[string][]float32,ln10)
 		for i := uint32(0); i < ln10; i++ {
 			k2, err := iohelp.ReadStringBytes(buf[at:])
-			if err != nil {
-				 return err
+			if err != nil{
+				return err
 			}
 			at += 4 + len(k2)
 			if len(buf[at:]) < 4 {
@@ -327,9 +323,9 @@ func (bbp *SomeMaps) UnmarshalBebop(buf []byte) (err error) {
 		}
 		k1 := iohelp.ReadGUIDBytes(buf[at:])
 		at += 16
-		(bbp.M5)[k1], err = makeMFromBytes(buf[at:])
-		if err != nil {
-			 return err
+		(bbp.M5)[k1], err = MakeMFromBytes(buf[at:])
+		if err != nil{
+			return err
 		}
 		at += ((bbp.M5)[k1]).Size()
 	}
@@ -352,15 +348,15 @@ func (bbp *SomeMaps) MustUnmarshalBebop(buf []byte) {
 	bbp.M2 = make(map[string]map[string]string,ln13)
 	for i := uint32(0); i < ln13; i++ {
 		k1 :=  iohelp.MustReadStringBytes(buf[at:])
-		at += 4+len(k1)
+		at += 4 + len(k1)
 		ln14 := iohelp.ReadUint32Bytes(buf[at:])
 		at += 4
 		(bbp.M2)[k1] = make(map[string]string,ln14)
 		for i := uint32(0); i < ln14; i++ {
 			k2 :=  iohelp.MustReadStringBytes(buf[at:])
-			at += 4+len(k2)
+			at += 4 + len(k2)
 			((bbp.M2)[k1])[k2] =  iohelp.MustReadStringBytes(buf[at:])
-			at += 4+len(((bbp.M2)[k1])[k2])
+			at += 4 + len(((bbp.M2)[k1])[k2])
 		}
 	}
 	bbp.M3 = make([]map[int32][]map[bool]S, iohelp.ReadUint32Bytes(buf[at:]))
@@ -381,7 +377,7 @@ func (bbp *SomeMaps) MustUnmarshalBebop(buf []byte) {
 				for i := uint32(0); i < ln16; i++ {
 					k4 := iohelp.ReadBoolBytes(buf[at:])
 					at += 1
-					((((bbp.M3)[i1])[k2])[i3])[k4] = mustMakeSFromBytes(buf[at:])
+					((((bbp.M3)[i1])[k2])[i3])[k4] = MustMakeSFromBytes(buf[at:])
 					at += (((((bbp.M3)[i1])[k2])[i3])[k4]).Size()
 				}
 			}
@@ -395,7 +391,7 @@ func (bbp *SomeMaps) MustUnmarshalBebop(buf []byte) {
 		(bbp.M4)[i1] = make(map[string][]float32,ln17)
 		for i := uint32(0); i < ln17; i++ {
 			k2 :=  iohelp.MustReadStringBytes(buf[at:])
-			at += 4+len(k2)
+			at += 4 + len(k2)
 			((bbp.M4)[i1])[k2] = make([]float32, iohelp.ReadUint32Bytes(buf[at:]))
 			at += 4
 			for i3 := range ((bbp.M4)[i1])[k2] {
@@ -410,7 +406,7 @@ func (bbp *SomeMaps) MustUnmarshalBebop(buf []byte) {
 	for i := uint32(0); i < ln18; i++ {
 		k1 := iohelp.ReadGUIDBytes(buf[at:])
 		at += 16
-		(bbp.M5)[k1] = mustMakeMFromBytes(buf[at:])
+		(bbp.M5)[k1] = MustMakeMFromBytes(buf[at:])
 		at += ((bbp.M5)[k1]).Size()
 	}
 }
@@ -445,7 +441,7 @@ func (bbp SomeMaps) EncodeBebop(iow io.Writer) (err error) {
 				for k4, v4 := range elem {
 					iohelp.WriteBool(w, k4)
 					err = (v4).EncodeBebop(w)
-					if err != nil {
+					if err != nil{
 						return err
 					}
 				}
@@ -468,7 +464,7 @@ func (bbp SomeMaps) EncodeBebop(iow io.Writer) (err error) {
 	for k1, v1 := range bbp.M5 {
 		iohelp.WriteGUID(w, k1)
 		err = (v1).EncodeBebop(w)
-		if err != nil {
+		if err != nil{
 			return err
 		}
 	}
@@ -506,8 +502,8 @@ func (bbp *SomeMaps) DecodeBebop(ior io.Reader) (err error) {
 				(((bbp.M3[i1])[k2])[i3]) = make(map[bool]S, ln4)
 				for i4 := uint32(0); i4 < ln4; i4++ {
 					k4 := iohelp.ReadBool(r)
-					(((((bbp.M3[i1])[k2])[i3])[k4])), err = makeS(r)
-					if err != nil {
+					(((((bbp.M3[i1])[k2])[i3])[k4])), err = MakeS(r)
+					if err != nil{
 						return err
 					}
 				}
@@ -530,8 +526,8 @@ func (bbp *SomeMaps) DecodeBebop(ior io.Reader) (err error) {
 	bbp.M5 = make(map[[16]byte]M, ln1)
 	for i1 := uint32(0); i1 < ln1; i1++ {
 		k1 := iohelp.ReadGUID(r)
-		((bbp.M5[k1])), err = makeM(r)
-		if err != nil {
+		((bbp.M5[k1])), err = MakeM(r)
+		if err != nil{
 			return err
 		}
 	}
@@ -547,14 +543,11 @@ func (bbp SomeMaps) Size() int {
 	}
 	bodyLen += 4
 	for k1, v1 := range bbp.M2 {
-		bodyLen += 4
-		bodyLen += len(k1)
+		bodyLen += 4 + len(k1)
 		bodyLen += 4
 		for k2, v2 := range v1 {
-			bodyLen += 4
-			bodyLen += len(k2)
-			bodyLen += 4
-			bodyLen += len(v2)
+			bodyLen += 4 + len(k2)
+			bodyLen += 4 + len(v2)
 		}
 	}
 	bodyLen += 4
@@ -576,8 +569,7 @@ func (bbp SomeMaps) Size() int {
 	for _, elem := range bbp.M4 {
 		bodyLen += 4
 		for k2, v2 := range elem {
-			bodyLen += 4
-			bodyLen += len(k2)
+			bodyLen += 4 + len(k2)
 			bodyLen += 4
 			bodyLen += len(v2) * 4
 		}
@@ -590,19 +582,19 @@ func (bbp SomeMaps) Size() int {
 	return bodyLen
 }
 
-func makeSomeMaps(r iohelp.ErrorReader) (SomeMaps, error) {
+func MakeSomeMaps(r iohelp.ErrorReader) (SomeMaps, error) {
 	v := SomeMaps{}
 	err := v.DecodeBebop(r)
 	return v, err
 }
 
-func makeSomeMapsFromBytes(buf []byte) (SomeMaps, error) {
+func MakeSomeMapsFromBytes(buf []byte) (SomeMaps, error) {
 	v := SomeMaps{}
 	err := v.UnmarshalBebop(buf)
 	return v, err
 }
 
-func mustMakeSomeMapsFromBytes(buf []byte) SomeMaps {
+func MustMakeSomeMapsFromBytes(buf []byte) SomeMaps {
 	v := SomeMaps{}
 	v.MustUnmarshalBebop(buf)
 	return v
@@ -738,19 +730,19 @@ func (bbp M) Size() int {
 	return bodyLen
 }
 
-func makeM(r iohelp.ErrorReader) (M, error) {
+func MakeM(r iohelp.ErrorReader) (M, error) {
 	v := M{}
 	err := v.DecodeBebop(r)
 	return v, err
 }
 
-func makeMFromBytes(buf []byte) (M, error) {
+func MakeMFromBytes(buf []byte) (M, error) {
 	v := M{}
 	err := v.UnmarshalBebop(buf)
 	return v, err
 }
 
-func mustMakeMFromBytes(buf []byte) M {
+func MustMakeMFromBytes(buf []byte) M {
 	v := M{}
 	v.MustUnmarshalBebop(buf)
 	return v

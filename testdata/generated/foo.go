@@ -30,9 +30,9 @@ func (bbp Foo) MarshalBebopTo(buf []byte) int {
 
 func (bbp *Foo) UnmarshalBebop(buf []byte) (err error) {
 	at := 0
-	bbp.Bar, err = makeBarFromBytes(buf[at:])
-	if err != nil {
-		 return err
+	bbp.Bar, err = MakeBarFromBytes(buf[at:])
+	if err != nil{
+		return err
 	}
 	at += (bbp.Bar).Size()
 	return nil
@@ -40,14 +40,14 @@ func (bbp *Foo) UnmarshalBebop(buf []byte) (err error) {
 
 func (bbp *Foo) MustUnmarshalBebop(buf []byte) {
 	at := 0
-	bbp.Bar = mustMakeBarFromBytes(buf[at:])
+	bbp.Bar = MustMakeBarFromBytes(buf[at:])
 	at += (bbp.Bar).Size()
 }
 
 func (bbp Foo) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
 	err = (bbp.Bar).EncodeBebop(w)
-	if err != nil {
+	if err != nil{
 		return err
 	}
 	return w.Err
@@ -55,8 +55,8 @@ func (bbp Foo) EncodeBebop(iow io.Writer) (err error) {
 
 func (bbp *Foo) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
-	(bbp.Bar), err = makeBar(r)
-	if err != nil {
+	(bbp.Bar), err = MakeBar(r)
+	if err != nil{
 		return err
 	}
 	return r.Err
@@ -68,19 +68,19 @@ func (bbp Foo) Size() int {
 	return bodyLen
 }
 
-func makeFoo(r iohelp.ErrorReader) (Foo, error) {
+func MakeFoo(r iohelp.ErrorReader) (Foo, error) {
 	v := Foo{}
 	err := v.DecodeBebop(r)
 	return v, err
 }
 
-func makeFooFromBytes(buf []byte) (Foo, error) {
+func MakeFooFromBytes(buf []byte) (Foo, error) {
 	v := Foo{}
 	err := v.UnmarshalBebop(buf)
 	return v, err
 }
 
-func mustMakeFooFromBytes(buf []byte) Foo {
+func MustMakeFooFromBytes(buf []byte) Foo {
 	v := Foo{}
 	v.MustUnmarshalBebop(buf)
 	return v
@@ -247,19 +247,19 @@ func (bbp Bar) Size() int {
 	return bodyLen
 }
 
-func makeBar(r iohelp.ErrorReader) (Bar, error) {
+func MakeBar(r iohelp.ErrorReader) (Bar, error) {
 	v := Bar{}
 	err := v.DecodeBebop(r)
 	return v, err
 }
 
-func makeBarFromBytes(buf []byte) (Bar, error) {
+func MakeBarFromBytes(buf []byte) (Bar, error) {
 	v := Bar{}
 	err := v.UnmarshalBebop(buf)
 	return v, err
 }
 
-func mustMakeBarFromBytes(buf []byte) Bar {
+func MustMakeBarFromBytes(buf []byte) Bar {
 	v := Bar{}
 	v.MustUnmarshalBebop(buf)
 	return v

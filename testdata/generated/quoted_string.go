@@ -90,19 +90,19 @@ func (bbp QuotedString) Size() int {
 	return bodyLen
 }
 
-func makeQuotedString(r iohelp.ErrorReader) (QuotedString, error) {
+func MakeQuotedString(r iohelp.ErrorReader) (QuotedString, error) {
 	v := QuotedString{}
 	err := v.DecodeBebop(r)
 	return v, err
 }
 
-func makeQuotedStringFromBytes(buf []byte) (QuotedString, error) {
+func MakeQuotedStringFromBytes(buf []byte) (QuotedString, error) {
 	v := QuotedString{}
 	err := v.UnmarshalBebop(buf)
 	return v, err
 }
 
-func mustMakeQuotedStringFromBytes(buf []byte) QuotedString {
+func MustMakeQuotedStringFromBytes(buf []byte) QuotedString {
 	v := QuotedString{}
 	v.MustUnmarshalBebop(buf)
 	return v

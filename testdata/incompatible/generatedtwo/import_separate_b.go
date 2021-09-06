@@ -27,17 +27,16 @@ func (bbp ImportedType) MarshalBebop() []byte {
 func (bbp ImportedType) MarshalBebopTo(buf []byte) int {
 	at := 0
 	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.Foobar)))
-	at += 4
-	copy(buf[at:at+len(bbp.Foobar)], []byte(bbp.Foobar))
-	at += len(bbp.Foobar)
+	copy(buf[at+4:at+4+len(bbp.Foobar)], []byte(bbp.Foobar))
+	at += 4 + len(bbp.Foobar)
 	return at
 }
 
 func (bbp *ImportedType) UnmarshalBebop(buf []byte) (err error) {
 	at := 0
 	bbp.Foobar, err = iohelp.ReadStringBytes(buf[at:])
-	if err != nil {
-		 return err
+	if err != nil{
+		return err
 	}
 	at += 4 + len(bbp.Foobar)
 	return nil
@@ -46,7 +45,7 @@ func (bbp *ImportedType) UnmarshalBebop(buf []byte) (err error) {
 func (bbp *ImportedType) MustUnmarshalBebop(buf []byte) {
 	at := 0
 	bbp.Foobar =  iohelp.MustReadStringBytes(buf[at:])
-	at += 4+len(bbp.Foobar)
+	at += 4 + len(bbp.Foobar)
 }
 
 func (bbp ImportedType) EncodeBebop(iow io.Writer) (err error) {
@@ -64,8 +63,7 @@ func (bbp *ImportedType) DecodeBebop(ior io.Reader) (err error) {
 
 func (bbp ImportedType) Size() int {
 	bodyLen := 0
-	bodyLen += 4
-	bodyLen += len(bbp.Foobar)
+	bodyLen += 4 + len(bbp.Foobar)
 	return bodyLen
 }
 

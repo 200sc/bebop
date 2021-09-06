@@ -1,10 +1,10 @@
 package bebop
 
 func simpleGoString(simple string, settings GenerateSettings) string {
-	if simple == "guid" {
+	if simple == typeGUID {
 		return "[16]byte"
 	}
-	if simple == "date" {
+	if simple == typeDate {
 		return "time.Time"
 	}
 	if alias, ok := settings.importTypeAliases[simple]; ok {

@@ -370,7 +370,7 @@ func (f File) Generate(w io.Writer, settings GenerateSettings) error {
 			break
 		}
 	}
-	if usedTypes["date"] {
+	if usedTypes[typeDate] {
 		imports = append(imports, "time")
 	}
 	if len(f.Messages)+len(f.Structs)+len(f.Unions) != 0 {
@@ -437,55 +437,6 @@ func (f File) Generate(w io.Writer, settings GenerateSettings) error {
 
 func writeLine(w io.Writer, format string, args ...interface{}) {
 	fmt.Fprintf(w, format+"\n", args...)
-}
-
-func writeLineWithTabs(w io.Writer, format string, depth int, args ...string) {
-	var assigner string
-	var receiver string
-	var typename string
-	var namespace string
-	var baretype string
-	if len(args) > 0 {
-		assigner = args[0]
-		if assigner[0] == '&' || assigner[0] == '*' {
-			receiver = assigner[1:]
-		} else {
-			if assigner[0] == '(' {
-				receiver = "(*" + assigner[1:]
-			} else {
-				receiver = "*" + assigner
-			}
-		}
-	}
-	if len(args) > 1 {
-		typename = args[1]
-		if strings.Contains(typename, ".") {
-			splitType := strings.Split(typename, ".")
-			if len(splitType) == 2 {
-				namespace = splitType[0]
-				baretype = splitType[1]
-			}
-		}
-	}
-	// add tabs
-	tbs := strings.Repeat("\t", depth)
-	format = tbs + format
-	format = strings.Replace(format, "\n", "\n"+tbs, -1)
-
-	// %RECV = receiver
-	// %ASGN = assigner
-	// %TYPE = typename
-	// %NAMESPACE = namespace
-	// %BARETYPE = type name without namespace
-	format = strings.Replace(format, "%RECV", receiver, -1)
-	format = strings.Replace(format, "%ASGN", assigner, -1)
-	format = strings.Replace(format, "%TYPE", typename, -1)
-	format = strings.Replace(format, "%BARETYPE", baretype, -1)
-	format = strings.Replace(format, "%NAMESPACE", namespace, -1)
-	format = strings.Replace(format, "%KNAME", depthName("k", depth), -1)
-	format = strings.Replace(format, "%VNAME", depthName("v", depth), -1)
-
-	fmt.Fprint(w, format+"\n")
 }
 
 func getLineWithTabs(format string, depth int, args ...string) string {
@@ -1206,7 +1157,7 @@ func writeFieldByter(name string, typ FieldType, w io.Writer, settings GenerateS
 	if typ.Array != nil {
 		writeLineWithTabs(w, "iohelp.WriteUint32Bytes(buf[at:], uint32(len(%ASGN)))", depth, name)
 		writeLineWithTabs(w, "at += 4", depth)
-		if typ.Array.Simple == "byte" || typ.Array.Simple == "uint8" {
+		if typ.Array.Simple == typeByte || typ.Array.Simple == typeUint8 {
 			writeLineWithTabs(w, "copy(buf[at:at+len(%ASGN)], %ASGN)", depth, name)
 			writeLineWithTabs(w, "at += len(%ASGN)", depth, name)
 			return
@@ -1250,7 +1201,7 @@ func writeFieldReadByter(name string, typ FieldType, w io.Writer, settings Gener
 				safe = false
 			}
 		}
-		if typ.Array.Simple == "byte" || typ.Array.Simple == "uint8" {
+		if typ.Array.Simple == typeByte || typ.Array.Simple == typeUint8 {
 			writeLineWithTabs(w, "copy(%ASGN, buf[at:at+len(%ASGN)])", depth, name)
 			writeLineWithTabs(w, "at += len(%ASGN)", depth, name)
 			return
@@ -1386,7 +1337,7 @@ func typeNeedsElem(typ string, settings GenerateSettings) bool {
 	switch typ {
 	case "":
 		return true
-	case "string":
+	case typeString:
 		return true
 	}
 	if _, ok := primitiveTypes[typ]; ok {
@@ -1414,7 +1365,7 @@ func writeMessageFieldBodyCount(name string, typ FieldType, w io.Writer, setting
 	} else if typ.Map != nil {
 		writeLineWithTabs(w, "bodyLen += 4", depth, name)
 		useV := typeNeedsElem(typ.Map.Value.Simple, settings)
-		useK := typ.Map.Key == "string"
+		useK := typ.Map.Key == typeString
 		if useV && useK {
 			writeLineWithTabs(w, "for %KNAME, %VNAME := range %ASGN {", depth, name)
 		} else if useV {
@@ -1454,397 +1405,6 @@ func unexposeName(name string) string {
 		return strings.ToLower(string(name[0]))
 	}
 	return ""
-}
-
-var fixedSizeTypes = map[string]uint8{
-	"bool":    1,
-	"byte":    1,
-	"uint8":   1,
-	"uint16":  2,
-	"int16":   2,
-	"uint32":  4,
-	"int32":   4,
-	"uint64":  8,
-	"int64":   8,
-	"float32": 4,
-	"float64": 8,
-	"guid":    16,
-	"date":    8,
-}
-
-func (f File) typeUnmarshallers() map[string]string {
-	out := make(map[string]string)
-	for typ := range fixedSizeTypes {
-		out[typ] = "%RECV = iohelp.Read" + strings.Title(typ) + "(r)"
-	}
-	out["string"] = "%RECV = iohelp.ReadString(r)"
-	out["guid"] = "%RECV = iohelp.ReadGUID(r)"
-	for _, en := range f.Enums {
-		out[en.Name] = "%RECV = %TYPE(iohelp.ReadUint32(r))"
-	}
-	for _, st := range f.Structs {
-		var format string
-		if st.Namespace != "" {
-			format = "(%RECV), err = %NAMESPACE.Make%BARETYPE(r)\n" +
-				"if err != nil {\n" +
-				"\treturn err\n" +
-				"}"
-		} else {
-			format = "(%RECV), err = make%TYPE(r)\n" +
-				"if err != nil {\n" +
-				"\treturn err\n" +
-				"}"
-		}
-		out[st.Name] = format
-	}
-	for _, msg := range f.Messages {
-		var format string
-		if msg.Namespace != "" {
-			format = "(%RECV), err = %NAMEPSACE.Make%BARETYPE(r)\n" +
-				"if err != nil {\n" +
-				"\treturn err\n" +
-				"}"
-		} else {
-			format = "(%RECV), err = Make%TYPE(r)\n" +
-				"if err != nil {\n" +
-				"\treturn err\n" +
-				"}"
-		}
-		out[msg.Name] = format
-	}
-	for _, union := range f.Unions {
-		uout := union.typeUnmarshallers()
-		for k, v := range uout {
-			out[k] = v
-		}
-	}
-	return out
-}
-
-func (u Union) typeUnmarshallers() map[string]string {
-	out := make(map[string]string)
-	format := "(%RECV), err = make%TYPE(r)\n" +
-		"if err != nil {\n" +
-		"\treturn err\n" +
-		"}"
-	out[u.Name] = format
-	for _, ufd := range u.Fields {
-		if ufd.Struct != nil {
-			format := "(%RECV), err = make%TYPE(r)\n" +
-				"if err != nil {\n" +
-				"\treturn err\n" +
-				"}"
-			out[ufd.Struct.Name] = format
-		}
-		if ufd.Message != nil {
-			format := "(%RECV), err = make%TYPE(r)\n" +
-				"if err != nil {\n" +
-				"\treturn err\n" +
-				"}"
-			out[ufd.Message.Name] = format
-		}
-	}
-	return out
-}
-
-func (f File) typeMarshallers() map[string]string {
-	out := make(map[string]string)
-	for typ := range fixedSizeTypes {
-		out[typ] = "iohelp.Write" + strings.Title(typ) + "(w, %ASGN)"
-	}
-	out["string"] = "iohelp.WriteUint32(w, uint32(len(%ASGN)))\n" +
-		"w.Write([]byte(%ASGN))"
-	out["guid"] = "iohelp.WriteGUID(w, %ASGN)"
-	out["date"] = "if %ASGN != (time.Time{}) {\n" +
-		"\tiohelp.WriteInt64(w, ((%ASGN).UnixNano()/100))\n" +
-		"} else {\n" +
-		"\tiohelp.WriteInt64(w, 0)\n" +
-		"}"
-	for _, en := range f.Enums {
-		out[en.Name] = "iohelp.WriteUint32(w, uint32(%ASGN))"
-	}
-	for _, st := range f.Structs {
-		format := "err = (%ASGN).EncodeBebop(w)\n" +
-			"if err != nil {\n" +
-			"\treturn err\n" +
-			"}"
-		out[st.Name] = format
-	}
-	for _, msg := range f.Messages {
-		format := "err = (%ASGN).EncodeBebop(w)\n" +
-			"if err != nil {\n" +
-			"\treturn err\n" +
-			"}"
-		out[msg.Name] = format
-	}
-	for _, union := range f.Unions {
-		uout := union.typeMarshallers()
-		for k, v := range uout {
-			out[k] = v
-		}
-	}
-	return out
-}
-
-func (u Union) typeMarshallers() map[string]string {
-	out := make(map[string]string)
-	format := "err = (%ASGN).EncodeBebop(w)\n" +
-		"if err != nil {\n" +
-		"\treturn err\n" +
-		"}"
-	out[u.Name] = format
-	for _, ufd := range u.Fields {
-		if ufd.Struct != nil {
-			format := "err = (%ASGN).EncodeBebop(w)\n" +
-				"if err != nil {\n" +
-				"\treturn err\n" +
-				"}"
-			out[ufd.Struct.Name] = format
-		}
-		if ufd.Message != nil {
-			format := "err = (%ASGN).EncodeBebop(w)\n" +
-				"if err != nil {\n" +
-				"\treturn err\n" +
-				"}"
-			out[ufd.Message.Name] = format
-		}
-	}
-	return out
-}
-
-func (f File) typeLengthers() map[string]string {
-	out := make(map[string]string)
-	for typ, sz := range fixedSizeTypes {
-		out[typ] = "bodyLen += " + strconv.Itoa(int(sz))
-	}
-	out["string"] = "bodyLen += 4\n" + "bodyLen += len(%ASGN)"
-	for _, en := range f.Enums {
-		out[en.Name] = "bodyLen += 4"
-	}
-	for _, st := range f.Structs {
-		out[st.Name] = "bodyLen += (%ASGN).Size()"
-	}
-	for _, msg := range f.Messages {
-		out[msg.Name] = "bodyLen += (%ASGN).Size()"
-	}
-	for _, union := range f.Unions {
-		uout := union.typeLengthers()
-		for k, v := range uout {
-			out[k] = v
-		}
-	}
-	return out
-}
-
-func (u Union) typeLengthers() map[string]string {
-	out := make(map[string]string)
-	out[u.Name] = "bodyLen += (%ASGN).Size()"
-	for _, ufd := range u.Fields {
-		if ufd.Struct != nil {
-			out[ufd.Struct.Name] = "bodyLen += (%ASGN).Size()"
-		}
-		if ufd.Message != nil {
-			out[ufd.Message.Name] = "bodyLen += (%ASGN).Size()"
-		}
-	}
-	return out
-}
-
-func (f File) typeByters() map[string]string {
-	out := make(map[string]string)
-	for typ, sz := range fixedSizeTypes {
-		out[typ] = "iohelp.Write" + strings.Title(typ) + "Bytes(buf[at:], %ASGN)\n" +
-			"at += " + strconv.Itoa(int(sz))
-	}
-	out["string"] = "iohelp.WriteUint32Bytes(buf[at:], uint32(len(%ASGN)))\n" +
-		"at += 4\n" +
-		"copy(buf[at:at+len(%ASGN)], []byte(%ASGN))\n" +
-		"at += len(%ASGN)"
-
-	out["guid"] = "iohelp.WriteGUIDBytes(buf[at:], %ASGN)\n" +
-		"at += 16"
-	out["date"] = "if %ASGN != (time.Time{}) {\n" +
-		"\tiohelp.WriteInt64Bytes(buf[at:], ((%ASGN).UnixNano()/100))\n" +
-		"} else {\n" +
-		"\tiohelp.WriteInt64Bytes(buf[at:], 0)\n" +
-		"}\n" +
-		"at += 8"
-	for _, en := range f.Enums {
-		out[en.Name] = "iohelp.WriteUint32Bytes(buf[at:], uint32(%ASGN))\n" +
-			"at += 4\n"
-	}
-	for _, st := range f.Structs {
-		out[st.Name] = "(%ASGN).MarshalBebopTo(buf[at:])\n" +
-			"at += (%ASGN).Size()"
-	}
-	for _, msg := range f.Messages {
-		out[msg.Name] = "(%ASGN).MarshalBebopTo(buf[at:])\n" +
-			"at += (%ASGN).Size()"
-	}
-	for _, union := range f.Unions {
-		uout := union.typeByters()
-		for k, v := range uout {
-			out[k] = v
-		}
-	}
-	return out
-}
-
-func (u Union) typeByters() map[string]string {
-	out := map[string]string{}
-	out[u.Name] = "(%ASGN).MarshalBebopTo(buf[at:])\n" +
-		"at += (%ASGN).Size()"
-	for _, ufd := range u.Fields {
-		if ufd.Struct != nil {
-			format := "(%ASGN).MarshalBebopTo(buf[at:])\n" +
-				"at += (%ASGN).Size()"
-			out[ufd.Struct.Name] = format
-		}
-		if ufd.Message != nil {
-			format := "(%ASGN).MarshalBebopTo(buf[at:])\n" +
-				"at += (%ASGN).Size()"
-			out[ufd.Message.Name] = format
-		}
-	}
-	return out
-}
-
-func (f File) typeByteReaders(gs GenerateSettings) map[string]string {
-	out := make(map[string]string)
-	for typ, sz := range fixedSizeTypes {
-		out[typ] = "%ASGN = iohelp.Read" + strings.Title(typ) + "Bytes(buf[at:])\n" +
-			"at += " + strconv.Itoa(int(sz))
-	}
-	out["guid"] = "%ASGN = iohelp.ReadGUIDBytes(buf[at:])\n" +
-		"at += 16"
-
-	stringRead := "ReadStringBytes(buf[at:])"
-	if gs.SharedMemoryStrings {
-		stringRead = "ReadStringBytesSharedMemory(buf[at:])"
-	}
-
-	out["string"] = "%ASGN =  iohelp.Must" + stringRead + "\n" +
-		"at += 4+len(%ASGN)"
-
-	out["string&safe"] = "%ASGN, err = iohelp." + stringRead + "\n" +
-		"if err != nil {\n" +
-		"\t return err\n" +
-		"}\n" +
-		"at += 4 + len(%ASGN)"
-
-	for _, en := range f.Enums {
-		out[en.Name] = "%ASGN = %TYPE(iohelp.ReadUint32Bytes(buf[at:]))\n" +
-			"at += 4\n"
-	}
-	for _, st := range f.Structs {
-		if st.Namespace != "" {
-			out[st.Name] = "%ASGN = %NAMESPACE.MustMake%BARETYPEFromBytes(buf[at:])\n" +
-				"at += (%ASGN).Size()"
-			out[st.Name+"&safe"] = "%ASGN, err = %NAMESPACE.Make%BARETYPEFromBytes(buf[at:])\n" +
-				"if err != nil {\n" +
-				"\t return err\n" +
-				"}\n" +
-				"at += (%ASGN).Size()"
-		} else {
-			out[st.Name] = "%ASGN = MustMake%TYPEFromBytes(buf[at:])\n" +
-				"at += (%ASGN).Size()"
-			out[st.Name+"&safe"] = "%ASGN, err = Make%TYPEFromBytes(buf[at:])\n" +
-				"if err != nil {\n" +
-				"\t return err\n" +
-				"}\n" +
-				"at += (%ASGN).Size()"
-		}
-	}
-	for _, msg := range f.Messages {
-		if msg.Namespace != "" {
-			out[msg.Name] = "%ASGN = %NAMESPACE.MustMake%BARETYPEFromBytes(buf[at:])\n" +
-				"at += (%ASGN).Size()"
-			out[msg.Name+"&safe"] = "%ASGN, err = %NAMESPACE.Make%BARETYPEFromBytes(buf[at:])\n" +
-				"if err != nil {\n" +
-				"\t return err\n" +
-				"}\n" +
-				"at += (%ASGN).Size()"
-		} else {
-			out[msg.Name] = "%ASGN = MustMake%TYPEFromBytes(buf[at:])\n" +
-				"at += (%ASGN).Size()"
-			out[msg.Name+"&safe"] = "%ASGN, err = Make%TYPEFromBytes(buf[at:])\n" +
-				"if err != nil {\n" +
-				"\t return err\n" +
-				"}\n" +
-				"at += (%ASGN).Size()"
-		}
-	}
-	for _, union := range f.Unions {
-		uout := union.typeByteReaders()
-		for k, v := range uout {
-			out[k] = v
-		}
-	}
-	return out
-}
-
-func (u Union) typeByteReaders() map[string]string {
-	out := map[string]string{}
-	if u.Namespace != "" {
-		out[u.Name] = "%ASGN = %NAMESPACE.MustMake%BARETYPEFromBytes(buf[at:])\n" +
-			"at += (%ASGN).Size()"
-		out[u.Name+"&safe"] = "%ASGN, err = %NAMESPACE.Make%BARETYPEFromBytes(buf[at:])\n" +
-			"if err != nil {\n" +
-			"\t return err\n" +
-			"}\n" +
-			"at += (%ASGN).Size()"
-	} else {
-		out[u.Name] = "%ASGN = %NAMESPACE.MustMake%TYPEFromBytes(buf[at:])\n" +
-			"at += (%ASGN).Size()"
-		out[u.Name+"&safe"] = "%ASGN, err = %NAMESPACE.Make%TYPEFromBytes(buf[at:])\n" +
-			"if err != nil {\n" +
-			"\t return err\n" +
-			"}\n" +
-			"at += (%ASGN).Size()"
-	}
-	for _, ufd := range u.Fields {
-		if ufd.Struct != nil {
-			st := ufd.Struct
-			if st.Namespace != "" {
-				out[st.Name] = "%ASGN = %NAMESPACE.MustMake%BARETYPEFromBytes(buf[at:])\n" +
-					"at += (%ASGN).Size()"
-				out[st.Name+"&safe"] = "%ASGN, err = %NAMESPACE.Make%BARETYPEFromBytes(buf[at:])\n" +
-					"if err != nil {\n" +
-					"\t return err\n" +
-					"}\n" +
-					"at += (%ASGN).Size()"
-			} else {
-				out[st.Name] = "%ASGN = MustMake%TYPEFromBytes(buf[at:])\n" +
-					"at += (%ASGN).Size()"
-				out[st.Name+"&safe"] = "%ASGN, err = Make%TYPEFromBytes(buf[at:])\n" +
-					"if err != nil {\n" +
-					"\t return err\n" +
-					"}\n" +
-					"at += (%ASGN).Size()"
-			}
-		}
-		if ufd.Message != nil {
-			msg := ufd.Message
-			if msg.Namespace != "" {
-				out[msg.Name] = "%ASGN = %NAMESPACE.MustMake%BARETYPEFromBytes(buf[at:])\n" +
-					"at += (%ASGN).Size()"
-				out[msg.Name+"&safe"] = "%ASGN, err = %NAMESPACE.Make%BARETYPEFromBytes(buf[at:])\n" +
-					"if err != nil {\n" +
-					"\t return err\n" +
-					"}\n" +
-					"at += (%ASGN).Size()"
-			} else {
-				out[msg.Name] = "%ASGN = MustMake%TYPEFromBytes(buf[at:])\n" +
-					"at += (%ASGN).Size()"
-				out[msg.Name+"&safe"] = "%ASGN, err = Make%TYPEFromBytes(buf[at:])\n" +
-					"if err != nil {\n" +
-					"\t return err\n" +
-					"}\n" +
-					"at += (%ASGN).Size()"
-			}
-		}
-	}
-	return out
 }
 
 func (f File) customRecordTypes() map[string]struct{} {
