@@ -27,7 +27,7 @@ func NewErrorReader(r io.Reader) ErrorReader {
 }
 
 func (er ErrorReader) Read(b []byte) (n int, err error) {
-	n, err = er.Reader.Read(b)
+	n, err = io.ReadFull(er.Reader, b)
 	if err != nil {
 		er.Err = err
 	}
