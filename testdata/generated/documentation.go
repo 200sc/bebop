@@ -3,7 +3,6 @@
 package generated
 
 import (
-	"bytes"
 	"io"
 	"github.com/200sc/bebop"
 	"github.com/200sc/bebop/iohelp"
@@ -37,12 +36,6 @@ type DocS struct {
 	X int32
 }
 
-func (bbp DocS) MarshalBebop() []byte {
-	buf := make([]byte, bbp.Size())
-	bbp.MarshalBebopTo(buf)
-	return buf
-}
-
 func (bbp DocS) MarshalBebopTo(buf []byte) int {
 	at := 0
 	iohelp.WriteInt32Bytes(buf[at:], bbp.X)
@@ -53,7 +46,7 @@ func (bbp DocS) MarshalBebopTo(buf []byte) int {
 func (bbp *DocS) UnmarshalBebop(buf []byte) (err error) {
 	at := 0
 	if len(buf[at:]) < 4 {
-		 return iohelp.ErrTooShort
+		 return io.ErrUnexpectedEOF
 	}
 	bbp.X = iohelp.ReadInt32Bytes(buf[at:])
 	at += 4
@@ -84,19 +77,25 @@ func (bbp DocS) Size() int {
 	return bodyLen
 }
 
-func makeDocS(r iohelp.ErrorReader) (DocS, error) {
+func (bbp DocS) MarshalBebop() []byte {
+	buf := make([]byte, bbp.Size())
+	bbp.MarshalBebopTo(buf)
+	return buf
+}
+
+func MakeDocS(r iohelp.ErrorReader) (DocS, error) {
 	v := DocS{}
 	err := v.DecodeBebop(r)
 	return v, err
 }
 
-func makeDocSFromBytes(buf []byte) (DocS, error) {
+func MakeDocSFromBytes(buf []byte) (DocS, error) {
 	v := DocS{}
 	err := v.UnmarshalBebop(buf)
 	return v, err
 }
 
-func mustMakeDocSFromBytes(buf []byte) DocS {
+func MustMakeDocSFromBytes(buf []byte) DocS {
 	v := DocS{}
 	v.MustUnmarshalBebop(buf)
 	return v
@@ -107,12 +106,6 @@ var _ bebop.Record = &DepM{}
 type DepM struct {
 	// Deprecated: x in DepM
 	X *int32
-}
-
-func (bbp DepM) MarshalBebop() []byte {
-	buf := make([]byte, bbp.Size())
-	bbp.MarshalBebopTo(buf)
-	return buf
 }
 
 func (bbp DepM) MarshalBebopTo(buf []byte) int {
@@ -138,7 +131,7 @@ func (bbp *DepM) UnmarshalBebop(buf []byte) (err error) {
 			at += 1
 			bbp.X = new(int32)
 			if len(buf[at:]) < 4 {
-				 return iohelp.ErrTooShort
+				 return io.ErrUnexpectedEOF
 			}
 			(*bbp.X) = iohelp.ReadInt32Bytes(buf[at:])
 			at += 4
@@ -177,18 +170,17 @@ func (bbp DepM) EncodeBebop(iow io.Writer) (err error) {
 }
 
 func (bbp *DepM) DecodeBebop(ior io.Reader) (err error) {
-	er := iohelp.NewErrorReader(ior)
-	bodyLen := iohelp.ReadUint32(er)
-	body := make([]byte, bodyLen)
-	er.Read(body)
-	r := iohelp.NewErrorReader(bytes.NewReader(body))
+	r := iohelp.NewErrorReader(ior)
+	bodyLen := iohelp.ReadUint32(r)
+	r.Reader = &io.LimitedReader{R:r.Reader, N:int64(bodyLen)}
 	for {
 		switch iohelp.ReadByte(r) {
 		case 1:
 			bbp.X = new(int32)
 			*bbp.X = iohelp.ReadInt32(r)
 		default:
-			return er.Err
+			io.ReadAll(r)
+			return r.Err
 		}
 	}
 }
@@ -202,19 +194,25 @@ func (bbp DepM) Size() int {
 	return bodyLen
 }
 
-func makeDepM(r iohelp.ErrorReader) (DepM, error) {
+func (bbp DepM) MarshalBebop() []byte {
+	buf := make([]byte, bbp.Size())
+	bbp.MarshalBebopTo(buf)
+	return buf
+}
+
+func MakeDepM(r iohelp.ErrorReader) (DepM, error) {
 	v := DepM{}
 	err := v.DecodeBebop(r)
 	return v, err
 }
 
-func makeDepMFromBytes(buf []byte) (DepM, error) {
+func MakeDepMFromBytes(buf []byte) (DepM, error) {
 	v := DepM{}
 	err := v.UnmarshalBebop(buf)
 	return v, err
 }
 
-func mustMakeDepMFromBytes(buf []byte) DepM {
+func MustMakeDepMFromBytes(buf []byte) DepM {
 	v := DepM{}
 	v.MustUnmarshalBebop(buf)
 	return v
@@ -231,12 +229,6 @@ type DocM struct {
 	// Deprecated, documented field 
 	// Deprecated: z in DocM
 	Z *int32
-}
-
-func (bbp DocM) MarshalBebop() []byte {
-	buf := make([]byte, bbp.Size())
-	bbp.MarshalBebopTo(buf)
-	return buf
 }
 
 func (bbp DocM) MarshalBebopTo(buf []byte) int {
@@ -274,7 +266,7 @@ func (bbp *DocM) UnmarshalBebop(buf []byte) (err error) {
 			at += 1
 			bbp.X = new(int32)
 			if len(buf[at:]) < 4 {
-				 return iohelp.ErrTooShort
+				 return io.ErrUnexpectedEOF
 			}
 			(*bbp.X) = iohelp.ReadInt32Bytes(buf[at:])
 			at += 4
@@ -282,7 +274,7 @@ func (bbp *DocM) UnmarshalBebop(buf []byte) (err error) {
 			at += 1
 			bbp.Y = new(int32)
 			if len(buf[at:]) < 4 {
-				 return iohelp.ErrTooShort
+				 return io.ErrUnexpectedEOF
 			}
 			(*bbp.Y) = iohelp.ReadInt32Bytes(buf[at:])
 			at += 4
@@ -290,7 +282,7 @@ func (bbp *DocM) UnmarshalBebop(buf []byte) (err error) {
 			at += 1
 			bbp.Z = new(int32)
 			if len(buf[at:]) < 4 {
-				 return iohelp.ErrTooShort
+				 return io.ErrUnexpectedEOF
 			}
 			(*bbp.Z) = iohelp.ReadInt32Bytes(buf[at:])
 			at += 4
@@ -347,11 +339,9 @@ func (bbp DocM) EncodeBebop(iow io.Writer) (err error) {
 }
 
 func (bbp *DocM) DecodeBebop(ior io.Reader) (err error) {
-	er := iohelp.NewErrorReader(ior)
-	bodyLen := iohelp.ReadUint32(er)
-	body := make([]byte, bodyLen)
-	er.Read(body)
-	r := iohelp.NewErrorReader(bytes.NewReader(body))
+	r := iohelp.NewErrorReader(ior)
+	bodyLen := iohelp.ReadUint32(r)
+	r.Reader = &io.LimitedReader{R:r.Reader, N:int64(bodyLen)}
 	for {
 		switch iohelp.ReadByte(r) {
 		case 1:
@@ -364,7 +354,8 @@ func (bbp *DocM) DecodeBebop(ior io.Reader) (err error) {
 			bbp.Z = new(int32)
 			*bbp.Z = iohelp.ReadInt32(r)
 		default:
-			return er.Err
+			io.ReadAll(r)
+			return r.Err
 		}
 	}
 }
@@ -386,19 +377,25 @@ func (bbp DocM) Size() int {
 	return bodyLen
 }
 
-func makeDocM(r iohelp.ErrorReader) (DocM, error) {
+func (bbp DocM) MarshalBebop() []byte {
+	buf := make([]byte, bbp.Size())
+	bbp.MarshalBebopTo(buf)
+	return buf
+}
+
+func MakeDocM(r iohelp.ErrorReader) (DocM, error) {
 	v := DocM{}
 	err := v.DecodeBebop(r)
 	return v, err
 }
 
-func makeDocMFromBytes(buf []byte) (DocM, error) {
+func MakeDocMFromBytes(buf []byte) (DocM, error) {
 	v := DocM{}
 	err := v.UnmarshalBebop(buf)
 	return v, err
 }
 
-func mustMakeDocMFromBytes(buf []byte) DocM {
+func MustMakeDocMFromBytes(buf []byte) DocM {
 	v := DocM{}
 	v.MustUnmarshalBebop(buf)
 	return v

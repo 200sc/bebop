@@ -3,7 +3,6 @@
 package generated
 
 import (
-	"bytes"
 	"io"
 	"github.com/200sc/bebop"
 	"github.com/200sc/bebop/iohelp"
@@ -24,44 +23,34 @@ type Musician struct {
 	plays Instrument
 }
 
-func (bbp Musician) MarshalBebop() []byte {
-	buf := make([]byte, bbp.Size())
-	bbp.MarshalBebopTo(buf)
-	return buf
-}
-
 func (bbp Musician) MarshalBebopTo(buf []byte) int {
 	at := 0
 	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.name)))
-	at += 4
-	copy(buf[at:at+len(bbp.name)], []byte(bbp.name))
-	at += len(bbp.name)
+	copy(buf[at+4:at+4+len(bbp.name)], []byte(bbp.name))
+	at += 4 + len(bbp.name)
 	iohelp.WriteUint32Bytes(buf[at:], uint32(bbp.plays))
 	at += 4
-	
 	return at
 }
 
 func (bbp *Musician) UnmarshalBebop(buf []byte) (err error) {
 	at := 0
 	bbp.name, err = iohelp.ReadStringBytes(buf[at:])
-	if err != nil {
-		 return err
+	if err != nil{
+		return err
 	}
 	at += 4 + len(bbp.name)
 	bbp.plays = Instrument(iohelp.ReadUint32Bytes(buf[at:]))
 	at += 4
-	
 	return nil
 }
 
 func (bbp *Musician) MustUnmarshalBebop(buf []byte) {
 	at := 0
-	bbp.name =  iohelp.MustReadStringBytes(buf[at:])
-	at += 4+len(bbp.name)
+	bbp.name = iohelp.MustReadStringBytes(buf[at:])
+	at += 4 + len(bbp.name)
 	bbp.plays = Instrument(iohelp.ReadUint32Bytes(buf[at:]))
 	at += 4
-	
 }
 
 func (bbp Musician) EncodeBebop(iow io.Writer) (err error) {
@@ -81,25 +70,30 @@ func (bbp *Musician) DecodeBebop(ior io.Reader) (err error) {
 
 func (bbp Musician) Size() int {
 	bodyLen := 0
-	bodyLen += 4
-	bodyLen += len(bbp.name)
+	bodyLen += 4 + len(bbp.name)
 	bodyLen += 4
 	return bodyLen
 }
 
-func makeMusician(r iohelp.ErrorReader) (Musician, error) {
+func (bbp Musician) MarshalBebop() []byte {
+	buf := make([]byte, bbp.Size())
+	bbp.MarshalBebopTo(buf)
+	return buf
+}
+
+func MakeMusician(r iohelp.ErrorReader) (Musician, error) {
 	v := Musician{}
 	err := v.DecodeBebop(r)
 	return v, err
 }
 
-func makeMusicianFromBytes(buf []byte) (Musician, error) {
+func MakeMusicianFromBytes(buf []byte) (Musician, error) {
 	v := Musician{}
 	err := v.UnmarshalBebop(buf)
 	return v, err
 }
 
-func mustMakeMusicianFromBytes(buf []byte) Musician {
+func MustMakeMusicianFromBytes(buf []byte) Musician {
 	v := Musician{}
 	v.MustUnmarshalBebop(buf)
 	return v
@@ -129,12 +123,6 @@ type Library struct {
 	Songs map[[16]byte]Song
 }
 
-func (bbp Library) MarshalBebop() []byte {
-	buf := make([]byte, bbp.Size())
-	bbp.MarshalBebopTo(buf)
-	return buf
-}
-
 func (bbp Library) MarshalBebopTo(buf []byte) int {
 	at := 0
 	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.Songs)))
@@ -155,13 +143,13 @@ func (bbp *Library) UnmarshalBebop(buf []byte) (err error) {
 	bbp.Songs = make(map[[16]byte]Song,ln1)
 	for i := uint32(0); i < ln1; i++ {
 		if len(buf[at:]) < 16 {
-			 return iohelp.ErrTooShort
+			 return io.ErrUnexpectedEOF
 		}
 		k1 := iohelp.ReadGUIDBytes(buf[at:])
 		at += 16
-		(bbp.Songs)[k1], err = makeSongFromBytes(buf[at:])
-		if err != nil {
-			 return err
+		(bbp.Songs)[k1], err = MakeSongFromBytes(buf[at:])
+		if err != nil{
+			return err
 		}
 		at += ((bbp.Songs)[k1]).Size()
 	}
@@ -176,7 +164,7 @@ func (bbp *Library) MustUnmarshalBebop(buf []byte) {
 	for i := uint32(0); i < ln2; i++ {
 		k1 := iohelp.ReadGUIDBytes(buf[at:])
 		at += 16
-		(bbp.Songs)[k1] = mustMakeSongFromBytes(buf[at:])
+		(bbp.Songs)[k1] = MustMakeSongFromBytes(buf[at:])
 		at += ((bbp.Songs)[k1]).Size()
 	}
 }
@@ -187,7 +175,7 @@ func (bbp Library) EncodeBebop(iow io.Writer) (err error) {
 	for k1, v1 := range bbp.Songs {
 		iohelp.WriteGUID(w, k1)
 		err = (v1).EncodeBebop(w)
-		if err != nil {
+		if err != nil{
 			return err
 		}
 	}
@@ -200,8 +188,8 @@ func (bbp *Library) DecodeBebop(ior io.Reader) (err error) {
 	bbp.Songs = make(map[[16]byte]Song, ln1)
 	for i1 := uint32(0); i1 < ln1; i1++ {
 		k1 := iohelp.ReadGUID(r)
-		((bbp.Songs[k1])), err = makeSong(r)
-		if err != nil {
+		((bbp.Songs[k1])), err = MakeSong(r)
+		if err != nil{
 			return err
 		}
 	}
@@ -218,19 +206,25 @@ func (bbp Library) Size() int {
 	return bodyLen
 }
 
-func makeLibrary(r iohelp.ErrorReader) (Library, error) {
+func (bbp Library) MarshalBebop() []byte {
+	buf := make([]byte, bbp.Size())
+	bbp.MarshalBebopTo(buf)
+	return buf
+}
+
+func MakeLibrary(r iohelp.ErrorReader) (Library, error) {
 	v := Library{}
 	err := v.DecodeBebop(r)
 	return v, err
 }
 
-func makeLibraryFromBytes(buf []byte) (Library, error) {
+func MakeLibraryFromBytes(buf []byte) (Library, error) {
 	v := Library{}
 	err := v.UnmarshalBebop(buf)
 	return v, err
 }
 
-func mustMakeLibraryFromBytes(buf []byte) Library {
+func MustMakeLibraryFromBytes(buf []byte) Library {
 	v := Library{}
 	v.MustUnmarshalBebop(buf)
 	return v
@@ -244,12 +238,6 @@ type Song struct {
 	Performers *[]Musician
 }
 
-func (bbp Song) MarshalBebop() []byte {
-	buf := make([]byte, bbp.Size())
-	bbp.MarshalBebopTo(buf)
-	return buf
-}
-
 func (bbp Song) MarshalBebopTo(buf []byte) int {
 	at := 0
 	iohelp.WriteUint32Bytes(buf[at:], uint32(bbp.Size()-4))
@@ -258,9 +246,8 @@ func (bbp Song) MarshalBebopTo(buf []byte) int {
 		buf[at] = 1
 		at++
 		iohelp.WriteUint32Bytes(buf[at:], uint32(len(*bbp.Title)))
-		at += 4
-		copy(buf[at:at+len(*bbp.Title)], []byte(*bbp.Title))
-		at += len(*bbp.Title)
+		copy(buf[at+4:at+4+len(*bbp.Title)], []byte(*bbp.Title))
+		at += 4 + len(*bbp.Title)
 	}
 	if bbp.Year != nil {
 		buf[at] = 2
@@ -291,15 +278,15 @@ func (bbp *Song) UnmarshalBebop(buf []byte) (err error) {
 			at += 1
 			bbp.Title = new(string)
 			(*bbp.Title), err = iohelp.ReadStringBytes(buf[at:])
-			if err != nil {
-				 return err
+			if err != nil{
+				return err
 			}
 			at += 4 + len((*bbp.Title))
 		case 2:
 			at += 1
 			bbp.Year = new(uint16)
 			if len(buf[at:]) < 2 {
-				 return iohelp.ErrTooShort
+				 return io.ErrUnexpectedEOF
 			}
 			(*bbp.Year) = iohelp.ReadUint16Bytes(buf[at:])
 			at += 2
@@ -307,14 +294,14 @@ func (bbp *Song) UnmarshalBebop(buf []byte) (err error) {
 			at += 1
 			bbp.Performers = new([]Musician)
 			if len(buf[at:]) < 4 {
-				 return iohelp.ErrTooShort
+				 return io.ErrUnexpectedEOF
 			}
 			(*bbp.Performers) = make([]Musician, iohelp.ReadUint32Bytes(buf[at:]))
 			at += 4
 			for i3 := range (*bbp.Performers) {
-				((*bbp.Performers))[i3], err = makeMusicianFromBytes(buf[at:])
-				if err != nil {
-					 return err
+				((*bbp.Performers))[i3], err = MakeMusicianFromBytes(buf[at:])
+				if err != nil{
+					return err
 				}
 				at += (((*bbp.Performers))[i3]).Size()
 			}
@@ -333,8 +320,8 @@ func (bbp *Song) MustUnmarshalBebop(buf []byte) {
 		case 1:
 			at += 1
 			bbp.Title = new(string)
-			(*bbp.Title) =  iohelp.MustReadStringBytes(buf[at:])
-			at += 4+len((*bbp.Title))
+			(*bbp.Title) = iohelp.MustReadStringBytes(buf[at:])
+			at += 4 + len((*bbp.Title))
 		case 2:
 			at += 1
 			bbp.Year = new(uint16)
@@ -346,7 +333,7 @@ func (bbp *Song) MustUnmarshalBebop(buf []byte) {
 			(*bbp.Performers) = make([]Musician, iohelp.ReadUint32Bytes(buf[at:]))
 			at += 4
 			for i3 := range (*bbp.Performers) {
-				((*bbp.Performers))[i3] = mustMakeMusicianFromBytes(buf[at:])
+				((*bbp.Performers))[i3] = MustMakeMusicianFromBytes(buf[at:])
 				at += (((*bbp.Performers))[i3]).Size()
 			}
 		default:
@@ -372,7 +359,7 @@ func (bbp Song) EncodeBebop(iow io.Writer) (err error) {
 		iohelp.WriteUint32(w, uint32(len(*bbp.Performers)))
 		for _, elem := range *bbp.Performers {
 			err = (elem).EncodeBebop(w)
-			if err != nil {
+			if err != nil{
 				return err
 			}
 		}
@@ -382,11 +369,9 @@ func (bbp Song) EncodeBebop(iow io.Writer) (err error) {
 }
 
 func (bbp *Song) DecodeBebop(ior io.Reader) (err error) {
-	er := iohelp.NewErrorReader(ior)
-	bodyLen := iohelp.ReadUint32(er)
-	body := make([]byte, bodyLen)
-	er.Read(body)
-	r := iohelp.NewErrorReader(bytes.NewReader(body))
+	r := iohelp.NewErrorReader(ior)
+	bodyLen := iohelp.ReadUint32(r)
+	r.Reader = &io.LimitedReader{R:r.Reader, N:int64(bodyLen)}
 	for {
 		switch iohelp.ReadByte(r) {
 		case 1:
@@ -399,13 +384,14 @@ func (bbp *Song) DecodeBebop(ior io.Reader) (err error) {
 			bbp.Performers = new([]Musician)
 			*bbp.Performers = make([]Musician, iohelp.ReadUint32(r))
 			for i := range *bbp.Performers {
-				((*bbp.Performers)[i]), err = makeMusician(r)
-				if err != nil {
+				((*bbp.Performers)[i]), err = MakeMusician(r)
+				if err != nil{
 					return err
 				}
 			}
 		default:
-			return er.Err
+			io.ReadAll(r)
+			return r.Err
 		}
 	}
 }
@@ -414,8 +400,7 @@ func (bbp Song) Size() int {
 	bodyLen := 5
 	if bbp.Title != nil {
 		bodyLen += 1
-		bodyLen += 4
-		bodyLen += len(*bbp.Title)
+		bodyLen += 4 + len(*bbp.Title)
 	}
 	if bbp.Year != nil {
 		bodyLen += 1
@@ -431,19 +416,25 @@ func (bbp Song) Size() int {
 	return bodyLen
 }
 
-func makeSong(r iohelp.ErrorReader) (Song, error) {
+func (bbp Song) MarshalBebop() []byte {
+	buf := make([]byte, bbp.Size())
+	bbp.MarshalBebopTo(buf)
+	return buf
+}
+
+func MakeSong(r iohelp.ErrorReader) (Song, error) {
 	v := Song{}
 	err := v.DecodeBebop(r)
 	return v, err
 }
 
-func makeSongFromBytes(buf []byte) (Song, error) {
+func MakeSongFromBytes(buf []byte) (Song, error) {
 	v := Song{}
 	err := v.UnmarshalBebop(buf)
 	return v, err
 }
 
-func mustMakeSongFromBytes(buf []byte) Song {
+func MustMakeSongFromBytes(buf []byte) Song {
 	v := Song{}
 	v.MustUnmarshalBebop(buf)
 	return v

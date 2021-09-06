@@ -3,7 +3,6 @@
 package generated
 
 import (
-	"bytes"
 	"io"
 	"github.com/200sc/bebop"
 	"github.com/200sc/bebop/iohelp"
@@ -15,26 +14,19 @@ type Print struct {
 	Printout string
 }
 
-func (bbp Print) MarshalBebop() []byte {
-	buf := make([]byte, bbp.Size())
-	bbp.MarshalBebopTo(buf)
-	return buf
-}
-
 func (bbp Print) MarshalBebopTo(buf []byte) int {
 	at := 0
 	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.Printout)))
-	at += 4
-	copy(buf[at:at+len(bbp.Printout)], []byte(bbp.Printout))
-	at += len(bbp.Printout)
+	copy(buf[at+4:at+4+len(bbp.Printout)], []byte(bbp.Printout))
+	at += 4 + len(bbp.Printout)
 	return at
 }
 
 func (bbp *Print) UnmarshalBebop(buf []byte) (err error) {
 	at := 0
 	bbp.Printout, err = iohelp.ReadStringBytes(buf[at:])
-	if err != nil {
-		 return err
+	if err != nil{
+		return err
 	}
 	at += 4 + len(bbp.Printout)
 	return nil
@@ -42,8 +34,8 @@ func (bbp *Print) UnmarshalBebop(buf []byte) (err error) {
 
 func (bbp *Print) MustUnmarshalBebop(buf []byte) {
 	at := 0
-	bbp.Printout =  iohelp.MustReadStringBytes(buf[at:])
-	at += 4+len(bbp.Printout)
+	bbp.Printout = iohelp.MustReadStringBytes(buf[at:])
+	at += 4 + len(bbp.Printout)
 }
 
 func (bbp Print) EncodeBebop(iow io.Writer) (err error) {
@@ -61,24 +53,29 @@ func (bbp *Print) DecodeBebop(ior io.Reader) (err error) {
 
 func (bbp Print) Size() int {
 	bodyLen := 0
-	bodyLen += 4
-	bodyLen += len(bbp.Printout)
+	bodyLen += 4 + len(bbp.Printout)
 	return bodyLen
 }
 
-func makePrint(r iohelp.ErrorReader) (Print, error) {
+func (bbp Print) MarshalBebop() []byte {
+	buf := make([]byte, bbp.Size())
+	bbp.MarshalBebopTo(buf)
+	return buf
+}
+
+func MakePrint(r iohelp.ErrorReader) (Print, error) {
 	v := Print{}
 	err := v.DecodeBebop(r)
 	return v, err
 }
 
-func makePrintFromBytes(buf []byte) (Print, error) {
+func MakePrintFromBytes(buf []byte) (Print, error) {
 	v := Print{}
 	err := v.UnmarshalBebop(buf)
 	return v, err
 }
 
-func mustMakePrintFromBytes(buf []byte) Print {
+func MustMakePrintFromBytes(buf []byte) Print {
 	v := Print{}
 	v.MustUnmarshalBebop(buf)
 	return v
@@ -89,12 +86,6 @@ var _ bebop.Record = &Add{}
 type Add struct {
 	A int32
 	B int32
-}
-
-func (bbp Add) MarshalBebop() []byte {
-	buf := make([]byte, bbp.Size())
-	bbp.MarshalBebopTo(buf)
-	return buf
 }
 
 func (bbp Add) MarshalBebopTo(buf []byte) int {
@@ -109,12 +100,12 @@ func (bbp Add) MarshalBebopTo(buf []byte) int {
 func (bbp *Add) UnmarshalBebop(buf []byte) (err error) {
 	at := 0
 	if len(buf[at:]) < 4 {
-		 return iohelp.ErrTooShort
+		 return io.ErrUnexpectedEOF
 	}
 	bbp.A = iohelp.ReadInt32Bytes(buf[at:])
 	at += 4
 	if len(buf[at:]) < 4 {
-		 return iohelp.ErrTooShort
+		 return io.ErrUnexpectedEOF
 	}
 	bbp.B = iohelp.ReadInt32Bytes(buf[at:])
 	at += 4
@@ -150,19 +141,25 @@ func (bbp Add) Size() int {
 	return bodyLen
 }
 
-func makeAdd(r iohelp.ErrorReader) (Add, error) {
+func (bbp Add) MarshalBebop() []byte {
+	buf := make([]byte, bbp.Size())
+	bbp.MarshalBebopTo(buf)
+	return buf
+}
+
+func MakeAdd(r iohelp.ErrorReader) (Add, error) {
 	v := Add{}
 	err := v.DecodeBebop(r)
 	return v, err
 }
 
-func makeAddFromBytes(buf []byte) (Add, error) {
+func MakeAddFromBytes(buf []byte) (Add, error) {
 	v := Add{}
 	err := v.UnmarshalBebop(buf)
 	return v, err
 }
 
-func mustMakeAddFromBytes(buf []byte) Add {
+func MustMakeAddFromBytes(buf []byte) Add {
 	v := Add{}
 	v.MustUnmarshalBebop(buf)
 	return v
@@ -172,12 +169,6 @@ var _ bebop.Record = &AddResponse{}
 
 type AddResponse struct {
 	C int32
-}
-
-func (bbp AddResponse) MarshalBebop() []byte {
-	buf := make([]byte, bbp.Size())
-	bbp.MarshalBebopTo(buf)
-	return buf
 }
 
 func (bbp AddResponse) MarshalBebopTo(buf []byte) int {
@@ -190,7 +181,7 @@ func (bbp AddResponse) MarshalBebopTo(buf []byte) int {
 func (bbp *AddResponse) UnmarshalBebop(buf []byte) (err error) {
 	at := 0
 	if len(buf[at:]) < 4 {
-		 return iohelp.ErrTooShort
+		 return io.ErrUnexpectedEOF
 	}
 	bbp.C = iohelp.ReadInt32Bytes(buf[at:])
 	at += 4
@@ -221,19 +212,25 @@ func (bbp AddResponse) Size() int {
 	return bodyLen
 }
 
-func makeAddResponse(r iohelp.ErrorReader) (AddResponse, error) {
+func (bbp AddResponse) MarshalBebop() []byte {
+	buf := make([]byte, bbp.Size())
+	bbp.MarshalBebopTo(buf)
+	return buf
+}
+
+func MakeAddResponse(r iohelp.ErrorReader) (AddResponse, error) {
 	v := AddResponse{}
 	err := v.DecodeBebop(r)
 	return v, err
 }
 
-func makeAddResponseFromBytes(buf []byte) (AddResponse, error) {
+func MakeAddResponseFromBytes(buf []byte) (AddResponse, error) {
 	v := AddResponse{}
 	err := v.UnmarshalBebop(buf)
 	return v, err
 }
 
-func mustMakeAddResponseFromBytes(buf []byte) AddResponse {
+func MustMakeAddResponseFromBytes(buf []byte) AddResponse {
 	v := AddResponse{}
 	v.MustUnmarshalBebop(buf)
 	return v
@@ -245,12 +242,6 @@ var _ bebop.Record = &PrintRequest{}
 
 type PrintRequest struct {
 	Print *Print
-}
-
-func (bbp PrintRequest) MarshalBebop() []byte {
-	buf := make([]byte, bbp.Size())
-	bbp.MarshalBebopTo(buf)
-	return buf
 }
 
 func (bbp PrintRequest) MarshalBebopTo(buf []byte) int {
@@ -276,9 +267,9 @@ func (bbp *PrintRequest) UnmarshalBebop(buf []byte) (err error) {
 		case 1:
 			at += 1
 			bbp.Print = new(Print)
-			(*bbp.Print), err = makePrintFromBytes(buf[at:])
-			if err != nil {
-				 return err
+			(*bbp.Print), err = MakePrintFromBytes(buf[at:])
+			if err != nil{
+				return err
 			}
 			at += ((*bbp.Print)).Size()
 		default:
@@ -296,7 +287,7 @@ func (bbp *PrintRequest) MustUnmarshalBebop(buf []byte) {
 		case 1:
 			at += 1
 			bbp.Print = new(Print)
-			(*bbp.Print) = mustMakePrintFromBytes(buf[at:])
+			(*bbp.Print) = MustMakePrintFromBytes(buf[at:])
 			at += ((*bbp.Print)).Size()
 		default:
 			return
@@ -311,7 +302,7 @@ func (bbp PrintRequest) EncodeBebop(iow io.Writer) (err error) {
 	if bbp.Print != nil {
 		w.Write([]byte{1})
 		err = (*bbp.Print).EncodeBebop(w)
-		if err != nil {
+		if err != nil{
 			return err
 		}
 	}
@@ -320,22 +311,21 @@ func (bbp PrintRequest) EncodeBebop(iow io.Writer) (err error) {
 }
 
 func (bbp *PrintRequest) DecodeBebop(ior io.Reader) (err error) {
-	er := iohelp.NewErrorReader(ior)
-	iohelp.ReadUint32(er)
-	bodyLen := iohelp.ReadUint32(er)
-	body := make([]byte, bodyLen)
-	er.Read(body)
-	r := iohelp.NewErrorReader(bytes.NewReader(body))
+	r := iohelp.NewErrorReader(ior)
+	iohelp.ReadUint32(r)
+	bodyLen := iohelp.ReadUint32(r)
+	r.Reader = &io.LimitedReader{R:r.Reader, N:int64(bodyLen)}
 	for {
 		switch iohelp.ReadByte(r) {
 		case 1:
 			bbp.Print = new(Print)
-			(*bbp.Print), err = makePrint(r)
-			if err != nil {
+			(*bbp.Print), err = MakePrint(r)
+			if err != nil{
 				return err
 			}
 		default:
-			return er.Err
+			io.ReadAll(r)
+			return r.Err
 		}
 	}
 }
@@ -350,19 +340,25 @@ func (bbp PrintRequest) Size() int {
 	return bodyLen
 }
 
-func makePrintRequest(r iohelp.ErrorReader) (PrintRequest, error) {
+func (bbp PrintRequest) MarshalBebop() []byte {
+	buf := make([]byte, bbp.Size())
+	bbp.MarshalBebopTo(buf)
+	return buf
+}
+
+func MakePrintRequest(r iohelp.ErrorReader) (PrintRequest, error) {
 	v := PrintRequest{}
 	err := v.DecodeBebop(r)
 	return v, err
 }
 
-func makePrintRequestFromBytes(buf []byte) (PrintRequest, error) {
+func MakePrintRequestFromBytes(buf []byte) (PrintRequest, error) {
 	v := PrintRequest{}
 	err := v.UnmarshalBebop(buf)
 	return v, err
 }
 
-func mustMakePrintRequestFromBytes(buf []byte) PrintRequest {
+func MustMakePrintRequestFromBytes(buf []byte) PrintRequest {
 	v := PrintRequest{}
 	v.MustUnmarshalBebop(buf)
 	return v
@@ -374,12 +370,6 @@ var _ bebop.Record = &AddRequest{}
 
 type AddRequest struct {
 	Add *Add
-}
-
-func (bbp AddRequest) MarshalBebop() []byte {
-	buf := make([]byte, bbp.Size())
-	bbp.MarshalBebopTo(buf)
-	return buf
 }
 
 func (bbp AddRequest) MarshalBebopTo(buf []byte) int {
@@ -405,9 +395,9 @@ func (bbp *AddRequest) UnmarshalBebop(buf []byte) (err error) {
 		case 1:
 			at += 1
 			bbp.Add = new(Add)
-			(*bbp.Add), err = makeAddFromBytes(buf[at:])
-			if err != nil {
-				 return err
+			(*bbp.Add), err = MakeAddFromBytes(buf[at:])
+			if err != nil{
+				return err
 			}
 			at += ((*bbp.Add)).Size()
 		default:
@@ -425,7 +415,7 @@ func (bbp *AddRequest) MustUnmarshalBebop(buf []byte) {
 		case 1:
 			at += 1
 			bbp.Add = new(Add)
-			(*bbp.Add) = mustMakeAddFromBytes(buf[at:])
+			(*bbp.Add) = MustMakeAddFromBytes(buf[at:])
 			at += ((*bbp.Add)).Size()
 		default:
 			return
@@ -440,7 +430,7 @@ func (bbp AddRequest) EncodeBebop(iow io.Writer) (err error) {
 	if bbp.Add != nil {
 		w.Write([]byte{1})
 		err = (*bbp.Add).EncodeBebop(w)
-		if err != nil {
+		if err != nil{
 			return err
 		}
 	}
@@ -449,22 +439,21 @@ func (bbp AddRequest) EncodeBebop(iow io.Writer) (err error) {
 }
 
 func (bbp *AddRequest) DecodeBebop(ior io.Reader) (err error) {
-	er := iohelp.NewErrorReader(ior)
-	iohelp.ReadUint32(er)
-	bodyLen := iohelp.ReadUint32(er)
-	body := make([]byte, bodyLen)
-	er.Read(body)
-	r := iohelp.NewErrorReader(bytes.NewReader(body))
+	r := iohelp.NewErrorReader(ior)
+	iohelp.ReadUint32(r)
+	bodyLen := iohelp.ReadUint32(r)
+	r.Reader = &io.LimitedReader{R:r.Reader, N:int64(bodyLen)}
 	for {
 		switch iohelp.ReadByte(r) {
 		case 1:
 			bbp.Add = new(Add)
-			(*bbp.Add), err = makeAdd(r)
-			if err != nil {
+			(*bbp.Add), err = MakeAdd(r)
+			if err != nil{
 				return err
 			}
 		default:
-			return er.Err
+			io.ReadAll(r)
+			return r.Err
 		}
 	}
 }
@@ -479,19 +468,25 @@ func (bbp AddRequest) Size() int {
 	return bodyLen
 }
 
-func makeAddRequest(r iohelp.ErrorReader) (AddRequest, error) {
+func (bbp AddRequest) MarshalBebop() []byte {
+	buf := make([]byte, bbp.Size())
+	bbp.MarshalBebopTo(buf)
+	return buf
+}
+
+func MakeAddRequest(r iohelp.ErrorReader) (AddRequest, error) {
 	v := AddRequest{}
 	err := v.DecodeBebop(r)
 	return v, err
 }
 
-func makeAddRequestFromBytes(buf []byte) (AddRequest, error) {
+func MakeAddRequestFromBytes(buf []byte) (AddRequest, error) {
 	v := AddRequest{}
 	err := v.UnmarshalBebop(buf)
 	return v, err
 }
 
-func mustMakeAddRequestFromBytes(buf []byte) AddRequest {
+func MustMakeAddRequestFromBytes(buf []byte) AddRequest {
 	v := AddRequest{}
 	v.MustUnmarshalBebop(buf)
 	return v

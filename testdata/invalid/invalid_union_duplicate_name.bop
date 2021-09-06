@@ -1,0 +1,4 @@
+union Test {
+	1 -> message foo{}
+	2 -> message foo{}
+}

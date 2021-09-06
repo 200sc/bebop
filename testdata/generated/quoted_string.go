@@ -19,12 +19,6 @@ type QuotedString struct {
 	Z int32
 }
 
-func (bbp QuotedString) MarshalBebop() []byte {
-	buf := make([]byte, bbp.Size())
-	bbp.MarshalBebopTo(buf)
-	return buf
-}
-
 func (bbp QuotedString) MarshalBebopTo(buf []byte) int {
 	at := 0
 	iohelp.WriteInt32Bytes(buf[at:], bbp.X)
@@ -39,17 +33,17 @@ func (bbp QuotedString) MarshalBebopTo(buf []byte) int {
 func (bbp *QuotedString) UnmarshalBebop(buf []byte) (err error) {
 	at := 0
 	if len(buf[at:]) < 4 {
-		 return iohelp.ErrTooShort
+		 return io.ErrUnexpectedEOF
 	}
 	bbp.X = iohelp.ReadInt32Bytes(buf[at:])
 	at += 4
 	if len(buf[at:]) < 4 {
-		 return iohelp.ErrTooShort
+		 return io.ErrUnexpectedEOF
 	}
 	bbp.Y = iohelp.ReadInt32Bytes(buf[at:])
 	at += 4
 	if len(buf[at:]) < 4 {
-		 return iohelp.ErrTooShort
+		 return io.ErrUnexpectedEOF
 	}
 	bbp.Z = iohelp.ReadInt32Bytes(buf[at:])
 	at += 4
@@ -90,19 +84,25 @@ func (bbp QuotedString) Size() int {
 	return bodyLen
 }
 
-func makeQuotedString(r iohelp.ErrorReader) (QuotedString, error) {
+func (bbp QuotedString) MarshalBebop() []byte {
+	buf := make([]byte, bbp.Size())
+	bbp.MarshalBebopTo(buf)
+	return buf
+}
+
+func MakeQuotedString(r iohelp.ErrorReader) (QuotedString, error) {
 	v := QuotedString{}
 	err := v.DecodeBebop(r)
 	return v, err
 }
 
-func makeQuotedStringFromBytes(buf []byte) (QuotedString, error) {
+func MakeQuotedStringFromBytes(buf []byte) (QuotedString, error) {
 	v := QuotedString{}
 	err := v.UnmarshalBebop(buf)
 	return v, err
 }
 
-func mustMakeQuotedStringFromBytes(buf []byte) QuotedString {
+func MustMakeQuotedStringFromBytes(buf []byte) QuotedString {
 	v := QuotedString{}
 	v.MustUnmarshalBebop(buf)
 	return v

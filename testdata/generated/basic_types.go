@@ -27,12 +27,6 @@ type BasicTypes struct {
 	A_date time.Time
 }
 
-func (bbp BasicTypes) MarshalBebop() []byte {
-	buf := make([]byte, bbp.Size())
-	bbp.MarshalBebopTo(buf)
-	return buf
-}
-
 func (bbp BasicTypes) MarshalBebopTo(buf []byte) int {
 	at := 0
 	iohelp.WriteBoolBytes(buf[at:], bbp.A_bool)
@@ -56,9 +50,8 @@ func (bbp BasicTypes) MarshalBebopTo(buf []byte) int {
 	iohelp.WriteFloat64Bytes(buf[at:], bbp.A_float64)
 	at += 8
 	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.A_string)))
-	at += 4
-	copy(buf[at:at+len(bbp.A_string)], []byte(bbp.A_string))
-	at += len(bbp.A_string)
+	copy(buf[at+4:at+4+len(bbp.A_string)], []byte(bbp.A_string))
+	at += 4 + len(bbp.A_string)
 	iohelp.WriteGUIDBytes(buf[at:], bbp.A_guid)
 	at += 16
 	if bbp.A_date != (time.Time{}) {
@@ -73,67 +66,67 @@ func (bbp BasicTypes) MarshalBebopTo(buf []byte) int {
 func (bbp *BasicTypes) UnmarshalBebop(buf []byte) (err error) {
 	at := 0
 	if len(buf[at:]) < 1 {
-		 return iohelp.ErrTooShort
+		 return io.ErrUnexpectedEOF
 	}
 	bbp.A_bool = iohelp.ReadBoolBytes(buf[at:])
 	at += 1
 	if len(buf[at:]) < 1 {
-		 return iohelp.ErrTooShort
+		 return io.ErrUnexpectedEOF
 	}
 	bbp.A_byte = iohelp.ReadByteBytes(buf[at:])
 	at += 1
 	if len(buf[at:]) < 2 {
-		 return iohelp.ErrTooShort
+		 return io.ErrUnexpectedEOF
 	}
 	bbp.A_int16 = iohelp.ReadInt16Bytes(buf[at:])
 	at += 2
 	if len(buf[at:]) < 2 {
-		 return iohelp.ErrTooShort
+		 return io.ErrUnexpectedEOF
 	}
 	bbp.A_uint16 = iohelp.ReadUint16Bytes(buf[at:])
 	at += 2
 	if len(buf[at:]) < 4 {
-		 return iohelp.ErrTooShort
+		 return io.ErrUnexpectedEOF
 	}
 	bbp.A_int32 = iohelp.ReadInt32Bytes(buf[at:])
 	at += 4
 	if len(buf[at:]) < 4 {
-		 return iohelp.ErrTooShort
+		 return io.ErrUnexpectedEOF
 	}
 	bbp.A_uint32 = iohelp.ReadUint32Bytes(buf[at:])
 	at += 4
 	if len(buf[at:]) < 8 {
-		 return iohelp.ErrTooShort
+		 return io.ErrUnexpectedEOF
 	}
 	bbp.A_int64 = iohelp.ReadInt64Bytes(buf[at:])
 	at += 8
 	if len(buf[at:]) < 8 {
-		 return iohelp.ErrTooShort
+		 return io.ErrUnexpectedEOF
 	}
 	bbp.A_uint64 = iohelp.ReadUint64Bytes(buf[at:])
 	at += 8
 	if len(buf[at:]) < 4 {
-		 return iohelp.ErrTooShort
+		 return io.ErrUnexpectedEOF
 	}
 	bbp.A_float32 = iohelp.ReadFloat32Bytes(buf[at:])
 	at += 4
 	if len(buf[at:]) < 8 {
-		 return iohelp.ErrTooShort
+		 return io.ErrUnexpectedEOF
 	}
 	bbp.A_float64 = iohelp.ReadFloat64Bytes(buf[at:])
 	at += 8
 	bbp.A_string, err = iohelp.ReadStringBytes(buf[at:])
-	if err != nil {
-		 return err
+	if err != nil{
+		return err
 	}
 	at += 4 + len(bbp.A_string)
 	if len(buf[at:]) < 16 {
-		 return iohelp.ErrTooShort
+		 return io.ErrUnexpectedEOF
 	}
 	bbp.A_guid = iohelp.ReadGUIDBytes(buf[at:])
 	at += 16
 	if len(buf[at:]) < 8 {
-		 return iohelp.ErrTooShort
+		 return io.ErrUnexpectedEOF
 	}
 	bbp.A_date = iohelp.ReadDateBytes(buf[at:])
 	at += 8
@@ -162,8 +155,8 @@ func (bbp *BasicTypes) MustUnmarshalBebop(buf []byte) {
 	at += 4
 	bbp.A_float64 = iohelp.ReadFloat64Bytes(buf[at:])
 	at += 8
-	bbp.A_string =  iohelp.MustReadStringBytes(buf[at:])
-	at += 4+len(bbp.A_string)
+	bbp.A_string = iohelp.MustReadStringBytes(buf[at:])
+	at += 4 + len(bbp.A_string)
 	bbp.A_guid = iohelp.ReadGUIDBytes(buf[at:])
 	at += 16
 	bbp.A_date = iohelp.ReadDateBytes(buf[at:])
@@ -223,26 +216,31 @@ func (bbp BasicTypes) Size() int {
 	bodyLen += 8
 	bodyLen += 4
 	bodyLen += 8
-	bodyLen += 4
-	bodyLen += len(bbp.A_string)
+	bodyLen += 4 + len(bbp.A_string)
 	bodyLen += 16
 	bodyLen += 8
 	return bodyLen
 }
 
-func makeBasicTypes(r iohelp.ErrorReader) (BasicTypes, error) {
+func (bbp BasicTypes) MarshalBebop() []byte {
+	buf := make([]byte, bbp.Size())
+	bbp.MarshalBebopTo(buf)
+	return buf
+}
+
+func MakeBasicTypes(r iohelp.ErrorReader) (BasicTypes, error) {
 	v := BasicTypes{}
 	err := v.DecodeBebop(r)
 	return v, err
 }
 
-func makeBasicTypesFromBytes(buf []byte) (BasicTypes, error) {
+func MakeBasicTypesFromBytes(buf []byte) (BasicTypes, error) {
 	v := BasicTypes{}
 	err := v.UnmarshalBebop(buf)
 	return v, err
 }
 
-func mustMakeBasicTypesFromBytes(buf []byte) BasicTypes {
+func MustMakeBasicTypesFromBytes(buf []byte) BasicTypes {
 	v := BasicTypes{}
 	v.MustUnmarshalBebop(buf)
 	return v

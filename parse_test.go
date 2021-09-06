@@ -34,6 +34,48 @@ func TestReadFile(t *testing.T) {
 	}
 	tcs := []testCase{
 		{
+			file: "import",
+			expected: File{
+				Structs: []Struct{
+					{
+						Name: "Hello",
+						Fields: []Field{
+							{
+								Name: "Yes",
+								FieldType: FieldType{
+									Simple: typeInt32,
+								},
+							},
+							{
+								Name: "No",
+								FieldType: FieldType{
+									Simple: typeString,
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			file: "import_b",
+			expected: File{
+				Structs: []Struct{
+					{
+						Name: "Test22",
+						Fields: []Field{
+							{
+								Name: "noisemaker",
+								FieldType: FieldType{
+									Simple: "Instrument",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
 			file: "enum_hex_int",
 			expected: File{
 				Enums: []Enum{
@@ -59,7 +101,7 @@ func TestReadFile(t *testing.T) {
 							{
 								Name: "strings",
 								FieldType: FieldType{
-									Array: &FieldType{Simple: "string"},
+									Array: &FieldType{Simple: typeString},
 								},
 							},
 						},
@@ -72,82 +114,82 @@ func TestReadFile(t *testing.T) {
 			expected: File{
 				Consts: []Const{
 					{
-						SimpleType: "uint8",
+						SimpleType: typeUint8,
 						Name:       "uint8const",
 						UIntValue:  uint64pointer(1),
 					},
 					{
-						SimpleType: "uint16",
+						SimpleType: typeUint16,
 						Name:       "uint16const",
 						UIntValue:  uint64pointer(1),
 					},
 					{
-						SimpleType: "uint32",
+						SimpleType: typeUint32,
 						Name:       "uint32const",
 						UIntValue:  uint64pointer(1),
 					},
 					{
-						SimpleType: "uint64",
+						SimpleType: typeUint64,
 						Name:       "uint64const",
 						UIntValue:  uint64pointer(1),
 					},
 					{
-						SimpleType: "byte",
+						SimpleType: typeByte,
 						Name:       "int8const",
 						UIntValue:  uint64pointer(1),
 					},
 					{
-						SimpleType: "int16",
+						SimpleType: typeInt16,
 						Name:       "int16const",
 						IntValue:   int64pointer(1),
 					},
 					{
-						SimpleType: "int32",
+						SimpleType: typeInt32,
 						Name:       "int32const",
 						IntValue:   int64pointer(1),
 					},
 					{
-						SimpleType: "int64",
+						SimpleType: typeInt64,
 						Name:       "int64const",
 						IntValue:   int64pointer(1),
 					},
 					{
-						SimpleType: "float32",
+						SimpleType: typeFloat32,
 						Name:       "float32const",
 						FloatValue: floatPointer(1),
 					},
 					{
-						SimpleType: "float64",
+						SimpleType: typeFloat64,
 						Name:       "float64const",
 						FloatValue: floatPointer(1.5),
 					},
 					{
-						SimpleType: "float64",
+						SimpleType: typeFloat64,
 						Name:       "float64infconst",
 						FloatValue: floatPointer(math.Inf(1)),
 					},
 					{
-						SimpleType: "float64",
+						SimpleType: typeFloat64,
 						Name:       "float64ninfconst",
 						FloatValue: floatPointer(math.Inf(-1)),
 					},
 					{
-						SimpleType: "float64",
+						SimpleType: typeFloat64,
 						Name:       "float64nanconst",
 						FloatValue: floatPointer(math.NaN()),
 					},
 					{
-						SimpleType: "bool",
+						SimpleType: typeBool,
 						Name:       "boolconst",
 						BoolValue:  boolPointer(true),
 					},
 					{
-						SimpleType:  "string",
+						SimpleType:  typeString,
 						Name:        "stringconst",
 						StringValue: stringPointer("1"),
 					},
 					{
-						SimpleType:  "guid",
+						SimpleType:  typeGUID,
 						Name:        "guidconst",
 						StringValue: stringPointer("e2722bf7-022a-496a-9f01-7029d7d5563d"),
 					},
@@ -162,40 +204,40 @@ func TestReadFile(t *testing.T) {
 						Name: "BasicArrays",
 						Fields: []Field{
 							{
-								FieldType: FieldType{Array: &FieldType{Simple: "bool"}},
+								FieldType: FieldType{Array: &FieldType{Simple: typeBool}},
 								Name:      "a_bool",
 							}, {
-								FieldType: FieldType{Array: &FieldType{Simple: "byte"}},
+								FieldType: FieldType{Array: &FieldType{Simple: typeByte}},
 								Name:      "a_byte",
 							}, {
-								FieldType: FieldType{Array: &FieldType{Simple: "int16"}},
+								FieldType: FieldType{Array: &FieldType{Simple: typeInt16}},
 								Name:      "a_int16",
 							}, {
-								FieldType: FieldType{Array: &FieldType{Simple: "uint16"}},
+								FieldType: FieldType{Array: &FieldType{Simple: typeUint16}},
 								Name:      "a_uint16",
 							}, {
-								FieldType: FieldType{Array: &FieldType{Simple: "int32"}},
+								FieldType: FieldType{Array: &FieldType{Simple: typeInt32}},
 								Name:      "a_int32",
 							}, {
-								FieldType: FieldType{Array: &FieldType{Simple: "uint32"}},
+								FieldType: FieldType{Array: &FieldType{Simple: typeUint32}},
 								Name:      "a_uint32",
 							}, {
-								FieldType: FieldType{Array: &FieldType{Simple: "int64"}},
+								FieldType: FieldType{Array: &FieldType{Simple: typeInt64}},
 								Name:      "a_int64",
 							}, {
-								FieldType: FieldType{Array: &FieldType{Simple: "uint64"}},
+								FieldType: FieldType{Array: &FieldType{Simple: typeUint64}},
 								Name:      "a_uint64",
 							}, {
-								FieldType: FieldType{Array: &FieldType{Simple: "float32"}},
+								FieldType: FieldType{Array: &FieldType{Simple: typeFloat32}},
 								Name:      "a_float32",
 							}, {
-								FieldType: FieldType{Array: &FieldType{Simple: "float64"}},
+								FieldType: FieldType{Array: &FieldType{Simple: typeFloat64}},
 								Name:      "a_float64",
 							}, {
-								FieldType: FieldType{Array: &FieldType{Simple: "string"}},
+								FieldType: FieldType{Array: &FieldType{Simple: typeString}},
 								Name:      "a_string",
 							}, {
-								FieldType: FieldType{Array: &FieldType{Simple: "guid"}},
+								FieldType: FieldType{Array: &FieldType{Simple: typeGUID}},
 								Name:      "a_guid",
 							},
 						},
@@ -203,7 +245,7 @@ func TestReadFile(t *testing.T) {
 						Name: "TestInt32Array",
 						Fields: []Field{
 							{
-								FieldType: FieldType{Array: &FieldType{Simple: "int32"}},
+								FieldType: FieldType{Array: &FieldType{Simple: typeInt32}},
 								Name:      "a",
 							},
 						},
@@ -219,43 +261,43 @@ func TestReadFile(t *testing.T) {
 						Name: "BasicTypes",
 						Fields: []Field{
 							{
-								FieldType: FieldType{Simple: "bool"},
+								FieldType: FieldType{Simple: typeBool},
 								Name:      "a_bool",
 							}, {
-								FieldType: FieldType{Simple: "byte"},
+								FieldType: FieldType{Simple: typeByte},
 								Name:      "a_byte",
 							}, {
-								FieldType: FieldType{Simple: "int16"},
+								FieldType: FieldType{Simple: typeInt16},
 								Name:      "a_int16",
 							}, {
-								FieldType: FieldType{Simple: "uint16"},
+								FieldType: FieldType{Simple: typeUint16},
 								Name:      "a_uint16",
 							}, {
-								FieldType: FieldType{Simple: "int32"},
+								FieldType: FieldType{Simple: typeInt32},
 								Name:      "a_int32",
 							}, {
-								FieldType: FieldType{Simple: "uint32"},
+								FieldType: FieldType{Simple: typeUint32},
 								Name:      "a_uint32",
 							}, {
-								FieldType: FieldType{Simple: "int64"},
+								FieldType: FieldType{Simple: typeInt64},
 								Name:      "a_int64",
 							}, {
-								FieldType: FieldType{Simple: "uint64"},
+								FieldType: FieldType{Simple: typeUint64},
 								Name:      "a_uint64",
 							}, {
-								FieldType: FieldType{Simple: "float32"},
+								FieldType: FieldType{Simple: typeFloat32},
 								Name:      "a_float32",
 							}, {
-								FieldType: FieldType{Simple: "float64"},
+								FieldType: FieldType{Simple: typeFloat64},
 								Name:      "a_float64",
 							}, {
-								FieldType: FieldType{Simple: "string"},
+								FieldType: FieldType{Simple: typeString},
 								Name:      "a_string",
 							}, {
-								FieldType: FieldType{Simple: "guid"},
+								FieldType: FieldType{Simple: typeGUID},
 								Name:      "a_guid",
 							}, {
-								FieldType: FieldType{Simple: "date"},
+								FieldType: FieldType{Simple: typeDate},
 								Name:      "a_date",
 							},
 						},
@@ -285,7 +327,7 @@ func TestReadFile(t *testing.T) {
 						Fields: []Field{
 							{
 								FieldType: FieldType{
-									Simple: "int16",
+									Simple: typeInt16,
 								},
 								Comment: " block \n line",
 								Name:    "f",
@@ -313,7 +355,7 @@ func TestReadFile(t *testing.T) {
 								Deprecated:        true,
 								DeprecatedMessage: "x in DepM",
 								FieldType: FieldType{
-									Simple: "int32",
+									Simple: typeInt32,
 								},
 							},
 						},
@@ -325,7 +367,7 @@ func TestReadFile(t *testing.T) {
 								Name:    "x",
 								Comment: " Documented field ",
 								FieldType: FieldType{
-									Simple: "int32",
+									Simple: typeInt32,
 								},
 							},
 							2: {
@@ -333,7 +375,7 @@ func TestReadFile(t *testing.T) {
 								Deprecated:        true,
 								DeprecatedMessage: "y in DocM",
 								FieldType: FieldType{
-									Simple: "int32",
+									Simple: typeInt32,
 								},
 							},
 							3: {
@@ -342,7 +384,7 @@ func TestReadFile(t *testing.T) {
 								Deprecated:        true,
 								DeprecatedMessage: "z in DocM",
 								FieldType: FieldType{
-									Simple: "int32",
+									Simple: typeInt32,
 								},
 							},
 						},
@@ -357,7 +399,7 @@ func TestReadFile(t *testing.T) {
 								Comment: " Documented field ",
 								Name:    "x",
 								FieldType: FieldType{
-									Simple: "int32",
+									Simple: typeInt32,
 								},
 							},
 						},
@@ -478,19 +520,19 @@ func TestReadFile(t *testing.T) {
 							1: {
 								Name: "x",
 								FieldType: FieldType{
-									Simple: "float64",
+									Simple: typeFloat64,
 								},
 							},
 							2: {
 								Name: "y",
 								FieldType: FieldType{
-									Simple: "float64",
+									Simple: typeFloat64,
 								},
 							},
 							3: {
 								Name: "z",
 								FieldType: FieldType{
-									Simple: "float64",
+									Simple: typeFloat64,
 								},
 							},
 						},
@@ -528,7 +570,7 @@ func TestReadFile(t *testing.T) {
 							{
 								Name: "name",
 								FieldType: FieldType{
-									Simple: "string",
+									Simple: typeString,
 								},
 							},
 							{
@@ -546,7 +588,7 @@ func TestReadFile(t *testing.T) {
 								Name: "songs",
 								FieldType: FieldType{
 									Map: &MapType{
-										Key: "guid",
+										Key: typeGUID,
 										Value: FieldType{
 											Simple: "Song",
 										},
@@ -563,13 +605,13 @@ func TestReadFile(t *testing.T) {
 							1: {
 								Name: "title",
 								FieldType: FieldType{
-									Simple: "string",
+									Simple: typeString,
 								},
 							},
 							2: {
 								Name: "year",
 								FieldType: FieldType{
-									Simple: "uint16",
+									Simple: typeUint16,
 								},
 							},
 							3: {
@@ -611,7 +653,7 @@ func TestReadFile(t *testing.T) {
 								Name: "a",
 								FieldType: FieldType{
 									Array: &FieldType{
-										Simple: "int32",
+										Simple: typeInt32,
 									},
 								},
 							},
@@ -624,7 +666,7 @@ func TestReadFile(t *testing.T) {
 								Name: "a",
 								FieldType: FieldType{
 									Array: &FieldType{
-										Simple: "uint32",
+										Simple: typeUint32,
 									},
 								},
 							},
@@ -637,7 +679,7 @@ func TestReadFile(t *testing.T) {
 								Name: "a",
 								FieldType: FieldType{
 									Array: &FieldType{
-										Simple: "float32",
+										Simple: typeFloat32,
 									},
 								},
 							},
@@ -650,7 +692,7 @@ func TestReadFile(t *testing.T) {
 								Name: "a",
 								FieldType: FieldType{
 									Array: &FieldType{
-										Simple: "int64",
+										Simple: typeInt64,
 									},
 								},
 							},
@@ -663,7 +705,7 @@ func TestReadFile(t *testing.T) {
 								Name: "a",
 								FieldType: FieldType{
 									Array: &FieldType{
-										Simple: "uint64",
+										Simple: typeUint64,
 									},
 								},
 							},
@@ -676,7 +718,7 @@ func TestReadFile(t *testing.T) {
 								Name: "a",
 								FieldType: FieldType{
 									Array: &FieldType{
-										Simple: "float64",
+										Simple: typeFloat64,
 									},
 								},
 							},
@@ -688,26 +730,26 @@ func TestReadFile(t *testing.T) {
 							{
 								Name: "time",
 								FieldType: FieldType{
-									Simple: "float64",
+									Simple: typeFloat64,
 								},
 							},
 							{
 								Name: "width",
 								FieldType: FieldType{
-									Simple: "uint32",
+									Simple: typeUint32,
 								},
 							},
 							{
 								Name: "height",
 								FieldType: FieldType{
-									Simple: "uint32",
+									Simple: typeUint32,
 								},
 							},
 							{
 								Name: "fragment",
 								FieldType: FieldType{
 									Array: &FieldType{
-										Simple: "byte",
+										Simple: typeByte,
 									},
 								},
 							},
@@ -739,13 +781,13 @@ func TestReadFile(t *testing.T) {
 							1: {
 								Name: "x",
 								FieldType: FieldType{
-									Simple: "int32",
+									Simple: typeInt32,
 								},
 							},
 							2: {
 								Name: "y",
 								FieldType: FieldType{
-									Simple: "int32",
+									Simple: typeInt32,
 								},
 							},
 						},
@@ -756,19 +798,19 @@ func TestReadFile(t *testing.T) {
 							1: {
 								Name: "x",
 								FieldType: FieldType{
-									Simple: "int32",
+									Simple: typeInt32,
 								},
 							},
 							2: {
 								Name: "y",
 								FieldType: FieldType{
-									Simple: "int32",
+									Simple: typeInt32,
 								},
 							},
 							3: {
 								Name: "z",
 								FieldType: FieldType{
-									Simple: "int32",
+									Simple: typeInt32,
 								},
 							},
 						},
@@ -785,7 +827,7 @@ func TestReadFile(t *testing.T) {
 							2: {
 								Name: "after",
 								FieldType: FieldType{
-									Simple: "int32",
+									Simple: typeInt32,
 								},
 							},
 						},
@@ -802,7 +844,7 @@ func TestReadFile(t *testing.T) {
 							2: {
 								Name: "after",
 								FieldType: FieldType{
-									Simple: "int32",
+									Simple: typeInt32,
 								},
 							},
 						},
@@ -821,13 +863,13 @@ func TestReadFile(t *testing.T) {
 							{
 								Name: "x",
 								FieldType: FieldType{
-									Simple: "int32",
+									Simple: typeInt32,
 								},
 							},
 							{
 								Name: "y",
 								FieldType: FieldType{
-									Simple: "int32",
+									Simple: typeInt32,
 								},
 							},
 						},
@@ -839,9 +881,9 @@ func TestReadFile(t *testing.T) {
 								Name: "m1",
 								FieldType: FieldType{
 									Map: &MapType{
-										Key: "bool",
+										Key: typeBool,
 										Value: FieldType{
-											Simple: "bool",
+											Simple: typeBool,
 										},
 									},
 								},
@@ -850,12 +892,12 @@ func TestReadFile(t *testing.T) {
 								Name: "m2",
 								FieldType: FieldType{
 									Map: &MapType{
-										Key: "string",
+										Key: typeString,
 										Value: FieldType{
 											Map: &MapType{
-												Key: "string",
+												Key: typeString,
 												Value: FieldType{
-													Simple: "string",
+													Simple: typeString,
 												},
 											},
 										},
@@ -867,11 +909,11 @@ func TestReadFile(t *testing.T) {
 								FieldType: FieldType{
 									Array: &FieldType{
 										Map: &MapType{
-											Key: "int32",
+											Key: typeInt32,
 											Value: FieldType{
 												Array: &FieldType{
 													Map: &MapType{
-														Key: "bool",
+														Key: typeBool,
 														Value: FieldType{
 															Simple: "S",
 														},
@@ -887,10 +929,10 @@ func TestReadFile(t *testing.T) {
 								FieldType: FieldType{
 									Array: &FieldType{
 										Map: &MapType{
-											Key: "string",
+											Key: typeString,
 											Value: FieldType{
 												Array: &FieldType{
-													Simple: "float32",
+													Simple: typeFloat32,
 												},
 											},
 										},
@@ -901,7 +943,7 @@ func TestReadFile(t *testing.T) {
 								Name: "m5",
 								FieldType: FieldType{
 									Map: &MapType{
-										Key: "guid",
+										Key: typeGUID,
 										Value: FieldType{
 											Simple: "M",
 										},
@@ -918,13 +960,13 @@ func TestReadFile(t *testing.T) {
 							1: {
 								Name: "a",
 								FieldType: FieldType{
-									Simple: "float32",
+									Simple: typeFloat32,
 								},
 							},
 							2: {
 								Name: "b",
 								FieldType: FieldType{
-									Simple: "float64",
+									Simple: typeFloat64,
 								},
 							},
 						},
@@ -944,117 +986,117 @@ func TestReadFile(t *testing.T) {
 							{
 								Name: "iNT0",
 								FieldType: FieldType{
-									Simple: "uint8",
+									Simple: typeUint8,
 								},
 							},
 							{
 								Name: "iNT1",
 								FieldType: FieldType{
-									Simple: "uint8",
+									Simple: typeUint8,
 								},
 							},
 							{
 								Name: "iNT1_",
 								FieldType: FieldType{
-									Simple: "int16",
+									Simple: typeInt16,
 								},
 							},
 							{
 								Name: "iNT8",
 								FieldType: FieldType{
-									Simple: "uint8",
+									Simple: typeUint8,
 								},
 							},
 							{
 								Name: "iNT8_",
 								FieldType: FieldType{
-									Simple: "int16",
+									Simple: typeInt16,
 								},
 							},
 							{
 								Name: "iNT16",
 								FieldType: FieldType{
-									Simple: "int16",
+									Simple: typeInt16,
 								},
 							},
 							{
 								Name: "iNT16_",
 								FieldType: FieldType{
-									Simple: "int16",
+									Simple: typeInt16,
 								},
 							},
 							{
 								Name: "iNT32",
 								FieldType: FieldType{
-									Simple: "int32",
+									Simple: typeInt32,
 								},
 							},
 							{
 								Name: "iNT32_",
 								FieldType: FieldType{
-									Simple: "int32",
+									Simple: typeInt32,
 								},
 							},
 							{
 								Name:    "tRUE",
 								Comment: " int8 nIL; // \"nil\": null,",
 								FieldType: FieldType{
-									Simple: "bool",
+									Simple: typeBool,
 								},
 							},
 							{
 								Name: "fALSE",
 								FieldType: FieldType{
-									Simple: "bool",
+									Simple: typeBool,
 								},
 							},
 							{
 								Name: "fLOAT",
 								FieldType: FieldType{
-									Simple: "float64",
+									Simple: typeFloat64,
 								},
 							},
 							{
 								Name: "fLOAT_",
 								FieldType: FieldType{
-									Simple: "float64",
+									Simple: typeFloat64,
 								},
 							},
 							{
 								Name: "sTRING0",
 								FieldType: FieldType{
-									Simple: "string",
+									Simple: typeString,
 								},
 							},
 							{
 								Name: "sTRING1",
 								FieldType: FieldType{
-									Simple: "string",
+									Simple: typeString,
 								},
 							},
 							{
 								Name: "sTRING4",
 								FieldType: FieldType{
-									Simple: "string",
+									Simple: typeString,
 								},
 							},
 							{
 								Name: "sTRING8",
 								FieldType: FieldType{
-									Simple: "string",
+									Simple: typeString,
 								},
 							},
 							{
 								Name: "sTRING16",
 								FieldType: FieldType{
-									Simple: "string",
+									Simple: typeString,
 								},
 							},
 							{
 								Name: "aRRAY0",
 								FieldType: FieldType{
 									Array: &FieldType{
-										Simple: "int32",
+										Simple: typeInt32,
 									},
 								},
 							},
@@ -1062,7 +1104,7 @@ func TestReadFile(t *testing.T) {
 								Name: "aRRAY1",
 								FieldType: FieldType{
 									Array: &FieldType{
-										Simple: "string",
+										Simple: typeString,
 									},
 								},
 							},
@@ -1070,7 +1112,7 @@ func TestReadFile(t *testing.T) {
 								Name: "aRRAY8",
 								FieldType: FieldType{
 									Array: &FieldType{
-										Simple: "int32",
+										Simple: typeInt32,
 									},
 								},
 							},
@@ -1109,13 +1151,13 @@ func TestReadFile(t *testing.T) {
 							{
 								Name: "name",
 								FieldType: FieldType{
-									Simple: "string",
+									Simple: typeString,
 								},
 							},
 							{
 								Name: "price",
 								FieldType: FieldType{
-									Simple: "uint32",
+									Simple: typeUint32,
 								},
 							},
 							{
@@ -1158,7 +1200,7 @@ func TestReadFile(t *testing.T) {
 								Deprecated:        true,
 								DeprecatedMessage: "Nobody react to what I'm about to say...",
 								FieldType: FieldType{
-									Simple: "string",
+									Simple: typeString,
 								},
 							},
 						},
@@ -1181,7 +1223,7 @@ func TestReadFile(t *testing.T) {
 										1: {
 											Name: "b",
 											FieldType: FieldType{
-												Simple: "uint32",
+												Simple: typeUint32,
 											},
 										},
 									},
@@ -1195,7 +1237,7 @@ func TestReadFile(t *testing.T) {
 										{
 											Name: "c",
 											FieldType: FieldType{
-												Simple: "bool",
+												Simple: typeBool,
 											},
 										},
 									},
@@ -1218,7 +1260,7 @@ func TestReadFile(t *testing.T) {
 										{
 											Name: "head",
 											FieldType: FieldType{
-												Simple: "uint32",
+												Simple: typeUint32,
 											},
 										}, {
 											Name: "tail",
@@ -1296,6 +1338,7 @@ func TestReadFileError(t *testing.T) {
 		errMessage string
 	}
 	tcs := []testCase{
+		{file: "invalid_import_no_file", errMessage: "[0:6] expected (String Literal), got no token"},
 		{file: "invalid_const_no_semi", errMessage: "[0:34] expected (Semicolon), got no token"},
 		{file: "invalid_const_float_no_semi", errMessage: "[0:37] expected (Semicolon), got no token"},
 		{file: "invalid_enum_with_op_code", errMessage: "[1:4] enums may not have attached op codes"},
@@ -1360,7 +1403,7 @@ func TestReadFileError(t *testing.T) {
 		{file: "invalid_const_invalid_guid", errMessage: "[0:31] \"guid-guid-guid\" has wrong length for guid"},
 		{file: "invalid_const_unassignable_string", errMessage: "[0:19] Integer Literal unassignable to string"},
 		{file: "invalid_const_unassignable_bool", errMessage: "[0:21] String Literal unassignable to bool"},
-		{file: "invalid_const_invalid_const_type", errMessage: "[0:24] invalid type for const date"},
+		{file: "invalid_const_invalid_const_type", errMessage: "[0:24] invalid type \"date\" for const"},
 		{file: "invalid_const_opcode", errMessage: "[1:5] consts may not have attached op codes"},
 		{file: "invalid_map_no_square", errMessage: "[1:8] expected (Open Square) got Semicolon"},
 		{file: "invalid_map_keys", errMessage: "[1:7] map must begin with simple type"},

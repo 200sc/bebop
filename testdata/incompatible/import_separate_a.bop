@@ -1,0 +1,21 @@
+const string go_package = "github.com/200sc/bebop/testdata/incompatible/generated";
+
+import "./import_separate_b.bop"
+import "./import_separate_c.bop"
+
+struct UsesImport {
+    ImportedType imported; 
+}
+
+message UsesImportMsg {
+    1 -> ImportedType imported;
+}
+
+union UsesImportUnion {
+    1 -> struct UnionStruct{
+        ImportedEnum hello;
+    }
+    2 -> message UnionMessage{
+        ImportedEnum goodbye;
+    }
+}

@@ -9,9 +9,17 @@ import (
 	"strings"
 )
 
-// ReadFile reads out a bebop file.
+type FileNamer interface {
+	Name() string
+}
+
+// ReadFile reads out a bebop file. If r is a FileNamer, like an *os.File,
+// the output's FileName will be populated.
 func ReadFile(r io.Reader) (File, error) {
 	f := File{}
+	if fnamer, ok := r.(FileNamer); ok {
+		f.FileName = fnamer.Name()
+	}
 	tr := newTokenReader(r)
 	nextCommentLines := []string{}
 	nextRecordOpCode := int32(0)
@@ -19,6 +27,17 @@ func ReadFile(r io.Reader) (File, error) {
 	for tr.Next() {
 		tk := tr.Token()
 		switch tk.kind {
+		case tokenKindImport:
+			toks, err := expectNext(tr, tokenKindStringLiteral)
+			if err != nil {
+				return f, err
+			}
+			imported, err := strconv.Unquote(string(toks[0].concrete))
+			if err != nil {
+				return f, err
+			}
+			f.Imports = append(f.Imports, imported)
+			continue
 		case tokenKindNewline:
 			nextCommentLines = []string{}
 			continue
@@ -90,6 +109,9 @@ func ReadFile(r io.Reader) (File, error) {
 				return f, err
 			}
 			cons.Comment = strings.Join(nextCommentLines, "\n")
+			if cons.Name == goPackage && cons.StringValue != nil {
+				f.GoPackage = *cons.StringValue
+			}
 			f.Consts = append(f.Consts, cons)
 		}
 		nextCommentLines = []string{}
@@ -595,7 +617,7 @@ func readConst(tr *tokenReader) (Const, error) {
 		default:
 			return cons, readError(tk, "%v unassignable to %v", tk.kind, cons.SimpleType)
 		}
-	case cons.SimpleType == "guid":
+	case cons.SimpleType == typeGUID:
 		if tk.kind != tokenKindStringLiteral {
 			return cons, readError(tk, "%v unassignable to %v", tk.kind, cons.SimpleType)
 		}
@@ -606,14 +628,14 @@ func readConst(tr *tokenReader) (Const, error) {
 			return cons, readError(tk, "%q has wrong length for guid", s)
 		}
 		cons.StringValue = &s
-	case cons.SimpleType == "string":
+	case cons.SimpleType == typeString:
 		if tk.kind != tokenKindStringLiteral {
 			return cons, readError(tk, "%v unassignable to %v", tk.kind, cons.SimpleType)
 		}
 		tk.concrete = bytes.Trim(tk.concrete, "\"")
 		s := string(tk.concrete)
 		cons.StringValue = &s
-	case cons.SimpleType == "bool":
+	case cons.SimpleType == typeBool:
 		if tk.kind != tokenKindTrue && tk.kind != tokenKindFalse {
 			return cons, readError(tk, "%v unassignable to %v", tk.kind, cons.SimpleType)
 		}
@@ -623,7 +645,7 @@ func readConst(tr *tokenReader) (Const, error) {
 		}
 		cons.BoolValue = &b
 	default:
-		return cons, readError(tk, "invalid type for const %v", cons.SimpleType)
+		return cons, readError(tk, "invalid type %q for const", cons.SimpleType)
 	}
 	_, err = expectNext(tr, tokenKindSemicolon)
 	if err != nil {

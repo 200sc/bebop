@@ -3,7 +3,6 @@
 package generated
 
 import (
-	"bytes"
 	"io"
 	"time"
 	"github.com/200sc/bebop"
@@ -15,12 +14,6 @@ var _ bebop.Record = &MyObj{}
 type MyObj struct {
 	Start *time.Time
 	End *time.Time
-}
-
-func (bbp MyObj) MarshalBebop() []byte {
-	buf := make([]byte, bbp.Size())
-	bbp.MarshalBebopTo(buf)
-	return buf
 }
 
 func (bbp MyObj) MarshalBebopTo(buf []byte) int {
@@ -60,7 +53,7 @@ func (bbp *MyObj) UnmarshalBebop(buf []byte) (err error) {
 			at += 1
 			bbp.Start = new(time.Time)
 			if len(buf[at:]) < 8 {
-				 return iohelp.ErrTooShort
+				 return io.ErrUnexpectedEOF
 			}
 			(*bbp.Start) = iohelp.ReadDateBytes(buf[at:])
 			at += 8
@@ -68,7 +61,7 @@ func (bbp *MyObj) UnmarshalBebop(buf []byte) (err error) {
 			at += 1
 			bbp.End = new(time.Time)
 			if len(buf[at:]) < 8 {
-				 return iohelp.ErrTooShort
+				 return io.ErrUnexpectedEOF
 			}
 			(*bbp.End) = iohelp.ReadDateBytes(buf[at:])
 			at += 8
@@ -124,11 +117,9 @@ func (bbp MyObj) EncodeBebop(iow io.Writer) (err error) {
 }
 
 func (bbp *MyObj) DecodeBebop(ior io.Reader) (err error) {
-	er := iohelp.NewErrorReader(ior)
-	bodyLen := iohelp.ReadUint32(er)
-	body := make([]byte, bodyLen)
-	er.Read(body)
-	r := iohelp.NewErrorReader(bytes.NewReader(body))
+	r := iohelp.NewErrorReader(ior)
+	bodyLen := iohelp.ReadUint32(r)
+	r.Reader = &io.LimitedReader{R:r.Reader, N:int64(bodyLen)}
 	for {
 		switch iohelp.ReadByte(r) {
 		case 1:
@@ -138,7 +129,8 @@ func (bbp *MyObj) DecodeBebop(ior io.Reader) (err error) {
 			bbp.End = new(time.Time)
 			*bbp.End = iohelp.ReadDate(r)
 		default:
-			return er.Err
+			io.ReadAll(r)
+			return r.Err
 		}
 	}
 }
@@ -156,19 +148,25 @@ func (bbp MyObj) Size() int {
 	return bodyLen
 }
 
-func makeMyObj(r iohelp.ErrorReader) (MyObj, error) {
+func (bbp MyObj) MarshalBebop() []byte {
+	buf := make([]byte, bbp.Size())
+	bbp.MarshalBebopTo(buf)
+	return buf
+}
+
+func MakeMyObj(r iohelp.ErrorReader) (MyObj, error) {
 	v := MyObj{}
 	err := v.DecodeBebop(r)
 	return v, err
 }
 
-func makeMyObjFromBytes(buf []byte) (MyObj, error) {
+func MakeMyObjFromBytes(buf []byte) (MyObj, error) {
 	v := MyObj{}
 	err := v.UnmarshalBebop(buf)
 	return v, err
 }
 
-func mustMakeMyObjFromBytes(buf []byte) MyObj {
+func MustMakeMyObjFromBytes(buf []byte) MyObj {
 	v := MyObj{}
 	v.MustUnmarshalBebop(buf)
 	return v

@@ -9,9 +9,8 @@ type Record interface {
 	// MarshalBebop converts a bebop record to wire format. It is recommended over
 	// EncodeBebop for performance.
 	MarshalBebop() []byte
-	// MarshalBebopTo writes a bebop record to an existing byte slice. It is primarily
-	// used internally, and performs no checks to ensure the given byte slice is large
-	// enough to contain the record.
+	// MarshalBebopTo writes a bebop record to an existing byte slice. It performs no
+	// checks to ensure the given byte slice is large enough to contain the record.
 	MarshalBebopTo([]byte) (n int)
 	// UnmarshalBebop is parallel to Marshal as Decode is to Encode. It has similar
 	// performance improvements.

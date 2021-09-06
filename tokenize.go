@@ -288,6 +288,7 @@ var keywords = map[string]tokenKind{
 	"nan":        tokenKindNaN,
 	"true":       tokenKindTrue,
 	"false":      tokenKindFalse,
+	"import":     tokenKindImport,
 }
 
 func (tr *tokenReader) nextIdent(firstRune rune) bool {

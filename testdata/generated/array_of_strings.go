@@ -14,21 +14,14 @@ type ArrayOfStrings struct {
 	Strings []string
 }
 
-func (bbp ArrayOfStrings) MarshalBebop() []byte {
-	buf := make([]byte, bbp.Size())
-	bbp.MarshalBebopTo(buf)
-	return buf
-}
-
 func (bbp ArrayOfStrings) MarshalBebopTo(buf []byte) int {
 	at := 0
 	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.Strings)))
 	at += 4
 	for _, v1 := range bbp.Strings {
 		iohelp.WriteUint32Bytes(buf[at:], uint32(len(v1)))
-		at += 4
-		copy(buf[at:at+len(v1)], []byte(v1))
-		at += len(v1)
+		copy(buf[at+4:at+4+len(v1)], []byte(v1))
+		at += 4 + len(v1)
 	}
 	return at
 }
@@ -36,14 +29,14 @@ func (bbp ArrayOfStrings) MarshalBebopTo(buf []byte) int {
 func (bbp *ArrayOfStrings) UnmarshalBebop(buf []byte) (err error) {
 	at := 0
 	if len(buf[at:]) < 4 {
-		 return iohelp.ErrTooShort
+		 return io.ErrUnexpectedEOF
 	}
 	bbp.Strings = make([]string, iohelp.ReadUint32Bytes(buf[at:]))
 	at += 4
 	for i1 := range bbp.Strings {
 		(bbp.Strings)[i1], err = iohelp.ReadStringBytes(buf[at:])
-		if err != nil {
-			 return err
+		if err != nil{
+			return err
 		}
 		at += 4 + len((bbp.Strings)[i1])
 	}
@@ -55,8 +48,8 @@ func (bbp *ArrayOfStrings) MustUnmarshalBebop(buf []byte) {
 	bbp.Strings = make([]string, iohelp.ReadUint32Bytes(buf[at:]))
 	at += 4
 	for i1 := range bbp.Strings {
-		(bbp.Strings)[i1] =  iohelp.MustReadStringBytes(buf[at:])
-		at += 4+len((bbp.Strings)[i1])
+		(bbp.Strings)[i1] = iohelp.MustReadStringBytes(buf[at:])
+		at += 4 + len((bbp.Strings)[i1])
 	}
 }
 
@@ -83,25 +76,30 @@ func (bbp ArrayOfStrings) Size() int {
 	bodyLen := 0
 	bodyLen += 4
 	for _, elem := range bbp.Strings {
-		bodyLen += 4
-		bodyLen += len(elem)
+		bodyLen += 4 + len(elem)
 	}
 	return bodyLen
 }
 
-func makeArrayOfStrings(r iohelp.ErrorReader) (ArrayOfStrings, error) {
+func (bbp ArrayOfStrings) MarshalBebop() []byte {
+	buf := make([]byte, bbp.Size())
+	bbp.MarshalBebopTo(buf)
+	return buf
+}
+
+func MakeArrayOfStrings(r iohelp.ErrorReader) (ArrayOfStrings, error) {
 	v := ArrayOfStrings{}
 	err := v.DecodeBebop(r)
 	return v, err
 }
 
-func makeArrayOfStringsFromBytes(buf []byte) (ArrayOfStrings, error) {
+func MakeArrayOfStringsFromBytes(buf []byte) (ArrayOfStrings, error) {
 	v := ArrayOfStrings{}
 	err := v.UnmarshalBebop(buf)
 	return v, err
 }
 
-func mustMakeArrayOfStringsFromBytes(buf []byte) ArrayOfStrings {
+func MustMakeArrayOfStringsFromBytes(buf []byte) ArrayOfStrings {
 	v := ArrayOfStrings{}
 	v.MustUnmarshalBebop(buf)
 	return v

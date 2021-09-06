@@ -16,6 +16,7 @@ var printHelp = flag.Bool("help", false, "print usage text")
 var packageName = flag.String("package", "bebopgen", "specify the name of the package to generate")
 var generateUnsafeMethods = flag.Bool("generate-unsafe", false, "whether unchecked additional methods should be generated")
 var shareStringMemory = flag.Bool("share-string-memory", false, "whether strings read in unmarshalling should share memory with the original byte slice")
+var combinedImports = flag.Bool("combined-imports", false, "whether imported files should be combined and generated as one, or to separate files")
 
 const version = "bebopc-go " + bebop.Version
 
@@ -39,30 +40,38 @@ func run() error {
 		return nil
 	}
 	if *inputFile == "" {
+		flag.Usage()
 		return fmt.Errorf("please provide an input file (-i)")
 	}
 	if *outputFile == "" {
+		flag.Usage()
 		return fmt.Errorf("please provide an output file (-o)")
 	}
 	f, err := os.Open(*inputFile)
 	if err != nil {
+		flag.Usage()
 		return fmt.Errorf("failed to open input file: %w", err)
 	}
 	defer f.Close()
 	bopf, err := bebop.ReadFile(f)
 	if err != nil {
 		filename := filepath.Base(*inputFile)
-		return fmt.Errorf("parsing input failed: %s%w", filename, err)
+		return fmt.Errorf("parsing input %s failed: %w", filename, err)
 	}
 	out, err := os.Create(*outputFile)
 	if err != nil {
 		return fmt.Errorf("failed to open output file: %w", err)
 	}
 	defer out.Close()
+	importMode := bebop.ImportGenerationModeSeparate
+	if *combinedImports {
+		importMode = bebop.ImportGenerationModeCombined
+	}
 	settings := bebop.GenerateSettings{
 		PackageName:           *packageName,
 		GenerateUnsafeMethods: *generateUnsafeMethods,
 		SharedMemoryStrings:   *shareStringMemory,
+		ImportGenerationMode:  importMode,
 	}
 	if err := bopf.Generate(out, settings); err != nil {
 		return fmt.Errorf("failed to generate file: %w", err)

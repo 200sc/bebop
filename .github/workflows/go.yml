@@ -26,3 +26,6 @@ jobs:
         go test -v ./...
         go get github.com/google/go-cmp/cmp
         go test -v ./testdata/generated
+        go test -v ./internal/importgraph
+        echo "These packages have no tests-- this line confirms they compile"  
+        go test -v ./testdata/incompatible/...

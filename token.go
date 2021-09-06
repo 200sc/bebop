@@ -31,6 +31,7 @@ const (
 	tokenKindNaN
 	tokenKindTrue
 	tokenKindFalse
+	tokenKindImport
 
 	tokenKindOpenSquare
 	tokenKindCloseSquare
@@ -84,6 +85,7 @@ var tokenStrings = map[tokenKind]string{
 	tokenKindNaN:            "NaN",
 	tokenKindTrue:           "True",
 	tokenKindFalse:          "False",
+	tokenKindImport:         "Import",
 }
 
 func (tk tokenKind) String() string {

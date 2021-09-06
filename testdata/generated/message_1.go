@@ -3,7 +3,6 @@
 package generated
 
 import (
-	"bytes"
 	"io"
 	"github.com/200sc/bebop"
 	"github.com/200sc/bebop/iohelp"
@@ -15,12 +14,6 @@ type ExampleMessage struct {
 	X *byte
 	Y *int16
 	Z *int32
-}
-
-func (bbp ExampleMessage) MarshalBebop() []byte {
-	buf := make([]byte, bbp.Size())
-	bbp.MarshalBebopTo(buf)
-	return buf
 }
 
 func (bbp ExampleMessage) MarshalBebopTo(buf []byte) int {
@@ -58,7 +51,7 @@ func (bbp *ExampleMessage) UnmarshalBebop(buf []byte) (err error) {
 			at += 1
 			bbp.X = new(byte)
 			if len(buf[at:]) < 1 {
-				 return iohelp.ErrTooShort
+				 return io.ErrUnexpectedEOF
 			}
 			(*bbp.X) = iohelp.ReadByteBytes(buf[at:])
 			at += 1
@@ -66,7 +59,7 @@ func (bbp *ExampleMessage) UnmarshalBebop(buf []byte) (err error) {
 			at += 1
 			bbp.Y = new(int16)
 			if len(buf[at:]) < 2 {
-				 return iohelp.ErrTooShort
+				 return io.ErrUnexpectedEOF
 			}
 			(*bbp.Y) = iohelp.ReadInt16Bytes(buf[at:])
 			at += 2
@@ -74,7 +67,7 @@ func (bbp *ExampleMessage) UnmarshalBebop(buf []byte) (err error) {
 			at += 1
 			bbp.Z = new(int32)
 			if len(buf[at:]) < 4 {
-				 return iohelp.ErrTooShort
+				 return io.ErrUnexpectedEOF
 			}
 			(*bbp.Z) = iohelp.ReadInt32Bytes(buf[at:])
 			at += 4
@@ -131,11 +124,9 @@ func (bbp ExampleMessage) EncodeBebop(iow io.Writer) (err error) {
 }
 
 func (bbp *ExampleMessage) DecodeBebop(ior io.Reader) (err error) {
-	er := iohelp.NewErrorReader(ior)
-	bodyLen := iohelp.ReadUint32(er)
-	body := make([]byte, bodyLen)
-	er.Read(body)
-	r := iohelp.NewErrorReader(bytes.NewReader(body))
+	r := iohelp.NewErrorReader(ior)
+	bodyLen := iohelp.ReadUint32(r)
+	r.Reader = &io.LimitedReader{R:r.Reader, N:int64(bodyLen)}
 	for {
 		switch iohelp.ReadByte(r) {
 		case 1:
@@ -148,7 +139,8 @@ func (bbp *ExampleMessage) DecodeBebop(ior io.Reader) (err error) {
 			bbp.Z = new(int32)
 			*bbp.Z = iohelp.ReadInt32(r)
 		default:
-			return er.Err
+			io.ReadAll(r)
+			return r.Err
 		}
 	}
 }
@@ -170,19 +162,25 @@ func (bbp ExampleMessage) Size() int {
 	return bodyLen
 }
 
-func makeExampleMessage(r iohelp.ErrorReader) (ExampleMessage, error) {
+func (bbp ExampleMessage) MarshalBebop() []byte {
+	buf := make([]byte, bbp.Size())
+	bbp.MarshalBebopTo(buf)
+	return buf
+}
+
+func MakeExampleMessage(r iohelp.ErrorReader) (ExampleMessage, error) {
 	v := ExampleMessage{}
 	err := v.DecodeBebop(r)
 	return v, err
 }
 
-func makeExampleMessageFromBytes(buf []byte) (ExampleMessage, error) {
+func MakeExampleMessageFromBytes(buf []byte) (ExampleMessage, error) {
 	v := ExampleMessage{}
 	err := v.UnmarshalBebop(buf)
 	return v, err
 }
 
-func mustMakeExampleMessageFromBytes(buf []byte) ExampleMessage {
+func MustMakeExampleMessageFromBytes(buf []byte) ExampleMessage {
 	v := ExampleMessage{}
 	v.MustUnmarshalBebop(buf)
 	return v
