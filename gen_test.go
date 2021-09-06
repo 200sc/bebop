@@ -157,6 +157,9 @@ func TestGenerateToFile_SeperateImports(t *testing.T) {
 		}, {
 			filename: "import_separate_b",
 			outfile:  filepath.Join("generatedtwo", "import_separate_b.go"),
+		}, {
+			filename: "import_separate_c",
+			outfile:  filepath.Join("generatedthree", "import_separate_c.go"),
 		},
 	}
 	for _, filedef := range files {

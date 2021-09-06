@@ -1,0 +1,4 @@
+const string go_package = "github.com/200sc/bebop/testdata/incompatible/generatedthree";
+
+struct NotImported { 
+}
