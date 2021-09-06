@@ -37,7 +37,7 @@ func TestUpstreamCompatiblityFailures(t *testing.T) {
 	}
 
 	var exceptions = map[string]string{
-		"invalid_nested_union.bop": "merged into upstream but unreleased",
+		"invalid_readonly_comment.bop": "bebopc 2.2.4 errors where 2.3.0 does not, without a changelog note",
 	}
 
 	for _, f := range files {
