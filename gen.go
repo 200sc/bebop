@@ -10,6 +10,8 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"github.com/200sc/bebop/internal/importgraph"
 )
 
 // GenerateSettings holds customization options for what Generate should do.
@@ -261,32 +263,51 @@ func (f File) Generate(w io.Writer, settings GenerateSettings) error {
 			thisFilePath = filepath.Join(wd, thisFilePath)
 		}
 		thisDir := filepath.Dir(thisFilePath)
-		// imports cause all elements of the imported file to be exported, so we
-		// must follow imports infinitely deep.
-		imports := make([]string, len(f.Imports))
-		copy(imports, f.Imports)
-		// TODO: should we forbid recursive imports? Yes, in non-combined mode
+		type bebopImport struct {
+			from string
+			to   string
+		}
+		imports := make([]bebopImport, len(f.Imports))
+		importGraph := importgraph.NewDgraph()
+		for i, imp := range f.Imports {
+			imports[i] = bebopImport{
+				from: f.GoPackage,
+				to:   imp,
+			}
+		}
 		// TODO: why are imports not scoped to a namespace?
 		imported := map[string]struct{}{}
 		for i := 0; i < len(imports); i++ {
 			imp := imports[i]
-			impPath := filepath.Join(thisDir, imp)
-			if _, ok := imported[impPath]; ok {
-				continue
-			}
+			impPath := filepath.Join(thisDir, imp.to)
+
 			impF, err := os.Open(impPath)
 			if err != nil {
-				return fmt.Errorf("failed to open imported file %s: %w", imp, err)
+				return fmt.Errorf("failed to open imported file %s: %w", imp.to, err)
 			}
 			impFile, err := ReadFile(impF)
 			if err != nil {
 				impF.Close()
-				return fmt.Errorf("failed to parse imported file %s: %w", imp, err)
+				return fmt.Errorf("failed to parse imported file %s: %w", imp.to, err)
 			}
 			impF.Close()
+			importGraph.AddEdge(imp.from, impFile.GoPackage)
+			if _, ok := imported[impPath]; ok {
+				continue
+			}
 			settings.imported = append(settings.imported, impFile)
-			imports = append(imports, impFile.Imports...)
+			for _, subImp := range impFile.Imports {
+				imports = append(imports, bebopImport{
+					from: impFile.GoPackage,
+					to:   subImp,
+				})
+			}
 			imported[impPath] = struct{}{}
+		}
+		if settings.ImportGenerationMode == ImportGenerationModeSeparate {
+			if err := importGraph.FindCycle(); err != nil {
+				return err
+			}
 		}
 	}
 	imports := []string{}

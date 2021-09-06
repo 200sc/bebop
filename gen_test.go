@@ -2,6 +2,7 @@ package bebop
 
 import (
 	"bytes"
+	"io"
 	"math/rand"
 	"os"
 	"path/filepath"
@@ -176,7 +177,7 @@ func TestGenerateToFile_SeperateImports(t *testing.T) {
 			}
 			// use a separate directory to ensure duplicate definitions in combined mode
 			// do not cause complation failures
-			os.MkdirAll(filepath.Join("testdata", "incompatible", filepath.Dir(filedef.outfile)), 777)
+			os.MkdirAll(filepath.Join("testdata", "incompatible", filepath.Dir(filedef.outfile)), 0777)
 			outFile := filepath.Join("testdata", "incompatible", filedef.outfile)
 			out, err := os.Create(outFile)
 			if err != nil {
@@ -190,6 +191,48 @@ func TestGenerateToFile_SeperateImports(t *testing.T) {
 			})
 			if err != nil {
 				t.Fatalf("generation failed: %v", err)
+			}
+		})
+	}
+}
+
+func TestGenerateToFile_SeperateImports_Errors(t *testing.T) {
+	type file struct {
+		filename   string
+		errMessage string
+	}
+	files := []file{
+		{
+			filename: "import_loop_a",
+			errMessage: `import cycle found:
+	github.com/200sc/bebop/testdata/incompatible/generated/a, imported by:
+	github.com/200sc/bebop/testdata/incompatible/generated/c, imported by:
+	github.com/200sc/bebop/testdata/incompatible/generated/b, imported by:
+	github.com/200sc/bebop/testdata/incompatible/generated/a`,
+		},
+	}
+	for _, filedef := range files {
+		filedef := filedef
+		t.Run(filedef.filename, func(t *testing.T) {
+			f, err := os.Open(filepath.Join("testdata", "incompatible", filedef.filename+".bop"))
+			if err != nil {
+				t.Fatalf("failed to open test file %s: %v", filedef.filename+".bop", err)
+			}
+			defer f.Close()
+			bopf, err := ReadFile(f)
+			if err != nil {
+				t.Fatalf("failed to read file %s: %v", filedef.filename+".bop", err)
+			}
+			err = bopf.Generate(io.Discard, GenerateSettings{
+				GenerateUnsafeMethods: true,
+				SharedMemoryStrings:   false,
+				ImportGenerationMode:  ImportGenerationModeSeparate,
+			})
+			if err == nil {
+				t.Fatalf("generate had no error: expected %q", filedef.errMessage)
+			}
+			if err.Error() != filedef.errMessage {
+				t.Fatalf("generate had wrong error: got %q, expected %q", err.Error(), filedef.errMessage)
 			}
 		})
 	}
@@ -215,7 +258,7 @@ func TestGenerateToFile_Imports(t *testing.T) {
 			}
 			// use a separate directory to ensure duplicate definitions in combined mode
 			// do not cause complation failures
-			os.MkdirAll(filepath.Join("testdata", "generated", filename), 777)
+			os.MkdirAll(filepath.Join("testdata", "generated", filename), 0777)
 			outFile := filepath.Join("testdata", "generated", filename, filename+".go")
 			out, err := os.Create(outFile)
 			if err != nil {

@@ -1,0 +1,3 @@
+const string go_package = "github.com/200sc/bebop/testdata/incompatible/generated/c";
+
+import "./import_loop_a.bop"
