@@ -78,16 +78,14 @@ At `main/bebopfmt` there is a cli utility to format and rewrite bop files. It ta
 
 The following is a list of known issues with the current version of the project, ordered by approximate priority for addressing them.
 
-- Support for importing relative .bop files is in progress.
-
 - We should be able to generate server code with handlers given all valid messages have op codes.
 
 - Tokenization and parsing could attempt corrective fixes to be able to report more than one error.
 
-- There are several incompatibilities between this compiler and the original compiler. These incompatibilities are documented (see testdata/incompatible), but we should attempt to resolve them. Trivially resolvable incompatibilities have been resolved already, remaining notes should involve raising upstream issues. 
+- There are several incompatibilities between this compiler and the original compiler. These incompatibilities are documented (see testdata/incompatible), but we should attempt to resolve them. Trivially resolvable incompatibilities have been resolved already, remaining notes should involve raising upstream issues.
 
 ## Credit
 
 Original bebop compiler (C#, Typescript, ...): https://github.com/RainwayApp/bebop
 
-Valid testdata largely from above project.
+In addition to defining the spec this package follows, most initial testdata was taken from the above project.
