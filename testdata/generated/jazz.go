@@ -145,10 +145,10 @@ func (bbp Library) MarshalBebopTo(buf []byte) int {
 
 func (bbp *Library) UnmarshalBebop(buf []byte) (err error) {
 	at := 0
-	ln3 := iohelp.ReadUint32Bytes(buf[at:])
+	ln1 := iohelp.ReadUint32Bytes(buf[at:])
 	at += 4
-	bbp.Songs = make(map[[16]byte]Song,ln3)
-	for i := uint32(0); i < ln3; i++ {
+	bbp.Songs = make(map[[16]byte]Song,ln1)
+	for i := uint32(0); i < ln1; i++ {
 		if len(buf[at:]) < 16 {
 			 return iohelp.ErrTooShort
 		}
@@ -165,10 +165,10 @@ func (bbp *Library) UnmarshalBebop(buf []byte) (err error) {
 
 func (bbp *Library) MustUnmarshalBebop(buf []byte) {
 	at := 0
-	ln4 := iohelp.ReadUint32Bytes(buf[at:])
+	ln2 := iohelp.ReadUint32Bytes(buf[at:])
 	at += 4
-	bbp.Songs = make(map[[16]byte]Song,ln4)
-	for i := uint32(0); i < ln4; i++ {
+	bbp.Songs = make(map[[16]byte]Song,ln2)
+	for i := uint32(0); i < ln2; i++ {
 		k1 := iohelp.ReadGUIDBytes(buf[at:])
 		at += 16
 		(bbp.Songs)[k1] = MustMakeSongFromBytes(buf[at:])

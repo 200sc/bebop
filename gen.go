@@ -30,6 +30,8 @@ type GenerateSettings struct {
 	imported          []File
 	importTypeAliases map[string]string
 
+	nextLength *int
+
 	GenerateUnsafeMethods bool
 	SharedMemoryStrings   bool
 }
@@ -245,6 +247,7 @@ func (f File) Generate(w io.Writer, settings GenerateSettings) error {
 	if err := settings.Validate(); err != nil {
 		return fmt.Errorf("invalid generation settings: %w", err)
 	}
+	settings.nextLength = new(int)
 
 	if len(f.Imports) != 0 {
 		thisFilePath := f.FileName
@@ -1146,11 +1149,9 @@ func depthName(name string, depth int) string {
 	return name + strconv.Itoa(depth)
 }
 
-var lengthInc = 0
-
-func lengthName() string {
-	lengthInc++
-	return "ln" + strconv.Itoa(lengthInc)
+func lengthName(settings GenerateSettings) string {
+	(*settings.nextLength)++
+	return "ln" + strconv.Itoa(*settings.nextLength)
 }
 
 func writeFieldByter(name string, typ FieldType, w io.Writer, settings GenerateSettings, depth int) {
@@ -1211,7 +1212,7 @@ func writeFieldReadByter(name string, typ FieldType, w io.Writer, settings Gener
 		writeFieldReadByter("("+name+")["+iName+"]", *typ.Array, w, settings, depth+1, safe)
 		writeLineWithTabs(w, "}", depth)
 	} else if typ.Map != nil {
-		lnName := lengthName()
+		lnName := lengthName(settings)
 		writeLineWithTabs(w, lnName+" := iohelp.ReadUint32Bytes(buf[at:])", depth)
 		writeLineWithTabs(w, "at += 4", depth)
 		writeLineWithTabs(w, "%ASGN = make(%TYPE,"+lnName+")", depth, name, typ.Map.goString(settings))
@@ -1388,23 +1389,17 @@ func writeMessageFieldBodyCount(name string, typ FieldType, w io.Writer, setting
 }
 
 func exposeName(name string) string {
-	if len(name) > 1 {
-		return strings.ToUpper(string(name[0])) + name[1:]
+	if name == "" {
+		return ""
 	}
-	if len(name) > 0 {
-		return strings.ToUpper(string(name[0]))
-	}
-	return ""
+	return strings.ToUpper(string(name[0])) + name[1:]
 }
 
 func unexposeName(name string) string {
-	if len(name) > 1 {
-		return strings.ToLower(string(name[0])) + name[1:]
+	if name == "" {
+		return ""
 	}
-	if len(name) > 0 {
-		return strings.ToLower(string(name[0]))
-	}
-	return ""
+	return strings.ToLower(string(name[0])) + name[1:]
 }
 
 func (f File) customRecordTypes() map[string]struct{} {
