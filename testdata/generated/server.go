@@ -14,12 +14,6 @@ type Print struct {
 	Printout string
 }
 
-func (bbp Print) MarshalBebop() []byte {
-	buf := make([]byte, bbp.Size())
-	bbp.MarshalBebopTo(buf)
-	return buf
-}
-
 func (bbp Print) MarshalBebopTo(buf []byte) int {
 	at := 0
 	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.Printout)))
@@ -63,6 +57,12 @@ func (bbp Print) Size() int {
 	return bodyLen
 }
 
+func (bbp Print) MarshalBebop() []byte {
+	buf := make([]byte, bbp.Size())
+	bbp.MarshalBebopTo(buf)
+	return buf
+}
+
 func MakePrint(r iohelp.ErrorReader) (Print, error) {
 	v := Print{}
 	err := v.DecodeBebop(r)
@@ -86,12 +86,6 @@ var _ bebop.Record = &Add{}
 type Add struct {
 	A int32
 	B int32
-}
-
-func (bbp Add) MarshalBebop() []byte {
-	buf := make([]byte, bbp.Size())
-	bbp.MarshalBebopTo(buf)
-	return buf
 }
 
 func (bbp Add) MarshalBebopTo(buf []byte) int {
@@ -147,6 +141,12 @@ func (bbp Add) Size() int {
 	return bodyLen
 }
 
+func (bbp Add) MarshalBebop() []byte {
+	buf := make([]byte, bbp.Size())
+	bbp.MarshalBebopTo(buf)
+	return buf
+}
+
 func MakeAdd(r iohelp.ErrorReader) (Add, error) {
 	v := Add{}
 	err := v.DecodeBebop(r)
@@ -169,12 +169,6 @@ var _ bebop.Record = &AddResponse{}
 
 type AddResponse struct {
 	C int32
-}
-
-func (bbp AddResponse) MarshalBebop() []byte {
-	buf := make([]byte, bbp.Size())
-	bbp.MarshalBebopTo(buf)
-	return buf
 }
 
 func (bbp AddResponse) MarshalBebopTo(buf []byte) int {
@@ -218,6 +212,12 @@ func (bbp AddResponse) Size() int {
 	return bodyLen
 }
 
+func (bbp AddResponse) MarshalBebop() []byte {
+	buf := make([]byte, bbp.Size())
+	bbp.MarshalBebopTo(buf)
+	return buf
+}
+
 func MakeAddResponse(r iohelp.ErrorReader) (AddResponse, error) {
 	v := AddResponse{}
 	err := v.DecodeBebop(r)
@@ -242,12 +242,6 @@ var _ bebop.Record = &PrintRequest{}
 
 type PrintRequest struct {
 	Print *Print
-}
-
-func (bbp PrintRequest) MarshalBebop() []byte {
-	buf := make([]byte, bbp.Size())
-	bbp.MarshalBebopTo(buf)
-	return buf
 }
 
 func (bbp PrintRequest) MarshalBebopTo(buf []byte) int {
@@ -346,6 +340,12 @@ func (bbp PrintRequest) Size() int {
 	return bodyLen
 }
 
+func (bbp PrintRequest) MarshalBebop() []byte {
+	buf := make([]byte, bbp.Size())
+	bbp.MarshalBebopTo(buf)
+	return buf
+}
+
 func MakePrintRequest(r iohelp.ErrorReader) (PrintRequest, error) {
 	v := PrintRequest{}
 	err := v.DecodeBebop(r)
@@ -370,12 +370,6 @@ var _ bebop.Record = &AddRequest{}
 
 type AddRequest struct {
 	Add *Add
-}
-
-func (bbp AddRequest) MarshalBebop() []byte {
-	buf := make([]byte, bbp.Size())
-	bbp.MarshalBebopTo(buf)
-	return buf
 }
 
 func (bbp AddRequest) MarshalBebopTo(buf []byte) int {
@@ -472,6 +466,12 @@ func (bbp AddRequest) Size() int {
 		bodyLen += (*bbp.Add).Size()
 	}
 	return bodyLen
+}
+
+func (bbp AddRequest) MarshalBebop() []byte {
+	buf := make([]byte, bbp.Size())
+	bbp.MarshalBebopTo(buf)
+	return buf
 }
 
 func MakeAddRequest(r iohelp.ErrorReader) (AddRequest, error) {

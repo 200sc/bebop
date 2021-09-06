@@ -16,12 +16,6 @@ type ExampleMessage struct {
 	Z *int32
 }
 
-func (bbp ExampleMessage) MarshalBebop() []byte {
-	buf := make([]byte, bbp.Size())
-	bbp.MarshalBebopTo(buf)
-	return buf
-}
-
 func (bbp ExampleMessage) MarshalBebopTo(buf []byte) int {
 	at := 0
 	iohelp.WriteUint32Bytes(buf[at:], uint32(bbp.Size()-4))
@@ -166,6 +160,12 @@ func (bbp ExampleMessage) Size() int {
 		bodyLen += 4
 	}
 	return bodyLen
+}
+
+func (bbp ExampleMessage) MarshalBebop() []byte {
+	buf := make([]byte, bbp.Size())
+	bbp.MarshalBebopTo(buf)
+	return buf
 }
 
 func MakeExampleMessage(r iohelp.ErrorReader) (ExampleMessage, error) {

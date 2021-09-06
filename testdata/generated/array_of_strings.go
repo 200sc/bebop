@@ -14,12 +14,6 @@ type ArrayOfStrings struct {
 	Strings []string
 }
 
-func (bbp ArrayOfStrings) MarshalBebop() []byte {
-	buf := make([]byte, bbp.Size())
-	bbp.MarshalBebopTo(buf)
-	return buf
-}
-
 func (bbp ArrayOfStrings) MarshalBebopTo(buf []byte) int {
 	at := 0
 	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.Strings)))
@@ -85,6 +79,12 @@ func (bbp ArrayOfStrings) Size() int {
 		bodyLen += 4 + len(elem)
 	}
 	return bodyLen
+}
+
+func (bbp ArrayOfStrings) MarshalBebop() []byte {
+	buf := make([]byte, bbp.Size())
+	bbp.MarshalBebopTo(buf)
+	return buf
 }
 
 func MakeArrayOfStrings(r iohelp.ErrorReader) (ArrayOfStrings, error) {

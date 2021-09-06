@@ -29,12 +29,6 @@ type Test22 struct {
 	Noisemaker Instrument
 }
 
-func (bbp Test22) MarshalBebop() []byte {
-	buf := make([]byte, bbp.Size())
-	bbp.MarshalBebopTo(buf)
-	return buf
-}
-
 func (bbp Test22) MarshalBebopTo(buf []byte) int {
 	at := 0
 	iohelp.WriteUint32Bytes(buf[at:], uint32(bbp.Noisemaker))
@@ -73,6 +67,12 @@ func (bbp Test22) Size() int {
 	return bodyLen
 }
 
+func (bbp Test22) MarshalBebop() []byte {
+	buf := make([]byte, bbp.Size())
+	bbp.MarshalBebopTo(buf)
+	return buf
+}
+
 func MakeTest22(r iohelp.ErrorReader) (Test22, error) {
 	v := Test22{}
 	err := v.DecodeBebop(r)
@@ -96,12 +96,6 @@ var _ bebop.Record = &Hello{}
 type Hello struct {
 	Yes int32
 	No string
-}
-
-func (bbp Hello) MarshalBebop() []byte {
-	buf := make([]byte, bbp.Size())
-	bbp.MarshalBebopTo(buf)
-	return buf
 }
 
 func (bbp Hello) MarshalBebopTo(buf []byte) int {
@@ -159,6 +153,12 @@ func (bbp Hello) Size() int {
 	return bodyLen
 }
 
+func (bbp Hello) MarshalBebop() []byte {
+	buf := make([]byte, bbp.Size())
+	bbp.MarshalBebopTo(buf)
+	return buf
+}
+
 func MakeHello(r iohelp.ErrorReader) (Hello, error) {
 	v := Hello{}
 	err := v.DecodeBebop(r)
@@ -182,12 +182,6 @@ var _ bebop.Record = &Musician{}
 type Musician struct {
 	name string
 	plays Instrument
-}
-
-func (bbp Musician) MarshalBebop() []byte {
-	buf := make([]byte, bbp.Size())
-	bbp.MarshalBebopTo(buf)
-	return buf
 }
 
 func (bbp Musician) MarshalBebopTo(buf []byte) int {
@@ -242,6 +236,12 @@ func (bbp Musician) Size() int {
 	return bodyLen
 }
 
+func (bbp Musician) MarshalBebop() []byte {
+	buf := make([]byte, bbp.Size())
+	bbp.MarshalBebopTo(buf)
+	return buf
+}
+
 func MakeMusician(r iohelp.ErrorReader) (Musician, error) {
 	v := Musician{}
 	err := v.DecodeBebop(r)
@@ -282,12 +282,6 @@ var _ bebop.Record = &Library{}
 
 type Library struct {
 	Songs map[[16]byte]Song
-}
-
-func (bbp Library) MarshalBebop() []byte {
-	buf := make([]byte, bbp.Size())
-	bbp.MarshalBebopTo(buf)
-	return buf
 }
 
 func (bbp Library) MarshalBebopTo(buf []byte) int {
@@ -373,6 +367,12 @@ func (bbp Library) Size() int {
 	return bodyLen
 }
 
+func (bbp Library) MarshalBebop() []byte {
+	buf := make([]byte, bbp.Size())
+	bbp.MarshalBebopTo(buf)
+	return buf
+}
+
 func MakeLibrary(r iohelp.ErrorReader) (Library, error) {
 	v := Library{}
 	err := v.DecodeBebop(r)
@@ -395,12 +395,6 @@ var _ bebop.Record = &Int32s{}
 
 type Int32s struct {
 	A []int32
-}
-
-func (bbp Int32s) MarshalBebop() []byte {
-	buf := make([]byte, bbp.Size())
-	bbp.MarshalBebopTo(buf)
-	return buf
 }
 
 func (bbp Int32s) MarshalBebopTo(buf []byte) int {
@@ -466,6 +460,12 @@ func (bbp Int32s) Size() int {
 	return bodyLen
 }
 
+func (bbp Int32s) MarshalBebop() []byte {
+	buf := make([]byte, bbp.Size())
+	bbp.MarshalBebopTo(buf)
+	return buf
+}
+
 func MakeInt32s(r iohelp.ErrorReader) (Int32s, error) {
 	v := Int32s{}
 	err := v.DecodeBebop(r)
@@ -488,12 +488,6 @@ var _ bebop.Record = &Uint32s{}
 
 type Uint32s struct {
 	A []uint32
-}
-
-func (bbp Uint32s) MarshalBebop() []byte {
-	buf := make([]byte, bbp.Size())
-	bbp.MarshalBebopTo(buf)
-	return buf
 }
 
 func (bbp Uint32s) MarshalBebopTo(buf []byte) int {
@@ -559,6 +553,12 @@ func (bbp Uint32s) Size() int {
 	return bodyLen
 }
 
+func (bbp Uint32s) MarshalBebop() []byte {
+	buf := make([]byte, bbp.Size())
+	bbp.MarshalBebopTo(buf)
+	return buf
+}
+
 func MakeUint32s(r iohelp.ErrorReader) (Uint32s, error) {
 	v := Uint32s{}
 	err := v.DecodeBebop(r)
@@ -581,12 +581,6 @@ var _ bebop.Record = &Float32s{}
 
 type Float32s struct {
 	A []float32
-}
-
-func (bbp Float32s) MarshalBebop() []byte {
-	buf := make([]byte, bbp.Size())
-	bbp.MarshalBebopTo(buf)
-	return buf
 }
 
 func (bbp Float32s) MarshalBebopTo(buf []byte) int {
@@ -652,6 +646,12 @@ func (bbp Float32s) Size() int {
 	return bodyLen
 }
 
+func (bbp Float32s) MarshalBebop() []byte {
+	buf := make([]byte, bbp.Size())
+	bbp.MarshalBebopTo(buf)
+	return buf
+}
+
 func MakeFloat32s(r iohelp.ErrorReader) (Float32s, error) {
 	v := Float32s{}
 	err := v.DecodeBebop(r)
@@ -674,12 +674,6 @@ var _ bebop.Record = &Int64s{}
 
 type Int64s struct {
 	A []int64
-}
-
-func (bbp Int64s) MarshalBebop() []byte {
-	buf := make([]byte, bbp.Size())
-	bbp.MarshalBebopTo(buf)
-	return buf
 }
 
 func (bbp Int64s) MarshalBebopTo(buf []byte) int {
@@ -745,6 +739,12 @@ func (bbp Int64s) Size() int {
 	return bodyLen
 }
 
+func (bbp Int64s) MarshalBebop() []byte {
+	buf := make([]byte, bbp.Size())
+	bbp.MarshalBebopTo(buf)
+	return buf
+}
+
 func MakeInt64s(r iohelp.ErrorReader) (Int64s, error) {
 	v := Int64s{}
 	err := v.DecodeBebop(r)
@@ -767,12 +767,6 @@ var _ bebop.Record = &Uint64s{}
 
 type Uint64s struct {
 	A []uint64
-}
-
-func (bbp Uint64s) MarshalBebop() []byte {
-	buf := make([]byte, bbp.Size())
-	bbp.MarshalBebopTo(buf)
-	return buf
 }
 
 func (bbp Uint64s) MarshalBebopTo(buf []byte) int {
@@ -838,6 +832,12 @@ func (bbp Uint64s) Size() int {
 	return bodyLen
 }
 
+func (bbp Uint64s) MarshalBebop() []byte {
+	buf := make([]byte, bbp.Size())
+	bbp.MarshalBebopTo(buf)
+	return buf
+}
+
 func MakeUint64s(r iohelp.ErrorReader) (Uint64s, error) {
 	v := Uint64s{}
 	err := v.DecodeBebop(r)
@@ -860,12 +860,6 @@ var _ bebop.Record = &Float64s{}
 
 type Float64s struct {
 	A []float64
-}
-
-func (bbp Float64s) MarshalBebop() []byte {
-	buf := make([]byte, bbp.Size())
-	bbp.MarshalBebopTo(buf)
-	return buf
 }
 
 func (bbp Float64s) MarshalBebopTo(buf []byte) int {
@@ -931,6 +925,12 @@ func (bbp Float64s) Size() int {
 	return bodyLen
 }
 
+func (bbp Float64s) MarshalBebop() []byte {
+	buf := make([]byte, bbp.Size())
+	bbp.MarshalBebopTo(buf)
+	return buf
+}
+
 func MakeFloat64s(r iohelp.ErrorReader) (Float64s, error) {
 	v := Float64s{}
 	err := v.DecodeBebop(r)
@@ -956,12 +956,6 @@ type VideoData struct {
 	Width uint32
 	Height uint32
 	Fragment []byte
-}
-
-func (bbp VideoData) MarshalBebop() []byte {
-	buf := make([]byte, bbp.Size())
-	bbp.MarshalBebopTo(buf)
-	return buf
 }
 
 func (bbp VideoData) MarshalBebopTo(buf []byte) int {
@@ -1057,6 +1051,12 @@ func (bbp VideoData) Size() int {
 	return bodyLen
 }
 
+func (bbp VideoData) MarshalBebop() []byte {
+	buf := make([]byte, bbp.Size())
+	bbp.MarshalBebopTo(buf)
+	return buf
+}
+
 func MakeVideoData(r iohelp.ErrorReader) (VideoData, error) {
 	v := VideoData{}
 	err := v.DecodeBebop(r)
@@ -1081,12 +1081,6 @@ type Song struct {
 	Title *string
 	Year *uint16
 	Performers *[]Musician
-}
-
-func (bbp Song) MarshalBebop() []byte {
-	buf := make([]byte, bbp.Size())
-	bbp.MarshalBebopTo(buf)
-	return buf
 }
 
 func (bbp Song) MarshalBebopTo(buf []byte) int {
@@ -1267,6 +1261,12 @@ func (bbp Song) Size() int {
 	return bodyLen
 }
 
+func (bbp Song) MarshalBebop() []byte {
+	buf := make([]byte, bbp.Size())
+	bbp.MarshalBebopTo(buf)
+	return buf
+}
+
 func MakeSong(r iohelp.ErrorReader) (Song, error) {
 	v := Song{}
 	err := v.DecodeBebop(r)
@@ -1290,12 +1290,6 @@ var _ bebop.Record = &MediaMessage{}
 type MediaMessage struct {
 	Codec *VideoCodec
 	Data *VideoData
-}
-
-func (bbp MediaMessage) MarshalBebop() []byte {
-	buf := make([]byte, bbp.Size())
-	bbp.MarshalBebopTo(buf)
-	return buf
 }
 
 func (bbp MediaMessage) MarshalBebopTo(buf []byte) int {
@@ -1417,6 +1411,12 @@ func (bbp MediaMessage) Size() int {
 	return bodyLen
 }
 
+func (bbp MediaMessage) MarshalBebop() []byte {
+	buf := make([]byte, bbp.Size())
+	bbp.MarshalBebopTo(buf)
+	return buf
+}
+
 func MakeMediaMessage(r iohelp.ErrorReader) (MediaMessage, error) {
 	v := MediaMessage{}
 	err := v.DecodeBebop(r)
@@ -1441,12 +1441,6 @@ var _ bebop.Record = &SkipTestOld{}
 type SkipTestOld struct {
 	X *int32
 	Y *int32
-}
-
-func (bbp SkipTestOld) MarshalBebop() []byte {
-	buf := make([]byte, bbp.Size())
-	bbp.MarshalBebopTo(buf)
-	return buf
 }
 
 func (bbp SkipTestOld) MarshalBebopTo(buf []byte) int {
@@ -1565,6 +1559,12 @@ func (bbp SkipTestOld) Size() int {
 	return bodyLen
 }
 
+func (bbp SkipTestOld) MarshalBebop() []byte {
+	buf := make([]byte, bbp.Size())
+	bbp.MarshalBebopTo(buf)
+	return buf
+}
+
 func MakeSkipTestOld(r iohelp.ErrorReader) (SkipTestOld, error) {
 	v := SkipTestOld{}
 	err := v.DecodeBebop(r)
@@ -1589,12 +1589,6 @@ type SkipTestNew struct {
 	X *int32
 	Y *int32
 	Z *int32
-}
-
-func (bbp SkipTestNew) MarshalBebop() []byte {
-	buf := make([]byte, bbp.Size())
-	bbp.MarshalBebopTo(buf)
-	return buf
 }
 
 func (bbp SkipTestNew) MarshalBebopTo(buf []byte) int {
@@ -1743,6 +1737,12 @@ func (bbp SkipTestNew) Size() int {
 	return bodyLen
 }
 
+func (bbp SkipTestNew) MarshalBebop() []byte {
+	buf := make([]byte, bbp.Size())
+	bbp.MarshalBebopTo(buf)
+	return buf
+}
+
 func MakeSkipTestNew(r iohelp.ErrorReader) (SkipTestNew, error) {
 	v := SkipTestNew{}
 	err := v.DecodeBebop(r)
@@ -1766,12 +1766,6 @@ var _ bebop.Record = &SkipTestOldContainer{}
 type SkipTestOldContainer struct {
 	S *SkipTestOld
 	After *int32
-}
-
-func (bbp SkipTestOldContainer) MarshalBebop() []byte {
-	buf := make([]byte, bbp.Size())
-	bbp.MarshalBebopTo(buf)
-	return buf
 }
 
 func (bbp SkipTestOldContainer) MarshalBebopTo(buf []byte) int {
@@ -1896,6 +1890,12 @@ func (bbp SkipTestOldContainer) Size() int {
 	return bodyLen
 }
 
+func (bbp SkipTestOldContainer) MarshalBebop() []byte {
+	buf := make([]byte, bbp.Size())
+	bbp.MarshalBebopTo(buf)
+	return buf
+}
+
 func MakeSkipTestOldContainer(r iohelp.ErrorReader) (SkipTestOldContainer, error) {
 	v := SkipTestOldContainer{}
 	err := v.DecodeBebop(r)
@@ -1919,12 +1919,6 @@ var _ bebop.Record = &SkipTestNewContainer{}
 type SkipTestNewContainer struct {
 	S *SkipTestNew
 	After *int32
-}
-
-func (bbp SkipTestNewContainer) MarshalBebop() []byte {
-	buf := make([]byte, bbp.Size())
-	bbp.MarshalBebopTo(buf)
-	return buf
 }
 
 func (bbp SkipTestNewContainer) MarshalBebopTo(buf []byte) int {
@@ -2047,6 +2041,12 @@ func (bbp SkipTestNewContainer) Size() int {
 		bodyLen += 4
 	}
 	return bodyLen
+}
+
+func (bbp SkipTestNewContainer) MarshalBebop() []byte {
+	buf := make([]byte, bbp.Size())
+	bbp.MarshalBebopTo(buf)
+	return buf
 }
 
 func MakeSkipTestNewContainer(r iohelp.ErrorReader) (SkipTestNewContainer, error) {

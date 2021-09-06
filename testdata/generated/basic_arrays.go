@@ -25,12 +25,6 @@ type BasicArrays struct {
 	A_guid [][16]byte
 }
 
-func (bbp BasicArrays) MarshalBebop() []byte {
-	buf := make([]byte, bbp.Size())
-	bbp.MarshalBebopTo(buf)
-	return buf
-}
-
 func (bbp BasicArrays) MarshalBebopTo(buf []byte) int {
 	at := 0
 	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.A_bool)))
@@ -466,6 +460,12 @@ func (bbp BasicArrays) Size() int {
 	return bodyLen
 }
 
+func (bbp BasicArrays) MarshalBebop() []byte {
+	buf := make([]byte, bbp.Size())
+	bbp.MarshalBebopTo(buf)
+	return buf
+}
+
 func MakeBasicArrays(r iohelp.ErrorReader) (BasicArrays, error) {
 	v := BasicArrays{}
 	err := v.DecodeBebop(r)
@@ -488,12 +488,6 @@ var _ bebop.Record = &TestInt32Array{}
 
 type TestInt32Array struct {
 	A []int32
-}
-
-func (bbp TestInt32Array) MarshalBebop() []byte {
-	buf := make([]byte, bbp.Size())
-	bbp.MarshalBebopTo(buf)
-	return buf
 }
 
 func (bbp TestInt32Array) MarshalBebopTo(buf []byte) int {
@@ -557,6 +551,12 @@ func (bbp TestInt32Array) Size() int {
 	bodyLen += 4
 	bodyLen += len(bbp.A) * 4
 	return bodyLen
+}
+
+func (bbp TestInt32Array) MarshalBebop() []byte {
+	buf := make([]byte, bbp.Size())
+	bbp.MarshalBebopTo(buf)
+	return buf
 }
 
 func MakeTestInt32Array(r iohelp.ErrorReader) (TestInt32Array, error) {

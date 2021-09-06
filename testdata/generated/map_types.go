@@ -15,12 +15,6 @@ type S struct {
 	y int32
 }
 
-func (bbp S) MarshalBebop() []byte {
-	buf := make([]byte, bbp.Size())
-	bbp.MarshalBebopTo(buf)
-	return buf
-}
-
 func (bbp S) MarshalBebopTo(buf []byte) int {
 	at := 0
 	iohelp.WriteInt32Bytes(buf[at:], bbp.x)
@@ -74,6 +68,12 @@ func (bbp S) Size() int {
 	return bodyLen
 }
 
+func (bbp S) MarshalBebop() []byte {
+	buf := make([]byte, bbp.Size())
+	bbp.MarshalBebopTo(buf)
+	return buf
+}
+
 func MakeS(r iohelp.ErrorReader) (S, error) {
 	v := S{}
 	err := v.DecodeBebop(r)
@@ -118,12 +118,6 @@ type SomeMaps struct {
 	M3 []map[int32][]map[bool]S
 	M4 []map[string][]float32
 	M5 map[[16]byte]M
-}
-
-func (bbp SomeMaps) MarshalBebop() []byte {
-	buf := make([]byte, bbp.Size())
-	bbp.MarshalBebopTo(buf)
-	return buf
 }
 
 func (bbp SomeMaps) MarshalBebopTo(buf []byte) int {
@@ -581,6 +575,12 @@ func (bbp SomeMaps) Size() int {
 	return bodyLen
 }
 
+func (bbp SomeMaps) MarshalBebop() []byte {
+	buf := make([]byte, bbp.Size())
+	bbp.MarshalBebopTo(buf)
+	return buf
+}
+
 func MakeSomeMaps(r iohelp.ErrorReader) (SomeMaps, error) {
 	v := SomeMaps{}
 	err := v.DecodeBebop(r)
@@ -604,12 +604,6 @@ var _ bebop.Record = &M{}
 type M struct {
 	A *float32
 	B *float64
-}
-
-func (bbp M) MarshalBebop() []byte {
-	buf := make([]byte, bbp.Size())
-	bbp.MarshalBebopTo(buf)
-	return buf
 }
 
 func (bbp M) MarshalBebopTo(buf []byte) int {
@@ -726,6 +720,12 @@ func (bbp M) Size() int {
 		bodyLen += 8
 	}
 	return bodyLen
+}
+
+func (bbp M) MarshalBebop() []byte {
+	buf := make([]byte, bbp.Size())
+	bbp.MarshalBebopTo(buf)
+	return buf
 }
 
 func MakeM(r iohelp.ErrorReader) (M, error) {

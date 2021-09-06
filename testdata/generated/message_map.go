@@ -14,12 +14,6 @@ type ReadOnlyMap struct {
 	Vals *map[string]uint8
 }
 
-func (bbp ReadOnlyMap) MarshalBebop() []byte {
-	buf := make([]byte, bbp.Size())
-	bbp.MarshalBebopTo(buf)
-	return buf
-}
-
 func (bbp ReadOnlyMap) MarshalBebopTo(buf []byte) int {
 	at := 0
 	iohelp.WriteUint32Bytes(buf[at:], uint32(bbp.Size()-4))
@@ -142,6 +136,12 @@ func (bbp ReadOnlyMap) Size() int {
 		}
 	}
 	return bodyLen
+}
+
+func (bbp ReadOnlyMap) MarshalBebop() []byte {
+	buf := make([]byte, bbp.Size())
+	bbp.MarshalBebopTo(buf)
+	return buf
 }
 
 func MakeReadOnlyMap(r iohelp.ErrorReader) (ReadOnlyMap, error) {

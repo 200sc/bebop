@@ -14,12 +14,6 @@ type Foo struct {
 	Bar Bar
 }
 
-func (bbp Foo) MarshalBebop() []byte {
-	buf := make([]byte, bbp.Size())
-	bbp.MarshalBebopTo(buf)
-	return buf
-}
-
 func (bbp Foo) MarshalBebopTo(buf []byte) int {
 	at := 0
 	(bbp.Bar).MarshalBebopTo(buf[at:])
@@ -67,6 +61,12 @@ func (bbp Foo) Size() int {
 	return bodyLen
 }
 
+func (bbp Foo) MarshalBebop() []byte {
+	buf := make([]byte, bbp.Size())
+	bbp.MarshalBebopTo(buf)
+	return buf
+}
+
 func MakeFoo(r iohelp.ErrorReader) (Foo, error) {
 	v := Foo{}
 	err := v.DecodeBebop(r)
@@ -91,12 +91,6 @@ type Bar struct {
 	X *float64
 	Y *float64
 	Z *float64
-}
-
-func (bbp Bar) MarshalBebop() []byte {
-	buf := make([]byte, bbp.Size())
-	bbp.MarshalBebopTo(buf)
-	return buf
 }
 
 func (bbp Bar) MarshalBebopTo(buf []byte) int {
@@ -243,6 +237,12 @@ func (bbp Bar) Size() int {
 		bodyLen += 8
 	}
 	return bodyLen
+}
+
+func (bbp Bar) MarshalBebop() []byte {
+	buf := make([]byte, bbp.Size())
+	bbp.MarshalBebopTo(buf)
+	return buf
 }
 
 func MakeBar(r iohelp.ErrorReader) (Bar, error) {

@@ -24,12 +24,6 @@ type Furniture struct {
 	family FurnitureFamily
 }
 
-func (bbp Furniture) MarshalBebop() []byte {
-	buf := make([]byte, bbp.Size())
-	bbp.MarshalBebopTo(buf)
-	return buf
-}
-
 func (bbp Furniture) MarshalBebopTo(buf []byte) int {
 	at := 0
 	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.name)))
@@ -94,6 +88,12 @@ func (bbp Furniture) Size() int {
 	return bodyLen
 }
 
+func (bbp Furniture) MarshalBebop() []byte {
+	buf := make([]byte, bbp.Size())
+	bbp.MarshalBebopTo(buf)
+	return buf
+}
+
 func MakeFurniture(r iohelp.ErrorReader) (Furniture, error) {
 	v := Furniture{}
 	err := v.DecodeBebop(r)
@@ -142,12 +142,6 @@ var _ bebop.Record = &RequestResponse{}
 
 type RequestResponse struct {
 	availableFurniture []Furniture
-}
-
-func (bbp RequestResponse) MarshalBebop() []byte {
-	buf := make([]byte, bbp.Size())
-	bbp.MarshalBebopTo(buf)
-	return buf
 }
 
 func (bbp RequestResponse) MarshalBebopTo(buf []byte) int {
@@ -228,6 +222,12 @@ func (bbp RequestResponse) Size() int {
 	return bodyLen
 }
 
+func (bbp RequestResponse) MarshalBebop() []byte {
+	buf := make([]byte, bbp.Size())
+	bbp.MarshalBebopTo(buf)
+	return buf
+}
+
 func MakeRequestResponse(r iohelp.ErrorReader) (RequestResponse, error) {
 	v := RequestResponse{}
 	err := v.DecodeBebop(r)
@@ -266,12 +266,6 @@ type RequestCatalog struct {
 	Family *FurnitureFamily
 	// Deprecated: Nobody react to what I'm about to say...
 	SecretTunnel *string
-}
-
-func (bbp RequestCatalog) MarshalBebop() []byte {
-	buf := make([]byte, bbp.Size())
-	bbp.MarshalBebopTo(buf)
-	return buf
 }
 
 func (bbp RequestCatalog) MarshalBebopTo(buf []byte) int {
@@ -391,6 +385,12 @@ func (bbp RequestCatalog) Size() int {
 		bodyLen += 4 + len(*bbp.SecretTunnel)
 	}
 	return bodyLen
+}
+
+func (bbp RequestCatalog) MarshalBebop() []byte {
+	buf := make([]byte, bbp.Size())
+	bbp.MarshalBebopTo(buf)
+	return buf
 }
 
 func MakeRequestCatalog(r iohelp.ErrorReader) (RequestCatalog, error) {

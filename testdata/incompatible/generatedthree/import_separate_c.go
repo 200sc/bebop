@@ -17,10 +17,6 @@ var _ bebop.Record = &NotImported{}
 type NotImported struct {
 }
 
-func (bbp NotImported) MarshalBebop() []byte {
-	return []byte{}
-}
-
 func (bbp NotImported) MarshalBebopTo(buf []byte) int {
 	return 0
 }
@@ -42,6 +38,10 @@ func (bbp *NotImported) DecodeBebop(ior io.Reader) (err error) {
 
 func (bbp NotImported) Size() int {
 	return 0
+}
+
+func (bbp NotImported) MarshalBebop() []byte {
+	return []byte{}
 }
 
 func MakeNotImported(r iohelp.ErrorReader) (NotImported, error) {

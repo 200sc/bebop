@@ -23,12 +23,6 @@ type Musician struct {
 	plays Instrument
 }
 
-func (bbp Musician) MarshalBebop() []byte {
-	buf := make([]byte, bbp.Size())
-	bbp.MarshalBebopTo(buf)
-	return buf
-}
-
 func (bbp Musician) MarshalBebopTo(buf []byte) int {
 	at := 0
 	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.name)))
@@ -81,6 +75,12 @@ func (bbp Musician) Size() int {
 	return bodyLen
 }
 
+func (bbp Musician) MarshalBebop() []byte {
+	buf := make([]byte, bbp.Size())
+	bbp.MarshalBebopTo(buf)
+	return buf
+}
+
 func MakeMusician(r iohelp.ErrorReader) (Musician, error) {
 	v := Musician{}
 	err := v.DecodeBebop(r)
@@ -121,12 +121,6 @@ var _ bebop.Record = &Library{}
 
 type Library struct {
 	Songs map[[16]byte]Song
-}
-
-func (bbp Library) MarshalBebop() []byte {
-	buf := make([]byte, bbp.Size())
-	bbp.MarshalBebopTo(buf)
-	return buf
 }
 
 func (bbp Library) MarshalBebopTo(buf []byte) int {
@@ -212,6 +206,12 @@ func (bbp Library) Size() int {
 	return bodyLen
 }
 
+func (bbp Library) MarshalBebop() []byte {
+	buf := make([]byte, bbp.Size())
+	bbp.MarshalBebopTo(buf)
+	return buf
+}
+
 func MakeLibrary(r iohelp.ErrorReader) (Library, error) {
 	v := Library{}
 	err := v.DecodeBebop(r)
@@ -236,12 +236,6 @@ type Song struct {
 	Title *string
 	Year *uint16
 	Performers *[]Musician
-}
-
-func (bbp Song) MarshalBebop() []byte {
-	buf := make([]byte, bbp.Size())
-	bbp.MarshalBebopTo(buf)
-	return buf
 }
 
 func (bbp Song) MarshalBebopTo(buf []byte) int {
@@ -420,6 +414,12 @@ func (bbp Song) Size() int {
 		}
 	}
 	return bodyLen
+}
+
+func (bbp Song) MarshalBebop() []byte {
+	buf := make([]byte, bbp.Size())
+	bbp.MarshalBebopTo(buf)
+	return buf
 }
 
 func MakeSong(r iohelp.ErrorReader) (Song, error) {

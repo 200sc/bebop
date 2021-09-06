@@ -27,12 +27,6 @@ type BasicTypes struct {
 	A_date time.Time
 }
 
-func (bbp BasicTypes) MarshalBebop() []byte {
-	buf := make([]byte, bbp.Size())
-	bbp.MarshalBebopTo(buf)
-	return buf
-}
-
 func (bbp BasicTypes) MarshalBebopTo(buf []byte) int {
 	at := 0
 	iohelp.WriteBoolBytes(buf[at:], bbp.A_bool)
@@ -226,6 +220,12 @@ func (bbp BasicTypes) Size() int {
 	bodyLen += 16
 	bodyLen += 8
 	return bodyLen
+}
+
+func (bbp BasicTypes) MarshalBebop() []byte {
+	buf := make([]byte, bbp.Size())
+	bbp.MarshalBebopTo(buf)
+	return buf
 }
 
 func MakeBasicTypes(r iohelp.ErrorReader) (BasicTypes, error) {

@@ -427,7 +427,7 @@ func (f File) Generate(w io.Writer, settings GenerateSettings) error {
 		if en.Namespace != "" {
 			continue
 		}
-		en.Generate(w, settings)
+		en.Generate(w)
 	}
 	for _, st := range f.Structs {
 		if st.Namespace != "" {
@@ -473,7 +473,7 @@ func writeComment(w io.Writer, depth int, comment string) {
 }
 
 // Generate writes a .go enum definition out to w.
-func (en Enum) Generate(w io.Writer, settings GenerateSettings) {
+func (en Enum) Generate(w io.Writer) {
 	exposedName := exposeName(en.Name)
 	writeComment(w, 0, en.Comment)
 	writeLine(w, "type %s uint32", exposedName)
@@ -509,19 +509,6 @@ func (st Struct) generateTypeDefinition(w io.Writer, settings GenerateSettings) 
 	writeLine(w, "type %s struct {", exposedName)
 	for _, fd := range st.Fields {
 		writeFieldDefinition(fd, w, st.ReadOnly, false, settings)
-	}
-	writeCloseBlock(w)
-}
-
-func (st Struct) generateMarshalBebop(w io.Writer, settings GenerateSettings) {
-	exposedName := exposeName(st.Name)
-	writeLine(w, "func (bbp %s) MarshalBebop() []byte {", exposedName)
-	if len(st.Fields) == 0 && st.OpCode == 0 {
-		writeLine(w, "\treturn []byte{}")
-	} else {
-		writeLine(w, "\tbuf := make([]byte, bbp.Size())")
-		writeLine(w, "\tbbp.MarshalBebopTo(buf)")
-		writeLine(w, "\treturn buf")
 	}
 	writeCloseBlock(w)
 }
@@ -666,45 +653,6 @@ func (st Struct) generateSize(w io.Writer, settings GenerateSettings) {
 	writeCloseBlock(w)
 }
 
-func (st Struct) generateMake(w io.Writer, settings GenerateSettings) {
-	exposedName := exposeName(st.Name)
-	writeLine(w, "func Make%[1]s(r iohelp.ErrorReader) (%[1]s, error) {", exposedName)
-	if len(st.Fields) == 0 && st.OpCode == 0 {
-		writeLine(w, "\treturn %s{}, nil", exposedName)
-	} else {
-		writeLine(w, "\tv := %s{}", exposedName)
-		writeLine(w, "\terr := v.DecodeBebop(r)")
-		writeLine(w, "\treturn v, err")
-	}
-	writeCloseBlock(w)
-}
-
-func (st Struct) generateMakeFromBytes(w io.Writer, settings GenerateSettings) {
-	exposedName := exposeName(st.Name)
-	writeLine(w, "func Make%[1]sFromBytes(buf []byte) (%[1]s, error) {", exposedName)
-	if len(st.Fields) == 0 && st.OpCode == 0 {
-		writeLine(w, "\treturn %s{}, nil", exposedName)
-	} else {
-		writeLine(w, "\tv := %s{}", exposedName)
-		writeLine(w, "\terr := v.UnmarshalBebop(buf)")
-		writeLine(w, "\treturn v, err")
-	}
-	writeCloseBlock(w)
-}
-
-func (st Struct) generateMustMakeFromBytes(w io.Writer, settings GenerateSettings) {
-	exposedName := exposeName(st.Name)
-	writeLine(w, "func MustMake%[1]sFromBytes(buf []byte) %[1]s {", exposedName)
-	if len(st.Fields) == 0 && st.OpCode == 0 {
-		writeLine(w, "\treturn %s{}", exposedName)
-	} else {
-		writeLine(w, "\tv := %s{}", exposedName)
-		writeLine(w, "\tv.MustUnmarshalBebop(buf)")
-		writeLine(w, "\treturn v")
-	}
-	writeCloseBlock(w)
-}
-
 func (st Struct) generateReadOnlyGetters(w io.Writer, settings GenerateSettings) {
 	// TODO: slices are not read only, we need to return a copy.
 	exposedName := exposeName(st.Name)
@@ -729,7 +677,6 @@ func (st Struct) generateReadOnlyGetters(w io.Writer, settings GenerateSettings)
 // Generate writes a .go struct definition out to w.
 func (st Struct) Generate(w io.Writer, settings GenerateSettings) {
 	st.generateTypeDefinition(w, settings)
-	st.generateMarshalBebop(w, settings)
 	st.generateMarshalBebopTo(w, settings)
 	st.generateUnmarshalBebop(w, settings)
 	if settings.GenerateUnsafeMethods {
@@ -738,11 +685,9 @@ func (st Struct) Generate(w io.Writer, settings GenerateSettings) {
 	st.generateEncodeBebop(w, settings)
 	st.generateDecodeBebop(w, settings)
 	st.generateSize(w, settings)
-	st.generateMake(w, settings)
-	st.generateMakeFromBytes(w, settings)
-	if settings.GenerateUnsafeMethods {
-		st.generateMustMakeFromBytes(w, settings)
-	}
+
+	isEmpty := len(st.Fields) == 0 && st.OpCode == 0
+	writeWrappers(w, st.Name, isEmpty, settings)
 	if st.ReadOnly {
 		st.generateReadOnlyGetters(w, settings)
 	}
@@ -767,18 +712,20 @@ func (msg Message) generateTypeDefinition(w io.Writer, settings GenerateSettings
 	for _, fd := range fields {
 		writeFieldDefinition(fd.Field, w, false, true, settings)
 	}
-	writeLine(w, "}")
-	writeLine(w, "")
+	writeCloseBlock(w)
 }
 
-func (msg Message) generateMarshalBebop(w io.Writer, settings GenerateSettings, fields []fieldWithNumber) {
+func (msg Message) generateMarshalBebop(w io.Writer) {
 	exposedName := exposeName(msg.Name)
 	writeLine(w, "func (bbp %s) MarshalBebop() []byte {", exposedName)
 	writeLine(w, "\tbuf := make([]byte, bbp.Size())")
 	writeLine(w, "\tbbp.MarshalBebopTo(buf)")
 	writeLine(w, "\treturn buf")
-	writeLine(w, "}")
-	writeLine(w, "")
+	writeCloseBlock(w)
+}
+
+func (msg Message) generateMarshalBebopTo(w io.Writer, settings GenerateSettings, fields []fieldWithNumber) {
+	exposedName := exposeName(msg.Name)
 	writeLine(w, "func (bbp %s) MarshalBebopTo(buf []byte) int {", exposedName)
 	if msg.OpCode != 0 {
 		writeLine(w, "\tiohelp.WriteUint32Bytes(buf, uint32(%sOpCode))", exposedName)
@@ -800,8 +747,7 @@ func (msg Message) generateMarshalBebop(w io.Writer, settings GenerateSettings, 
 		writeLineWithTabs(w, "}", 1)
 	}
 	writeLine(w, "\treturn at")
-	writeLine(w, "}")
-	writeLine(w, "")
+	writeCloseBlock(w)
 }
 
 func (msg Message) generateUnmarshalBebop(w io.Writer, settings GenerateSettings, fields []fieldWithNumber) {
@@ -827,8 +773,7 @@ func (msg Message) generateUnmarshalBebop(w io.Writer, settings GenerateSettings
 	writeLine(w, "\t\t\treturn nil")
 	writeLine(w, "\t\t}")
 	writeLine(w, "\t}")
-	writeLine(w, "}")
-	writeLine(w, "")
+	writeCloseBlock(w)
 }
 
 func (msg Message) generateMustUnmarshalBebop(w io.Writer, settings GenerateSettings, fields []fieldWithNumber) {
@@ -854,8 +799,7 @@ func (msg Message) generateMustUnmarshalBebop(w io.Writer, settings GenerateSett
 	writeLine(w, "\t\t\treturn")
 	writeLine(w, "\t\t}")
 	writeLine(w, "\t}")
-	writeLine(w, "}")
-	writeLine(w, "")
+	writeCloseBlock(w)
 }
 
 func (msg Message) generateEncodeBebop(w io.Writer, settings GenerateSettings, fields []fieldWithNumber) {
@@ -880,8 +824,7 @@ func (msg Message) generateEncodeBebop(w io.Writer, settings GenerateSettings, f
 	}
 	writeLine(w, "\tw.Write([]byte{0})")
 	writeLine(w, "\treturn w.Err")
-	writeLine(w, "}")
-	writeLine(w, "")
+	writeCloseBlock(w)
 }
 
 func (msg Message) generateDecodeBebop(w io.Writer, settings GenerateSettings, fields []fieldWithNumber) {
@@ -909,8 +852,7 @@ func (msg Message) generateDecodeBebop(w io.Writer, settings GenerateSettings, f
 	writeLine(w, "\t\t\treturn r.Err")
 	writeLine(w, "\t\t}")
 	writeLine(w, "\t}")
-	writeLine(w, "}")
-	writeLine(w, "")
+	writeCloseBlock(w)
 }
 
 func (msg Message) generateSize(w io.Writer, settings GenerateSettings, fields []fieldWithNumber) {
@@ -933,38 +875,7 @@ func (msg Message) generateSize(w io.Writer, settings GenerateSettings, fields [
 		writeLineWithTabs(w, "}", 1)
 	}
 	writeLine(w, "\treturn bodyLen")
-	writeLine(w, "}")
-	writeLine(w, "")
-}
-
-func (msg Message) generateMustMakeFromBytes(w io.Writer, settings GenerateSettings) {
-	exposedName := exposeName(msg.Name)
-	writeLine(w, "func MustMake%[1]sFromBytes(buf []byte) %[1]s {", exposedName)
-	writeLine(w, "\tv := %s{}", exposedName)
-	writeLine(w, "\tv.MustUnmarshalBebop(buf)")
-	writeLine(w, "\treturn v")
-	writeLine(w, "}")
-	writeLine(w, "")
-}
-
-func (msg Message) generateMake(w io.Writer, settings GenerateSettings) {
-	exposedName := exposeName(msg.Name)
-	writeLine(w, "func Make%[1]s(r iohelp.ErrorReader) (%[1]s, error) {", exposedName)
-	writeLine(w, "\tv := %s{}", exposedName)
-	writeLine(w, "\terr := v.DecodeBebop(r)")
-	writeLine(w, "\treturn v, err")
-	writeLine(w, "}")
-	writeLine(w, "")
-}
-
-func (msg Message) generateMakeFromBytes(w io.Writer, settings GenerateSettings) {
-	exposedName := exposeName(msg.Name)
-	writeLine(w, "func Make%[1]sFromBytes(buf []byte) (%[1]s, error) {", exposedName)
-	writeLine(w, "\tv := %s{}", exposedName)
-	writeLine(w, "\terr := v.UnmarshalBebop(buf)")
-	writeLine(w, "\treturn v, err")
-	writeLine(w, "}")
-	writeLine(w, "")
+	writeCloseBlock(w)
 }
 
 // Generate writes a .go message definition out to w.
@@ -980,7 +891,7 @@ func (msg Message) Generate(w io.Writer, settings GenerateSettings) {
 		return fields[i].num < fields[j].num
 	})
 	msg.generateTypeDefinition(w, settings, fields)
-	msg.generateMarshalBebop(w, settings, fields)
+	msg.generateMarshalBebopTo(w, settings, fields)
 	msg.generateUnmarshalBebop(w, settings, fields)
 	if settings.GenerateUnsafeMethods {
 		msg.generateMustUnmarshalBebop(w, settings, fields)
@@ -988,11 +899,184 @@ func (msg Message) Generate(w io.Writer, settings GenerateSettings) {
 	msg.generateEncodeBebop(w, settings, fields)
 	msg.generateDecodeBebop(w, settings, fields)
 	msg.generateSize(w, settings, fields)
-	msg.generateMake(w, settings)
-	msg.generateMakeFromBytes(w, settings)
-	if settings.GenerateUnsafeMethods {
-		msg.generateMustMakeFromBytes(w, settings)
+	isEmpty := len(msg.Fields) == 0 && msg.OpCode == 0
+	writeWrappers(w, msg.Name, isEmpty, settings)
+}
+
+func (u Union) generateTypeDefinition(w io.Writer, settings GenerateSettings, fields []fieldWithNumber) {
+	exposedName := exposeName(u.Name)
+	if u.OpCode != 0 {
+		writeLine(w, "const %sOpCode = 0x%x", exposedName, u.OpCode)
+		writeLine(w, "")
 	}
+	writeLine(w, "var _ bebop.Record = &%s{}", exposedName)
+	writeLine(w, "")
+	writeComment(w, 0, u.Comment)
+	writeLine(w, "type %s struct {", exposedName)
+	for _, fd := range fields {
+		writeFieldDefinition(fd.Field, w, false, true, settings)
+	}
+	writeCloseBlock(w)
+}
+
+func (u Union) generateMarshalBebopTo(w io.Writer, settings GenerateSettings, fields []fieldWithNumber) {
+	exposedName := exposeName(u.Name)
+	writeLine(w, "func (bbp %s) MarshalBebopTo(buf []byte) int {", exposedName)
+	if u.OpCode != 0 {
+		writeLine(w, "\tiohelp.WriteUint32Bytes(buf, uint32(%sOpCode))", exposedName)
+		writeLine(w, "\tat := 4")
+		writeLine(w, "\tiohelp.WriteUint32Bytes(buf[at:], uint32(bbp.Size()-8))")
+	} else {
+		writeLine(w, "\tat := 0")
+		writeLine(w, "\tiohelp.WriteUint32Bytes(buf[at:], uint32(bbp.Size()-4))")
+	}
+	writeLine(w, "\tat += 4")
+	for _, fd := range fields {
+		name := exposeName(fd.Name)
+		num := strconv.Itoa(int(fd.num))
+		name = "*bbp." + name
+		writeLineWithTabs(w, "if %RECV != nil {", 1, name)
+		writeLineWithTabs(w, "buf[at] = %ASGN", 2, num)
+		writeLineWithTabs(w, "at++", 2)
+		writeFieldByter(name, fd.FieldType, w, settings, 2)
+		writeLineWithTabs(w, "return at", 2)
+		writeLineWithTabs(w, "}", 1)
+	}
+	writeLine(w, "\treturn at")
+	writeCloseBlock(w)
+}
+
+func (u Union) generateUnmarshalBebop(w io.Writer, settings GenerateSettings, fields []fieldWithNumber) {
+	exposedName := exposeName(u.Name)
+	writeLine(w, "func (bbp *%s) UnmarshalBebop(buf []byte) (err error) {", exposedName)
+	if u.OpCode != 0 {
+		writeLine(w, "\tat := 4")
+	} else {
+		writeLine(w, "\tat := 0")
+	}
+	writeLine(w, "\t_ = iohelp.ReadUint32Bytes(buf[at:])")
+	writeLine(w, "\tbuf = buf[4:]")
+	writeLine(w, "\tif len(buf) == 0 {")
+	writeLine(w, "\t\treturn iohelp.ErrUnpopulatedUnion")
+	writeLine(w, "\t}")
+	writeLine(w, "\tfor {")
+	writeLine(w, "\t\tswitch buf[at] {")
+	for _, fd := range fields {
+		name := exposeName(fd.Name)
+		writeLine(w, "\t\tcase %d:", fd.num)
+		writeLine(w, "\t\t\tat += 1")
+		writeLine(w, "\t\t\tbbp.%[1]s = new(%[2]s)", name, fd.FieldType.goString(settings))
+		writeFieldReadByter("(*bbp."+name+")", fd.FieldType, w, settings, 3, true)
+		writeLine(w, "\t\t\treturn nil")
+	}
+	writeLine(w, "\t\tdefault:")
+	writeLine(w, "\t\t\treturn nil")
+	writeLine(w, "\t\t}")
+	writeLine(w, "\t}")
+	writeCloseBlock(w)
+}
+
+func (u Union) generateMustUnmarshalBebop(w io.Writer, settings GenerateSettings, fields []fieldWithNumber) {
+	exposedName := exposeName(u.Name)
+	writeLine(w, "func (bbp *%s) MustUnmarshalBebop(buf []byte) {", exposedName)
+	if u.OpCode != 0 {
+		writeLine(w, "\tat := 4")
+	} else {
+		writeLine(w, "\tat := 0")
+	}
+	writeLine(w, "\t_ = iohelp.ReadUint32Bytes(buf[at:])")
+	writeLine(w, "\tbuf = buf[4:]")
+	writeLine(w, "\tfor {")
+	writeLine(w, "\t\tswitch buf[at] {")
+	for _, fd := range fields {
+		name := exposeName(fd.Name)
+		writeLine(w, "\t\tcase %d:", fd.num)
+		writeLine(w, "\t\t\tat += 1")
+		writeLine(w, "\t\t\tbbp.%[1]s = new(%[2]s)", name, fd.FieldType.goString(settings))
+		writeFieldReadByter("(*bbp."+name+")", fd.FieldType, w, settings, 3, false)
+		writeLine(w, "\t\t\treturn")
+	}
+	writeLine(w, "\t\tdefault:")
+	writeLine(w, "\t\t\treturn")
+	writeLine(w, "\t\t}")
+	writeLine(w, "\t}")
+	writeCloseBlock(w)
+}
+
+func (u Union) generateEncodeBebop(w io.Writer, settings GenerateSettings, fields []fieldWithNumber) {
+	exposedName := exposeName(u.Name)
+	*settings.isFirstTopLength = true
+	writeLine(w, "func (bbp %s) EncodeBebop(iow io.Writer) (err error) {", exposedName)
+	writeLine(w, "\tw := iohelp.NewErrorWriter(iow)")
+	if u.OpCode != 0 {
+		writeLine(w, "\tiohelp.WriteUint32(w, uint32(%sOpCode))", exposedName)
+		writeLine(w, "\tiohelp.WriteUint32(w, uint32(bbp.Size()-8))")
+	} else {
+		writeLine(w, "\tiohelp.WriteUint32(w, uint32(bbp.Size()-4))")
+	}
+	for _, fd := range fields {
+		name := exposeName(fd.Name)
+		num := strconv.Itoa(int(fd.num))
+		name = "*bbp." + name
+		writeLineWithTabs(w, "if %RECV != nil {", 1, name)
+		writeLineWithTabs(w, "w.Write([]byte{%ASGN})", 2, num)
+		writeFieldMarshaller(name, fd.FieldType, w, settings, 2)
+		writeLineWithTabs(w, "return w.Err", 2)
+		writeLineWithTabs(w, "}", 1)
+	}
+	writeLine(w, "\treturn w.Err")
+	writeCloseBlock(w)
+}
+
+func (u Union) generateDecodeBebop(w io.Writer, settings GenerateSettings, fields []fieldWithNumber) {
+	exposedName := exposeName(u.Name)
+	*settings.isFirstTopLength = true
+	writeLine(w, "func (bbp *%s) DecodeBebop(ior io.Reader) (err error) {", exposedName)
+	writeLine(w, "\tr := iohelp.NewErrorReader(ior)")
+	if u.OpCode != 0 {
+		writeLine(w, "\tiohelp.ReadUint32(r)")
+	}
+	writeLine(w, "\tbodyLen := iohelp.ReadUint32(r)")
+	writeLine(w, "\tr.Reader = &io.LimitedReader{R:r.Reader, N:int64(bodyLen)}")
+	writeLine(w, "\tfor {")
+	writeLine(w, "\t\tswitch iohelp.ReadByte(r) {")
+	for _, fd := range fields {
+		writeLine(w, "\t\tcase %d:", fd.num)
+		name := exposeName(fd.Name)
+		writeLine(w, "\t\t\tbbp.%[1]s = new(%[2]s)", name, fd.FieldType.goString(settings))
+		writeMessageFieldUnmarshaller("bbp."+name, fd.FieldType, w, settings, 3)
+		writeLine(w, "\t\t\tio.ReadAll(r)")
+		writeLine(w, "\t\t\treturn r.Err")
+	}
+	// ref: https://github.com/RainwayApp/bebop/wiki/Wire-format#messages, final paragraph
+	// we're allowed to skip parsing all remaining fields if we see one that we don't know about.
+	writeLine(w, "\t\tdefault:")
+	writeLine(w, "\t\t\tio.ReadAll(r)")
+	writeLine(w, "\t\t\treturn r.Err")
+	writeLine(w, "\t\t}")
+	writeLine(w, "\t}")
+	writeCloseBlock(w)
+}
+
+func (u Union) generateSize(w io.Writer, settings GenerateSettings, fields []fieldWithNumber) {
+	exposedName := exposeName(u.Name)
+	writeLine(w, "func (bbp %s) Size() int {", exposedName)
+	// size at front (4)
+	writeLine(w, "\tbodyLen := 4")
+	if u.OpCode != 0 {
+		writeLine(w, "\tbodyLen += 4")
+	}
+	for _, fd := range fields {
+		name := exposeName(fd.Name)
+		name = "*bbp." + name
+		writeLineWithTabs(w, "if %RECV != nil {", 1, name)
+		writeLineWithTabs(w, "bodyLen += 1", 2)
+		writeMessageFieldBodyCount(name, fd.FieldType, w, settings, 2)
+		writeLineWithTabs(w, "return bodyLen", 2)
+		writeLineWithTabs(w, "}", 1)
+	}
+	writeLine(w, "\treturn bodyLen")
+	writeCloseBlock(w)
 }
 
 // Generate writes a .go union definition out to w.
@@ -1024,190 +1108,18 @@ func (u Union) Generate(w io.Writer, settings GenerateSettings) {
 			field.UnionField.Message.Generate(w, settings)
 		}
 	}
-	exposedName := exposeName(u.Name)
-	if u.OpCode != 0 {
-		writeLine(w, "const %sOpCode = 0x%x", exposedName, u.OpCode)
-		writeLine(w, "")
-	}
-	writeLine(w, "var _ bebop.Record = &%s{}", exposedName)
-	writeLine(w, "")
-	writeComment(w, 0, u.Comment)
-	writeLine(w, "type %s struct {", exposedName)
-	for _, fd := range fields {
-		writeFieldDefinition(fd.Field, w, false, true, settings)
-	}
-	writeLine(w, "}")
-	writeLine(w, "")
-	writeLine(w, "func (bbp %s) MarshalBebop() []byte {", exposedName)
-	writeLine(w, "\tbuf := make([]byte, bbp.Size())")
-	writeLine(w, "\tbbp.MarshalBebopTo(buf)")
-	writeLine(w, "\treturn buf")
-	writeLine(w, "}")
-	writeLine(w, "")
-	writeLine(w, "func (bbp %s) MarshalBebopTo(buf []byte) int {", exposedName)
-	if u.OpCode != 0 {
-		writeLine(w, "\tiohelp.WriteUint32Bytes(buf, uint32(%sOpCode))", exposedName)
-		writeLine(w, "\tat := 4")
-		writeLine(w, "\tiohelp.WriteUint32Bytes(buf[at:], uint32(bbp.Size()-8))")
-	} else {
-		writeLine(w, "\tat := 0")
-		writeLine(w, "\tiohelp.WriteUint32Bytes(buf[at:], uint32(bbp.Size()-4))")
-	}
-	writeLine(w, "\tat += 4")
-	for _, fd := range fields {
-		name := exposeName(fd.Name)
-		num := strconv.Itoa(int(fd.num))
-		name = "*bbp." + name
-		writeLineWithTabs(w, "if %RECV != nil {", 1, name)
-		writeLineWithTabs(w, "buf[at] = %ASGN", 2, num)
-		writeLineWithTabs(w, "at++", 2)
-		writeFieldByter(name, fd.FieldType, w, settings, 2)
-		writeLineWithTabs(w, "return at", 2)
-		writeLineWithTabs(w, "}", 1)
-	}
-	writeLine(w, "\treturn at")
-	writeLine(w, "}")
-	writeLine(w, "")
-	writeLine(w, "func (bbp *%s) UnmarshalBebop(buf []byte) (err error) {", exposedName)
-	if u.OpCode != 0 {
-		writeLine(w, "\tat := 4")
-	} else {
-		writeLine(w, "\tat := 0")
-	}
-	writeLine(w, "\t_ = iohelp.ReadUint32Bytes(buf[at:])")
-	writeLine(w, "\tbuf = buf[4:]")
-	writeLine(w, "\tif len(buf) == 0 {")
-	writeLine(w, "\t\treturn iohelp.ErrUnpopulatedUnion")
-	writeLine(w, "\t}")
-	writeLine(w, "\tfor {")
-	writeLine(w, "\t\tswitch buf[at] {")
-	for _, fd := range fields {
-		name := exposeName(fd.Name)
-		writeLine(w, "\t\tcase %d:", fd.num)
-		writeLine(w, "\t\t\tat += 1")
-		writeLine(w, "\t\t\tbbp.%[1]s = new(%[2]s)", name, fd.FieldType.goString(settings))
-		writeFieldReadByter("(*bbp."+name+")", fd.FieldType, w, settings, 3, true)
-		writeLine(w, "\t\t\treturn nil")
-	}
-	writeLine(w, "\t\tdefault:")
-	writeLine(w, "\t\t\treturn nil")
-	writeLine(w, "\t\t}")
-	writeLine(w, "\t}")
-	writeLine(w, "}")
-	writeLine(w, "")
+	u.generateTypeDefinition(w, settings, fields)
+	u.generateMarshalBebopTo(w, settings, fields)
+	u.generateUnmarshalBebop(w, settings, fields)
 	if settings.GenerateUnsafeMethods {
-		writeLine(w, "func (bbp *%s) MustUnmarshalBebop(buf []byte) {", exposedName)
-		if u.OpCode != 0 {
-			writeLine(w, "\tat := 4")
-		} else {
-			writeLine(w, "\tat := 0")
-		}
-		writeLine(w, "\t_ = iohelp.ReadUint32Bytes(buf[at:])")
-		writeLine(w, "\tbuf = buf[4:]")
-		writeLine(w, "\tfor {")
-		writeLine(w, "\t\tswitch buf[at] {")
-		for _, fd := range fields {
-			name := exposeName(fd.Name)
-			writeLine(w, "\t\tcase %d:", fd.num)
-			writeLine(w, "\t\t\tat += 1")
-			writeLine(w, "\t\t\tbbp.%[1]s = new(%[2]s)", name, fd.FieldType.goString(settings))
-			writeFieldReadByter("(*bbp."+name+")", fd.FieldType, w, settings, 3, false)
-			writeLine(w, "\t\t\treturn")
-		}
-		writeLine(w, "\t\tdefault:")
-		writeLine(w, "\t\t\treturn")
-		writeLine(w, "\t\t}")
-		writeLine(w, "\t}")
-		writeLine(w, "}")
-		writeLine(w, "")
+		u.generateMustUnmarshalBebop(w, settings, fields)
 	}
-	*settings.isFirstTopLength = true
-	writeLine(w, "func (bbp %s) EncodeBebop(iow io.Writer) (err error) {", exposedName)
-	writeLine(w, "\tw := iohelp.NewErrorWriter(iow)")
-	if u.OpCode != 0 {
-		writeLine(w, "\tiohelp.WriteUint32(w, uint32(%sOpCode))", exposedName)
-		writeLine(w, "\tiohelp.WriteUint32(w, uint32(bbp.Size()-8))")
-	} else {
-		writeLine(w, "\tiohelp.WriteUint32(w, uint32(bbp.Size()-4))")
-	}
-	for _, fd := range fields {
-		name := exposeName(fd.Name)
-		num := strconv.Itoa(int(fd.num))
-		name = "*bbp." + name
-		writeLineWithTabs(w, "if %RECV != nil {", 1, name)
-		writeLineWithTabs(w, "w.Write([]byte{%ASGN})", 2, num)
-		writeFieldMarshaller(name, fd.FieldType, w, settings, 2)
-		writeLineWithTabs(w, "return w.Err", 2)
-		writeLineWithTabs(w, "}", 1)
-	}
-	writeLine(w, "\treturn w.Err")
-	writeLine(w, "}")
-	writeLine(w, "")
-	*settings.isFirstTopLength = true
-	writeLine(w, "func (bbp *%s) DecodeBebop(ior io.Reader) (err error) {", exposedName)
-	writeLine(w, "\tr := iohelp.NewErrorReader(ior)")
-	if u.OpCode != 0 {
-		writeLine(w, "\tiohelp.ReadUint32(r)")
-	}
-	writeLine(w, "\tbodyLen := iohelp.ReadUint32(r)")
-	writeLine(w, "\tr.Reader = &io.LimitedReader{R:r.Reader, N:int64(bodyLen)}")
-	writeLine(w, "\tfor {")
-	writeLine(w, "\t\tswitch iohelp.ReadByte(r) {")
-	for _, fd := range fields {
-		writeLine(w, "\t\tcase %d:", fd.num)
-		name := exposeName(fd.Name)
-		writeLine(w, "\t\t\tbbp.%[1]s = new(%[2]s)", name, fd.FieldType.goString(settings))
-		writeMessageFieldUnmarshaller("bbp."+name, fd.FieldType, w, settings, 3)
-		writeLine(w, "\t\t\tio.ReadAll(r)")
-		writeLine(w, "\t\t\treturn r.Err")
-	}
-	// ref: https://github.com/RainwayApp/bebop/wiki/Wire-format#messages, final paragraph
-	// we're allowed to skip parsing all remaining fields if we see one that we don't know about.
-	writeLine(w, "\t\tdefault:")
-	writeLine(w, "\t\t\tio.ReadAll(r)")
-	writeLine(w, "\t\t\treturn r.Err")
-	writeLine(w, "\t\t}")
-	writeLine(w, "\t}")
-	writeLine(w, "}")
-	writeLine(w, "")
-	writeLine(w, "func (bbp %s) Size() int {", exposedName)
-	// size at front (4)
-	writeLine(w, "\tbodyLen := 4")
-	if u.OpCode != 0 {
-		writeLine(w, "\tbodyLen += 4")
-	}
-	for _, fd := range fields {
-		name := exposeName(fd.Name)
-		name = "*bbp." + name
-		writeLineWithTabs(w, "if %RECV != nil {", 1, name)
-		writeLineWithTabs(w, "bodyLen += 1", 2)
-		writeMessageFieldBodyCount(name, fd.FieldType, w, settings, 2)
-		writeLineWithTabs(w, "return bodyLen", 2)
-		writeLineWithTabs(w, "}", 1)
-	}
-	writeLine(w, "\treturn bodyLen")
-	writeLine(w, "}")
-	writeLine(w, "")
-	writeLine(w, "func Make%[1]s(r iohelp.ErrorReader) (%[1]s, error) {", exposedName)
-	writeLine(w, "\tv := %s{}", exposedName)
-	writeLine(w, "\terr := v.DecodeBebop(r)")
-	writeLine(w, "\treturn v, err")
-	writeLine(w, "}")
-	writeLine(w, "")
-	writeLine(w, "func Make%[1]sFromBytes(buf []byte) (%[1]s, error) {", exposedName)
-	writeLine(w, "\tv := %s{}", exposedName)
-	writeLine(w, "\terr := v.UnmarshalBebop(buf)")
-	writeLine(w, "\treturn v, err")
-	writeLine(w, "}")
-	writeLine(w, "")
-	if settings.GenerateUnsafeMethods {
-		writeLine(w, "func MustMake%[1]sFromBytes(buf []byte) %[1]s {", exposedName)
-		writeLine(w, "\tv := %s{}", exposedName)
-		writeLine(w, "\tv.MustUnmarshalBebop(buf)")
-		writeLine(w, "\treturn v")
-		writeLine(w, "}")
-		writeLine(w, "")
-	}
+	u.generateEncodeBebop(w, settings, fields)
+	u.generateDecodeBebop(w, settings, fields)
+	u.generateSize(w, settings, fields)
+	isEmpty := len(u.Fields) == 0 && u.OpCode == 0
+	writeWrappers(w, u.Name, isEmpty, settings)
+
 }
 
 func (con Const) impossibleGoConst() bool {
@@ -1525,4 +1437,65 @@ func unexposeName(name string) string {
 		return ""
 	}
 	return strings.ToLower(string(name[0])) + name[1:]
+}
+
+func writeWrappers(w io.Writer, name string, isEmpty bool, settings GenerateSettings) {
+	writeMarshalBebop(w, name, isEmpty)
+	writeMake(w, name, isEmpty)
+	writeMakeFromBytes(w, name, isEmpty)
+	if settings.GenerateUnsafeMethods {
+		writeMustMakeFromBytes(w, name, isEmpty)
+	}
+}
+
+func writeMarshalBebop(w io.Writer, name string, isEmpty bool) {
+	exposedName := exposeName(name)
+	writeLine(w, "func (bbp %s) MarshalBebop() []byte {", exposedName)
+	if isEmpty {
+		writeLine(w, "\treturn []byte{}")
+	} else {
+		writeLine(w, "\tbuf := make([]byte, bbp.Size())")
+		writeLine(w, "\tbbp.MarshalBebopTo(buf)")
+		writeLine(w, "\treturn buf")
+	}
+	writeCloseBlock(w)
+}
+
+func writeMake(w io.Writer, name string, isEmpty bool) {
+	exposedName := exposeName(name)
+	writeLine(w, "func Make%[1]s(r iohelp.ErrorReader) (%[1]s, error) {", exposedName)
+	if isEmpty {
+		writeLine(w, "\treturn %s{}, nil", exposedName)
+	} else {
+		writeLine(w, "\tv := %s{}", exposedName)
+		writeLine(w, "\terr := v.DecodeBebop(r)")
+		writeLine(w, "\treturn v, err")
+	}
+	writeCloseBlock(w)
+}
+
+func writeMakeFromBytes(w io.Writer, name string, isEmpty bool) {
+	exposedName := exposeName(name)
+	writeLine(w, "func Make%[1]sFromBytes(buf []byte) (%[1]s, error) {", exposedName)
+	if isEmpty {
+		writeLine(w, "\treturn %s{}, nil", exposedName)
+	} else {
+		writeLine(w, "\tv := %s{}", exposedName)
+		writeLine(w, "\terr := v.UnmarshalBebop(buf)")
+		writeLine(w, "\treturn v, err")
+	}
+	writeCloseBlock(w)
+}
+
+func writeMustMakeFromBytes(w io.Writer, name string, isEmpty bool) {
+	exposedName := exposeName(name)
+	writeLine(w, "func MustMake%[1]sFromBytes(buf []byte) %[1]s {", exposedName)
+	if isEmpty {
+		writeLine(w, "\treturn %s{}", exposedName)
+	} else {
+		writeLine(w, "\tv := %s{}", exposedName)
+		writeLine(w, "\tv.MustUnmarshalBebop(buf)")
+		writeLine(w, "\treturn v")
+	}
+	writeCloseBlock(w)
 }

@@ -18,12 +18,6 @@ type ImportedType struct {
 	Foobar string
 }
 
-func (bbp ImportedType) MarshalBebop() []byte {
-	buf := make([]byte, bbp.Size())
-	bbp.MarshalBebopTo(buf)
-	return buf
-}
-
 func (bbp ImportedType) MarshalBebopTo(buf []byte) int {
 	at := 0
 	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.Foobar)))
@@ -65,6 +59,12 @@ func (bbp ImportedType) Size() int {
 	bodyLen := 0
 	bodyLen += 4 + len(bbp.Foobar)
 	return bodyLen
+}
+
+func (bbp ImportedType) MarshalBebop() []byte {
+	buf := make([]byte, bbp.Size())
+	bbp.MarshalBebopTo(buf)
+	return buf
 }
 
 func MakeImportedType(r iohelp.ErrorReader) (ImportedType, error) {

@@ -19,12 +19,6 @@ type UsesImport struct {
 	Imported generatedtwo.ImportedType
 }
 
-func (bbp UsesImport) MarshalBebop() []byte {
-	buf := make([]byte, bbp.Size())
-	bbp.MarshalBebopTo(buf)
-	return buf
-}
-
 func (bbp UsesImport) MarshalBebopTo(buf []byte) int {
 	at := 0
 	(bbp.Imported).MarshalBebopTo(buf[at:])
@@ -70,6 +64,12 @@ func (bbp UsesImport) Size() int {
 	bodyLen := 0
 	bodyLen += (bbp.Imported).Size()
 	return bodyLen
+}
+
+func (bbp UsesImport) MarshalBebop() []byte {
+	buf := make([]byte, bbp.Size())
+	bbp.MarshalBebopTo(buf)
+	return buf
 }
 
 func MakeUsesImport(r iohelp.ErrorReader) (UsesImport, error) {

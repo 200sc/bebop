@@ -14,12 +14,6 @@ type A struct {
 	B *uint32
 }
 
-func (bbp A) MarshalBebop() []byte {
-	buf := make([]byte, bbp.Size())
-	bbp.MarshalBebopTo(buf)
-	return buf
-}
-
 func (bbp A) MarshalBebopTo(buf []byte) int {
 	at := 0
 	iohelp.WriteUint32Bytes(buf[at:], uint32(bbp.Size()-4))
@@ -106,6 +100,12 @@ func (bbp A) Size() int {
 	return bodyLen
 }
 
+func (bbp A) MarshalBebop() []byte {
+	buf := make([]byte, bbp.Size())
+	bbp.MarshalBebopTo(buf)
+	return buf
+}
+
 func MakeA(r iohelp.ErrorReader) (A, error) {
 	v := A{}
 	err := v.DecodeBebop(r)
@@ -131,12 +131,6 @@ var _ bebop.Record = &B{}
 //     
 type B struct {
 	C bool
-}
-
-func (bbp B) MarshalBebop() []byte {
-	buf := make([]byte, bbp.Size())
-	bbp.MarshalBebopTo(buf)
-	return buf
 }
 
 func (bbp B) MarshalBebopTo(buf []byte) int {
@@ -180,6 +174,12 @@ func (bbp B) Size() int {
 	return bodyLen
 }
 
+func (bbp B) MarshalBebop() []byte {
+	buf := make([]byte, bbp.Size())
+	bbp.MarshalBebopTo(buf)
+	return buf
+}
+
 func MakeB(r iohelp.ErrorReader) (B, error) {
 	v := B{}
 	err := v.DecodeBebop(r)
@@ -201,10 +201,6 @@ func MustMakeBFromBytes(buf []byte) B {
 var _ bebop.Record = &C{}
 
 type C struct {
-}
-
-func (bbp C) MarshalBebop() []byte {
-	return []byte{}
 }
 
 func (bbp C) MarshalBebopTo(buf []byte) int {
@@ -230,6 +226,10 @@ func (bbp C) Size() int {
 	return 0
 }
 
+func (bbp C) MarshalBebop() []byte {
+	return []byte{}
+}
+
 func MakeC(r iohelp.ErrorReader) (C, error) {
 	return C{}, nil
 }
@@ -253,12 +253,6 @@ type U struct {
 	A *A
 	B *B
 	C *C
-}
-
-func (bbp U) MarshalBebop() []byte {
-	buf := make([]byte, bbp.Size())
-	bbp.MarshalBebopTo(buf)
-	return buf
 }
 
 func (bbp U) MarshalBebopTo(buf []byte) int {
@@ -452,6 +446,12 @@ func (bbp U) Size() int {
 	return bodyLen
 }
 
+func (bbp U) MarshalBebop() []byte {
+	buf := make([]byte, bbp.Size())
+	bbp.MarshalBebopTo(buf)
+	return buf
+}
+
 func MakeU(r iohelp.ErrorReader) (U, error) {
 	v := U{}
 	err := v.DecodeBebop(r)
@@ -475,12 +475,6 @@ var _ bebop.Record = &Cons{}
 type Cons struct {
 	Head uint32
 	Tail List
-}
-
-func (bbp Cons) MarshalBebop() []byte {
-	buf := make([]byte, bbp.Size())
-	bbp.MarshalBebopTo(buf)
-	return buf
 }
 
 func (bbp Cons) MarshalBebopTo(buf []byte) int {
@@ -542,6 +536,12 @@ func (bbp Cons) Size() int {
 	return bodyLen
 }
 
+func (bbp Cons) MarshalBebop() []byte {
+	buf := make([]byte, bbp.Size())
+	bbp.MarshalBebopTo(buf)
+	return buf
+}
+
 func MakeCons(r iohelp.ErrorReader) (Cons, error) {
 	v := Cons{}
 	err := v.DecodeBebop(r)
@@ -564,10 +564,6 @@ var _ bebop.Record = &Nil{}
 
 // nil is empty
 type Nil struct {
-}
-
-func (bbp Nil) MarshalBebop() []byte {
-	return []byte{}
 }
 
 func (bbp Nil) MarshalBebopTo(buf []byte) int {
@@ -593,6 +589,10 @@ func (bbp Nil) Size() int {
 	return 0
 }
 
+func (bbp Nil) MarshalBebop() []byte {
+	return []byte{}
+}
+
 func MakeNil(r iohelp.ErrorReader) (Nil, error) {
 	return Nil{}, nil
 }
@@ -610,12 +610,6 @@ var _ bebop.Record = &List{}
 type List struct {
 	Cons *Cons
 	Nil *Nil
-}
-
-func (bbp List) MarshalBebop() []byte {
-	buf := make([]byte, bbp.Size())
-	bbp.MarshalBebopTo(buf)
-	return buf
 }
 
 func (bbp List) MarshalBebopTo(buf []byte) int {
@@ -760,6 +754,12 @@ func (bbp List) Size() int {
 		return bodyLen
 	}
 	return bodyLen
+}
+
+func (bbp List) MarshalBebop() []byte {
+	buf := make([]byte, bbp.Size())
+	bbp.MarshalBebopTo(buf)
+	return buf
 }
 
 func MakeList(r iohelp.ErrorReader) (List, error) {

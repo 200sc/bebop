@@ -16,12 +16,6 @@ type MyObj struct {
 	End *time.Time
 }
 
-func (bbp MyObj) MarshalBebop() []byte {
-	buf := make([]byte, bbp.Size())
-	bbp.MarshalBebopTo(buf)
-	return buf
-}
-
 func (bbp MyObj) MarshalBebopTo(buf []byte) int {
 	at := 0
 	iohelp.WriteUint32Bytes(buf[at:], uint32(bbp.Size()-4))
@@ -152,6 +146,12 @@ func (bbp MyObj) Size() int {
 		bodyLen += 8
 	}
 	return bodyLen
+}
+
+func (bbp MyObj) MarshalBebop() []byte {
+	buf := make([]byte, bbp.Size())
+	bbp.MarshalBebopTo(buf)
+	return buf
 }
 
 func MakeMyObj(r iohelp.ErrorReader) (MyObj, error) {

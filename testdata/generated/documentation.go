@@ -36,12 +36,6 @@ type DocS struct {
 	X int32
 }
 
-func (bbp DocS) MarshalBebop() []byte {
-	buf := make([]byte, bbp.Size())
-	bbp.MarshalBebopTo(buf)
-	return buf
-}
-
 func (bbp DocS) MarshalBebopTo(buf []byte) int {
 	at := 0
 	iohelp.WriteInt32Bytes(buf[at:], bbp.X)
@@ -83,6 +77,12 @@ func (bbp DocS) Size() int {
 	return bodyLen
 }
 
+func (bbp DocS) MarshalBebop() []byte {
+	buf := make([]byte, bbp.Size())
+	bbp.MarshalBebopTo(buf)
+	return buf
+}
+
 func MakeDocS(r iohelp.ErrorReader) (DocS, error) {
 	v := DocS{}
 	err := v.DecodeBebop(r)
@@ -106,12 +106,6 @@ var _ bebop.Record = &DepM{}
 type DepM struct {
 	// Deprecated: x in DepM
 	X *int32
-}
-
-func (bbp DepM) MarshalBebop() []byte {
-	buf := make([]byte, bbp.Size())
-	bbp.MarshalBebopTo(buf)
-	return buf
 }
 
 func (bbp DepM) MarshalBebopTo(buf []byte) int {
@@ -200,6 +194,12 @@ func (bbp DepM) Size() int {
 	return bodyLen
 }
 
+func (bbp DepM) MarshalBebop() []byte {
+	buf := make([]byte, bbp.Size())
+	bbp.MarshalBebopTo(buf)
+	return buf
+}
+
 func MakeDepM(r iohelp.ErrorReader) (DepM, error) {
 	v := DepM{}
 	err := v.DecodeBebop(r)
@@ -229,12 +229,6 @@ type DocM struct {
 	// Deprecated, documented field 
 	// Deprecated: z in DocM
 	Z *int32
-}
-
-func (bbp DocM) MarshalBebop() []byte {
-	buf := make([]byte, bbp.Size())
-	bbp.MarshalBebopTo(buf)
-	return buf
 }
 
 func (bbp DocM) MarshalBebopTo(buf []byte) int {
@@ -381,6 +375,12 @@ func (bbp DocM) Size() int {
 		bodyLen += 4
 	}
 	return bodyLen
+}
+
+func (bbp DocM) MarshalBebop() []byte {
+	buf := make([]byte, bbp.Size())
+	bbp.MarshalBebopTo(buf)
+	return buf
 }
 
 func MakeDocM(r iohelp.ErrorReader) (DocM, error) {

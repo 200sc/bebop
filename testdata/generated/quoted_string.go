@@ -19,12 +19,6 @@ type QuotedString struct {
 	Z int32
 }
 
-func (bbp QuotedString) MarshalBebop() []byte {
-	buf := make([]byte, bbp.Size())
-	bbp.MarshalBebopTo(buf)
-	return buf
-}
-
 func (bbp QuotedString) MarshalBebopTo(buf []byte) int {
 	at := 0
 	iohelp.WriteInt32Bytes(buf[at:], bbp.X)
@@ -88,6 +82,12 @@ func (bbp QuotedString) Size() int {
 	bodyLen += 4
 	bodyLen += 4
 	return bodyLen
+}
+
+func (bbp QuotedString) MarshalBebop() []byte {
+	buf := make([]byte, bbp.Size())
+	bbp.MarshalBebopTo(buf)
+	return buf
 }
 
 func MakeQuotedString(r iohelp.ErrorReader) (QuotedString, error) {
