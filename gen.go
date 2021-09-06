@@ -1034,7 +1034,7 @@ func (u Union) Generate(w io.Writer, settings GenerateSettings) {
 	writeLine(w, "\t_ = iohelp.ReadUint32Bytes(buf[at:])")
 	writeLine(w, "\tbuf = buf[4:]")
 	writeLine(w, "\tif len(buf) == 0 {")
-	writeLine(w, "\t\treturn iohelp.UnpopulatedUnion")
+	writeLine(w, "\t\treturn iohelp.ErrUnpopulatedUnion")
 	writeLine(w, "\t}")
 	writeLine(w, "\tfor {")
 	writeLine(w, "\t\tswitch buf[at] {")
@@ -1274,7 +1274,7 @@ func writeFieldByter(name string, typ FieldType, w io.Writer, settings GenerateS
 
 func writeLengthCheck(w io.Writer, ln string, depth int, args ...string) {
 	writeLineWithTabs(w, "if len(buf[at:]) < "+ln+" {", depth, args...)
-	writeLineWithTabs(w, "\t return iohelp.ErrTooShort", depth, args...)
+	writeLineWithTabs(w, "\t return io.ErrUnexpectedEOF", depth, args...)
 	writeLineWithTabs(w, "}", depth, args...)
 }
 

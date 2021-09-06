@@ -9,9 +9,12 @@ import (
 	"unsafe"
 )
 
-var ErrTooShort error = errors.New("buffer too short")
+var (
 
-var UnpopulatedUnion error = errors.New("union has no populated member")
+	// ErrUnpopulatedUnion indicates a union had no contents, when exactly
+	// one member should be populated
+	ErrUnpopulatedUnion error = errors.New("union has no populated member")
+)
 
 type ErrorReader struct {
 	Reader io.Reader
@@ -74,22 +77,22 @@ func MustReadStringBytesSharedMemory(buf []byte) string {
 
 func ReadStringBytes(buf []byte) (string, error) {
 	if len(buf) < 4 {
-		return "", ErrTooShort
+		return "", io.ErrUnexpectedEOF
 	}
 	sz := ReadUint32Bytes(buf)
 	if len(buf) < int(sz)+4 {
-		return "", ErrTooShort
+		return "", io.ErrUnexpectedEOF
 	}
 	return string(buf[4 : 4+sz]), nil
 }
 
 func ReadStringBytesSharedMemory(buf []byte) (string, error) {
 	if len(buf) < 4 {
-		return "", ErrTooShort
+		return "", io.ErrUnexpectedEOF
 	}
 	sz := ReadUint32Bytes(buf)
 	if len(buf) < int(sz)+4 {
-		return "", ErrTooShort
+		return "", io.ErrUnexpectedEOF
 	}
 	cut := buf[4 : 4+sz]
 	return *(*string)(unsafe.Pointer(&cut)), nil
