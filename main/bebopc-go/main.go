@@ -53,10 +53,13 @@ func run() error {
 		return fmt.Errorf("failed to open input file: %w", err)
 	}
 	defer f.Close()
-	bopf, err := bebop.ReadFile(f)
+	bopf, warnings, err := bebop.ReadFile(f)
 	if err != nil {
 		filename := filepath.Base(*inputFile)
 		return fmt.Errorf("parsing input %s failed: %w", filename, err)
+	}
+	for _, w := range warnings {
+		fmt.Fprintf(os.Stderr, "warning: %v\n", w)
 	}
 	out, err := os.Create(*outputFile)
 	if err != nil {

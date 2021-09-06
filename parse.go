@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"math"
 	"strconv"
 	"strings"
 )
@@ -14,8 +13,9 @@ type FileNamer interface {
 }
 
 // ReadFile reads out a bebop file. If r is a FileNamer, like an *os.File,
-// the output's FileName will be populated.
-func ReadFile(r io.Reader) (File, error) {
+// the output's FileName will be populated. In addition to fatal errors, string
+// warnings may also be output.
+func ReadFile(r io.Reader) (File, []string, error) {
 	f := File{}
 	if fnamer, ok := r.(FileNamer); ok {
 		f.FileName = fnamer.Name()
@@ -24,17 +24,18 @@ func ReadFile(r io.Reader) (File, error) {
 	nextCommentLines := []string{}
 	nextRecordOpCode := int32(0)
 	nextRecordReadOnly := false
+	warnings := []string{}
 	for tr.Next() {
 		tk := tr.Token()
 		switch tk.kind {
 		case tokenKindImport:
 			toks, err := expectNext(tr, tokenKindStringLiteral)
 			if err != nil {
-				return f, err
+				return f, warnings, err
 			}
 			imported, err := strconv.Unquote(string(toks[0].concrete))
 			if err != nil {
-				return f, err
+				return f, warnings, err
 			}
 			f.Imports = append(f.Imports, imported)
 			continue
@@ -51,33 +52,33 @@ func ReadFile(r io.Reader) (File, error) {
 			var err error
 			nextRecordOpCode, err = readOpCode(tr)
 			if err != nil {
-				return f, err
+				return f, warnings, err
 			}
 			continue
 		case tokenKindEnum:
 			if nextRecordOpCode != 0 {
-				return f, readError(tk, "enums may not have attached op codes")
+				return f, warnings, readError(tk, "enums may not have attached op codes")
 			}
 			en, err := readEnum(tr)
 			if err != nil {
-				return f, err
+				return f, warnings, err
 			}
 			en.Comment = strings.Join(nextCommentLines, "\n")
 			f.Enums = append(f.Enums, en)
 		case tokenKindReadOnly:
 			nextRecordReadOnly = true
 			if !tr.Next() {
-				return f, readError(tk, "expected (Struct) got no token")
+				return f, warnings, readError(tk, "expected (Struct) got no token")
 			}
 			tk = tr.Token()
 			if tk.kind != tokenKindStruct {
-				return f, readError(tk, "expected (Struct) got (%v)", tk.kind)
+				return f, warnings, readError(tk, "expected (Struct) got (%v)", tk.kind)
 			}
 			fallthrough
 		case tokenKindStruct:
 			st, err := readStruct(tr)
 			if err != nil {
-				return f, err
+				return f, warnings, err
 			}
 			st.Comment = strings.Join(nextCommentLines, "\n")
 			st.OpCode = nextRecordOpCode
@@ -87,7 +88,7 @@ func ReadFile(r io.Reader) (File, error) {
 		case tokenKindMessage:
 			msg, err := readMessage(tr)
 			if err != nil {
-				return f, err
+				return f, warnings, err
 			}
 			msg.Comment = strings.Join(nextCommentLines, "\n")
 			msg.OpCode = nextRecordOpCode
@@ -95,29 +96,30 @@ func ReadFile(r io.Reader) (File, error) {
 		case tokenKindUnion:
 			union, err := readUnion(tr)
 			if err != nil {
-				return f, err
+				return f, warnings, err
 			}
 			union.Comment = strings.Join(nextCommentLines, "\n")
 			union.OpCode = nextRecordOpCode
 			f.Unions = append(f.Unions, union)
 		case tokenKindConst:
 			if nextRecordOpCode != 0 {
-				return f, readError(tk, "consts may not have attached op codes")
+				return f, warnings, readError(tk, "consts may not have attached op codes")
 			}
-			cons, err := readConst(tr)
+			cons, constWarnings, err := readConst(tr)
+			warnings = append(warnings, constWarnings...)
 			if err != nil {
-				return f, err
+				return f, warnings, err
 			}
 			cons.Comment = strings.Join(nextCommentLines, "\n")
-			if cons.Name == goPackage && cons.StringValue != nil {
-				f.GoPackage = *cons.StringValue
+			if cons.Name == goPackage && cons.SimpleType == typeString {
+				f.GoPackage, _ = strconv.Unquote(cons.Value)
 			}
 			f.Consts = append(f.Consts, cons)
 		}
 		nextCommentLines = []string{}
 		nextRecordOpCode = 0
 	}
-	return f, nil
+	return f, warnings, nil
 }
 
 func expectAnyOfNext(tr *tokenReader, kinds ...tokenKind) error {
@@ -558,102 +560,90 @@ func readUnion(tr *tokenReader) (Union, error) {
 	return union, nil
 }
 
-func readConst(tr *tokenReader) (Const, error) {
+func readConst(tr *tokenReader) (Const, []string, error) {
+	warnings := []string{}
 	cons := Const{}
 	toks, err := expectNext(tr, tokenKindIdent, tokenKindIdent, tokenKindEquals)
 	if err != nil {
-		return cons, err
+		return cons, warnings, err
 	}
 	cons.SimpleType = string(toks[0].concrete)
 	cons.Name = string(toks[1].concrete)
 
 	if !tr.Next() {
-		return cons, readError(toks[2], "expected value following const type")
+		return cons, warnings, readError(toks[2], "expected value following const type")
 	}
 	tk := tr.Token()
+	cons.Value = string(tk.concrete)
 	switch {
 	case isUintPrimitive(cons.SimpleType):
 		if tk.kind != tokenKindIntegerLiteral {
-			return cons, readError(tk, "%v unassignable to %v", tk.kind, cons.SimpleType)
+			return cons, warnings, readError(tk, "%v unassignable to %v", tk.kind, cons.SimpleType)
 		}
-		val, err := strconv.ParseUint(string(tk.concrete), 0, 64)
+		_, err := strconv.ParseUint(string(tk.concrete), 0, 64)
 		if err != nil {
-			return cons, readError(tk, err.Error())
+			// export a warning
+			warnings = append(warnings, readError(tk, err.Error()).Error())
 		}
-		cons.UIntValue = &val
 	case isIntPrimitive(cons.SimpleType):
 		if tk.kind != tokenKindIntegerLiteral {
-			return cons, readError(tk, "%v unassignable to %v", tk.kind, cons.SimpleType)
+			return cons, warnings, readError(tk, "%v unassignable to %v", tk.kind, cons.SimpleType)
 		}
-		val, err := strconv.ParseInt(string(tk.concrete), 0, 64)
+		_, err := strconv.ParseInt(string(tk.concrete), 0, 64)
 		if err != nil {
-			return cons, readError(tk, err.Error())
+			// export a warning
+			warnings = append(warnings, readError(tk, err.Error()).Error())
 		}
-		cons.IntValue = &val
 	case isFloatPrimitive(cons.SimpleType):
 		switch tk.kind {
 		case tokenKindInf:
-			val := math.Inf(1)
-			cons.FloatValue = &val
+			cons.Value = "math.Inf(1)"
 		case tokenKindNegativeInf:
-			val := math.Inf(-1)
-			cons.FloatValue = &val
+			cons.Value = "math.Inf(-1)"
 		case tokenKindNaN:
-			val := math.NaN()
-			cons.FloatValue = &val
+			cons.Value = "math.NaN()"
 		case tokenKindIntegerLiteral:
-			val, err := strconv.ParseInt(string(tk.concrete), 0, 64)
+			_, err := strconv.ParseInt(string(tk.concrete), 0, 64)
 			if err != nil {
-				return cons, readError(tk, err.Error())
+				// export a warning
+				warnings = append(warnings, readError(tk, err.Error()).Error())
 			}
-			fVal := float64(val)
-			cons.FloatValue = &fVal
 		case tokenKindFloatLiteral:
-			fVal, err := strconv.ParseFloat(string(tk.concrete), 64)
+			_, err := strconv.ParseFloat(string(tk.concrete), 64)
 			if err != nil {
-				return cons, readError(tk, err.Error())
+				// export a warning
+				warnings = append(warnings, readError(tk, err.Error()).Error())
 			}
-			cons.FloatValue = &fVal
 		default:
-			return cons, readError(tk, "%v unassignable to %v", tk.kind, cons.SimpleType)
+			return cons, warnings, readError(tk, "%v unassignable to %v", tk.kind, cons.SimpleType)
 		}
 	case cons.SimpleType == typeGUID:
 		if tk.kind != tokenKindStringLiteral {
-			return cons, readError(tk, "%v unassignable to %v", tk.kind, cons.SimpleType)
+			return cons, warnings, readError(tk, "%v unassignable to %v", tk.kind, cons.SimpleType)
 		}
-		tk.concrete = bytes.Trim(tk.concrete, "\"")
-		s := string(tk.concrete)
+		s := string(bytes.Trim(tk.concrete, "\""))
 		// TODO: what guid formats does rainway support?
 		if len(strings.ReplaceAll(s, "-", "")) != 32 {
-			return cons, readError(tk, "%q has wrong length for guid", s)
+			return cons, warnings, readError(tk, "%q has wrong length for guid", s)
 		}
-		cons.StringValue = &s
 	case cons.SimpleType == typeString:
 		if tk.kind != tokenKindStringLiteral {
-			return cons, readError(tk, "%v unassignable to %v", tk.kind, cons.SimpleType)
+			return cons, warnings, readError(tk, "%v unassignable to %v", tk.kind, cons.SimpleType)
 		}
-		tk.concrete = bytes.Trim(tk.concrete, "\"")
-		s := string(tk.concrete)
-		cons.StringValue = &s
 	case cons.SimpleType == typeBool:
 		if tk.kind != tokenKindTrue && tk.kind != tokenKindFalse {
-			return cons, readError(tk, "%v unassignable to %v", tk.kind, cons.SimpleType)
+			return cons, warnings, readError(tk, "%v unassignable to %v", tk.kind, cons.SimpleType)
 		}
-		b, err := strconv.ParseBool(string(tk.concrete))
-		if err != nil {
-			return cons, readError(tk, err.Error())
-		}
-		cons.BoolValue = &b
 	default:
-		return cons, readError(tk, "invalid type %q for const", cons.SimpleType)
+		return cons, warnings, readError(tk, "invalid type %q for const", cons.SimpleType)
 	}
 	_, err = expectNext(tr, tokenKindSemicolon)
 	if err != nil {
-		return cons, err
+		return cons, warnings, err
 	}
 	skipEndOfLineComments(tr)
 	optNewline(tr)
-	return cons, nil
+	return cons, warnings, nil
 }
 
 func readOpCode(tr *tokenReader) (int32, error) {

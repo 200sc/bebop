@@ -32,7 +32,7 @@ func TestTokenizeFormat(t *testing.T) {
 			if err != nil {
 				t.Fatalf("failed to open test file %s: %v", filename+".bop", err)
 			}
-			if _, err := ReadFile(f); err != nil {
+			if _, _, err := ReadFile(f); err != nil {
 				f.Close()
 				t.Fatalf("can not format unparseable files")
 			}
@@ -65,7 +65,7 @@ func TestTokenizeFormatIncompatible(t *testing.T) {
 			if err != nil {
 				t.Fatalf("failed to open test file %s: %v", filename+".bop", err)
 			}
-			if _, err := ReadFile(f); err != nil {
+			if _, _, err := ReadFile(f); err != nil {
 				f.Close()
 				t.Fatalf("can not format unparseable files")
 			}

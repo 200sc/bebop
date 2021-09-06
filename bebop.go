@@ -134,10 +134,5 @@ type Const struct {
 	SimpleType string
 	Comment    string
 	Name       string
-	// GUIDs also use string values
-	StringValue *string
-	IntValue    *int64
-	UIntValue   *uint64
-	FloatValue  *float64
-	BoolValue   *bool
+	Value      string
 }

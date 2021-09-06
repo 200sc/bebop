@@ -37,7 +37,7 @@ func TestValidateIncompatibleError(t *testing.T) {
 				t.Fatalf("failed to open test file %s: %v", tc.file+".bop", err)
 			}
 			defer f.Close()
-			bopf, err := ReadFile(f)
+			bopf, _, err := ReadFile(f)
 			if err != nil {
 				t.Fatalf("failed to read file %s: %v", tc.file+".bop", err)
 			}
@@ -102,7 +102,7 @@ func TestValidateError(t *testing.T) {
 				t.Fatalf("failed to open test file %s: %v", tc.file+".bop", err)
 			}
 			defer f.Close()
-			bopf, err := ReadFile(f)
+			bopf, _, err := ReadFile(f)
 			if err != nil {
 				t.Fatalf("failed to read file %s: %v", tc.file+".bop", err)
 			}
@@ -137,7 +137,7 @@ func TestGenerate_Error(t *testing.T) {
 				t.Fatalf("failed to open test file %s: %v", tc.file+".bop", err)
 			}
 			defer f.Close()
-			bopf, err := ReadFile(f)
+			bopf, _, err := ReadFile(f)
 			if err != nil {
 				t.Fatalf("failed to read file %s: %v", tc.file+".bop", err)
 			}
@@ -177,7 +177,7 @@ func TestGenerateToFile_SeperateImports(t *testing.T) {
 				t.Fatalf("failed to open test file %s: %v", filedef.filename+".bop", err)
 			}
 			defer f.Close()
-			bopf, err := ReadFile(f)
+			bopf, _, err := ReadFile(f)
 			if err != nil {
 				t.Fatalf("failed to read file %s: %v", filedef.filename+".bop", err)
 			}
@@ -221,7 +221,7 @@ func TestGenerateToFile_SeperateImports_ImportCycle(t *testing.T) {
 				t.Fatalf("failed to open test file %s: %v", filedef.filename+".bop", err)
 			}
 			defer f.Close()
-			bopf, err := ReadFile(f)
+			bopf, _, err := ReadFile(f)
 			if err != nil {
 				t.Fatalf("failed to read file %s: %v", filedef.filename+".bop", err)
 			}
@@ -309,7 +309,7 @@ func TestGenerateToFile_Error(t *testing.T) {
 					t.Fatalf("failed to open test file %s: %v", tc.filename+".bop", err)
 				}
 				defer f.Close()
-				tc.File, err = ReadFile(f)
+				tc.File, _, err = ReadFile(f)
 				if err != nil {
 					t.Fatalf("failed to read file %s: %v", tc.filename+".bop", err)
 				}
@@ -339,7 +339,7 @@ func TestGenerateToFile_Imports(t *testing.T) {
 				t.Fatalf("failed to open test file %s: %v", filename+".bop", err)
 			}
 			defer f.Close()
-			bopf, err := ReadFile(f)
+			bopf, _, err := ReadFile(f)
 			if err != nil {
 				t.Fatalf("failed to read file %s: %v", filename+".bop", err)
 			}
@@ -396,7 +396,7 @@ func TestGenerateToFile(t *testing.T) {
 				t.Fatalf("failed to open test file %s: %v", filename+".bop", err)
 			}
 			defer f.Close()
-			bopf, err := ReadFile(f)
+			bopf, _, err := ReadFile(f)
 			if err != nil {
 				t.Fatalf("failed to read file %s: %v", filename+".bop", err)
 			}
@@ -428,7 +428,7 @@ func TestGenerateToFileIncompatible(t *testing.T) {
 				t.Fatalf("failed to open test file %s: %v", filename+".bop", err)
 			}
 			defer f.Close()
-			bopf, err := ReadFile(f)
+			bopf, _, err := ReadFile(f)
 			if err != nil {
 				t.Fatalf("failed to read file %s: %v", filename+".bop", err)
 			}
