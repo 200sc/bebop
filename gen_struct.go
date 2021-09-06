@@ -202,11 +202,7 @@ func writeStructFieldUnmarshaller(name string, typ FieldType, w io.Writer, setti
 	if typ.Array != nil {
 		writeLineWithTabs(w, "%RECV = make([]%TYPE, iohelp.ReadUint32(r))", depth, name, typ.Array.goString(settings))
 		writeLineWithTabs(w, "for "+iName+" := range %RECV {", depth, name)
-		if name[0] == '&' {
-			name = "&(" + name[1:] + "[" + iName + "])"
-		} else {
-			name = "(" + name + ")[" + iName + "]"
-		}
+		name = "&(" + name[1:] + "[" + iName + "])"
 		writeStructFieldUnmarshaller(name, *typ.Array, w, settings, depth+1)
 		writeLineWithTabs(w, "}", depth)
 	} else if typ.Map != nil {
@@ -223,11 +219,7 @@ func writeStructFieldUnmarshaller(name string, typ FieldType, w io.Writer, setti
 		writeLineWithTabs(w, "for "+iName+" := uint32(0); "+iName+" < "+lnName+"; "+iName+"++ {", depth, name)
 		ln := getLineWithTabs(settings.typeUnmarshallers[typ.Map.Key], depth+1, "&"+depthName("k", depth))
 		w.Write([]byte(strings.Replace(ln, "=", ":=", 1)))
-		if name[0] == '&' {
-			name = "&(" + name[1:] + "[" + depthName("k", depth) + "])"
-		} else {
-			name = "(" + name + ")[" + depthName("k", depth) + "]"
-		}
+		name = "&(" + name[1:] + "[" + depthName("k", depth) + "])"
 		writeStructFieldUnmarshaller(name, typ.Map.Value, w, settings, depth+1)
 		writeLineWithTabs(w, "}", depth)
 	} else {

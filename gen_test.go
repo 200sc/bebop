@@ -87,6 +87,12 @@ func TestValidateError(t *testing.T) {
 	}, {
 		file: "invalid_const_duplicate_name",
 		err:  "const has duplicated name hello",
+	}, {
+		file: "invalid_union_duplicate_name",
+		err:  "union Test has duplicate field name foo",
+	}, {
+		file: "invalid_union_primitive_name",
+		err:  "union shares primitive type name uint8",
 	}}
 	for _, tc := range tcs {
 		tc := tc
@@ -196,19 +202,15 @@ func TestGenerateToFile_SeperateImports(t *testing.T) {
 	}
 }
 
-func TestGenerateToFile_SeperateImports_Errors(t *testing.T) {
+func TestGenerateToFile_SeperateImports_ImportCycle(t *testing.T) {
 	type file struct {
 		filename   string
 		errMessage string
 	}
 	files := []file{
 		{
-			filename: "import_loop_a",
-			errMessage: `import cycle found:
-	github.com/200sc/bebop/testdata/incompatible/generated/a, imported by:
-	github.com/200sc/bebop/testdata/incompatible/generated/c, imported by:
-	github.com/200sc/bebop/testdata/incompatible/generated/b, imported by:
-	github.com/200sc/bebop/testdata/incompatible/generated/a`,
+			filename:   "import_loop_a",
+			errMessage: "import cycle found:", // the cycle itself is not deterministic, depending on which node is scanned first
 		},
 	}
 	for _, filedef := range files {
@@ -231,8 +233,93 @@ func TestGenerateToFile_SeperateImports_Errors(t *testing.T) {
 			if err == nil {
 				t.Fatalf("generate had no error: expected %q", filedef.errMessage)
 			}
-			if err.Error() != filedef.errMessage {
+			if !strings.HasPrefix(err.Error(), filedef.errMessage) {
 				t.Fatalf("generate had wrong error: got %q, expected %q", err.Error(), filedef.errMessage)
+			}
+		})
+	}
+}
+
+func TestGenerateToFile_Error(t *testing.T) {
+	type testCase struct {
+		name string
+		// provide one of the following two:
+		File
+		filename string
+		GenerateSettings
+		errMessage string
+	}
+	tcs := []testCase{
+		{
+			name:             "no package definition",
+			File:             File{},
+			GenerateSettings: GenerateSettings{},
+			errMessage:       "no package name is defined, provide a go_package const or an explicit package name setting",
+		}, {
+			name: "bad import strategy",
+			File: File{},
+			GenerateSettings: GenerateSettings{
+				ImportGenerationMode: 5,
+			},
+			errMessage: "invalid generation settings: unknown import mode: 5",
+		}, {
+			name:     "no go package const in import",
+			filename: "invalid_import_no_const",
+			GenerateSettings: GenerateSettings{
+				GenerateUnsafeMethods: true,
+				SharedMemoryStrings:   true,
+				ImportGenerationMode:  ImportGenerationModeSeparate,
+			},
+			errMessage: "cannot import quoted_string.bop: file has no go_package const",
+		}, {
+			name: "undefined map key type",
+			File: File{
+				Structs: []Struct{
+					{
+						Fields: []Field{
+							{
+								Name: "F",
+								FieldType: FieldType{
+									Map: &MapType{
+										Key: "boofus",
+										Value: FieldType{
+											Simple: "bofus",
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			GenerateSettings: GenerateSettings{
+				GenerateUnsafeMethods: true,
+				SharedMemoryStrings:   true,
+				ImportGenerationMode:  ImportGenerationModeSeparate,
+			},
+			errMessage: "cannot generate file: map key type boofus undefined",
+		},
+	}
+	for _, tc := range tcs {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			if tc.filename != "" {
+				f, err := os.Open(filepath.Join("testdata", "incompatible", tc.filename+".bop"))
+				if err != nil {
+					t.Fatalf("failed to open test file %s: %v", tc.filename+".bop", err)
+				}
+				defer f.Close()
+				tc.File, err = ReadFile(f)
+				if err != nil {
+					t.Fatalf("failed to read file %s: %v", tc.filename+".bop", err)
+				}
+			}
+			err := tc.File.Generate(io.Discard, tc.GenerateSettings)
+			if err == nil {
+				t.Fatalf("generate had no error: expected %q", tc.errMessage)
+			}
+			if err.Error() != tc.errMessage {
+				t.Fatalf("generate had wrong error: got %q, expected %q", err.Error(), tc.errMessage)
 			}
 		})
 	}
@@ -294,6 +381,7 @@ var genTestFiles = []string{
 	"request",
 	"server",
 	"union",
+	"union_field",
 	"date",
 	"message_1",
 }

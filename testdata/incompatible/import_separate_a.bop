@@ -6,3 +6,16 @@ import "./import_separate_c.bop"
 struct UsesImport {
     ImportedType imported; 
 }
+
+message UsesImportMsg {
+    1 -> ImportedType imported;
+}
+
+union UsesImportUnion {
+    1 -> struct UnionStruct{
+        ImportedEnum hello;
+    }
+    2 -> message UnionMessage{
+        ImportedEnum goodbye;
+    }
+}

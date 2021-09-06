@@ -80,7 +80,6 @@ const (
 	fmtEncode  = "err = (%ASGN).EncodeBebop(w)\n"
 )
 
-// TODO: these should be constant strings
 var fixedSizeTypes = map[string]uint8{
 	typeBool:    1,
 	typeByte:    1,

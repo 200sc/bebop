@@ -59,15 +59,6 @@ var allImportModes = map[ImportGenerationMode]struct{}{
 	ImportGenerationModeCombined: {},
 }
 
-var reservedWords = map[string]struct{}{
-	"map":      {},
-	"array":    {},
-	"struct":   {},
-	"message":  {},
-	"enum":     {},
-	"readonly": {},
-}
-
 func (gs GenerateSettings) Validate() error {
 	if _, ok := allImportModes[gs.ImportGenerationMode]; !ok {
 		return fmt.Errorf("unknown import mode: %d", gs.ImportGenerationMode)
@@ -89,9 +80,6 @@ func (f File) Validate() error {
 	for _, en := range f.Enums {
 		if _, ok := primitiveTypes[en.Name]; ok {
 			return fmt.Errorf("enum shares primitive type name %s", en.Name)
-		}
-		if _, ok := reservedWords[en.Name]; ok {
-			return fmt.Errorf("enum shares reserved word name %s", en.Name)
 		}
 		if _, ok := customTypes[en.Name]; ok {
 			return fmt.Errorf("enum has duplicated name %s", en.Name)
@@ -118,9 +106,6 @@ func (f File) Validate() error {
 		if _, ok := primitiveTypes[st.Name]; ok {
 			return fmt.Errorf("struct shares primitive type name %s", st.Name)
 		}
-		if _, ok := reservedWords[st.Name]; ok {
-			return fmt.Errorf("struct shares reserved word name %s", st.Name)
-		}
 		if _, ok := customTypes[st.Name]; ok {
 			return fmt.Errorf("struct has duplicated name %s", st.Name)
 		}
@@ -143,9 +128,6 @@ func (f File) Validate() error {
 		if _, ok := primitiveTypes[msg.Name]; ok {
 			return fmt.Errorf("message shares primitive type name %s", msg.Name)
 		}
-		if _, ok := reservedWords[msg.Name]; ok {
-			return fmt.Errorf("message shares reserved word name %s", msg.Name)
-		}
 		if _, ok := customTypes[msg.Name]; ok {
 			return fmt.Errorf("message has duplicated name %s", msg.Name)
 		}
@@ -161,6 +143,26 @@ func (f File) Validate() error {
 			}
 
 			msgNames[fd.Name] = struct{}{}
+		}
+	}
+	for _, un := range f.Unions {
+		if _, ok := primitiveTypes[un.Name]; ok {
+			return fmt.Errorf("union shares primitive type name %s", un.Name)
+		}
+		if _, ok := customTypes[un.Name]; ok {
+			return fmt.Errorf("union has duplicated name %s", un.Name)
+		}
+		if un.Namespace != "" {
+			nameWithoutPrefix := strings.TrimPrefix(un.Name, un.Namespace+".")
+			customTypes[nameWithoutPrefix] = struct{}{}
+		}
+		customTypes[un.Name] = struct{}{}
+		unionNames := map[string]struct{}{}
+		for _, fd := range un.Fields {
+			if _, ok := unionNames[fd.name()]; ok {
+				return fmt.Errorf("union %s has duplicate field name %s", un.Name, fd.name())
+			}
+			unionNames[fd.name()] = struct{}{}
 		}
 	}
 	allTypes := customTypes
@@ -220,8 +222,6 @@ func (f File) Validate() error {
 			return fmt.Errorf("struct %s recursively includes itself as a required field", stName)
 		}
 	}
-
-	// Todo: union validation
 
 	return nil
 }
@@ -317,7 +317,7 @@ func (f File) Generate(w io.Writer, settings GenerateSettings) error {
 	case ImportGenerationModeSeparate:
 		for _, imp := range settings.imported {
 			if imp.GoPackage == "" {
-				return fmt.Errorf("cannot import %s: file has no %s const", imp.FileName, goPackage)
+				return fmt.Errorf("cannot import %s: file has no %s const", filepath.Base(imp.FileName), goPackage)
 			}
 			packageName := imp.GoPackage
 			packageNamespace := path.Base(packageName)
@@ -695,11 +695,7 @@ func writeFieldBodyCount(name string, typ FieldType, w io.Writer, settings Gener
 			writeLineWithTabs(w, "bodyLen += len(%ASGN) * "+strconv.Itoa(int(sz)), depth, name)
 			return
 		}
-		if typeNeedsElem(typ.Array.Simple, settings) {
-			writeLineWithTabs(w, "for _, elem := range %ASGN {", depth, name)
-		} else {
-			writeLineWithTabs(w, "for range %ASGN {", depth, name)
-		}
+		writeLineWithTabs(w, "for _, elem := range %ASGN {", depth, name)
 		writeFieldBodyCount("elem", *typ.Array, w, settings, depth+1)
 		writeLineWithTabs(w, "}", depth)
 	} else if typ.Map != nil {

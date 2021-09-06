@@ -26,3 +26,11 @@ func (ft FieldType) goString(settings GenerateSettings) string {
 func (mt MapType) goString(settings GenerateSettings) string {
 	return "map[" + simpleGoString(mt.Key, settings) + "]" + mt.Value.goString(settings)
 }
+
+func (uf UnionField) name() string {
+	if uf.Message != nil {
+		return uf.Message.Name
+	} else {
+		return uf.Struct.Name
+	}
+}

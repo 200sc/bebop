@@ -1,0 +1,9 @@
+message WithUnionField {
+    1 -> List2 test;
+}
+
+union List2 {
+    1 -> struct Cons2 { uint32 head; List tail; }
+    // nil is empty
+    2 -> struct Nil2 {}
+}

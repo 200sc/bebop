@@ -90,3 +90,324 @@ func MustMakeUsesImportFromBytes(buf []byte) UsesImport {
 	return v
 }
 
+var _ bebop.Record = &UsesImportMsg{}
+
+type UsesImportMsg struct {
+	Imported *generatedtwo.ImportedType
+}
+
+func (bbp UsesImportMsg) MarshalBebopTo(buf []byte) int {
+	at := 0
+	iohelp.WriteUint32Bytes(buf[at:], uint32(bbp.Size()-4))
+	at += 4
+	if bbp.Imported != nil {
+		buf[at] = 1
+		at++
+		(*bbp.Imported).MarshalBebopTo(buf[at:])
+		at += (*bbp.Imported).Size()
+	}
+	return at
+}
+
+func (bbp *UsesImportMsg) UnmarshalBebop(buf []byte) (err error) {
+	at := 0
+	_ = iohelp.ReadUint32Bytes(buf[at:])
+	buf = buf[4:]
+	for {
+		switch buf[at] {
+		case 1:
+			at += 1
+			bbp.Imported = new(generatedtwo.ImportedType)
+			(*bbp.Imported), err = generatedtwo.MakeImportedTypeFromBytes(buf[at:])
+			if err != nil{
+				return err
+			}
+			at += ((*bbp.Imported)).Size()
+		default:
+			return nil
+		}
+	}
+}
+
+func (bbp *UsesImportMsg) MustUnmarshalBebop(buf []byte) {
+	at := 0
+	_ = iohelp.ReadUint32Bytes(buf[at:])
+	buf = buf[4:]
+	for {
+		switch buf[at] {
+		case 1:
+			at += 1
+			bbp.Imported = new(generatedtwo.ImportedType)
+			(*bbp.Imported) = generatedtwo.MustMakeImportedTypeFromBytes(buf[at:])
+			at += ((*bbp.Imported)).Size()
+		default:
+			return
+		}
+	}
+}
+
+func (bbp UsesImportMsg) EncodeBebop(iow io.Writer) (err error) {
+	w := iohelp.NewErrorWriter(iow)
+	iohelp.WriteUint32(w, uint32(bbp.Size()-4))
+	if bbp.Imported != nil {
+		w.Write([]byte{1})
+		err = (*bbp.Imported).EncodeBebop(w)
+		if err != nil{
+			return err
+		}
+	}
+	w.Write([]byte{0})
+	return w.Err
+}
+
+func (bbp *UsesImportMsg) DecodeBebop(ior io.Reader) (err error) {
+	r := iohelp.NewErrorReader(ior)
+	bodyLen := iohelp.ReadUint32(r)
+	r.Reader = &io.LimitedReader{R:r.Reader, N:int64(bodyLen)}
+	for {
+		switch iohelp.ReadByte(r) {
+		case 1:
+			bbp.Imported = new(generatedtwo.ImportedType)
+			(*bbp.Imported), err = generatedtwo.MakeImportedType(r)
+			if err != nil{
+				return err
+			}
+		default:
+			io.ReadAll(r)
+			return r.Err
+		}
+	}
+}
+
+func (bbp UsesImportMsg) Size() int {
+	bodyLen := 5
+	if bbp.Imported != nil {
+		bodyLen += 1
+		bodyLen += (*bbp.Imported).Size()
+	}
+	return bodyLen
+}
+
+func (bbp UsesImportMsg) MarshalBebop() []byte {
+	buf := make([]byte, bbp.Size())
+	bbp.MarshalBebopTo(buf)
+	return buf
+}
+
+func MakeUsesImportMsg(r iohelp.ErrorReader) (UsesImportMsg, error) {
+	v := UsesImportMsg{}
+	err := v.DecodeBebop(r)
+	return v, err
+}
+
+func MakeUsesImportMsgFromBytes(buf []byte) (UsesImportMsg, error) {
+	v := UsesImportMsg{}
+	err := v.UnmarshalBebop(buf)
+	return v, err
+}
+
+func MustMakeUsesImportMsgFromBytes(buf []byte) UsesImportMsg {
+	v := UsesImportMsg{}
+	v.MustUnmarshalBebop(buf)
+	return v
+}
+
+var _ bebop.Record = &UnionStruct{}
+
+type UnionStruct struct {
+	Hello generatedtwo.ImportedEnum
+}
+
+func (bbp UnionStruct) MarshalBebopTo(buf []byte) int {
+	at := 0
+	iohelp.WriteUint32Bytes(buf[at:], uint32(bbp.Hello))
+	at += 4
+	return at
+}
+
+func (bbp *UnionStruct) UnmarshalBebop(buf []byte) (err error) {
+	at := 0
+	bbp.Hello = generatedtwo.ImportedEnum(iohelp.ReadUint32Bytes(buf[at:]))
+	at += 4
+	return nil
+}
+
+func (bbp *UnionStruct) MustUnmarshalBebop(buf []byte) {
+	at := 0
+	bbp.Hello = generatedtwo.ImportedEnum(iohelp.ReadUint32Bytes(buf[at:]))
+	at += 4
+}
+
+func (bbp UnionStruct) EncodeBebop(iow io.Writer) (err error) {
+	w := iohelp.NewErrorWriter(iow)
+	iohelp.WriteUint32(w, uint32(bbp.Hello))
+	return w.Err
+}
+
+func (bbp *UnionStruct) DecodeBebop(ior io.Reader) (err error) {
+	r := iohelp.NewErrorReader(ior)
+	bbp.Hello = generatedtwo.ImportedEnum(iohelp.ReadUint32(r))
+	return r.Err
+}
+
+func (bbp UnionStruct) Size() int {
+	bodyLen := 0
+	bodyLen += 4
+	return bodyLen
+}
+
+func (bbp UnionStruct) MarshalBebop() []byte {
+	buf := make([]byte, bbp.Size())
+	bbp.MarshalBebopTo(buf)
+	return buf
+}
+
+func MakeUnionStruct(r iohelp.ErrorReader) (UnionStruct, error) {
+	v := UnionStruct{}
+	err := v.DecodeBebop(r)
+	return v, err
+}
+
+func MakeUnionStructFromBytes(buf []byte) (UnionStruct, error) {
+	v := UnionStruct{}
+	err := v.UnmarshalBebop(buf)
+	return v, err
+}
+
+func MustMakeUnionStructFromBytes(buf []byte) UnionStruct {
+	v := UnionStruct{}
+	v.MustUnmarshalBebop(buf)
+	return v
+}
+
+var _ bebop.Record = &UsesImportUnion{}
+
+type UsesImportUnion struct {
+	UnionStruct *UnionStruct
+}
+
+func (bbp UsesImportUnion) MarshalBebopTo(buf []byte) int {
+	at := 0
+	iohelp.WriteUint32Bytes(buf[at:], uint32(bbp.Size()-4))
+	at += 4
+	if bbp.UnionStruct != nil {
+		buf[at] = 1
+		at++
+		(*bbp.UnionStruct).MarshalBebopTo(buf[at:])
+		at += (*bbp.UnionStruct).Size()
+		return at
+	}
+	return at
+}
+
+func (bbp *UsesImportUnion) UnmarshalBebop(buf []byte) (err error) {
+	at := 0
+	_ = iohelp.ReadUint32Bytes(buf[at:])
+	buf = buf[4:]
+	if len(buf) == 0 {
+		return iohelp.ErrUnpopulatedUnion
+	}
+	for {
+		switch buf[at] {
+		case 1:
+			at += 1
+			bbp.UnionStruct = new(UnionStruct)
+			(*bbp.UnionStruct), err = MakeUnionStructFromBytes(buf[at:])
+			if err != nil{
+				return err
+			}
+			at += ((*bbp.UnionStruct)).Size()
+			return nil
+		default:
+			return nil
+		}
+	}
+}
+
+func (bbp *UsesImportUnion) MustUnmarshalBebop(buf []byte) {
+	at := 0
+	_ = iohelp.ReadUint32Bytes(buf[at:])
+	buf = buf[4:]
+	for {
+		switch buf[at] {
+		case 1:
+			at += 1
+			bbp.UnionStruct = new(UnionStruct)
+			(*bbp.UnionStruct) = MustMakeUnionStructFromBytes(buf[at:])
+			at += ((*bbp.UnionStruct)).Size()
+			return
+		default:
+			return
+		}
+	}
+}
+
+func (bbp UsesImportUnion) EncodeBebop(iow io.Writer) (err error) {
+	w := iohelp.NewErrorWriter(iow)
+	iohelp.WriteUint32(w, uint32(bbp.Size()-4))
+	if bbp.UnionStruct != nil {
+		w.Write([]byte{1})
+		err = (*bbp.UnionStruct).EncodeBebop(w)
+		if err != nil{
+			return err
+		}
+		return w.Err
+	}
+	return w.Err
+}
+
+func (bbp *UsesImportUnion) DecodeBebop(ior io.Reader) (err error) {
+	r := iohelp.NewErrorReader(ior)
+	bodyLen := iohelp.ReadUint32(r)
+	r.Reader = &io.LimitedReader{R:r.Reader, N:int64(bodyLen)}
+	for {
+		switch iohelp.ReadByte(r) {
+		case 1:
+			bbp.UnionStruct = new(UnionStruct)
+			(*bbp.UnionStruct), err = MakeUnionStruct(r)
+			if err != nil{
+				return err
+			}
+			io.ReadAll(r)
+			return r.Err
+		default:
+			io.ReadAll(r)
+			return r.Err
+		}
+	}
+}
+
+func (bbp UsesImportUnion) Size() int {
+	bodyLen := 4
+	if bbp.UnionStruct != nil {
+		bodyLen += 1
+		bodyLen += (*bbp.UnionStruct).Size()
+		return bodyLen
+	}
+	return bodyLen
+}
+
+func (bbp UsesImportUnion) MarshalBebop() []byte {
+	buf := make([]byte, bbp.Size())
+	bbp.MarshalBebopTo(buf)
+	return buf
+}
+
+func MakeUsesImportUnion(r iohelp.ErrorReader) (UsesImportUnion, error) {
+	v := UsesImportUnion{}
+	err := v.DecodeBebop(r)
+	return v, err
+}
+
+func MakeUsesImportUnionFromBytes(buf []byte) (UsesImportUnion, error) {
+	v := UsesImportUnion{}
+	err := v.UnmarshalBebop(buf)
+	return v, err
+}
+
+func MustMakeUsesImportUnionFromBytes(buf []byte) UsesImportUnion {
+	v := UsesImportUnion{}
+	v.MustUnmarshalBebop(buf)
+	return v
+}
+
