@@ -206,6 +206,9 @@ func (bbp RequestResponse) EncodeBebop(iow io.Writer) (err error) {
 func (bbp *RequestResponse) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
 	r.Read(make([]byte, 4))
+	if r.Err != nil {
+		return r.Err
+	}
 	bbp.availableFurniture = make([]Furniture, iohelp.ReadUint32(r))
 	for i1 := range bbp.availableFurniture {
 		((bbp.availableFurniture[i1])), err = MakeFurniture(r)
@@ -363,6 +366,9 @@ func (bbp *RequestCatalog) DecodeBebop(ior io.Reader) (err error) {
 	bodyLen := iohelp.ReadUint32(er)
 	body := make([]byte, bodyLen)
 	er.Read(body)
+	if er.Err != nil {
+		return er.Err
+	}
 	r := iohelp.NewErrorReader(bytes.NewReader(body))
 	for {
 		switch iohelp.ReadByte(r) {
@@ -373,7 +379,7 @@ func (bbp *RequestCatalog) DecodeBebop(ior io.Reader) (err error) {
 			bbp.SecretTunnel = new(string)
 			*bbp.SecretTunnel = iohelp.ReadString(r)
 		default:
-			return er.Err
+			return r.Err
 		}
 	}
 }

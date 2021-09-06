@@ -128,6 +128,9 @@ func (bbp *MyObj) DecodeBebop(ior io.Reader) (err error) {
 	bodyLen := iohelp.ReadUint32(er)
 	body := make([]byte, bodyLen)
 	er.Read(body)
+	if er.Err != nil {
+		return er.Err
+	}
 	r := iohelp.NewErrorReader(bytes.NewReader(body))
 	for {
 		switch iohelp.ReadByte(r) {
@@ -138,7 +141,7 @@ func (bbp *MyObj) DecodeBebop(ior io.Reader) (err error) {
 			bbp.End = new(time.Time)
 			*bbp.End = iohelp.ReadDate(r)
 		default:
-			return er.Err
+			return r.Err
 		}
 	}
 }

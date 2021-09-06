@@ -181,6 +181,9 @@ func (bbp *DepM) DecodeBebop(ior io.Reader) (err error) {
 	bodyLen := iohelp.ReadUint32(er)
 	body := make([]byte, bodyLen)
 	er.Read(body)
+	if er.Err != nil {
+		return er.Err
+	}
 	r := iohelp.NewErrorReader(bytes.NewReader(body))
 	for {
 		switch iohelp.ReadByte(r) {
@@ -188,7 +191,7 @@ func (bbp *DepM) DecodeBebop(ior io.Reader) (err error) {
 			bbp.X = new(int32)
 			*bbp.X = iohelp.ReadInt32(r)
 		default:
-			return er.Err
+			return r.Err
 		}
 	}
 }
@@ -351,6 +354,9 @@ func (bbp *DocM) DecodeBebop(ior io.Reader) (err error) {
 	bodyLen := iohelp.ReadUint32(er)
 	body := make([]byte, bodyLen)
 	er.Read(body)
+	if er.Err != nil {
+		return er.Err
+	}
 	r := iohelp.NewErrorReader(bytes.NewReader(body))
 	for {
 		switch iohelp.ReadByte(r) {
@@ -364,7 +370,7 @@ func (bbp *DocM) DecodeBebop(ior io.Reader) (err error) {
 			bbp.Z = new(int32)
 			*bbp.Z = iohelp.ReadInt32(r)
 		default:
-			return er.Err
+			return r.Err
 		}
 	}
 }

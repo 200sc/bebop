@@ -212,6 +212,9 @@ func (bbp *Bar) DecodeBebop(ior io.Reader) (err error) {
 	bodyLen := iohelp.ReadUint32(er)
 	body := make([]byte, bodyLen)
 	er.Read(body)
+	if er.Err != nil {
+		return er.Err
+	}
 	r := iohelp.NewErrorReader(bytes.NewReader(body))
 	for {
 		switch iohelp.ReadByte(r) {
@@ -225,7 +228,7 @@ func (bbp *Bar) DecodeBebop(ior io.Reader) (err error) {
 			bbp.Z = new(float64)
 			*bbp.Z = iohelp.ReadFloat64(r)
 		default:
-			return er.Err
+			return r.Err
 		}
 	}
 }

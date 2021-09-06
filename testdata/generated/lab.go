@@ -802,6 +802,9 @@ func (bbp *MediaMessage) DecodeBebop(ior io.Reader) (err error) {
 	bodyLen := iohelp.ReadUint32(er)
 	body := make([]byte, bodyLen)
 	er.Read(body)
+	if er.Err != nil {
+		return er.Err
+	}
 	r := iohelp.NewErrorReader(bytes.NewReader(body))
 	for {
 		switch iohelp.ReadByte(r) {
@@ -815,7 +818,7 @@ func (bbp *MediaMessage) DecodeBebop(ior io.Reader) (err error) {
 				return err
 			}
 		default:
-			return er.Err
+			return r.Err
 		}
 	}
 }
@@ -954,6 +957,9 @@ func (bbp *SkipTestOld) DecodeBebop(ior io.Reader) (err error) {
 	bodyLen := iohelp.ReadUint32(er)
 	body := make([]byte, bodyLen)
 	er.Read(body)
+	if er.Err != nil {
+		return er.Err
+	}
 	r := iohelp.NewErrorReader(bytes.NewReader(body))
 	for {
 		switch iohelp.ReadByte(r) {
@@ -964,7 +970,7 @@ func (bbp *SkipTestOld) DecodeBebop(ior io.Reader) (err error) {
 			bbp.Y = new(int32)
 			*bbp.Y = iohelp.ReadInt32(r)
 		default:
-			return er.Err
+			return r.Err
 		}
 	}
 }
@@ -1126,6 +1132,9 @@ func (bbp *SkipTestNew) DecodeBebop(ior io.Reader) (err error) {
 	bodyLen := iohelp.ReadUint32(er)
 	body := make([]byte, bodyLen)
 	er.Read(body)
+	if er.Err != nil {
+		return er.Err
+	}
 	r := iohelp.NewErrorReader(bytes.NewReader(body))
 	for {
 		switch iohelp.ReadByte(r) {
@@ -1139,7 +1148,7 @@ func (bbp *SkipTestNew) DecodeBebop(ior io.Reader) (err error) {
 			bbp.Z = new(int32)
 			*bbp.Z = iohelp.ReadInt32(r)
 		default:
-			return er.Err
+			return r.Err
 		}
 	}
 }
@@ -1284,6 +1293,9 @@ func (bbp *SkipTestOldContainer) DecodeBebop(ior io.Reader) (err error) {
 	bodyLen := iohelp.ReadUint32(er)
 	body := make([]byte, bodyLen)
 	er.Read(body)
+	if er.Err != nil {
+		return er.Err
+	}
 	r := iohelp.NewErrorReader(bytes.NewReader(body))
 	for {
 		switch iohelp.ReadByte(r) {
@@ -1297,7 +1309,7 @@ func (bbp *SkipTestOldContainer) DecodeBebop(ior io.Reader) (err error) {
 			bbp.After = new(int32)
 			*bbp.After = iohelp.ReadInt32(r)
 		default:
-			return er.Err
+			return r.Err
 		}
 	}
 }
@@ -1438,6 +1450,9 @@ func (bbp *SkipTestNewContainer) DecodeBebop(ior io.Reader) (err error) {
 	bodyLen := iohelp.ReadUint32(er)
 	body := make([]byte, bodyLen)
 	er.Read(body)
+	if er.Err != nil {
+		return er.Err
+	}
 	r := iohelp.NewErrorReader(bytes.NewReader(body))
 	for {
 		switch iohelp.ReadByte(r) {
@@ -1451,7 +1466,7 @@ func (bbp *SkipTestNewContainer) DecodeBebop(ior io.Reader) (err error) {
 			bbp.After = new(int32)
 			*bbp.After = iohelp.ReadInt32(r)
 		default:
-			return er.Err
+			return r.Err
 		}
 	}
 }

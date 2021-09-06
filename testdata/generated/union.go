@@ -87,6 +87,9 @@ func (bbp *A) DecodeBebop(ior io.Reader) (err error) {
 	bodyLen := iohelp.ReadUint32(er)
 	body := make([]byte, bodyLen)
 	er.Read(body)
+	if er.Err != nil {
+		return er.Err
+	}
 	r := iohelp.NewErrorReader(bytes.NewReader(body))
 	for {
 		switch iohelp.ReadByte(r) {
@@ -94,7 +97,7 @@ func (bbp *A) DecodeBebop(ior io.Reader) (err error) {
 			bbp.B = new(uint32)
 			*bbp.B = iohelp.ReadUint32(r)
 		default:
-			return er.Err
+			return r.Err
 		}
 	}
 }
@@ -412,6 +415,9 @@ func (bbp *U) DecodeBebop(ior io.Reader) (err error) {
 	bodyLen := iohelp.ReadUint32(er)
 	body := make([]byte, bodyLen)
 	er.Read(body)
+	if er.Err != nil {
+		return er.Err
+	}
 	r := iohelp.NewErrorReader(bytes.NewReader(body))
 	for {
 		switch iohelp.ReadByte(r) {
@@ -421,21 +427,21 @@ func (bbp *U) DecodeBebop(ior io.Reader) (err error) {
 			if err != nil{
 				return err
 			}
-			return er.Err
+			return r.Err
 		case 2:
 			bbp.B = new(B)
 			(*bbp.B), err = MakeB(r)
 			if err != nil{
 				return err
 			}
-			return er.Err
+			return r.Err
 		case 3:
 			bbp.C = new(C)
 			(*bbp.C), err = MakeC(r)
 			if err != nil{
 				return err
 			}
-			return er.Err
+			return r.Err
 		default:
 			return er.Err
 		}
@@ -745,6 +751,9 @@ func (bbp *List) DecodeBebop(ior io.Reader) (err error) {
 	bodyLen := iohelp.ReadUint32(er)
 	body := make([]byte, bodyLen)
 	er.Read(body)
+	if er.Err != nil {
+		return er.Err
+	}
 	r := iohelp.NewErrorReader(bytes.NewReader(body))
 	for {
 		switch iohelp.ReadByte(r) {
@@ -754,14 +763,14 @@ func (bbp *List) DecodeBebop(ior io.Reader) (err error) {
 			if err != nil{
 				return err
 			}
-			return er.Err
+			return r.Err
 		case 2:
 			bbp.Nil = new(Nil)
 			(*bbp.Nil), err = MakeNil(r)
 			if err != nil{
 				return err
 			}
-			return er.Err
+			return r.Err
 		default:
 			return er.Err
 		}

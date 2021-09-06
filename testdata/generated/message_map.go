@@ -116,6 +116,9 @@ func (bbp *ReadOnlyMap) DecodeBebop(ior io.Reader) (err error) {
 	bodyLen := iohelp.ReadUint32(er)
 	body := make([]byte, bodyLen)
 	er.Read(body)
+	if er.Err != nil {
+		return er.Err
+	}
 	r := iohelp.NewErrorReader(bytes.NewReader(body))
 	for {
 		switch iohelp.ReadByte(r) {
@@ -128,7 +131,7 @@ func (bbp *ReadOnlyMap) DecodeBebop(ior io.Reader) (err error) {
 				(*bbp.Vals)[k3] = iohelp.ReadUint8(r)
 			}
 		default:
-			return er.Err
+			return r.Err
 		}
 	}
 }

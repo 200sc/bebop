@@ -589,6 +589,7 @@ func (st Struct) Generate(w io.Writer, settings GenerateSettings) {
 	writeLine(w, "\tr := iohelp.NewErrorReader(ior)")
 	if st.OpCode != 0 {
 		writeLine(w, "\tr.Read(make([]byte, 4))")
+		writeLine(w, "\tif r.Err != nil {\n\t\treturn r.Err\n\t}")
 	}
 	for _, fd := range st.Fields {
 		name := exposeName(fd.Name)
@@ -803,6 +804,7 @@ func (msg Message) Generate(w io.Writer, settings GenerateSettings) {
 	// reading at the byte after this entire body.
 	writeLine(w, "\tbody := make([]byte, bodyLen)")
 	writeLine(w, "\ter.Read(body)")
+	writeLine(w, "\tif er.Err != nil {\n\t\treturn er.Err\n\t}")
 	writeLine(w, "\tr := iohelp.NewErrorReader(bytes.NewReader(body))")
 	writeLine(w, "\tfor {")
 	writeLine(w, "\t\tswitch iohelp.ReadByte(r) {")
@@ -816,7 +818,7 @@ func (msg Message) Generate(w io.Writer, settings GenerateSettings) {
 	// for some reason we're allowed to skip parsing all remaining fields if we see one
 	// that we don't know about.
 	writeLine(w, "\t\tdefault:")
-	writeLine(w, "\t\t\treturn er.Err")
+	writeLine(w, "\t\t\treturn r.Err")
 	writeLine(w, "\t\t}")
 	writeLine(w, "\t}")
 	writeLine(w, "}")
@@ -1024,6 +1026,7 @@ func (u Union) Generate(w io.Writer, settings GenerateSettings) {
 	// reading at the byte after this entire body.
 	writeLine(w, "\tbody := make([]byte, bodyLen)")
 	writeLine(w, "\ter.Read(body)")
+	writeLine(w, "\tif er.Err != nil {\n\t\treturn er.Err\n\t}")
 	writeLine(w, "\tr := iohelp.NewErrorReader(bytes.NewReader(body))")
 	writeLine(w, "\tfor {")
 	writeLine(w, "\t\tswitch iohelp.ReadByte(r) {")
@@ -1032,7 +1035,7 @@ func (u Union) Generate(w io.Writer, settings GenerateSettings) {
 		name := exposeName(fd.Name)
 		writeLine(w, "\t\t\tbbp.%[1]s = new(%[2]s)", name, fd.FieldType.goString(settings))
 		writeMessageFieldUnmarshaller("bbp."+name, fd.FieldType, w, settings, 3)
-		writeLine(w, "\t\t\treturn er.Err")
+		writeLine(w, "\t\t\treturn r.Err")
 	}
 	// ref: https://github.com/RainwayApp/bebop/wiki/Wire-format#messages, final paragraph
 	// for some reason we're allowed to skip parsing all remaining fields if we see one
