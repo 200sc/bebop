@@ -3,7 +3,6 @@
 package generated
 
 import (
-	"bytes"
 	"io"
 	"github.com/200sc/bebop"
 	"github.com/200sc/bebop/iohelp"
@@ -60,7 +59,7 @@ func (bbp *ReadOnlyMap) UnmarshalBebop(buf []byte) (err error) {
 				}
 				at += 4 + len(k3)
 				if len(buf[at:]) < 1 {
-					 return iohelp.ErrTooShort
+					 return io.ErrUnexpectedEOF
 				}
 				((*bbp.Vals))[k3] = iohelp.ReadUint8Bytes(buf[at:])
 				at += 1
@@ -112,14 +111,9 @@ func (bbp ReadOnlyMap) EncodeBebop(iow io.Writer) (err error) {
 }
 
 func (bbp *ReadOnlyMap) DecodeBebop(ior io.Reader) (err error) {
-	er := iohelp.NewErrorReader(ior)
-	bodyLen := iohelp.ReadUint32(er)
-	body := make([]byte, bodyLen)
-	er.Read(body)
-	if er.Err != nil {
-		return er.Err
-	}
-	r := iohelp.NewErrorReader(bytes.NewReader(body))
+	r := iohelp.NewErrorReader(ior)
+	bodyLen := iohelp.ReadUint32(r)
+	r.Reader = &io.LimitedReader{R:r.Reader, N:int64(bodyLen)}
 	for {
 		switch iohelp.ReadByte(r) {
 		case 1:
@@ -131,6 +125,7 @@ func (bbp *ReadOnlyMap) DecodeBebop(ior io.Reader) (err error) {
 				(*bbp.Vals)[k3] = iohelp.ReadUint8(r)
 			}
 		default:
+			io.ReadAll(r)
 			return r.Err
 		}
 	}

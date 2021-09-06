@@ -3,7 +3,6 @@
 package generated
 
 import (
-	"bytes"
 	"io"
 	"github.com/200sc/bebop"
 	"github.com/200sc/bebop/iohelp"
@@ -44,7 +43,7 @@ func (bbp *A) UnmarshalBebop(buf []byte) (err error) {
 			at += 1
 			bbp.B = new(uint32)
 			if len(buf[at:]) < 4 {
-				 return iohelp.ErrTooShort
+				 return io.ErrUnexpectedEOF
 			}
 			(*bbp.B) = iohelp.ReadUint32Bytes(buf[at:])
 			at += 4
@@ -83,20 +82,16 @@ func (bbp A) EncodeBebop(iow io.Writer) (err error) {
 }
 
 func (bbp *A) DecodeBebop(ior io.Reader) (err error) {
-	er := iohelp.NewErrorReader(ior)
-	bodyLen := iohelp.ReadUint32(er)
-	body := make([]byte, bodyLen)
-	er.Read(body)
-	if er.Err != nil {
-		return er.Err
-	}
-	r := iohelp.NewErrorReader(bytes.NewReader(body))
+	r := iohelp.NewErrorReader(ior)
+	bodyLen := iohelp.ReadUint32(r)
+	r.Reader = &io.LimitedReader{R:r.Reader, N:int64(bodyLen)}
 	for {
 		switch iohelp.ReadByte(r) {
 		case 1:
 			bbp.B = new(uint32)
 			*bbp.B = iohelp.ReadUint32(r)
 		default:
+			io.ReadAll(r)
 			return r.Err
 		}
 	}
@@ -154,7 +149,7 @@ func (bbp B) MarshalBebopTo(buf []byte) int {
 func (bbp *B) UnmarshalBebop(buf []byte) (err error) {
 	at := 0
 	if len(buf[at:]) < 1 {
-		 return iohelp.ErrTooShort
+		 return io.ErrUnexpectedEOF
 	}
 	bbp.C = iohelp.ReadBoolBytes(buf[at:])
 	at += 1
@@ -209,9 +204,7 @@ type C struct {
 }
 
 func (bbp C) MarshalBebop() []byte {
-	buf := make([]byte, bbp.Size())
-	bbp.MarshalBebopTo(buf)
-	return buf
+	return []byte{}
 }
 
 func (bbp C) MarshalBebopTo(buf []byte) int {
@@ -226,36 +219,27 @@ func (bbp *C) MustUnmarshalBebop(buf []byte) {
 }
 
 func (bbp C) EncodeBebop(iow io.Writer) (err error) {
-	w := iohelp.NewErrorWriter(iow)
-	return w.Err
+	return nil
 }
 
 func (bbp *C) DecodeBebop(ior io.Reader) (err error) {
-	r := iohelp.NewErrorReader(ior)
-	return r.Err
+	return nil
 }
 
 func (bbp C) Size() int {
-	bodyLen := 0
-	return bodyLen
+	return 0
 }
 
 func MakeC(r iohelp.ErrorReader) (C, error) {
-	v := C{}
-	err := v.DecodeBebop(r)
-	return v, err
+	return C{}, nil
 }
 
 func MakeCFromBytes(buf []byte) (C, error) {
-	v := C{}
-	err := v.UnmarshalBebop(buf)
-	return v, err
+	return C{}, nil
 }
 
 func MustMakeCFromBytes(buf []byte) C {
-	v := C{}
-	v.MustUnmarshalBebop(buf)
-	return v
+	return C{}
 }
 
 const UOpCode = 0x79656168
@@ -311,7 +295,7 @@ func (bbp *U) UnmarshalBebop(buf []byte) (err error) {
 	_ = iohelp.ReadUint32Bytes(buf[at:])
 	buf = buf[4:]
 	if len(buf) == 0 {
-		return iohelp.UnpopulatedUnion
+		return iohelp.ErrUnpopulatedUnion
 	}
 	for {
 		switch buf[at] {
@@ -410,15 +394,10 @@ func (bbp U) EncodeBebop(iow io.Writer) (err error) {
 }
 
 func (bbp *U) DecodeBebop(ior io.Reader) (err error) {
-	er := iohelp.NewErrorReader(ior)
-	iohelp.ReadUint32(er)
-	bodyLen := iohelp.ReadUint32(er)
-	body := make([]byte, bodyLen)
-	er.Read(body)
-	if er.Err != nil {
-		return er.Err
-	}
-	r := iohelp.NewErrorReader(bytes.NewReader(body))
+	r := iohelp.NewErrorReader(ior)
+	iohelp.ReadUint32(r)
+	bodyLen := iohelp.ReadUint32(r)
+	r.Reader = &io.LimitedReader{R:r.Reader, N:int64(bodyLen)}
 	for {
 		switch iohelp.ReadByte(r) {
 		case 1:
@@ -427,6 +406,7 @@ func (bbp *U) DecodeBebop(ior io.Reader) (err error) {
 			if err != nil{
 				return err
 			}
+			io.ReadAll(r)
 			return r.Err
 		case 2:
 			bbp.B = new(B)
@@ -434,6 +414,7 @@ func (bbp *U) DecodeBebop(ior io.Reader) (err error) {
 			if err != nil{
 				return err
 			}
+			io.ReadAll(r)
 			return r.Err
 		case 3:
 			bbp.C = new(C)
@@ -441,9 +422,11 @@ func (bbp *U) DecodeBebop(ior io.Reader) (err error) {
 			if err != nil{
 				return err
 			}
+			io.ReadAll(r)
 			return r.Err
 		default:
-			return er.Err
+			io.ReadAll(r)
+			return r.Err
 		}
 	}
 }
@@ -512,7 +495,7 @@ func (bbp Cons) MarshalBebopTo(buf []byte) int {
 func (bbp *Cons) UnmarshalBebop(buf []byte) (err error) {
 	at := 0
 	if len(buf[at:]) < 4 {
-		 return iohelp.ErrTooShort
+		 return io.ErrUnexpectedEOF
 	}
 	bbp.Head = iohelp.ReadUint32Bytes(buf[at:])
 	at += 4
@@ -584,9 +567,7 @@ type Nil struct {
 }
 
 func (bbp Nil) MarshalBebop() []byte {
-	buf := make([]byte, bbp.Size())
-	bbp.MarshalBebopTo(buf)
-	return buf
+	return []byte{}
 }
 
 func (bbp Nil) MarshalBebopTo(buf []byte) int {
@@ -601,36 +582,27 @@ func (bbp *Nil) MustUnmarshalBebop(buf []byte) {
 }
 
 func (bbp Nil) EncodeBebop(iow io.Writer) (err error) {
-	w := iohelp.NewErrorWriter(iow)
-	return w.Err
+	return nil
 }
 
 func (bbp *Nil) DecodeBebop(ior io.Reader) (err error) {
-	r := iohelp.NewErrorReader(ior)
-	return r.Err
+	return nil
 }
 
 func (bbp Nil) Size() int {
-	bodyLen := 0
-	return bodyLen
+	return 0
 }
 
 func MakeNil(r iohelp.ErrorReader) (Nil, error) {
-	v := Nil{}
-	err := v.DecodeBebop(r)
-	return v, err
+	return Nil{}, nil
 }
 
 func MakeNilFromBytes(buf []byte) (Nil, error) {
-	v := Nil{}
-	err := v.UnmarshalBebop(buf)
-	return v, err
+	return Nil{}, nil
 }
 
 func MustMakeNilFromBytes(buf []byte) Nil {
-	v := Nil{}
-	v.MustUnmarshalBebop(buf)
-	return v
+	return Nil{}
 }
 
 var _ bebop.Record = &List{}
@@ -672,7 +644,7 @@ func (bbp *List) UnmarshalBebop(buf []byte) (err error) {
 	_ = iohelp.ReadUint32Bytes(buf[at:])
 	buf = buf[4:]
 	if len(buf) == 0 {
-		return iohelp.UnpopulatedUnion
+		return iohelp.ErrUnpopulatedUnion
 	}
 	for {
 		switch buf[at] {
@@ -747,14 +719,9 @@ func (bbp List) EncodeBebop(iow io.Writer) (err error) {
 }
 
 func (bbp *List) DecodeBebop(ior io.Reader) (err error) {
-	er := iohelp.NewErrorReader(ior)
-	bodyLen := iohelp.ReadUint32(er)
-	body := make([]byte, bodyLen)
-	er.Read(body)
-	if er.Err != nil {
-		return er.Err
-	}
-	r := iohelp.NewErrorReader(bytes.NewReader(body))
+	r := iohelp.NewErrorReader(ior)
+	bodyLen := iohelp.ReadUint32(r)
+	r.Reader = &io.LimitedReader{R:r.Reader, N:int64(bodyLen)}
 	for {
 		switch iohelp.ReadByte(r) {
 		case 1:
@@ -763,6 +730,7 @@ func (bbp *List) DecodeBebop(ior io.Reader) (err error) {
 			if err != nil{
 				return err
 			}
+			io.ReadAll(r)
 			return r.Err
 		case 2:
 			bbp.Nil = new(Nil)
@@ -770,9 +738,11 @@ func (bbp *List) DecodeBebop(ior io.Reader) (err error) {
 			if err != nil{
 				return err
 			}
+			io.ReadAll(r)
 			return r.Err
 		default:
-			return er.Err
+			io.ReadAll(r)
+			return r.Err
 		}
 	}
 }

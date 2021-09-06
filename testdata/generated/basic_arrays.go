@@ -110,125 +110,125 @@ func (bbp BasicArrays) MarshalBebopTo(buf []byte) int {
 func (bbp *BasicArrays) UnmarshalBebop(buf []byte) (err error) {
 	at := 0
 	if len(buf[at:]) < 4 {
-		 return iohelp.ErrTooShort
+		 return io.ErrUnexpectedEOF
 	}
 	bbp.A_bool = make([]bool, iohelp.ReadUint32Bytes(buf[at:]))
 	at += 4
 	if len(buf[at:]) < len(bbp.A_bool)*1 {
-		 return iohelp.ErrTooShort
+		 return io.ErrUnexpectedEOF
 	}
 	for i1 := range bbp.A_bool {
 		(bbp.A_bool)[i1] = iohelp.ReadBoolBytes(buf[at:])
 		at += 1
 	}
 	if len(buf[at:]) < 4 {
-		 return iohelp.ErrTooShort
+		 return io.ErrUnexpectedEOF
 	}
 	bbp.A_byte = make([]byte, iohelp.ReadUint32Bytes(buf[at:]))
 	at += 4
 	if len(buf[at:]) < len(bbp.A_byte)*1 {
-		 return iohelp.ErrTooShort
+		 return io.ErrUnexpectedEOF
 	}
 	copy(bbp.A_byte, buf[at:at+len(bbp.A_byte)])
 	at += len(bbp.A_byte)
 	if len(buf[at:]) < 4 {
-		 return iohelp.ErrTooShort
+		 return io.ErrUnexpectedEOF
 	}
 	bbp.A_int16 = make([]int16, iohelp.ReadUint32Bytes(buf[at:]))
 	at += 4
 	if len(buf[at:]) < len(bbp.A_int16)*2 {
-		 return iohelp.ErrTooShort
+		 return io.ErrUnexpectedEOF
 	}
 	for i1 := range bbp.A_int16 {
 		(bbp.A_int16)[i1] = iohelp.ReadInt16Bytes(buf[at:])
 		at += 2
 	}
 	if len(buf[at:]) < 4 {
-		 return iohelp.ErrTooShort
+		 return io.ErrUnexpectedEOF
 	}
 	bbp.A_uint16 = make([]uint16, iohelp.ReadUint32Bytes(buf[at:]))
 	at += 4
 	if len(buf[at:]) < len(bbp.A_uint16)*2 {
-		 return iohelp.ErrTooShort
+		 return io.ErrUnexpectedEOF
 	}
 	for i1 := range bbp.A_uint16 {
 		(bbp.A_uint16)[i1] = iohelp.ReadUint16Bytes(buf[at:])
 		at += 2
 	}
 	if len(buf[at:]) < 4 {
-		 return iohelp.ErrTooShort
+		 return io.ErrUnexpectedEOF
 	}
 	bbp.A_int32 = make([]int32, iohelp.ReadUint32Bytes(buf[at:]))
 	at += 4
 	if len(buf[at:]) < len(bbp.A_int32)*4 {
-		 return iohelp.ErrTooShort
+		 return io.ErrUnexpectedEOF
 	}
 	for i1 := range bbp.A_int32 {
 		(bbp.A_int32)[i1] = iohelp.ReadInt32Bytes(buf[at:])
 		at += 4
 	}
 	if len(buf[at:]) < 4 {
-		 return iohelp.ErrTooShort
+		 return io.ErrUnexpectedEOF
 	}
 	bbp.A_uint32 = make([]uint32, iohelp.ReadUint32Bytes(buf[at:]))
 	at += 4
 	if len(buf[at:]) < len(bbp.A_uint32)*4 {
-		 return iohelp.ErrTooShort
+		 return io.ErrUnexpectedEOF
 	}
 	for i1 := range bbp.A_uint32 {
 		(bbp.A_uint32)[i1] = iohelp.ReadUint32Bytes(buf[at:])
 		at += 4
 	}
 	if len(buf[at:]) < 4 {
-		 return iohelp.ErrTooShort
+		 return io.ErrUnexpectedEOF
 	}
 	bbp.A_int64 = make([]int64, iohelp.ReadUint32Bytes(buf[at:]))
 	at += 4
 	if len(buf[at:]) < len(bbp.A_int64)*8 {
-		 return iohelp.ErrTooShort
+		 return io.ErrUnexpectedEOF
 	}
 	for i1 := range bbp.A_int64 {
 		(bbp.A_int64)[i1] = iohelp.ReadInt64Bytes(buf[at:])
 		at += 8
 	}
 	if len(buf[at:]) < 4 {
-		 return iohelp.ErrTooShort
+		 return io.ErrUnexpectedEOF
 	}
 	bbp.A_uint64 = make([]uint64, iohelp.ReadUint32Bytes(buf[at:]))
 	at += 4
 	if len(buf[at:]) < len(bbp.A_uint64)*8 {
-		 return iohelp.ErrTooShort
+		 return io.ErrUnexpectedEOF
 	}
 	for i1 := range bbp.A_uint64 {
 		(bbp.A_uint64)[i1] = iohelp.ReadUint64Bytes(buf[at:])
 		at += 8
 	}
 	if len(buf[at:]) < 4 {
-		 return iohelp.ErrTooShort
+		 return io.ErrUnexpectedEOF
 	}
 	bbp.A_float32 = make([]float32, iohelp.ReadUint32Bytes(buf[at:]))
 	at += 4
 	if len(buf[at:]) < len(bbp.A_float32)*4 {
-		 return iohelp.ErrTooShort
+		 return io.ErrUnexpectedEOF
 	}
 	for i1 := range bbp.A_float32 {
 		(bbp.A_float32)[i1] = iohelp.ReadFloat32Bytes(buf[at:])
 		at += 4
 	}
 	if len(buf[at:]) < 4 {
-		 return iohelp.ErrTooShort
+		 return io.ErrUnexpectedEOF
 	}
 	bbp.A_float64 = make([]float64, iohelp.ReadUint32Bytes(buf[at:]))
 	at += 4
 	if len(buf[at:]) < len(bbp.A_float64)*8 {
-		 return iohelp.ErrTooShort
+		 return io.ErrUnexpectedEOF
 	}
 	for i1 := range bbp.A_float64 {
 		(bbp.A_float64)[i1] = iohelp.ReadFloat64Bytes(buf[at:])
 		at += 8
 	}
 	if len(buf[at:]) < 4 {
-		 return iohelp.ErrTooShort
+		 return io.ErrUnexpectedEOF
 	}
 	bbp.A_string = make([]string, iohelp.ReadUint32Bytes(buf[at:]))
 	at += 4
@@ -240,12 +240,12 @@ func (bbp *BasicArrays) UnmarshalBebop(buf []byte) (err error) {
 		at += 4 + len((bbp.A_string)[i1])
 	}
 	if len(buf[at:]) < 4 {
-		 return iohelp.ErrTooShort
+		 return io.ErrUnexpectedEOF
 	}
 	bbp.A_guid = make([][16]byte, iohelp.ReadUint32Bytes(buf[at:]))
 	at += 4
 	if len(buf[at:]) < len(bbp.A_guid)*16 {
-		 return iohelp.ErrTooShort
+		 return io.ErrUnexpectedEOF
 	}
 	for i1 := range bbp.A_guid {
 		(bbp.A_guid)[i1] = iohelp.ReadGUIDBytes(buf[at:])
@@ -510,12 +510,12 @@ func (bbp TestInt32Array) MarshalBebopTo(buf []byte) int {
 func (bbp *TestInt32Array) UnmarshalBebop(buf []byte) (err error) {
 	at := 0
 	if len(buf[at:]) < 4 {
-		 return iohelp.ErrTooShort
+		 return io.ErrUnexpectedEOF
 	}
 	bbp.A = make([]int32, iohelp.ReadUint32Bytes(buf[at:]))
 	at += 4
 	if len(buf[at:]) < len(bbp.A)*4 {
-		 return iohelp.ErrTooShort
+		 return io.ErrUnexpectedEOF
 	}
 	for i1 := range bbp.A {
 		(bbp.A)[i1] = iohelp.ReadInt32Bytes(buf[at:])

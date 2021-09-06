@@ -35,7 +35,7 @@ func (bbp ArrayOfStrings) MarshalBebopTo(buf []byte) int {
 func (bbp *ArrayOfStrings) UnmarshalBebop(buf []byte) (err error) {
 	at := 0
 	if len(buf[at:]) < 4 {
-		 return iohelp.ErrTooShort
+		 return io.ErrUnexpectedEOF
 	}
 	bbp.Strings = make([]string, iohelp.ReadUint32Bytes(buf[at:]))
 	at += 4

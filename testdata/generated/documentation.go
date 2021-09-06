@@ -3,7 +3,6 @@
 package generated
 
 import (
-	"bytes"
 	"io"
 	"github.com/200sc/bebop"
 	"github.com/200sc/bebop/iohelp"
@@ -53,7 +52,7 @@ func (bbp DocS) MarshalBebopTo(buf []byte) int {
 func (bbp *DocS) UnmarshalBebop(buf []byte) (err error) {
 	at := 0
 	if len(buf[at:]) < 4 {
-		 return iohelp.ErrTooShort
+		 return io.ErrUnexpectedEOF
 	}
 	bbp.X = iohelp.ReadInt32Bytes(buf[at:])
 	at += 4
@@ -138,7 +137,7 @@ func (bbp *DepM) UnmarshalBebop(buf []byte) (err error) {
 			at += 1
 			bbp.X = new(int32)
 			if len(buf[at:]) < 4 {
-				 return iohelp.ErrTooShort
+				 return io.ErrUnexpectedEOF
 			}
 			(*bbp.X) = iohelp.ReadInt32Bytes(buf[at:])
 			at += 4
@@ -177,20 +176,16 @@ func (bbp DepM) EncodeBebop(iow io.Writer) (err error) {
 }
 
 func (bbp *DepM) DecodeBebop(ior io.Reader) (err error) {
-	er := iohelp.NewErrorReader(ior)
-	bodyLen := iohelp.ReadUint32(er)
-	body := make([]byte, bodyLen)
-	er.Read(body)
-	if er.Err != nil {
-		return er.Err
-	}
-	r := iohelp.NewErrorReader(bytes.NewReader(body))
+	r := iohelp.NewErrorReader(ior)
+	bodyLen := iohelp.ReadUint32(r)
+	r.Reader = &io.LimitedReader{R:r.Reader, N:int64(bodyLen)}
 	for {
 		switch iohelp.ReadByte(r) {
 		case 1:
 			bbp.X = new(int32)
 			*bbp.X = iohelp.ReadInt32(r)
 		default:
+			io.ReadAll(r)
 			return r.Err
 		}
 	}
@@ -277,7 +272,7 @@ func (bbp *DocM) UnmarshalBebop(buf []byte) (err error) {
 			at += 1
 			bbp.X = new(int32)
 			if len(buf[at:]) < 4 {
-				 return iohelp.ErrTooShort
+				 return io.ErrUnexpectedEOF
 			}
 			(*bbp.X) = iohelp.ReadInt32Bytes(buf[at:])
 			at += 4
@@ -285,7 +280,7 @@ func (bbp *DocM) UnmarshalBebop(buf []byte) (err error) {
 			at += 1
 			bbp.Y = new(int32)
 			if len(buf[at:]) < 4 {
-				 return iohelp.ErrTooShort
+				 return io.ErrUnexpectedEOF
 			}
 			(*bbp.Y) = iohelp.ReadInt32Bytes(buf[at:])
 			at += 4
@@ -293,7 +288,7 @@ func (bbp *DocM) UnmarshalBebop(buf []byte) (err error) {
 			at += 1
 			bbp.Z = new(int32)
 			if len(buf[at:]) < 4 {
-				 return iohelp.ErrTooShort
+				 return io.ErrUnexpectedEOF
 			}
 			(*bbp.Z) = iohelp.ReadInt32Bytes(buf[at:])
 			at += 4
@@ -350,14 +345,9 @@ func (bbp DocM) EncodeBebop(iow io.Writer) (err error) {
 }
 
 func (bbp *DocM) DecodeBebop(ior io.Reader) (err error) {
-	er := iohelp.NewErrorReader(ior)
-	bodyLen := iohelp.ReadUint32(er)
-	body := make([]byte, bodyLen)
-	er.Read(body)
-	if er.Err != nil {
-		return er.Err
-	}
-	r := iohelp.NewErrorReader(bytes.NewReader(body))
+	r := iohelp.NewErrorReader(ior)
+	bodyLen := iohelp.ReadUint32(r)
+	r.Reader = &io.LimitedReader{R:r.Reader, N:int64(bodyLen)}
 	for {
 		switch iohelp.ReadByte(r) {
 		case 1:
@@ -370,6 +360,7 @@ func (bbp *DocM) DecodeBebop(ior io.Reader) (err error) {
 			bbp.Z = new(int32)
 			*bbp.Z = iohelp.ReadInt32(r)
 		default:
+			io.ReadAll(r)
 			return r.Err
 		}
 	}

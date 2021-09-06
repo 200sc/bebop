@@ -3,7 +3,6 @@
 package generated
 
 import (
-	"bytes"
 	"io"
 	"github.com/200sc/bebop"
 	"github.com/200sc/bebop/iohelp"
@@ -150,7 +149,7 @@ func (bbp *Library) UnmarshalBebop(buf []byte) (err error) {
 	bbp.Songs = make(map[[16]byte]Song,ln1)
 	for i := uint32(0); i < ln1; i++ {
 		if len(buf[at:]) < 16 {
-			 return iohelp.ErrTooShort
+			 return io.ErrUnexpectedEOF
 		}
 		k1 := iohelp.ReadGUIDBytes(buf[at:])
 		at += 16
@@ -293,7 +292,7 @@ func (bbp *Song) UnmarshalBebop(buf []byte) (err error) {
 			at += 1
 			bbp.Year = new(uint16)
 			if len(buf[at:]) < 2 {
-				 return iohelp.ErrTooShort
+				 return io.ErrUnexpectedEOF
 			}
 			(*bbp.Year) = iohelp.ReadUint16Bytes(buf[at:])
 			at += 2
@@ -301,7 +300,7 @@ func (bbp *Song) UnmarshalBebop(buf []byte) (err error) {
 			at += 1
 			bbp.Performers = new([]Musician)
 			if len(buf[at:]) < 4 {
-				 return iohelp.ErrTooShort
+				 return io.ErrUnexpectedEOF
 			}
 			(*bbp.Performers) = make([]Musician, iohelp.ReadUint32Bytes(buf[at:]))
 			at += 4
@@ -376,14 +375,9 @@ func (bbp Song) EncodeBebop(iow io.Writer) (err error) {
 }
 
 func (bbp *Song) DecodeBebop(ior io.Reader) (err error) {
-	er := iohelp.NewErrorReader(ior)
-	bodyLen := iohelp.ReadUint32(er)
-	body := make([]byte, bodyLen)
-	er.Read(body)
-	if er.Err != nil {
-		return er.Err
-	}
-	r := iohelp.NewErrorReader(bytes.NewReader(body))
+	r := iohelp.NewErrorReader(ior)
+	bodyLen := iohelp.ReadUint32(r)
+	r.Reader = &io.LimitedReader{R:r.Reader, N:int64(bodyLen)}
 	for {
 		switch iohelp.ReadByte(r) {
 		case 1:
@@ -402,6 +396,7 @@ func (bbp *Song) DecodeBebop(ior io.Reader) (err error) {
 				}
 			}
 		default:
+			io.ReadAll(r)
 			return r.Err
 		}
 	}

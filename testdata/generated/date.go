@@ -3,7 +3,6 @@
 package generated
 
 import (
-	"bytes"
 	"io"
 	"time"
 	"github.com/200sc/bebop"
@@ -60,7 +59,7 @@ func (bbp *MyObj) UnmarshalBebop(buf []byte) (err error) {
 			at += 1
 			bbp.Start = new(time.Time)
 			if len(buf[at:]) < 8 {
-				 return iohelp.ErrTooShort
+				 return io.ErrUnexpectedEOF
 			}
 			(*bbp.Start) = iohelp.ReadDateBytes(buf[at:])
 			at += 8
@@ -68,7 +67,7 @@ func (bbp *MyObj) UnmarshalBebop(buf []byte) (err error) {
 			at += 1
 			bbp.End = new(time.Time)
 			if len(buf[at:]) < 8 {
-				 return iohelp.ErrTooShort
+				 return io.ErrUnexpectedEOF
 			}
 			(*bbp.End) = iohelp.ReadDateBytes(buf[at:])
 			at += 8
@@ -124,14 +123,9 @@ func (bbp MyObj) EncodeBebop(iow io.Writer) (err error) {
 }
 
 func (bbp *MyObj) DecodeBebop(ior io.Reader) (err error) {
-	er := iohelp.NewErrorReader(ior)
-	bodyLen := iohelp.ReadUint32(er)
-	body := make([]byte, bodyLen)
-	er.Read(body)
-	if er.Err != nil {
-		return er.Err
-	}
-	r := iohelp.NewErrorReader(bytes.NewReader(body))
+	r := iohelp.NewErrorReader(ior)
+	bodyLen := iohelp.ReadUint32(r)
+	r.Reader = &io.LimitedReader{R:r.Reader, N:int64(bodyLen)}
 	for {
 		switch iohelp.ReadByte(r) {
 		case 1:
@@ -141,6 +135,7 @@ func (bbp *MyObj) DecodeBebop(ior io.Reader) (err error) {
 			bbp.End = new(time.Time)
 			*bbp.End = iohelp.ReadDate(r)
 		default:
+			io.ReadAll(r)
 			return r.Err
 		}
 	}

@@ -72,52 +72,52 @@ func (bbp BasicTypes) MarshalBebopTo(buf []byte) int {
 func (bbp *BasicTypes) UnmarshalBebop(buf []byte) (err error) {
 	at := 0
 	if len(buf[at:]) < 1 {
-		 return iohelp.ErrTooShort
+		 return io.ErrUnexpectedEOF
 	}
 	bbp.A_bool = iohelp.ReadBoolBytes(buf[at:])
 	at += 1
 	if len(buf[at:]) < 1 {
-		 return iohelp.ErrTooShort
+		 return io.ErrUnexpectedEOF
 	}
 	bbp.A_byte = iohelp.ReadByteBytes(buf[at:])
 	at += 1
 	if len(buf[at:]) < 2 {
-		 return iohelp.ErrTooShort
+		 return io.ErrUnexpectedEOF
 	}
 	bbp.A_int16 = iohelp.ReadInt16Bytes(buf[at:])
 	at += 2
 	if len(buf[at:]) < 2 {
-		 return iohelp.ErrTooShort
+		 return io.ErrUnexpectedEOF
 	}
 	bbp.A_uint16 = iohelp.ReadUint16Bytes(buf[at:])
 	at += 2
 	if len(buf[at:]) < 4 {
-		 return iohelp.ErrTooShort
+		 return io.ErrUnexpectedEOF
 	}
 	bbp.A_int32 = iohelp.ReadInt32Bytes(buf[at:])
 	at += 4
 	if len(buf[at:]) < 4 {
-		 return iohelp.ErrTooShort
+		 return io.ErrUnexpectedEOF
 	}
 	bbp.A_uint32 = iohelp.ReadUint32Bytes(buf[at:])
 	at += 4
 	if len(buf[at:]) < 8 {
-		 return iohelp.ErrTooShort
+		 return io.ErrUnexpectedEOF
 	}
 	bbp.A_int64 = iohelp.ReadInt64Bytes(buf[at:])
 	at += 8
 	if len(buf[at:]) < 8 {
-		 return iohelp.ErrTooShort
+		 return io.ErrUnexpectedEOF
 	}
 	bbp.A_uint64 = iohelp.ReadUint64Bytes(buf[at:])
 	at += 8
 	if len(buf[at:]) < 4 {
-		 return iohelp.ErrTooShort
+		 return io.ErrUnexpectedEOF
 	}
 	bbp.A_float32 = iohelp.ReadFloat32Bytes(buf[at:])
 	at += 4
 	if len(buf[at:]) < 8 {
-		 return iohelp.ErrTooShort
+		 return io.ErrUnexpectedEOF
 	}
 	bbp.A_float64 = iohelp.ReadFloat64Bytes(buf[at:])
 	at += 8
@@ -127,12 +127,12 @@ func (bbp *BasicTypes) UnmarshalBebop(buf []byte) (err error) {
 	}
 	at += 4 + len(bbp.A_string)
 	if len(buf[at:]) < 16 {
-		 return iohelp.ErrTooShort
+		 return io.ErrUnexpectedEOF
 	}
 	bbp.A_guid = iohelp.ReadGUIDBytes(buf[at:])
 	at += 16
 	if len(buf[at:]) < 8 {
-		 return iohelp.ErrTooShort
+		 return io.ErrUnexpectedEOF
 	}
 	bbp.A_date = iohelp.ReadDateBytes(buf[at:])
 	at += 8

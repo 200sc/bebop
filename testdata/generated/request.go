@@ -3,7 +3,6 @@
 package generated
 
 import (
-	"bytes"
 	"io"
 	"github.com/200sc/bebop"
 	"github.com/200sc/bebop/iohelp"
@@ -51,7 +50,7 @@ func (bbp *Furniture) UnmarshalBebop(buf []byte) (err error) {
 	}
 	at += 4 + len(bbp.name)
 	if len(buf[at:]) < 4 {
-		 return iohelp.ErrTooShort
+		 return io.ErrUnexpectedEOF
 	}
 	bbp.price = iohelp.ReadUint32Bytes(buf[at:])
 	at += 4
@@ -166,7 +165,7 @@ func (bbp RequestResponse) MarshalBebopTo(buf []byte) int {
 func (bbp *RequestResponse) UnmarshalBebop(buf []byte) (err error) {
 	at := 4
 	if len(buf[at:]) < 4 {
-		 return iohelp.ErrTooShort
+		 return io.ErrUnexpectedEOF
 	}
 	bbp.availableFurniture = make([]Furniture, iohelp.ReadUint32Bytes(buf[at:]))
 	at += 4
@@ -361,15 +360,10 @@ func (bbp RequestCatalog) EncodeBebop(iow io.Writer) (err error) {
 }
 
 func (bbp *RequestCatalog) DecodeBebop(ior io.Reader) (err error) {
-	er := iohelp.NewErrorReader(ior)
-	iohelp.ReadUint32(er)
-	bodyLen := iohelp.ReadUint32(er)
-	body := make([]byte, bodyLen)
-	er.Read(body)
-	if er.Err != nil {
-		return er.Err
-	}
-	r := iohelp.NewErrorReader(bytes.NewReader(body))
+	r := iohelp.NewErrorReader(ior)
+	iohelp.ReadUint32(r)
+	bodyLen := iohelp.ReadUint32(r)
+	r.Reader = &io.LimitedReader{R:r.Reader, N:int64(bodyLen)}
 	for {
 		switch iohelp.ReadByte(r) {
 		case 1:
@@ -379,6 +373,7 @@ func (bbp *RequestCatalog) DecodeBebop(ior io.Reader) (err error) {
 			bbp.SecretTunnel = new(string)
 			*bbp.SecretTunnel = iohelp.ReadString(r)
 		default:
+			io.ReadAll(r)
 			return r.Err
 		}
 	}

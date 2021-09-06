@@ -30,7 +30,8 @@ type GenerateSettings struct {
 	imported          []File
 	importTypeAliases map[string]string
 
-	nextLength *int
+	nextLength       *int
+	isFirstTopLength *bool
 
 	GenerateUnsafeMethods bool
 	SharedMemoryStrings   bool
@@ -248,6 +249,7 @@ func (f File) Generate(w io.Writer, settings GenerateSettings) error {
 		return fmt.Errorf("invalid generation settings: %w", err)
 	}
 	settings.nextLength = new(int)
+	settings.isFirstTopLength = new(bool)
 
 	if len(f.Imports) != 0 {
 		thisFilePath := f.FileName
@@ -361,9 +363,6 @@ func (f File) Generate(w io.Writer, settings GenerateSettings) error {
 	writeLine(w, "")
 	writeLine(w, "package %s", settings.PackageName)
 	writeLine(w, "")
-	if len(f.Messages)+len(f.Unions) != 0 {
-		imports = append(imports, "bytes")
-	}
 	if len(f.Messages)+len(f.Structs)+len(f.Unions) != 0 {
 		imports = append(imports, "io")
 	}
@@ -411,6 +410,9 @@ func (f File) Generate(w io.Writer, settings GenerateSettings) error {
 		writeLine(w, ")")
 		writeLine(w, "")
 	}
+	// Namespaced types are imported from another package, and must not be generated.
+	// They must, however, be defined up til this point so we know how to create them
+	// as components of records in this package.
 	for _, en := range f.Enums {
 		if en.Namespace != "" {
 			continue
@@ -589,7 +591,7 @@ func (st Struct) generateMustUnmarshalBebop(w io.Writer, settings GenerateSettin
 
 func (st Struct) generateEncodeBebop(w io.Writer, settings GenerateSettings) {
 	exposedName := exposeName(st.Name)
-	isFirstTopLength = true
+	*settings.isFirstTopLength = true
 	writeLine(w, "func (bbp %s) EncodeBebop(iow io.Writer) (err error) {", exposedName)
 	if len(st.Fields) == 0 && st.OpCode == 0 {
 		writeLine(w, "\treturn nil")
@@ -613,7 +615,7 @@ func (st Struct) generateEncodeBebop(w io.Writer, settings GenerateSettings) {
 
 func (st Struct) generateDecodeBebop(w io.Writer, settings GenerateSettings) {
 	exposedName := exposeName(st.Name)
-	isFirstTopLength = true
+	*settings.isFirstTopLength = true
 	writeLine(w, "func (bbp *%s) DecodeBebop(ior io.Reader) (err error) {", exposedName)
 	if len(st.Fields) == 0 && st.OpCode == 0 {
 		writeLine(w, "\treturn nil")
@@ -856,7 +858,7 @@ func (msg Message) Generate(w io.Writer, settings GenerateSettings) {
 		writeLine(w, "}")
 		writeLine(w, "")
 	}
-	isFirstTopLength = true
+	*settings.isFirstTopLength = true
 	writeLine(w, "func (bbp %s) EncodeBebop(iow io.Writer) (err error) {", exposedName)
 	writeLine(w, "\tw := iohelp.NewErrorWriter(iow)")
 	if msg.OpCode != 0 {
@@ -878,21 +880,14 @@ func (msg Message) Generate(w io.Writer, settings GenerateSettings) {
 	writeLine(w, "\treturn w.Err")
 	writeLine(w, "}")
 	writeLine(w, "")
-	isFirstTopLength = true
+	*settings.isFirstTopLength = true
 	writeLine(w, "func (bbp *%s) DecodeBebop(ior io.Reader) (err error) {", exposedName)
-	writeLine(w, "\ter := iohelp.NewErrorReader(ior)")
+	writeLine(w, "\tr := iohelp.NewErrorReader(ior)")
 	if msg.OpCode != 0 {
-		writeLine(w, "\tiohelp.ReadUint32(er)")
+		writeLine(w, "\tiohelp.ReadUint32(r)")
 	}
-	writeLine(w, "\tbodyLen := iohelp.ReadUint32(er)")
-	// why read the entire body upfront? Because we're allowed
-	// to exit early, and if we do exit early and this message
-	// is a field of another record we need that record to resume
-	// reading at the byte after this entire body.
-	writeLine(w, "\tbody := make([]byte, bodyLen)")
-	writeLine(w, "\ter.Read(body)")
-	writeLine(w, "\tif er.Err != nil {\n\t\treturn er.Err\n\t}")
-	writeLine(w, "\tr := iohelp.NewErrorReader(bytes.NewReader(body))")
+	writeLine(w, "\tbodyLen := iohelp.ReadUint32(r)")
+	writeLine(w, "\tr.Reader = &io.LimitedReader{R:r.Reader, N:int64(bodyLen)}")
 	writeLine(w, "\tfor {")
 	writeLine(w, "\t\tswitch iohelp.ReadByte(r) {")
 	for _, fd := range fields {
@@ -902,9 +897,9 @@ func (msg Message) Generate(w io.Writer, settings GenerateSettings) {
 		writeMessageFieldUnmarshaller("bbp."+name, fd.FieldType, w, settings, 3)
 	}
 	// ref: https://github.com/RainwayApp/bebop/wiki/Wire-format#messages, final paragraph
-	// for some reason we're allowed to skip parsing all remaining fields if we see one
-	// that we don't know about.
+	// we're allowed to skip parsing all remaining fields if we see one that we don't know about.
 	writeLine(w, "\t\tdefault:")
+	writeLine(w, "\t\t\tio.ReadAll(r)")
 	writeLine(w, "\t\t\treturn r.Err")
 	writeLine(w, "\t\t}")
 	writeLine(w, "\t}")
@@ -1078,7 +1073,7 @@ func (u Union) Generate(w io.Writer, settings GenerateSettings) {
 		writeLine(w, "}")
 		writeLine(w, "")
 	}
-	isFirstTopLength = true
+	*settings.isFirstTopLength = true
 	writeLine(w, "func (bbp %s) EncodeBebop(iow io.Writer) (err error) {", exposedName)
 	writeLine(w, "\tw := iohelp.NewErrorWriter(iow)")
 	if u.OpCode != 0 {
@@ -1100,21 +1095,14 @@ func (u Union) Generate(w io.Writer, settings GenerateSettings) {
 	writeLine(w, "\treturn w.Err")
 	writeLine(w, "}")
 	writeLine(w, "")
-	isFirstTopLength = true
+	*settings.isFirstTopLength = true
 	writeLine(w, "func (bbp *%s) DecodeBebop(ior io.Reader) (err error) {", exposedName)
-	writeLine(w, "\ter := iohelp.NewErrorReader(ior)")
+	writeLine(w, "\tr := iohelp.NewErrorReader(ior)")
 	if u.OpCode != 0 {
-		writeLine(w, "\tiohelp.ReadUint32(er)")
+		writeLine(w, "\tiohelp.ReadUint32(r)")
 	}
-	writeLine(w, "\tbodyLen := iohelp.ReadUint32(er)")
-	// why read the entire body upfront? Because we're allowed
-	// to exit early, and if we do exit early and this message
-	// is a field of another record we need that record to resume
-	// reading at the byte after this entire body.
-	writeLine(w, "\tbody := make([]byte, bodyLen)")
-	writeLine(w, "\ter.Read(body)")
-	writeLine(w, "\tif er.Err != nil {\n\t\treturn er.Err\n\t}")
-	writeLine(w, "\tr := iohelp.NewErrorReader(bytes.NewReader(body))")
+	writeLine(w, "\tbodyLen := iohelp.ReadUint32(r)")
+	writeLine(w, "\tr.Reader = &io.LimitedReader{R:r.Reader, N:int64(bodyLen)}")
 	writeLine(w, "\tfor {")
 	writeLine(w, "\t\tswitch iohelp.ReadByte(r) {")
 	for _, fd := range fields {
@@ -1122,13 +1110,14 @@ func (u Union) Generate(w io.Writer, settings GenerateSettings) {
 		name := exposeName(fd.Name)
 		writeLine(w, "\t\t\tbbp.%[1]s = new(%[2]s)", name, fd.FieldType.goString(settings))
 		writeMessageFieldUnmarshaller("bbp."+name, fd.FieldType, w, settings, 3)
+		writeLine(w, "\t\t\tio.ReadAll(r)")
 		writeLine(w, "\t\t\treturn r.Err")
 	}
 	// ref: https://github.com/RainwayApp/bebop/wiki/Wire-format#messages, final paragraph
-	// for some reason we're allowed to skip parsing all remaining fields if we see one
-	// that we don't know about.
+	// we're allowed to skip parsing all remaining fields if we see one that we don't know about.
 	writeLine(w, "\t\tdefault:")
-	writeLine(w, "\t\t\treturn er.Err")
+	writeLine(w, "\t\t\tio.ReadAll(r)")
+	writeLine(w, "\t\t\treturn r.Err")
 	writeLine(w, "\t\t}")
 	writeLine(w, "\t}")
 	writeLine(w, "}")
@@ -1356,8 +1345,6 @@ func writeFieldMarshaller(name string, typ FieldType, w io.Writer, settings Gene
 	}
 }
 
-var isFirstTopLength = true
-
 func writeStructFieldUnmarshaller(name string, typ FieldType, w io.Writer, settings GenerateSettings, depth int) {
 	iName := "i" + strconv.Itoa(depth)
 	if typ.Array != nil {
@@ -1372,9 +1359,9 @@ func writeStructFieldUnmarshaller(name string, typ FieldType, w io.Writer, setti
 		writeLineWithTabs(w, "}", depth)
 	} else if typ.Map != nil {
 		lnName := "ln" + strconv.Itoa(depth)
-		if isFirstTopLength && depth == 1 {
+		if *settings.isFirstTopLength && depth == 1 {
 			writeLineWithTabs(w, lnName+" := iohelp.ReadUint32(r)", depth)
-			isFirstTopLength = false
+			*settings.isFirstTopLength = false
 		} else if depth == 1 {
 			writeLineWithTabs(w, lnName+" = iohelp.ReadUint32(r)", depth)
 		} else {
@@ -1490,104 +1477,4 @@ func unexposeName(name string) string {
 		return ""
 	}
 	return strings.ToLower(string(name[0])) + name[1:]
-}
-
-func (f File) customRecordTypes() map[string]struct{} {
-	out := make(map[string]struct{})
-	for _, st := range f.Structs {
-		out[st.Name] = struct{}{}
-	}
-	for _, msg := range f.Messages {
-		out[msg.Name] = struct{}{}
-	}
-	for _, union := range f.Unions {
-		out[union.Name] = struct{}{}
-		for _, ufd := range union.Fields {
-			if ufd.Struct != nil {
-				out[ufd.Struct.Name] = struct{}{}
-			}
-			if ufd.Message != nil {
-				out[ufd.Message.Name] = struct{}{}
-			}
-		}
-	}
-	return out
-}
-
-func (f File) usedTypes() map[string]bool {
-	out := make(map[string]bool)
-	for _, st := range f.Structs {
-		stOut := st.usedTypes()
-		for k, v := range stOut {
-			out[k] = v
-		}
-	}
-	for _, msg := range f.Messages {
-		msgOut := msg.usedTypes()
-		for k, v := range msgOut {
-			out[k] = v
-		}
-	}
-	for _, union := range f.Unions {
-		unionOut := union.usedTypes()
-		for k, v := range unionOut {
-			out[k] = v
-		}
-	}
-	return out
-}
-
-func (st Struct) usedTypes() map[string]bool {
-	out := make(map[string]bool)
-	for _, fd := range st.Fields {
-		fdTypes := fd.usedTypes()
-		for k, v := range fdTypes {
-			out[k] = v
-		}
-	}
-	return out
-}
-
-func (msg Message) usedTypes() map[string]bool {
-	out := make(map[string]bool)
-	for _, fd := range msg.Fields {
-		fdTypes := fd.usedTypes()
-		for k, v := range fdTypes {
-			out[k] = v
-		}
-	}
-	return out
-}
-
-func (u Union) usedTypes() map[string]bool {
-	out := make(map[string]bool)
-	for _, ufd := range u.Fields {
-		fdTypes := ufd.usedTypes()
-		for k, v := range fdTypes {
-			out[k] = v
-		}
-	}
-	return out
-}
-
-func (ft FieldType) usedTypes() map[string]bool {
-	if ft.Array != nil {
-		return ft.Array.usedTypes()
-	}
-	if ft.Map != nil {
-		valTypes := ft.Map.Value.usedTypes()
-		valTypes[ft.Map.Key] = true
-		return valTypes
-	}
-	return map[string]bool{ft.Simple: true}
-}
-
-func (ufd UnionField) usedTypes() map[string]bool {
-	if ufd.Struct != nil {
-		return ufd.Struct.usedTypes()
-	}
-	if ufd.Message != nil {
-		return ufd.Message.usedTypes()
-	}
-	return map[string]bool{}
 }

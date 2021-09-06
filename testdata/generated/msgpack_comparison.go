@@ -111,67 +111,67 @@ func (bbp MsgpackComparison) MarshalBebopTo(buf []byte) int {
 func (bbp *MsgpackComparison) UnmarshalBebop(buf []byte) (err error) {
 	at := 0
 	if len(buf[at:]) < 1 {
-		 return iohelp.ErrTooShort
+		 return io.ErrUnexpectedEOF
 	}
 	bbp.INT0 = iohelp.ReadUint8Bytes(buf[at:])
 	at += 1
 	if len(buf[at:]) < 1 {
-		 return iohelp.ErrTooShort
+		 return io.ErrUnexpectedEOF
 	}
 	bbp.INT1 = iohelp.ReadUint8Bytes(buf[at:])
 	at += 1
 	if len(buf[at:]) < 2 {
-		 return iohelp.ErrTooShort
+		 return io.ErrUnexpectedEOF
 	}
 	bbp.INT1_ = iohelp.ReadInt16Bytes(buf[at:])
 	at += 2
 	if len(buf[at:]) < 1 {
-		 return iohelp.ErrTooShort
+		 return io.ErrUnexpectedEOF
 	}
 	bbp.INT8 = iohelp.ReadUint8Bytes(buf[at:])
 	at += 1
 	if len(buf[at:]) < 2 {
-		 return iohelp.ErrTooShort
+		 return io.ErrUnexpectedEOF
 	}
 	bbp.INT8_ = iohelp.ReadInt16Bytes(buf[at:])
 	at += 2
 	if len(buf[at:]) < 2 {
-		 return iohelp.ErrTooShort
+		 return io.ErrUnexpectedEOF
 	}
 	bbp.INT16 = iohelp.ReadInt16Bytes(buf[at:])
 	at += 2
 	if len(buf[at:]) < 2 {
-		 return iohelp.ErrTooShort
+		 return io.ErrUnexpectedEOF
 	}
 	bbp.INT16_ = iohelp.ReadInt16Bytes(buf[at:])
 	at += 2
 	if len(buf[at:]) < 4 {
-		 return iohelp.ErrTooShort
+		 return io.ErrUnexpectedEOF
 	}
 	bbp.INT32 = iohelp.ReadInt32Bytes(buf[at:])
 	at += 4
 	if len(buf[at:]) < 4 {
-		 return iohelp.ErrTooShort
+		 return io.ErrUnexpectedEOF
 	}
 	bbp.INT32_ = iohelp.ReadInt32Bytes(buf[at:])
 	at += 4
 	if len(buf[at:]) < 1 {
-		 return iohelp.ErrTooShort
+		 return io.ErrUnexpectedEOF
 	}
 	bbp.TRUE = iohelp.ReadBoolBytes(buf[at:])
 	at += 1
 	if len(buf[at:]) < 1 {
-		 return iohelp.ErrTooShort
+		 return io.ErrUnexpectedEOF
 	}
 	bbp.FALSE = iohelp.ReadBoolBytes(buf[at:])
 	at += 1
 	if len(buf[at:]) < 8 {
-		 return iohelp.ErrTooShort
+		 return io.ErrUnexpectedEOF
 	}
 	bbp.FLOAT = iohelp.ReadFloat64Bytes(buf[at:])
 	at += 8
 	if len(buf[at:]) < 8 {
-		 return iohelp.ErrTooShort
+		 return io.ErrUnexpectedEOF
 	}
 	bbp.FLOAT_ = iohelp.ReadFloat64Bytes(buf[at:])
 	at += 8
@@ -201,19 +201,19 @@ func (bbp *MsgpackComparison) UnmarshalBebop(buf []byte) (err error) {
 	}
 	at += 4 + len(bbp.STRING16)
 	if len(buf[at:]) < 4 {
-		 return iohelp.ErrTooShort
+		 return io.ErrUnexpectedEOF
 	}
 	bbp.ARRAY0 = make([]int32, iohelp.ReadUint32Bytes(buf[at:]))
 	at += 4
 	if len(buf[at:]) < len(bbp.ARRAY0)*4 {
-		 return iohelp.ErrTooShort
+		 return io.ErrUnexpectedEOF
 	}
 	for i1 := range bbp.ARRAY0 {
 		(bbp.ARRAY0)[i1] = iohelp.ReadInt32Bytes(buf[at:])
 		at += 4
 	}
 	if len(buf[at:]) < 4 {
-		 return iohelp.ErrTooShort
+		 return io.ErrUnexpectedEOF
 	}
 	bbp.ARRAY1 = make([]string, iohelp.ReadUint32Bytes(buf[at:]))
 	at += 4
@@ -225,12 +225,12 @@ func (bbp *MsgpackComparison) UnmarshalBebop(buf []byte) (err error) {
 		at += 4 + len((bbp.ARRAY1)[i1])
 	}
 	if len(buf[at:]) < 4 {
-		 return iohelp.ErrTooShort
+		 return io.ErrUnexpectedEOF
 	}
 	bbp.ARRAY8 = make([]int32, iohelp.ReadUint32Bytes(buf[at:]))
 	at += 4
 	if len(buf[at:]) < len(bbp.ARRAY8)*4 {
-		 return iohelp.ErrTooShort
+		 return io.ErrUnexpectedEOF
 	}
 	for i1 := range bbp.ARRAY8 {
 		(bbp.ARRAY8)[i1] = iohelp.ReadInt32Bytes(buf[at:])
