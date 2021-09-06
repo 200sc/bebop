@@ -340,15 +340,15 @@ func (bbp *SomeMaps) MustUnmarshalBebop(buf []byte) {
 	at += 4
 	bbp.M2 = make(map[string]map[string]string,ln9)
 	for i := uint32(0); i < ln9; i++ {
-		k1 :=  iohelp.MustReadStringBytes(buf[at:])
+		k1 := iohelp.MustReadStringBytes(buf[at:])
 		at += 4 + len(k1)
 		ln10 := iohelp.ReadUint32Bytes(buf[at:])
 		at += 4
 		(bbp.M2)[k1] = make(map[string]string,ln10)
 		for i := uint32(0); i < ln10; i++ {
-			k2 :=  iohelp.MustReadStringBytes(buf[at:])
+			k2 := iohelp.MustReadStringBytes(buf[at:])
 			at += 4 + len(k2)
-			((bbp.M2)[k1])[k2] =  iohelp.MustReadStringBytes(buf[at:])
+			((bbp.M2)[k1])[k2] = iohelp.MustReadStringBytes(buf[at:])
 			at += 4 + len(((bbp.M2)[k1])[k2])
 		}
 	}
@@ -383,7 +383,7 @@ func (bbp *SomeMaps) MustUnmarshalBebop(buf []byte) {
 		at += 4
 		(bbp.M4)[i1] = make(map[string][]float32,ln13)
 		for i := uint32(0); i < ln13; i++ {
-			k2 :=  iohelp.MustReadStringBytes(buf[at:])
+			k2 := iohelp.MustReadStringBytes(buf[at:])
 			at += 4 + len(k2)
 			((bbp.M4)[i1])[k2] = make([]float32, iohelp.ReadUint32Bytes(buf[at:]))
 			at += 4

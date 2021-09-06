@@ -48,7 +48,7 @@ func (bbp *ArrayOfStrings) MustUnmarshalBebop(buf []byte) {
 	bbp.Strings = make([]string, iohelp.ReadUint32Bytes(buf[at:]))
 	at += 4
 	for i1 := range bbp.Strings {
-		(bbp.Strings)[i1] =  iohelp.MustReadStringBytes(buf[at:])
+		(bbp.Strings)[i1] = iohelp.MustReadStringBytes(buf[at:])
 		at += 4 + len((bbp.Strings)[i1])
 	}
 }

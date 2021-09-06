@@ -55,7 +55,7 @@ func (bbp *Furniture) UnmarshalBebop(buf []byte) (err error) {
 
 func (bbp *Furniture) MustUnmarshalBebop(buf []byte) {
 	at := 0
-	bbp.name =  iohelp.MustReadStringBytes(buf[at:])
+	bbp.name = iohelp.MustReadStringBytes(buf[at:])
 	at += 4 + len(bbp.name)
 	bbp.price = iohelp.ReadUint32Bytes(buf[at:])
 	at += 4
@@ -328,7 +328,7 @@ func (bbp *RequestCatalog) MustUnmarshalBebop(buf []byte) {
 		case 2:
 			at += 1
 			bbp.SecretTunnel = new(string)
-			(*bbp.SecretTunnel) =  iohelp.MustReadStringBytes(buf[at:])
+			(*bbp.SecretTunnel) = iohelp.MustReadStringBytes(buf[at:])
 			at += 4 + len((*bbp.SecretTunnel))
 		default:
 			return

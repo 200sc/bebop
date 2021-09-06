@@ -312,7 +312,7 @@ func (f File) typeByteReaders(gs GenerateSettings) map[string]string {
 		stringRead = "ReadStringBytesSharedMemory(buf[at:])"
 	}
 
-	out[typeString] = "%ASGN =  iohelp.Must" + stringRead + "\n" + fmtAdd4PlusLenToAt
+	out[typeString] = "%ASGN = iohelp.Must" + stringRead + "\n" + fmtAdd4PlusLenToAt
 	out["string&safe"] = "%ASGN, err = iohelp." + stringRead + "\n" + fmtErrReturn + "\n" + fmtAdd4PlusLenToAt
 
 	for _, en := range f.Enums {

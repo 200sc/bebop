@@ -311,7 +311,7 @@ func (bbp *BasicArrays) MustUnmarshalBebop(buf []byte) {
 	bbp.A_string = make([]string, iohelp.ReadUint32Bytes(buf[at:]))
 	at += 4
 	for i1 := range bbp.A_string {
-		(bbp.A_string)[i1] =  iohelp.MustReadStringBytes(buf[at:])
+		(bbp.A_string)[i1] = iohelp.MustReadStringBytes(buf[at:])
 		at += 4 + len((bbp.A_string)[i1])
 	}
 	bbp.A_guid = make([][16]byte, iohelp.ReadUint32Bytes(buf[at:]))

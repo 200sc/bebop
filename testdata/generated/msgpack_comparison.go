@@ -261,15 +261,15 @@ func (bbp *MsgpackComparison) MustUnmarshalBebop(buf []byte) {
 	at += 8
 	bbp.FLOAT_ = iohelp.ReadFloat64Bytes(buf[at:])
 	at += 8
-	bbp.STRING0 =  iohelp.MustReadStringBytes(buf[at:])
+	bbp.STRING0 = iohelp.MustReadStringBytes(buf[at:])
 	at += 4 + len(bbp.STRING0)
-	bbp.STRING1 =  iohelp.MustReadStringBytes(buf[at:])
+	bbp.STRING1 = iohelp.MustReadStringBytes(buf[at:])
 	at += 4 + len(bbp.STRING1)
-	bbp.STRING4 =  iohelp.MustReadStringBytes(buf[at:])
+	bbp.STRING4 = iohelp.MustReadStringBytes(buf[at:])
 	at += 4 + len(bbp.STRING4)
-	bbp.STRING8 =  iohelp.MustReadStringBytes(buf[at:])
+	bbp.STRING8 = iohelp.MustReadStringBytes(buf[at:])
 	at += 4 + len(bbp.STRING8)
-	bbp.STRING16 =  iohelp.MustReadStringBytes(buf[at:])
+	bbp.STRING16 = iohelp.MustReadStringBytes(buf[at:])
 	at += 4 + len(bbp.STRING16)
 	bbp.ARRAY0 = make([]int32, iohelp.ReadUint32Bytes(buf[at:]))
 	at += 4
@@ -280,7 +280,7 @@ func (bbp *MsgpackComparison) MustUnmarshalBebop(buf []byte) {
 	bbp.ARRAY1 = make([]string, iohelp.ReadUint32Bytes(buf[at:]))
 	at += 4
 	for i1 := range bbp.ARRAY1 {
-		(bbp.ARRAY1)[i1] =  iohelp.MustReadStringBytes(buf[at:])
+		(bbp.ARRAY1)[i1] = iohelp.MustReadStringBytes(buf[at:])
 		at += 4 + len((bbp.ARRAY1)[i1])
 	}
 	bbp.ARRAY8 = make([]int32, iohelp.ReadUint32Bytes(buf[at:]))

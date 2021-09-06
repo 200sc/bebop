@@ -77,7 +77,7 @@ func (bbp *ReadOnlyMap) MustUnmarshalBebop(buf []byte) {
 			at += 4
 			(*bbp.Vals) = make(map[string]uint8,ln2)
 			for i := uint32(0); i < ln2; i++ {
-				k3 :=  iohelp.MustReadStringBytes(buf[at:])
+				k3 := iohelp.MustReadStringBytes(buf[at:])
 				at += 4 + len(k3)
 				((*bbp.Vals))[k3] = iohelp.ReadUint8Bytes(buf[at:])
 				at += 1

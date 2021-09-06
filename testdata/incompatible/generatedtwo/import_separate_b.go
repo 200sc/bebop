@@ -38,7 +38,7 @@ func (bbp *ImportedType) UnmarshalBebop(buf []byte) (err error) {
 
 func (bbp *ImportedType) MustUnmarshalBebop(buf []byte) {
 	at := 0
-	bbp.Foobar =  iohelp.MustReadStringBytes(buf[at:])
+	bbp.Foobar = iohelp.MustReadStringBytes(buf[at:])
 	at += 4 + len(bbp.Foobar)
 }
 

@@ -155,7 +155,7 @@ func (bbp *BasicTypes) MustUnmarshalBebop(buf []byte) {
 	at += 4
 	bbp.A_float64 = iohelp.ReadFloat64Bytes(buf[at:])
 	at += 8
-	bbp.A_string =  iohelp.MustReadStringBytes(buf[at:])
+	bbp.A_string = iohelp.MustReadStringBytes(buf[at:])
 	at += 4 + len(bbp.A_string)
 	bbp.A_guid = iohelp.ReadGUIDBytes(buf[at:])
 	at += 16

@@ -127,7 +127,7 @@ func (bbp *Hello) MustUnmarshalBebop(buf []byte) {
 	at := 0
 	bbp.Yes = iohelp.ReadInt32Bytes(buf[at:])
 	at += 4
-	bbp.No =  iohelp.MustReadStringBytes(buf[at:])
+	bbp.No = iohelp.MustReadStringBytes(buf[at:])
 	at += 4 + len(bbp.No)
 }
 
@@ -208,7 +208,7 @@ func (bbp *Musician) UnmarshalBebop(buf []byte) (err error) {
 
 func (bbp *Musician) MustUnmarshalBebop(buf []byte) {
 	at := 0
-	bbp.name =  iohelp.MustReadStringBytes(buf[at:])
+	bbp.name = iohelp.MustReadStringBytes(buf[at:])
 	at += 4 + len(bbp.name)
 	bbp.plays = Instrument(iohelp.ReadUint32Bytes(buf[at:]))
 	at += 4
@@ -1165,7 +1165,7 @@ func (bbp *Song) MustUnmarshalBebop(buf []byte) {
 		case 1:
 			at += 1
 			bbp.Title = new(string)
-			(*bbp.Title) =  iohelp.MustReadStringBytes(buf[at:])
+			(*bbp.Title) = iohelp.MustReadStringBytes(buf[at:])
 			at += 4 + len((*bbp.Title))
 		case 2:
 			at += 1

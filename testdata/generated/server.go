@@ -34,7 +34,7 @@ func (bbp *Print) UnmarshalBebop(buf []byte) (err error) {
 
 func (bbp *Print) MustUnmarshalBebop(buf []byte) {
 	at := 0
-	bbp.Printout =  iohelp.MustReadStringBytes(buf[at:])
+	bbp.Printout = iohelp.MustReadStringBytes(buf[at:])
 	at += 4 + len(bbp.Printout)
 }
 
