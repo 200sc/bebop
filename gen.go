@@ -529,16 +529,17 @@ func (st Struct) generateMarshalBebop(w io.Writer, settings GenerateSettings) {
 func (st Struct) generateMarshalBebopTo(w io.Writer, settings GenerateSettings) {
 	exposedName := exposeName(st.Name)
 	writeLine(w, "func (bbp %s) MarshalBebopTo(buf []byte) int {", exposedName)
+	startAt := "0"
 	if st.OpCode != 0 {
 		writeLine(w, "\tiohelp.WriteUint32Bytes(buf, uint32(%sOpCode))", exposedName)
-		if len(st.Fields) > 0 {
-			writeLine(w, "\tat := 4")
-		}
-	} else {
-		if len(st.Fields) > 0 {
-			writeLine(w, "\tat := 0")
-		}
+		startAt = "4"
 	}
+	if len(st.Fields) == 0 {
+		writeLine(w, "\treturn "+startAt)
+		writeCloseBlock(w)
+		return
+	}
+	writeLine(w, "\tat := "+startAt)
 	for _, fd := range st.Fields {
 		name := exposeName(fd.Name)
 		if st.ReadOnly {
@@ -546,11 +547,7 @@ func (st Struct) generateMarshalBebopTo(w io.Writer, settings GenerateSettings) 
 		}
 		writeFieldByter("bbp."+name, fd.FieldType, w, settings, 1)
 	}
-	if len(st.Fields) == 0 {
-		writeLine(w, "\treturn 0")
-	} else {
-		writeLine(w, "\treturn at")
-	}
+	writeLine(w, "\treturn at")
 	writeCloseBlock(w)
 }
 
@@ -757,8 +754,7 @@ type fieldWithNumber struct {
 	num uint8
 }
 
-// Generate writes a .go message definition out to w.
-func (msg Message) Generate(w io.Writer, settings GenerateSettings) {
+func (msg Message) generateTypeDefinition(w io.Writer, settings GenerateSettings, fields []fieldWithNumber) {
 	exposedName := exposeName(msg.Name)
 	if msg.OpCode != 0 {
 		writeLine(w, "const %sOpCode = 0x%x", exposedName, msg.OpCode)
@@ -768,21 +764,15 @@ func (msg Message) Generate(w io.Writer, settings GenerateSettings) {
 	writeLine(w, "")
 	writeComment(w, 0, msg.Comment)
 	writeLine(w, "type %s struct {", exposedName)
-	fields := make([]fieldWithNumber, 0, len(msg.Fields))
-	for i, fd := range msg.Fields {
-		fields = append(fields, fieldWithNumber{
-			Field: fd,
-			num:   i,
-		})
-	}
-	sort.Slice(fields, func(i, j int) bool {
-		return fields[i].num < fields[j].num
-	})
 	for _, fd := range fields {
 		writeFieldDefinition(fd.Field, w, false, true, settings)
 	}
 	writeLine(w, "}")
 	writeLine(w, "")
+}
+
+func (msg Message) generateMarshalBebop(w io.Writer, settings GenerateSettings, fields []fieldWithNumber) {
+	exposedName := exposeName(msg.Name)
 	writeLine(w, "func (bbp %s) MarshalBebop() []byte {", exposedName)
 	writeLine(w, "\tbuf := make([]byte, bbp.Size())")
 	writeLine(w, "\tbbp.MarshalBebopTo(buf)")
@@ -812,6 +802,10 @@ func (msg Message) Generate(w io.Writer, settings GenerateSettings) {
 	writeLine(w, "\treturn at")
 	writeLine(w, "}")
 	writeLine(w, "")
+}
+
+func (msg Message) generateUnmarshalBebop(w io.Writer, settings GenerateSettings, fields []fieldWithNumber) {
+	exposedName := exposeName(msg.Name)
 	writeLine(w, "func (bbp *%s) UnmarshalBebop(buf []byte) (err error) {", exposedName)
 	if msg.OpCode != 0 {
 		writeLine(w, "\tat := 4")
@@ -835,31 +829,37 @@ func (msg Message) Generate(w io.Writer, settings GenerateSettings) {
 	writeLine(w, "\t}")
 	writeLine(w, "}")
 	writeLine(w, "")
-	if settings.GenerateUnsafeMethods {
-		writeLine(w, "func (bbp *%s) MustUnmarshalBebop(buf []byte) {", exposedName)
-		if msg.OpCode != 0 {
-			writeLine(w, "\tat := 4")
-		} else {
-			writeLine(w, "\tat := 0")
-		}
-		writeLine(w, "\t_ = iohelp.ReadUint32Bytes(buf[at:])")
-		writeLine(w, "\tbuf = buf[4:]")
-		writeLine(w, "\tfor {")
-		writeLine(w, "\t\tswitch buf[at] {")
-		for _, fd := range fields {
-			name := exposeName(fd.Name)
-			writeLine(w, "\t\tcase %d:", fd.num)
-			writeLine(w, "\t\t\tat += 1")
-			writeLine(w, "\t\t\tbbp.%[1]s = new(%[2]s)", name, fd.FieldType.goString(settings))
-			writeFieldReadByter("(*bbp."+name+")", fd.FieldType, w, settings, 3, false)
-		}
-		writeLine(w, "\t\tdefault:")
-		writeLine(w, "\t\t\treturn")
-		writeLine(w, "\t\t}")
-		writeLine(w, "\t}")
-		writeLine(w, "}")
-		writeLine(w, "")
+}
+
+func (msg Message) generateMustUnmarshalBebop(w io.Writer, settings GenerateSettings, fields []fieldWithNumber) {
+	exposedName := exposeName(msg.Name)
+	writeLine(w, "func (bbp *%s) MustUnmarshalBebop(buf []byte) {", exposedName)
+	if msg.OpCode != 0 {
+		writeLine(w, "\tat := 4")
+	} else {
+		writeLine(w, "\tat := 0")
 	}
+	writeLine(w, "\t_ = iohelp.ReadUint32Bytes(buf[at:])")
+	writeLine(w, "\tbuf = buf[4:]")
+	writeLine(w, "\tfor {")
+	writeLine(w, "\t\tswitch buf[at] {")
+	for _, fd := range fields {
+		name := exposeName(fd.Name)
+		writeLine(w, "\t\tcase %d:", fd.num)
+		writeLine(w, "\t\t\tat += 1")
+		writeLine(w, "\t\t\tbbp.%[1]s = new(%[2]s)", name, fd.FieldType.goString(settings))
+		writeFieldReadByter("(*bbp."+name+")", fd.FieldType, w, settings, 3, false)
+	}
+	writeLine(w, "\t\tdefault:")
+	writeLine(w, "\t\t\treturn")
+	writeLine(w, "\t\t}")
+	writeLine(w, "\t}")
+	writeLine(w, "}")
+	writeLine(w, "")
+}
+
+func (msg Message) generateEncodeBebop(w io.Writer, settings GenerateSettings, fields []fieldWithNumber) {
+	exposedName := exposeName(msg.Name)
 	*settings.isFirstTopLength = true
 	writeLine(w, "func (bbp %s) EncodeBebop(iow io.Writer) (err error) {", exposedName)
 	writeLine(w, "\tw := iohelp.NewErrorWriter(iow)")
@@ -882,6 +882,10 @@ func (msg Message) Generate(w io.Writer, settings GenerateSettings) {
 	writeLine(w, "\treturn w.Err")
 	writeLine(w, "}")
 	writeLine(w, "")
+}
+
+func (msg Message) generateDecodeBebop(w io.Writer, settings GenerateSettings, fields []fieldWithNumber) {
+	exposedName := exposeName(msg.Name)
 	*settings.isFirstTopLength = true
 	writeLine(w, "func (bbp *%s) DecodeBebop(ior io.Reader) (err error) {", exposedName)
 	writeLine(w, "\tr := iohelp.NewErrorReader(ior)")
@@ -907,6 +911,10 @@ func (msg Message) Generate(w io.Writer, settings GenerateSettings) {
 	writeLine(w, "\t}")
 	writeLine(w, "}")
 	writeLine(w, "")
+}
+
+func (msg Message) generateSize(w io.Writer, settings GenerateSettings, fields []fieldWithNumber) {
+	exposedName := exposeName(msg.Name)
 	writeLine(w, "func (bbp %s) Size() int {", exposedName)
 	// size at front (4) + 0 byte (1)
 	// q: why do messages end in a 0 byte?
@@ -927,25 +935,63 @@ func (msg Message) Generate(w io.Writer, settings GenerateSettings) {
 	writeLine(w, "\treturn bodyLen")
 	writeLine(w, "}")
 	writeLine(w, "")
+}
+
+func (msg Message) generateMustMakeFromBytes(w io.Writer, settings GenerateSettings) {
+	exposedName := exposeName(msg.Name)
+	writeLine(w, "func MustMake%[1]sFromBytes(buf []byte) %[1]s {", exposedName)
+	writeLine(w, "\tv := %s{}", exposedName)
+	writeLine(w, "\tv.MustUnmarshalBebop(buf)")
+	writeLine(w, "\treturn v")
+	writeLine(w, "}")
+	writeLine(w, "")
+}
+
+func (msg Message) generateMake(w io.Writer, settings GenerateSettings) {
+	exposedName := exposeName(msg.Name)
 	writeLine(w, "func Make%[1]s(r iohelp.ErrorReader) (%[1]s, error) {", exposedName)
 	writeLine(w, "\tv := %s{}", exposedName)
 	writeLine(w, "\terr := v.DecodeBebop(r)")
 	writeLine(w, "\treturn v, err")
 	writeLine(w, "}")
 	writeLine(w, "")
+}
+
+func (msg Message) generateMakeFromBytes(w io.Writer, settings GenerateSettings) {
+	exposedName := exposeName(msg.Name)
 	writeLine(w, "func Make%[1]sFromBytes(buf []byte) (%[1]s, error) {", exposedName)
 	writeLine(w, "\tv := %s{}", exposedName)
 	writeLine(w, "\terr := v.UnmarshalBebop(buf)")
 	writeLine(w, "\treturn v, err")
 	writeLine(w, "}")
 	writeLine(w, "")
+}
+
+// Generate writes a .go message definition out to w.
+func (msg Message) Generate(w io.Writer, settings GenerateSettings) {
+	fields := make([]fieldWithNumber, 0, len(msg.Fields))
+	for i, fd := range msg.Fields {
+		fields = append(fields, fieldWithNumber{
+			Field: fd,
+			num:   i,
+		})
+	}
+	sort.Slice(fields, func(i, j int) bool {
+		return fields[i].num < fields[j].num
+	})
+	msg.generateTypeDefinition(w, settings, fields)
+	msg.generateMarshalBebop(w, settings, fields)
+	msg.generateUnmarshalBebop(w, settings, fields)
 	if settings.GenerateUnsafeMethods {
-		writeLine(w, "func MustMake%[1]sFromBytes(buf []byte) %[1]s {", exposedName)
-		writeLine(w, "\tv := %s{}", exposedName)
-		writeLine(w, "\tv.MustUnmarshalBebop(buf)")
-		writeLine(w, "\treturn v")
-		writeLine(w, "}")
-		writeLine(w, "")
+		msg.generateMustUnmarshalBebop(w, settings, fields)
+	}
+	msg.generateEncodeBebop(w, settings, fields)
+	msg.generateDecodeBebop(w, settings, fields)
+	msg.generateSize(w, settings, fields)
+	msg.generateMake(w, settings)
+	msg.generateMakeFromBytes(w, settings)
+	if settings.GenerateUnsafeMethods {
+		msg.generateMustMakeFromBytes(w, settings)
 	}
 }
 
