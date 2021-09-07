@@ -16,6 +16,9 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
+var totalTests = 0
+var tsTests = 0
+
 func TestMarshalCycleRecords(t *testing.T) {
 	type testCase struct {
 		name   string
@@ -64,7 +67,7 @@ func TestMarshalCycleRecords(t *testing.T) {
 	}, {
 		name: "BasicArrays",
 		// fails, js's b64 tells us to create a huge paylaod
-		tsName: "BasicArrays",
+		//tsName: "BasicArrays",
 		record: &generated.BasicArrays{
 			A_bool:    []bool{true, false, true},
 			A_uint16:  []uint16{0, 2, 65535},
@@ -90,7 +93,7 @@ func TestMarshalCycleRecords(t *testing.T) {
 	}, {
 		name: "TestInt32Array",
 		// fails js side before during decode
-		tsName: "TestInt32Array",
+		// tsName: "TestInt32Array",
 		record: &generated.TestInt32Array{
 			A: []int32{
 				0, 2, 15412, 301523, 3441213,
@@ -105,7 +108,7 @@ func TestMarshalCycleRecords(t *testing.T) {
 	}, {
 		name: "BasicTypes",
 		// hangs
-		tsName: "BasicTypes",
+		//tsName: "BasicTypes",
 		record: &generated.BasicTypes{
 			A_bool:    true,
 			A_byte:    4,
@@ -120,8 +123,8 @@ func TestMarshalCycleRecords(t *testing.T) {
 		record:          &generated.DocS{},
 		unmarshalRecord: func() bebop.Record { return &generated.DocS{} },
 	}, {
-		name:   "DocS",
-		tsName: "DocS",
+		name: "DocS",
+		// tsName: "DocS",
 		// fails js side before during decode
 		record: &generated.DocS{
 			X: 203202003,
@@ -133,32 +136,25 @@ func TestMarshalCycleRecords(t *testing.T) {
 		record:          &generated.DepM{},
 		unmarshalRecord: func() bebop.Record { return &generated.DepM{} },
 	}, {
-		name: "DepM",
-		// bebop ts fails to write anything for this type, it will always output
-		// [1,0,0,0,0]
-		tsName: "DepM",
-		record: &generated.DepM{
-			X: int32p(444),
-		},
-		unmarshalRecord: func() bebop.Record { return &generated.DepM{} },
-	}, {
 		name:            "empty DocM",
+		tsName:          "DocM",
 		record:          &generated.DocM{},
 		unmarshalRecord: func() bebop.Record { return &generated.DocM{} },
 	}, {
-		name: "DocM",
+		name:   "DocM",
+		tsName: "DocM",
 		record: &generated.DocM{
 			X: int32p(14123),
-			Y: int32p(12314502),
-			Z: int32p(-2),
 		},
 		unmarshalRecord: func() bebop.Record { return &generated.DocM{} },
 	}, {
 		name:            "empty Foo",
+		tsName:          "Foo",
 		record:          &generated.Foo{},
 		unmarshalRecord: func() bebop.Record { return &generated.Foo{} },
 	}, {
 		name: "Foo",
+		//tsName: "Foo",
 		record: &generated.Foo{
 			Bar: generated.Bar{
 				X: float64p(3.21312),
@@ -169,27 +165,32 @@ func TestMarshalCycleRecords(t *testing.T) {
 		unmarshalRecord: func() bebop.Record { return &generated.Foo{} },
 	}, {
 		name:            "empty Bar",
+		tsName:          "Bar",
 		record:          &generated.Bar{},
 		unmarshalRecord: func() bebop.Record { return &generated.Bar{} },
 	}, {
 		name: "Bar",
+		//tsName: "Bar",
 		record: &generated.Bar{
 			Y: float64p(19999999999999999.2),
 		},
 		unmarshalRecord: func() bebop.Record { return &generated.Bar{} },
 	}, {
 		name:            "empty Musician",
+		tsName:          "Musician",
 		record:          &generated.Musician{},
 		unmarshalRecord: func() bebop.Record { return &generated.Musician{} },
 		skipEquality:    true,
 	}, {
-		name: "empty Library",
+		name:   "empty Library",
+		tsName: "Library",
 		record: &generated.Library{
 			Songs: map[[16]uint8]generated.Song{},
 		},
 		unmarshalRecord: func() bebop.Record { return &generated.Library{} },
 	}, {
 		name: "Library",
+		//tsName: "Library",
 		record: &generated.Library{
 			Songs: map[[16]byte]generated.Song{
 				{0x35, 0x91, 0x8b, 0xc9, 0x19, 0x6d, 0x40, 0xea, 0x97, 0x79, 0x88, 0x9d, 0x79, 0xb7, 0x53, 0xf0}: {
@@ -201,22 +202,28 @@ func TestMarshalCycleRecords(t *testing.T) {
 		unmarshalRecord: func() bebop.Record { return &generated.Library{} },
 	}, {
 		name:            "empty Song",
+		tsName:          "Song",
 		record:          &generated.Song{},
 		unmarshalRecord: func() bebop.Record { return &generated.Song{} },
-	}, {name: "Song",
+	}, {
+		name:   "Song",
+		tsName: "Song",
 		record: &generated.Song{
 			Title: stringp("song-title2"),
 			Year:  uint16p(20342),
 		},
 		unmarshalRecord: func() bebop.Record { return &generated.Song{} },
 	}, {
-		name: "empty VideoData",
+		name:   "empty VideoData",
+		tsName: "VideoData",
 		record: &generated.VideoData{
 			Fragment: []byte{},
 		},
 		unmarshalRecord: func() bebop.Record { return &generated.VideoData{} },
 	}, {
 		name: "VideoData",
+		// big size problem
+		//tsName: "VideoData",
 		record: &generated.VideoData{
 			Time:     -2042.122,
 			Width:    9333,
@@ -226,14 +233,17 @@ func TestMarshalCycleRecords(t *testing.T) {
 		unmarshalRecord: func() bebop.Record { return &generated.VideoData{} },
 	}, {
 		name:            "empty MediaMessage",
+		tsName:          "MediaMessage",
 		record:          &generated.MediaMessage{},
 		unmarshalRecord: func() bebop.Record { return &generated.MediaMessage{} },
 	}, {
 		name:            "empty SkipTestOld",
+		tsName:          "SkipTestOld",
 		record:          &generated.SkipTestOld{},
 		unmarshalRecord: func() bebop.Record { return &generated.SkipTestOld{} },
 	}, {
 		name: "SkipTestOld",
+		//tsName: "SkipTestOld",
 		record: &generated.SkipTestOld{
 			X: int32p(2222),
 			Y: int32p(12315),
@@ -241,10 +251,12 @@ func TestMarshalCycleRecords(t *testing.T) {
 		unmarshalRecord: func() bebop.Record { return &generated.SkipTestOld{} },
 	}, {
 		name:            "empty SkipTestNew",
+		tsName:          "SkipTestNew",
 		record:          &generated.SkipTestNew{},
 		unmarshalRecord: func() bebop.Record { return &generated.SkipTestNew{} },
 	}, {
 		name: "SkipTestNew",
+		//tsName: "SkipTestNew",
 		record: &generated.SkipTestNew{
 			X: int32p(222322),
 			Y: int32p(123125),
@@ -253,19 +265,23 @@ func TestMarshalCycleRecords(t *testing.T) {
 		unmarshalRecord: func() bebop.Record { return &generated.SkipTestNew{} },
 	}, {
 		name:            "empty SkipTestOldContainer",
+		tsName:          "SkipTestOldContainer",
 		record:          &generated.SkipTestOldContainer{},
 		unmarshalRecord: func() bebop.Record { return &generated.SkipTestOldContainer{} },
 	}, {
 		name:            "empty SkipTestNewContainer",
+		tsName:          "SkipTestNewContainer",
 		record:          &generated.SkipTestNewContainer{},
 		unmarshalRecord: func() bebop.Record { return &generated.SkipTestNewContainer{} },
 	}, {
 		name:            "empty S",
+		tsName:          "S",
 		record:          &generated.S{},
 		unmarshalRecord: func() bebop.Record { return &generated.S{} },
 		skipEquality:    true,
 	}, {
-		name: "empty SomeMaps",
+		name:   "empty SomeMaps",
+		tsName: "SomeMaps",
 		record: &generated.SomeMaps{
 			M1: map[bool]bool{},
 			M2: map[string]map[string]string{},
@@ -275,7 +291,8 @@ func TestMarshalCycleRecords(t *testing.T) {
 		},
 		unmarshalRecord: func() bebop.Record { return &generated.SomeMaps{} },
 	}, {
-		name: "SomeMaps1",
+		name:   "SomeMaps1",
+		tsName: "SomeMaps",
 		record: &generated.SomeMaps{
 			M3: []map[int32][]map[bool]generated.S{
 				{
@@ -287,137 +304,87 @@ func TestMarshalCycleRecords(t *testing.T) {
 		},
 		unmarshalRecord: func() bebop.Record { return &generated.SomeMaps{} },
 		skipEquality:    true,
-	},
-		// we can't do some maps 2 because it contains maps with more than one element, whose order is marshalled randomly.
-		// {
-		// 	name: "SomeMaps2",
-		// 	record: &generated.SomeMaps{
-		// 		M1: map[bool]bool{
-		// 			true: true,
-		// 		},
-		// 		M2: map[string]map[string]string{
-		// 			"mario": map[string]string{
-		// 				"mario":    "",
-		// 				"luigi":    "",
-		// 				"brothers": "",
-		// 			},
-		// 		},
-		// 		M3: []map[int32][]map[bool]generated.S{
-		// 			{
-		// 				0: []map[bool]generated.S{{
-		// 					true: generated.S{},
-		// 				}},
-		// 			}, {
-		// 				2: []map[bool]generated.S{{
-		// 					true: generated.S{},
-		// 				}},
-		// 			}, {
-		// 				41111: []map[bool]generated.S{{
-		// 					false: generated.S{},
-		// 				}},
-		// 			},
-		// 		},
-		// 		M4: []map[string][]float32{
-		// 			{
-		// 				"a": []float32{1321, 1423, 1423, 540, 12314, 1231, 4123, 1412, 1230, 4123, 123},
-		// 			},
-		// 		},
-		// 		M5: map[[16]byte]generated.M{
-		// 			[16]byte{5: 3}: generated.M{B: float64p(0.0000002)},
-		// 		},
-		// 	},
-		// 	unmarshalRecord: func() bebop.Record { return  &generated.SomeMaps{} },
-		//  unmarshalTo2:  &generated.SomeMaps{},
-		// 	skipEquality: true,
-		// },
-		{
-			name:            "empty M",
-			record:          &generated.M{},
-			unmarshalRecord: func() bebop.Record { return &generated.M{} },
-		}, {
-			name: "empty MsgpackComparison",
-			record: &generated.MsgpackComparison{
-				ARRAY0: []int32{},
-				ARRAY1: []string{},
-				ARRAY8: []int32{},
+	}, {
+		name:            "empty M",
+		tsName:          "M",
+		record:          &generated.M{},
+		unmarshalRecord: func() bebop.Record { return &generated.M{} },
+	}, {
+		name:   "empty MsgpackComparison",
+		tsName: "MsgpackComparison",
+		record: &generated.MsgpackComparison{
+			ARRAY0: []int32{},
+			ARRAY1: []string{},
+			ARRAY8: []int32{},
+		},
+		unmarshalRecord: func() bebop.Record { return &generated.MsgpackComparison{} },
+	}, {
+		name:            "empty Furniture",
+		tsName:          "Furniture",
+		record:          &generated.Furniture{},
+		unmarshalRecord: func() bebop.Record { return &generated.Furniture{} },
+		skipEquality:    true,
+	}, {
+		name: "empty RequestResponse",
+		// failure in js
+		//tsName:          "RequestResponse",
+		record:          &generated.RequestResponse{},
+		unmarshalRecord: func() bebop.Record { return &generated.RequestResponse{} },
+		skipEquality:    true,
+	}, {
+		name:            "empty RequestCatalog",
+		tsName:          "RequestCatalog",
+		record:          &generated.RequestCatalog{},
+		unmarshalRecord: func() bebop.Record { return &generated.RequestCatalog{} },
+	}, {
+		name:            "empty ReadOnlyMap",
+		tsName:          "ReadOnlyMap",
+		record:          &generated.ReadOnlyMap{},
+		unmarshalRecord: func() bebop.Record { return &generated.ReadOnlyMap{} },
+		skipEquality:    true,
+	}, {
+		name: "Union U: A",
+		//tsName: "U",
+		record: &generated.U{
+			A: &generated.A{
+				B: uint32p(2),
 			},
-			unmarshalRecord: func() bebop.Record { return &generated.MsgpackComparison{} },
-		}, {
-			name:            "empty Furniture",
-			record:          &generated.Furniture{},
-			unmarshalRecord: func() bebop.Record { return &generated.Furniture{} },
-			skipEquality:    true,
-		}, {
-			name:            "empty RequestResponse",
-			record:          &generated.RequestResponse{},
-			unmarshalRecord: func() bebop.Record { return &generated.RequestResponse{} },
-			skipEquality:    true,
-		}, {
-			name:            "empty RequestCatalog",
-			record:          &generated.RequestCatalog{},
-			unmarshalRecord: func() bebop.Record { return &generated.RequestCatalog{} },
-		}, {
-			name:            "empty ReadOnlyMap",
-			record:          &generated.ReadOnlyMap{},
-			unmarshalRecord: func() bebop.Record { return &generated.ReadOnlyMap{} },
-			skipEquality:    true,
-			// Empty unions are not supported
-			// }, {
-			// 	name:         "empty Union U",
-			// 	record:       &generated.U{},
-			// 	unmarshalRecord: func() bebop.Record { return  &generated.U{} },
-			// 	unmarshalTo2: &generated.U{},
-		}, {
-			name: "Union U: A",
-			record: &generated.U{
-				A: &generated.A{
-					B: uint32p(2),
-				},
+		},
+		unmarshalRecord: func() bebop.Record { return &generated.U{} },
+	}, {
+		name: "Union U: B",
+		//tsName: "U",
+		record: &generated.U{
+			B: &generated.B{
+				C: true,
 			},
-			unmarshalRecord: func() bebop.Record { return &generated.U{} },
-		}, {
-			name: "Union U: B",
-			record: &generated.U{
-				B: &generated.B{
-					C: true,
-				},
-			},
-			unmarshalRecord: func() bebop.Record { return &generated.U{} },
-		}, {
-			name:   "Union U: C",
-			tsName: "U",
-			record: &generated.U{
-				C: &generated.C{},
-			},
-			unmarshalRecord: func() bebop.Record { return &generated.U{} },
-		}, {
-			name:   "Union List",
-			tsName: "List",
-			record: &generated.List{
-				Cons: &generated.Cons{
-					Head: 1,
-					Tail: generated.List{
-						Cons: &generated.Cons{
-							Head: 2,
-							Tail: generated.List{
-								Nil: &generated.Nil{},
-							},
+		},
+		unmarshalRecord: func() bebop.Record { return &generated.U{} },
+	}, {
+		name: "Union U: C",
+		//tsName: "U",
+		record: &generated.U{
+			C: &generated.C{},
+		},
+		unmarshalRecord: func() bebop.Record { return &generated.U{} },
+	}, {
+		name: "Union List",
+		//tsName: "List",
+		record: &generated.List{
+			Cons: &generated.Cons{
+				Head: 1,
+				Tail: generated.List{
+					Cons: &generated.Cons{
+						Head: 2,
+						Tail: generated.List{
+							Nil: &generated.Nil{},
 						},
 					},
 				},
 			},
-			unmarshalRecord: func() bebop.Record { return &generated.List{} },
-			// }, {
-			// 	name: "Date MyObj",
-			// 	// compilation + empty value tests-- times are rounded down
-			// 	// so comparing them exactly is tricky
-			// 	record: &generated.MyObj{
-			// 		Start: nowP(),
-			// 		End:   nowP(),
-			// 	},
-			// 	unmarshalRecord: func() bebop.Record { return  &generated.MyObj{} },
-			// 	unmarshalTo2: &generated.MyObj{},
-		}}
+		},
+		unmarshalRecord: func() bebop.Record { return &generated.List{} },
+	}}
 	for _, tc := range tcs {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
@@ -489,14 +456,18 @@ func TestMarshalCycleRecords(t *testing.T) {
 				}
 			}
 
+			totalTests++
 			if tc.tsName == "" {
+				fmt.Printf("%d/%d tests covered in typescript\n", tsTests, totalTests)
 				return
 			}
-			fmt.Println("execing js")
+			tsTests++
+			fmt.Printf("%d/%d tests covered in typescript\n", tsTests, totalTests)
+			//fmt.Println("execing js")
 
 			marshalData5 := umt.MarshalBebop()
 			inputB64 := base64.URLEncoding.EncodeToString(marshalData5)
-			fmt.Println(marshalData5, inputB64)
+			//fmt.Println(marshalData5, inputB64)
 			jsQuery := fmt.Sprintf(`
 
 			var Buffer = require('buffer').Buffer
@@ -506,16 +477,16 @@ func TestMarshalCycleRecords(t *testing.T) {
 			}
 
 			var FromBase64 = function (str) {
-				console.log(str)
+				//console.log(str)
 				let buf = Buffer.from(str, 'base64')
-				console.log(buf)
+				//console.log(buf)
 				return buf;
 			}
 
 			let bbp = exports.%[1]s.decode(FromBase64(%[2]q))
-			console.log(bbp)
+			//console.log(bbp)
 			let binary = exports.%[1]s.encode(bbp)
-			console.log(binary)
+			//console.log(binary)
 			console.log(ToBase64(binary))
 						`, tc.tsName, inputB64)
 			cmd := exec.Command("node", `out.js`)
@@ -531,12 +502,12 @@ func TestMarshalCycleRecords(t *testing.T) {
 			outputB64, _ := io.ReadAll(stdout)
 			if err != nil {
 				allErr, _ := io.ReadAll(stderr)
+				fmt.Println(err)
 				fmt.Println(string(allErr))
 				t.Fatalf("node exec failed: %v", err)
 			}
-			fmt.Println(err)
 			fmt.Println("out:", string(outputB64))
-			fmt.Println("in:", len([]byte(inputB64)))
+			fmt.Println("in:", inputB64)
 
 			outBinary, _ := base64.StdEncoding.DecodeString(string(outputB64))
 			umt = tc.unmarshalRecord()

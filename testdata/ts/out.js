@@ -601,17 +601,17 @@ exports.DepM = {
     readFrom: function (view) {
         var message = {};
         var length = view.readMessageLength();
-        console.log("length", length)
+        //console.log("length", length)
         var end = view.index + length;
         while (true) {
             let by = view.readByte()
-            console.log("byte?", by) 
+            //console.log("byte?", by) 
             switch (by) {
                 case 0:
                     return message;
                 case 1:
                     message.x = view.readInt32();
-                    console.log("int32", message.x)
+                    //console.log("int32", message.x)
                     break;
                 default:
                     view.index = end;
