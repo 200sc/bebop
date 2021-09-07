@@ -2,7 +2,6 @@ package bebop
 
 import (
 	"fmt"
-	"math"
 )
 
 func (f File) equals(f2 File) error {
@@ -239,21 +238,4 @@ func (c Const) equals(c2 Const) error {
 		return fmt.Errorf("value mismatch: %v vs %v", c.Value, c2.Value)
 	}
 	return nil
-}
-
-func floatEquals(f1, f2 float64) bool {
-	// TODO: epsilon equality?
-	if f1 == f2 {
-		return true
-	}
-	if math.IsNaN(f1) && math.IsNaN(f2) {
-		return true
-	}
-	if math.IsInf(f1, 1) && math.IsInf(f2, 1) {
-		return true
-	}
-	if math.IsInf(f1, -1) && math.IsInf(f2, -1) {
-		return true
-	}
-	return false
 }

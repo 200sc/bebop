@@ -26,6 +26,9 @@ func (msg Message) generateMarshalBebopTo(w io.Writer, settings GenerateSettings
 	}
 	writeLine(w, "\tat += 4")
 	for _, fd := range fields {
+		if fd.Deprecated {
+			continue
+		}
 		name := exposeName(fd.Name)
 		num := strconv.Itoa(int(fd.num))
 		name = "*bbp." + name
@@ -103,6 +106,9 @@ func (msg Message) generateEncodeBebop(w io.Writer, settings GenerateSettings, f
 		writeLine(w, "\tiohelp.WriteUint32(w, uint32(bbp.Size()-4))")
 	}
 	for _, fd := range fields {
+		if fd.Deprecated {
+			continue
+		}
 		name := exposeName(fd.Name)
 		num := strconv.Itoa(int(fd.num))
 		name = "*bbp." + name
@@ -156,6 +162,9 @@ func (msg Message) generateSize(w io.Writer, settings GenerateSettings, fields [
 		writeLine(w, "\tbodyLen += 4")
 	}
 	for _, fd := range fields {
+		if fd.Deprecated {
+			continue
+		}
 		name := exposeName(fd.Name)
 		name = "*bbp." + name
 		writeLineWithTabs(w, "if %RECV != nil {", 1, name)

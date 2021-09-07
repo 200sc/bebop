@@ -279,13 +279,6 @@ func (bbp RequestCatalog) MarshalBebopTo(buf []byte) int {
 		iohelp.WriteUint32Bytes(buf[at:], uint32(*bbp.Family))
 		at += 4
 	}
-	if bbp.SecretTunnel != nil {
-		buf[at] = 2
-		at++
-		iohelp.WriteUint32Bytes(buf[at:], uint32(len(*bbp.SecretTunnel)))
-		copy(buf[at+4:at+4+len(*bbp.SecretTunnel)], []byte(*bbp.SecretTunnel))
-		at += 4 + len(*bbp.SecretTunnel)
-	}
 	return at
 }
 
@@ -344,11 +337,6 @@ func (bbp RequestCatalog) EncodeBebop(iow io.Writer) (err error) {
 		w.Write([]byte{1})
 		iohelp.WriteUint32(w, uint32(*bbp.Family))
 	}
-	if bbp.SecretTunnel != nil {
-		w.Write([]byte{2})
-		iohelp.WriteUint32(w, uint32(len(*bbp.SecretTunnel)))
-		w.Write([]byte(*bbp.SecretTunnel))
-	}
 	w.Write([]byte{0})
 	return w.Err
 }
@@ -379,10 +367,6 @@ func (bbp RequestCatalog) Size() int {
 	if bbp.Family != nil {
 		bodyLen += 1
 		bodyLen += 4
-	}
-	if bbp.SecretTunnel != nil {
-		bodyLen += 1
-		bodyLen += 4 + len(*bbp.SecretTunnel)
 	}
 	return bodyLen
 }

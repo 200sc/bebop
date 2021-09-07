@@ -1036,7 +1036,7 @@ func TestReadFile(t *testing.T) {
 								},
 							},
 							{
-								Name: "fLOAT_",
+								Name: "fLOAT_x",
 								FieldType: FieldType{
 									Simple: typeFloat64,
 								},
