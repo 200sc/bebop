@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -67,7 +68,7 @@ func TestMarshalCycleRecords(t *testing.T) {
 	}, {
 		name: "BasicArrays",
 		// fails, js's b64 tells us to create a huge paylaod
-		//tsName: "BasicArrays",
+		tsName: "BasicArrays",
 		record: &generated.BasicArrays{
 			A_bool:    []bool{true, false, true},
 			A_uint16:  []uint16{0, 2, 65535},
@@ -91,9 +92,8 @@ func TestMarshalCycleRecords(t *testing.T) {
 		},
 		unmarshalRecord: func() bebop.Record { return &generated.TestInt32Array{} },
 	}, {
-		name: "TestInt32Array",
-		// fails js side before during decode
-		// tsName: "TestInt32Array",
+		name:   "TestInt32Array",
+		tsName: "TestInt32Array",
 		record: &generated.TestInt32Array{
 			A: []int32{
 				0, 2, 15412, 301523, 3441213,
@@ -107,8 +107,8 @@ func TestMarshalCycleRecords(t *testing.T) {
 		unmarshalRecord: func() bebop.Record { return &generated.BasicTypes{} },
 	}, {
 		name: "BasicTypes",
-		// hangs
-		//tsName: "BasicTypes",
+		// minor mismatch (date?)
+		// tsName: "BasicTypes",
 		record: &generated.BasicTypes{
 			A_bool:    true,
 			A_byte:    4,
@@ -123,9 +123,8 @@ func TestMarshalCycleRecords(t *testing.T) {
 		record:          &generated.DocS{},
 		unmarshalRecord: func() bebop.Record { return &generated.DocS{} },
 	}, {
-		name: "DocS",
-		// tsName: "DocS",
-		// fails js side before during decode
+		name:   "DocS",
+		tsName: "DocS",
 		record: &generated.DocS{
 			X: 203202003,
 		},
@@ -153,8 +152,8 @@ func TestMarshalCycleRecords(t *testing.T) {
 		record:          &generated.Foo{},
 		unmarshalRecord: func() bebop.Record { return &generated.Foo{} },
 	}, {
-		name: "Foo",
-		//tsName: "Foo",
+		name:   "Foo",
+		tsName: "Foo",
 		record: &generated.Foo{
 			Bar: generated.Bar{
 				X: float64p(3.21312),
@@ -169,10 +168,10 @@ func TestMarshalCycleRecords(t *testing.T) {
 		record:          &generated.Bar{},
 		unmarshalRecord: func() bebop.Record { return &generated.Bar{} },
 	}, {
-		name: "Bar",
-		//tsName: "Bar",
+		name:   "Bar",
+		tsName: "Bar",
 		record: &generated.Bar{
-			Y: float64p(19999999999999999.2),
+			Y: float64p(19999.2),
 		},
 		unmarshalRecord: func() bebop.Record { return &generated.Bar{} },
 	}, {
@@ -189,8 +188,8 @@ func TestMarshalCycleRecords(t *testing.T) {
 		},
 		unmarshalRecord: func() bebop.Record { return &generated.Library{} },
 	}, {
-		name: "Library",
-		//tsName: "Library",
+		name:   "Library",
+		tsName: "Library",
 		record: &generated.Library{
 			Songs: map[[16]byte]generated.Song{
 				{0x35, 0x91, 0x8b, 0xc9, 0x19, 0x6d, 0x40, 0xea, 0x97, 0x79, 0x88, 0x9d, 0x79, 0xb7, 0x53, 0xf0}: {
@@ -223,7 +222,7 @@ func TestMarshalCycleRecords(t *testing.T) {
 	}, {
 		name: "VideoData",
 		// big size problem
-		//tsName: "VideoData",
+		tsName: "VideoData",
 		record: &generated.VideoData{
 			Time:     -2042.122,
 			Width:    9333,
@@ -242,8 +241,8 @@ func TestMarshalCycleRecords(t *testing.T) {
 		record:          &generated.SkipTestOld{},
 		unmarshalRecord: func() bebop.Record { return &generated.SkipTestOld{} },
 	}, {
-		name: "SkipTestOld",
-		//tsName: "SkipTestOld",
+		name:   "SkipTestOld",
+		tsName: "SkipTestOld",
 		record: &generated.SkipTestOld{
 			X: int32p(2222),
 			Y: int32p(12315),
@@ -255,8 +254,8 @@ func TestMarshalCycleRecords(t *testing.T) {
 		record:          &generated.SkipTestNew{},
 		unmarshalRecord: func() bebop.Record { return &generated.SkipTestNew{} },
 	}, {
-		name: "SkipTestNew",
-		//tsName: "SkipTestNew",
+		name:   "SkipTestNew",
+		tsName: "SkipTestNew",
 		record: &generated.SkipTestNew{
 			X: int32p(222322),
 			Y: int32p(123125),
@@ -473,7 +472,8 @@ func TestMarshalCycleRecords(t *testing.T) {
 			var Buffer = require('buffer').Buffer
 
 			var ToBase64 = function (u8) {
-				return Buffer.from(String.fromCharCode.apply(null, u8)).toString('base64')
+				//console.log(u8)
+				return Buffer.from(u8).toString('base64');
 			}
 
 			var FromBase64 = function (str) {
@@ -506,8 +506,8 @@ func TestMarshalCycleRecords(t *testing.T) {
 				fmt.Println(string(allErr))
 				t.Fatalf("node exec failed: %v", err)
 			}
-			fmt.Println("out:", string(outputB64))
 			fmt.Println("in:", inputB64)
+			fmt.Println("out:", strings.TrimSpace(string(outputB64)))
 
 			outBinary, _ := base64.StdEncoding.DecodeString(string(outputB64))
 			umt = tc.unmarshalRecord()
@@ -517,6 +517,11 @@ func TestMarshalCycleRecords(t *testing.T) {
 			}
 			buf = &bytes.Buffer{}
 			err = umt.EncodeBebop(buf)
+			if b, ok := umt.(*generated.Bar); ok {
+				if b.Y != nil {
+					fmt.Println(*b.Y)
+				}
+			}
 			marshalData6 := buf.Bytes()
 			if err != nil {
 				t.Fatalf("js marshal failed: %v", err)
