@@ -18,6 +18,9 @@ func skipIfUpstreamMissing(t *testing.T) {
 }
 
 func TestUpstreamCompatiblitySuccess(t *testing.T) {
+	if testing.Short() {
+		t.Skip("upstream tests skipped by --short")
+	}
 	skipIfUpstreamMissing(t)
 
 	cmd := exec.Command(upsteamCompilerName, "--ts", "./out.ts", "--dir", filepath.Join(".", "testdata", "base"))
@@ -29,6 +32,9 @@ func TestUpstreamCompatiblitySuccess(t *testing.T) {
 }
 
 func TestUpstreamCompatiblityFailures(t *testing.T) {
+	if testing.Short() {
+		t.Skip("upstream tests skipped by --short")
+	}
 	skipIfUpstreamMissing(t)
 
 	files, err := os.ReadDir(filepath.Join(".", "testdata", "invalid"))
