@@ -21,10 +21,6 @@ func (st Struct) generateMarshalBebopTo(w io.Writer, settings GenerateSettings) 
 	exposedName := exposeName(st.Name)
 	writeLine(w, "func (bbp %s) MarshalBebopTo(buf []byte) int {", exposedName)
 	startAt := "0"
-	if st.OpCode != 0 {
-		writeLine(w, "\tiohelp.WriteUint32Bytes(buf, uint32(%sOpCode))", exposedName)
-		startAt = "4"
-	}
 	if len(st.Fields) == 0 {
 		writeLine(w, "\treturn "+startAt)
 		writeCloseBlock(w)
@@ -45,14 +41,8 @@ func (st Struct) generateMarshalBebopTo(w io.Writer, settings GenerateSettings) 
 func (st Struct) generateUnmarshalBebop(w io.Writer, settings GenerateSettings) {
 	exposedName := exposeName(st.Name)
 	writeLine(w, "func (bbp *%s) UnmarshalBebop(buf []byte) (err error) {", exposedName)
-	if st.OpCode != 0 {
-		if len(st.Fields) > 0 {
-			writeLine(w, "\tat := 4")
-		}
-	} else {
-		if len(st.Fields) > 0 {
-			writeLine(w, "\tat := 0")
-		}
+	if len(st.Fields) > 0 {
+		writeLine(w, "\tat := 0")
 	}
 	for _, fd := range st.Fields {
 		name := exposeName(fd.Name)
@@ -68,14 +58,8 @@ func (st Struct) generateUnmarshalBebop(w io.Writer, settings GenerateSettings) 
 func (st Struct) generateMustUnmarshalBebop(w io.Writer, settings GenerateSettings) {
 	exposedName := exposeName(st.Name)
 	writeLine(w, "func (bbp *%s) MustUnmarshalBebop(buf []byte) {", exposedName)
-	if st.OpCode != 0 {
-		if len(st.Fields) > 0 {
-			writeLine(w, "\tat := 4")
-		}
-	} else {
-		if len(st.Fields) > 0 {
-			writeLine(w, "\tat := 0")
-		}
+	if len(st.Fields) > 0 {
+		writeLine(w, "\tat := 0")
 	}
 	for _, fd := range st.Fields {
 		name := exposeName(fd.Name)
@@ -91,13 +75,10 @@ func (st Struct) generateEncodeBebop(w io.Writer, settings GenerateSettings) {
 	exposedName := exposeName(st.Name)
 	*settings.isFirstTopLength = true
 	writeLine(w, "func (bbp %s) EncodeBebop(iow io.Writer) (err error) {", exposedName)
-	if len(st.Fields) == 0 && st.OpCode == 0 {
+	if len(st.Fields) == 0 {
 		writeLine(w, "\treturn nil")
 	} else {
 		writeLine(w, "\tw := iohelp.NewErrorWriter(iow)")
-		if st.OpCode != 0 {
-			writeLine(w, "\tiohelp.WriteUint32(w, uint32(%sOpCode))", exposedName)
-		}
 		for _, fd := range st.Fields {
 			name := exposeName(fd.Name)
 			if st.ReadOnly {
@@ -114,14 +95,10 @@ func (st Struct) generateDecodeBebop(w io.Writer, settings GenerateSettings) {
 	exposedName := exposeName(st.Name)
 	*settings.isFirstTopLength = true
 	writeLine(w, "func (bbp *%s) DecodeBebop(ior io.Reader) (err error) {", exposedName)
-	if len(st.Fields) == 0 && st.OpCode == 0 {
+	if len(st.Fields) == 0 {
 		writeLine(w, "\treturn nil")
 	} else {
 		writeLine(w, "\tr := iohelp.NewErrorReader(ior)")
-		if st.OpCode != 0 {
-			writeLine(w, "\tr.Read(make([]byte, 4))")
-			writeLine(w, "\tif r.Err != nil {\n\t\treturn r.Err\n\t}")
-		}
 		for _, fd := range st.Fields {
 			name := exposeName(fd.Name)
 			if st.ReadOnly {
@@ -137,13 +114,10 @@ func (st Struct) generateDecodeBebop(w io.Writer, settings GenerateSettings) {
 func (st Struct) generateSize(w io.Writer, settings GenerateSettings) {
 	exposedName := exposeName(st.Name)
 	writeLine(w, "func (bbp %s) Size() int {", exposedName)
-	if len(st.Fields) == 0 && st.OpCode == 0 {
+	if len(st.Fields) == 0 {
 		writeLine(w, "\treturn 0")
 	} else {
 		writeLine(w, "\tbodyLen := 0")
-		if st.OpCode != 0 {
-			writeLine(w, "\tbodyLen += 4")
-		}
 		for _, fd := range st.Fields {
 			name := exposeName(fd.Name)
 			if st.ReadOnly {
@@ -190,7 +164,7 @@ func (st Struct) Generate(w io.Writer, settings GenerateSettings) {
 	st.generateDecodeBebop(w, settings)
 	st.generateSize(w, settings)
 
-	isEmpty := len(st.Fields) == 0 && st.OpCode == 0
+	isEmpty := len(st.Fields) == 0
 	writeWrappers(w, st.Name, isEmpty, settings)
 	if st.ReadOnly {
 		st.generateReadOnlyGetters(w, settings)

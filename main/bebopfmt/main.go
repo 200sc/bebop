@@ -86,7 +86,7 @@ func formatFile(path string) error {
 	if err != nil {
 		return fmt.Errorf("Failed to open path: %w", err)
 	}
-	_, err = bebop.ReadFile(f)
+	_, _, err = bebop.ReadFile(f)
 	if err != nil {
 		f.Close()
 		return fmt.Errorf("Failed to read file: %w", err)

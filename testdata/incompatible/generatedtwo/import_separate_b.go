@@ -408,7 +408,7 @@ type ImportedUnion struct {
 
 func (bbp ImportedUnion) MarshalBebopTo(buf []byte) int {
 	at := 0
-	iohelp.WriteUint32Bytes(buf[at:], uint32(bbp.Size()-4))
+	iohelp.WriteUint32Bytes(buf[at:], uint32(bbp.Size()-5))
 	at += 4
 	if bbp.WhyAreTheseInline != nil {
 		buf[at] = 1
@@ -486,7 +486,7 @@ func (bbp *ImportedUnion) MustUnmarshalBebop(buf []byte) {
 
 func (bbp ImportedUnion) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
-	iohelp.WriteUint32(w, uint32(bbp.Size()-4))
+	iohelp.WriteUint32(w, uint32(bbp.Size()-5))
 	if bbp.WhyAreTheseInline != nil {
 		w.Write([]byte{1})
 		err = (*bbp.WhyAreTheseInline).EncodeBebop(w)
@@ -509,7 +509,7 @@ func (bbp ImportedUnion) EncodeBebop(iow io.Writer) (err error) {
 func (bbp *ImportedUnion) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
 	bodyLen := iohelp.ReadUint32(r)
-	r.Reader = &io.LimitedReader{R:r.Reader, N:int64(bodyLen)}
+	r.Reader = &io.LimitedReader{R:r.Reader, N:int64(bodyLen)+1}
 	for {
 		switch iohelp.ReadByte(r) {
 		case 1:

@@ -9,7 +9,7 @@ import (
 //go:generate go-fuzz-build
 
 func Fuzz(data []byte) int {
-	bopf, err := bebop.ReadFile(bytes.NewReader(data))
+	bopf, _, err := bebop.ReadFile(bytes.NewReader(data))
 	if err != nil {
 		return 0
 	}

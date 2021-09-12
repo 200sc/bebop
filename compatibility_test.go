@@ -18,6 +18,9 @@ func skipIfUpstreamMissing(t *testing.T) {
 }
 
 func TestUpstreamCompatiblitySuccess(t *testing.T) {
+	if testing.Short() {
+		t.Skip("upstream tests skipped by --short")
+	}
 	skipIfUpstreamMissing(t)
 
 	cmd := exec.Command(upsteamCompilerName, "--ts", "./out.ts", "--dir", filepath.Join(".", "testdata", "base"))
@@ -29,6 +32,9 @@ func TestUpstreamCompatiblitySuccess(t *testing.T) {
 }
 
 func TestUpstreamCompatiblityFailures(t *testing.T) {
+	if testing.Short() {
+		t.Skip("upstream tests skipped by --short")
+	}
 	skipIfUpstreamMissing(t)
 
 	files, err := os.ReadDir(filepath.Join(".", "testdata", "invalid"))
@@ -37,7 +43,7 @@ func TestUpstreamCompatiblityFailures(t *testing.T) {
 	}
 
 	var exceptions = map[string]string{
-		"invalid_nested_union.bop": "merged into upstream but unreleased",
+		"invalid_readonly_comment.bop": "bebopc 2.2.4 errors where 2.3.0 does not, without a changelog note",
 	}
 
 	for _, f := range files {

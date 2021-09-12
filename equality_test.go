@@ -2,7 +2,6 @@ package bebop
 
 import (
 	"fmt"
-	"math"
 )
 
 func (f File) equals(f2 File) error {
@@ -235,62 +234,8 @@ func (c Const) equals(c2 Const) error {
 	if c.Name != c2.Name {
 		return fmt.Errorf("name mismatch: %v vs %v", c.Name, c2.Name)
 	}
-	if (c.IntValue == nil) != (c2.IntValue == nil) {
-		return fmt.Errorf("const has int value type mismatch: %v vs %v", c.IntValue != nil, c2.IntValue != nil)
-	}
-	if c.IntValue != nil && c2.IntValue != nil {
-		if *c.IntValue != *c2.IntValue {
-			return fmt.Errorf("int value mismatch: %v vs %v", *c.IntValue, *c2.IntValue)
-		}
-	}
-	if (c.UIntValue == nil) != (c2.UIntValue == nil) {
-		return fmt.Errorf("const has uint value type mismatch: %v vs %v", c.UIntValue != nil, c2.UIntValue != nil)
-	}
-	if c.UIntValue != nil && c2.UIntValue != nil {
-		if *c.UIntValue != *c2.UIntValue {
-			return fmt.Errorf("uint value mismatch: %v vs %v", *c.UIntValue, *c2.UIntValue)
-		}
-	}
-	if (c.FloatValue == nil) != (c2.FloatValue == nil) {
-		return fmt.Errorf("const has float value type mismatch: %v vs %v", c.FloatValue != nil, c2.FloatValue != nil)
-	}
-	if c.FloatValue != nil && c2.FloatValue != nil {
-		if !floatEquals(*c.FloatValue, *c2.FloatValue) {
-			return fmt.Errorf("float value mismatch: %v vs %v", *c.FloatValue, *c2.FloatValue)
-		}
-	}
-	if (c.BoolValue == nil) != (c2.BoolValue == nil) {
-		return fmt.Errorf("const has bool value type mismatch: %v vs %v", c.BoolValue != nil, c2.BoolValue != nil)
-	}
-	if c.BoolValue != nil && c2.BoolValue != nil {
-		if *c.BoolValue != *c2.BoolValue {
-			return fmt.Errorf("bool value mismatch: %v vs %v", *c.BoolValue, *c2.BoolValue)
-		}
-	}
-	if (c.StringValue == nil) != (c2.StringValue == nil) {
-		return fmt.Errorf("const has string value type mismatch: %v vs %v", c.StringValue != nil, c2.StringValue != nil)
-	}
-	if c.StringValue != nil && c2.StringValue != nil {
-		if *c.StringValue != *c2.StringValue {
-			return fmt.Errorf("string value mismatch: %v vs %v", *c.StringValue, *c2.StringValue)
-		}
+	if c.Value != c2.Value {
+		return fmt.Errorf("value mismatch: %v vs %v", c.Value, c2.Value)
 	}
 	return nil
-}
-
-func floatEquals(f1, f2 float64) bool {
-	// TODO: epsilon equality?
-	if f1 == f2 {
-		return true
-	}
-	if math.IsNaN(f1) && math.IsNaN(f2) {
-		return true
-	}
-	if math.IsInf(f1, 1) && math.IsInf(f2, 1) {
-		return true
-	}
-	if math.IsInf(f1, -1) && math.IsInf(f2, -1) {
-		return true
-	}
-	return false
 }

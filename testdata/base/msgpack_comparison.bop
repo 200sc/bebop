@@ -16,7 +16,7 @@ struct MsgpackComparison {
   bool tRUE; // "true": true,
   bool fALSE; // "false": false,
   float64 fLOAT; // "float": 0.5,
-  float64 fLOAT_; // "float-": -0.5,
+  float64 fLOAT_x; // "float-": -0.5,
   string sTRING0; // "string0": "",
   string sTRING1; // "string1": "A",
   string sTRING4; // "string4": "foobarbaz",

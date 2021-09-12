@@ -16,16 +16,13 @@ type fieldWithNumber struct {
 func (msg Message) generateMarshalBebopTo(w io.Writer, settings GenerateSettings, fields []fieldWithNumber) {
 	exposedName := exposeName(msg.Name)
 	writeLine(w, "func (bbp %s) MarshalBebopTo(buf []byte) int {", exposedName)
-	if msg.OpCode != 0 {
-		writeLine(w, "\tiohelp.WriteUint32Bytes(buf, uint32(%sOpCode))", exposedName)
-		writeLine(w, "\tat := 4")
-		writeLine(w, "\tiohelp.WriteUint32Bytes(buf[at:], uint32(bbp.Size()-8))")
-	} else {
-		writeLine(w, "\tat := 0")
-		writeLine(w, "\tiohelp.WriteUint32Bytes(buf[at:], uint32(bbp.Size()-4))")
-	}
+	writeLine(w, "\tat := 0")
+	writeLine(w, "\tiohelp.WriteUint32Bytes(buf[at:], uint32(bbp.Size()-4))")
 	writeLine(w, "\tat += 4")
 	for _, fd := range fields {
+		if fd.Deprecated {
+			continue
+		}
 		name := exposeName(fd.Name)
 		num := strconv.Itoa(int(fd.num))
 		name = "*bbp." + name
@@ -42,11 +39,7 @@ func (msg Message) generateMarshalBebopTo(w io.Writer, settings GenerateSettings
 func (msg Message) generateUnmarshalBebop(w io.Writer, settings GenerateSettings, fields []fieldWithNumber) {
 	exposedName := exposeName(msg.Name)
 	writeLine(w, "func (bbp *%s) UnmarshalBebop(buf []byte) (err error) {", exposedName)
-	if msg.OpCode != 0 {
-		writeLine(w, "\tat := 4")
-	} else {
-		writeLine(w, "\tat := 0")
-	}
+	writeLine(w, "\tat := 0")
 	writeLine(w, "\t_ = iohelp.ReadUint32Bytes(buf[at:])")
 	writeLine(w, "\tbuf = buf[4:]")
 	writeLine(w, "\tfor {")
@@ -68,11 +61,7 @@ func (msg Message) generateUnmarshalBebop(w io.Writer, settings GenerateSettings
 func (msg Message) generateMustUnmarshalBebop(w io.Writer, settings GenerateSettings, fields []fieldWithNumber) {
 	exposedName := exposeName(msg.Name)
 	writeLine(w, "func (bbp *%s) MustUnmarshalBebop(buf []byte) {", exposedName)
-	if msg.OpCode != 0 {
-		writeLine(w, "\tat := 4")
-	} else {
-		writeLine(w, "\tat := 0")
-	}
+	writeLine(w, "\tat := 0")
 	writeLine(w, "\t_ = iohelp.ReadUint32Bytes(buf[at:])")
 	writeLine(w, "\tbuf = buf[4:]")
 	writeLine(w, "\tfor {")
@@ -96,13 +85,11 @@ func (msg Message) generateEncodeBebop(w io.Writer, settings GenerateSettings, f
 	*settings.isFirstTopLength = true
 	writeLine(w, "func (bbp %s) EncodeBebop(iow io.Writer) (err error) {", exposedName)
 	writeLine(w, "\tw := iohelp.NewErrorWriter(iow)")
-	if msg.OpCode != 0 {
-		writeLine(w, "\tiohelp.WriteUint32(w, uint32(%sOpCode))", exposedName)
-		writeLine(w, "\tiohelp.WriteUint32(w, uint32(bbp.Size()-8))")
-	} else {
-		writeLine(w, "\tiohelp.WriteUint32(w, uint32(bbp.Size()-4))")
-	}
+	writeLine(w, "\tiohelp.WriteUint32(w, uint32(bbp.Size()-4))")
 	for _, fd := range fields {
+		if fd.Deprecated {
+			continue
+		}
 		name := exposeName(fd.Name)
 		num := strconv.Itoa(int(fd.num))
 		name = "*bbp." + name
@@ -121,9 +108,6 @@ func (msg Message) generateDecodeBebop(w io.Writer, settings GenerateSettings, f
 	*settings.isFirstTopLength = true
 	writeLine(w, "func (bbp *%s) DecodeBebop(ior io.Reader) (err error) {", exposedName)
 	writeLine(w, "\tr := iohelp.NewErrorReader(ior)")
-	if msg.OpCode != 0 {
-		writeLine(w, "\tiohelp.ReadUint32(r)")
-	}
 	writeLine(w, "\tbodyLen := iohelp.ReadUint32(r)")
 	writeLine(w, "\tr.Reader = &io.LimitedReader{R:r.Reader, N:int64(bodyLen)}")
 	writeLine(w, "\tfor {")
@@ -152,10 +136,10 @@ func (msg Message) generateSize(w io.Writer, settings GenerateSettings, fields [
 	// a: (I think) because then we can loop reading a single byte for each field, and if we read 0
 	// we know we're done and don't have to unread the byte
 	writeLine(w, "\tbodyLen := 5")
-	if msg.OpCode != 0 {
-		writeLine(w, "\tbodyLen += 4")
-	}
 	for _, fd := range fields {
+		if fd.Deprecated {
+			continue
+		}
 		name := exposeName(fd.Name)
 		name = "*bbp." + name
 		writeLineWithTabs(w, "if %RECV != nil {", 1, name)
@@ -188,7 +172,7 @@ func (msg Message) Generate(w io.Writer, settings GenerateSettings) {
 	msg.generateEncodeBebop(w, settings, fields)
 	msg.generateDecodeBebop(w, settings, fields)
 	msg.generateSize(w, settings, fields)
-	isEmpty := len(msg.Fields) == 0 && msg.OpCode == 0
+	isEmpty := len(msg.Fields) == 0
 	writeWrappers(w, msg.Name, isEmpty, settings)
 }
 

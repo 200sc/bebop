@@ -1,31 +1,10 @@
 package bebop
 
 import (
-	"math"
 	"os"
 	"path/filepath"
 	"testing"
 )
-
-func int64pointer(i int64) *int64 {
-	return &i
-}
-
-func uint64pointer(i uint64) *uint64 {
-	return &i
-}
-
-func stringPointer(s string) *string {
-	return &s
-}
-
-func boolPointer(b bool) *bool {
-	return &b
-}
-
-func floatPointer(f float64) *float64 {
-	return &f
-}
 
 func TestReadFile(t *testing.T) {
 	type testCase struct {
@@ -116,82 +95,82 @@ func TestReadFile(t *testing.T) {
 					{
 						SimpleType: typeUint8,
 						Name:       "uint8const",
-						UIntValue:  uint64pointer(1),
+						Value:      "1",
 					},
 					{
 						SimpleType: typeUint16,
 						Name:       "uint16const",
-						UIntValue:  uint64pointer(1),
+						Value:      "1",
 					},
 					{
 						SimpleType: typeUint32,
 						Name:       "uint32const",
-						UIntValue:  uint64pointer(1),
+						Value:      "1",
 					},
 					{
 						SimpleType: typeUint64,
 						Name:       "uint64const",
-						UIntValue:  uint64pointer(1),
+						Value:      "1",
 					},
 					{
 						SimpleType: typeByte,
 						Name:       "int8const",
-						UIntValue:  uint64pointer(1),
+						Value:      "1",
 					},
 					{
 						SimpleType: typeInt16,
 						Name:       "int16const",
-						IntValue:   int64pointer(1),
+						Value:      "1",
 					},
 					{
 						SimpleType: typeInt32,
 						Name:       "int32const",
-						IntValue:   int64pointer(1),
+						Value:      "1",
 					},
 					{
 						SimpleType: typeInt64,
 						Name:       "int64const",
-						IntValue:   int64pointer(1),
+						Value:      "1",
 					},
 					{
 						SimpleType: typeFloat32,
 						Name:       "float32const",
-						FloatValue: floatPointer(1),
+						Value:      "1",
 					},
 					{
 						SimpleType: typeFloat64,
 						Name:       "float64const",
-						FloatValue: floatPointer(1.5),
+						Value:      "1.5",
 					},
 					{
 						SimpleType: typeFloat64,
 						Name:       "float64infconst",
-						FloatValue: floatPointer(math.Inf(1)),
+						Value:      "math.Inf(1)",
 					},
 					{
 						SimpleType: typeFloat64,
 						Name:       "float64ninfconst",
-						FloatValue: floatPointer(math.Inf(-1)),
+						Value:      "math.Inf(-1)",
 					},
 					{
 						SimpleType: typeFloat64,
 						Name:       "float64nanconst",
-						FloatValue: floatPointer(math.NaN()),
+						Value:      "math.NaN()",
 					},
 					{
 						SimpleType: typeBool,
 						Name:       "boolconst",
-						BoolValue:  boolPointer(true),
+						Value:      "true",
 					},
 					{
-						SimpleType:  typeString,
-						Name:        "stringconst",
-						StringValue: stringPointer("1"),
+						SimpleType: typeString,
+						Name:       "stringconst",
+						Value:      `"1"`,
 					},
 					{
-						SimpleType:  typeGUID,
-						Name:        "guidconst",
-						StringValue: stringPointer("e2722bf7-022a-496a-9f01-7029d7d5563d"),
+						SimpleType: typeGUID,
+						Name:       "guidconst",
+						Value:      `"e2722bf7-022a-496a-9f01-7029d7d5563d"`,
 					},
 				},
 			},
@@ -1057,7 +1036,7 @@ func TestReadFile(t *testing.T) {
 								},
 							},
 							{
-								Name: "fLOAT_",
+								Name: "fLOAT_x",
 								FieldType: FieldType{
 									Simple: typeFloat64,
 								},
@@ -1291,7 +1270,7 @@ func TestReadFile(t *testing.T) {
 				t.Fatalf("failed to open test file %s: %v", tc.file+".bop", err)
 			}
 			defer f.Close()
-			bf, err := ReadFile(f)
+			bf, _, err := ReadFile(f)
 			if err != nil {
 				t.Fatalf("read file errored: %v", err)
 			}
@@ -1302,7 +1281,7 @@ func TestReadFile(t *testing.T) {
 	}
 }
 
-func TestReadFileErrorIncompatible(t *testing.T) {
+func TestReadFileErrorWarnings(t *testing.T) {
 	type testCase struct {
 		file       string
 		errMessage string
@@ -1316,17 +1295,17 @@ func TestReadFileErrorIncompatible(t *testing.T) {
 	for _, tc := range tcs {
 		tc := tc
 		t.Run(tc.file, func(t *testing.T) {
-			f, err := os.Open(filepath.Join("testdata", "incompatible", tc.file+".bop"))
+			f, err := os.Open(filepath.Join("testdata", "warning", tc.file+".bop"))
 			if err != nil {
 				t.Fatalf("failed to open test file %s: %v", tc.file+".bop", err)
 			}
 			defer f.Close()
-			_, err = ReadFile(f)
-			if err == nil {
-				t.Fatalf("read file should have errored")
+			_, warnings, err := ReadFile(f)
+			if err != nil {
+				t.Fatalf("read file should not have errored: %v", err)
 			}
-			if err.Error() != tc.errMessage {
-				t.Fatalf("read file had wrong error: got %q, expected %q", err.Error(), tc.errMessage)
+			if warnings[0] != tc.errMessage {
+				t.Fatalf("read file had wrong warning: got %q, expected %q", warnings[0], tc.errMessage)
 			}
 		})
 	}
@@ -1424,7 +1403,7 @@ func TestReadFileError(t *testing.T) {
 				t.Fatalf("failed to open test file %s: %v", tc.file+".bop", err)
 			}
 			defer f.Close()
-			_, err = ReadFile(f)
+			_, _, err = ReadFile(f)
 			if err == nil {
 				t.Fatalf("read file should have errored")
 			}

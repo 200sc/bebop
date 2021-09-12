@@ -26,7 +26,7 @@ type MsgpackComparison struct {
 	TRUE bool
 	FALSE bool
 	FLOAT float64
-	FLOAT_ float64
+	FLOAT_x float64
 	STRING0 string
 	STRING1 string
 	STRING4 string
@@ -63,7 +63,7 @@ func (bbp MsgpackComparison) MarshalBebopTo(buf []byte) int {
 	at += 1
 	iohelp.WriteFloat64Bytes(buf[at:], bbp.FLOAT)
 	at += 8
-	iohelp.WriteFloat64Bytes(buf[at:], bbp.FLOAT_)
+	iohelp.WriteFloat64Bytes(buf[at:], bbp.FLOAT_x)
 	at += 8
 	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.STRING0)))
 	copy(buf[at+4:at+4+len(bbp.STRING0)], []byte(bbp.STRING0))
@@ -167,7 +167,7 @@ func (bbp *MsgpackComparison) UnmarshalBebop(buf []byte) (err error) {
 	if len(buf[at:]) < 8 {
 		 return io.ErrUnexpectedEOF
 	}
-	bbp.FLOAT_ = iohelp.ReadFloat64Bytes(buf[at:])
+	bbp.FLOAT_x = iohelp.ReadFloat64Bytes(buf[at:])
 	at += 8
 	bbp.STRING0, err = iohelp.ReadStringBytes(buf[at:])
 	if err != nil{
@@ -259,7 +259,7 @@ func (bbp *MsgpackComparison) MustUnmarshalBebop(buf []byte) {
 	at += 1
 	bbp.FLOAT = iohelp.ReadFloat64Bytes(buf[at:])
 	at += 8
-	bbp.FLOAT_ = iohelp.ReadFloat64Bytes(buf[at:])
+	bbp.FLOAT_x = iohelp.ReadFloat64Bytes(buf[at:])
 	at += 8
 	bbp.STRING0 = iohelp.MustReadStringBytes(buf[at:])
 	at += 4 + len(bbp.STRING0)
@@ -305,7 +305,7 @@ func (bbp MsgpackComparison) EncodeBebop(iow io.Writer) (err error) {
 	iohelp.WriteBool(w, bbp.TRUE)
 	iohelp.WriteBool(w, bbp.FALSE)
 	iohelp.WriteFloat64(w, bbp.FLOAT)
-	iohelp.WriteFloat64(w, bbp.FLOAT_)
+	iohelp.WriteFloat64(w, bbp.FLOAT_x)
 	iohelp.WriteUint32(w, uint32(len(bbp.STRING0)))
 	w.Write([]byte(bbp.STRING0))
 	iohelp.WriteUint32(w, uint32(len(bbp.STRING1)))
@@ -346,7 +346,7 @@ func (bbp *MsgpackComparison) DecodeBebop(ior io.Reader) (err error) {
 	bbp.TRUE = iohelp.ReadBool(r)
 	bbp.FALSE = iohelp.ReadBool(r)
 	bbp.FLOAT = iohelp.ReadFloat64(r)
-	bbp.FLOAT_ = iohelp.ReadFloat64(r)
+	bbp.FLOAT_x = iohelp.ReadFloat64(r)
 	bbp.STRING0 = iohelp.ReadString(r)
 	bbp.STRING1 = iohelp.ReadString(r)
 	bbp.STRING4 = iohelp.ReadString(r)

@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"math"
 	"os"
 	"path"
 	"path/filepath"
@@ -285,7 +284,7 @@ func (f File) Generate(w io.Writer, settings GenerateSettings) error {
 			if err != nil {
 				return fmt.Errorf("failed to open imported file %s: %w", imp.to, err)
 			}
-			impFile, err := ReadFile(impF)
+			impFile, _, err := ReadFile(impF)
 			if err != nil {
 				impF.Close()
 				return fmt.Errorf("failed to parse imported file %s: %w", imp.to, err)
@@ -495,13 +494,13 @@ func (con Const) impossibleGoConst() bool {
 	// at least not intuitively. This probagbly doesn't matter-- its rare to
 	// rely on inf or nan floating points anyway, and even if you could get these as
 	// consts you would need to use math.IsInf or math.IsNaN for many use cases.
-	if con.FloatValue != nil {
-		switch {
-		case math.IsInf(*con.FloatValue, 1):
+	if con.SimpleType == typeFloat32 || con.SimpleType == typeFloat64 {
+		switch con.Value {
+		case "math.Inf(-1)":
 			return true
-		case math.IsInf(*con.FloatValue, -1):
+		case "math.Inf(1)":
 			return true
-		case math.IsNaN(*con.FloatValue):
+		case "math.NaN()":
 			return true
 		}
 	}
@@ -510,29 +509,7 @@ func (con Const) impossibleGoConst() bool {
 
 func (con Const) Generate(w io.Writer, settings GenerateSettings) {
 	writeComment(w, 0, con.Comment)
-	var val interface{}
-	switch {
-	case con.BoolValue != nil:
-		val = *con.BoolValue
-	case con.FloatValue != nil:
-		switch {
-		case math.IsInf(*con.FloatValue, 1):
-			val = "math.Inf(1)"
-		case math.IsInf(*con.FloatValue, -1):
-			val = "math.Inf(-1)"
-		case math.IsNaN(*con.FloatValue):
-			val = "math.NaN()"
-		default:
-			val = strconv.FormatFloat(*con.FloatValue, 'g', -1, 64)
-		}
-	case con.IntValue != nil:
-		val = *con.IntValue
-	case con.UIntValue != nil:
-		val = *con.UIntValue
-	case con.StringValue != nil:
-		val = fmt.Sprintf("%q", *con.StringValue)
-	}
-	writeLine(w, "\t%s = %v", exposeName(con.Name), val)
+	writeLine(w, "\t%s = %v", exposeName(con.Name), con.Value)
 }
 
 func writeFieldDefinition(fd Field, w io.Writer, readOnly bool, message bool, settings GenerateSettings) {
