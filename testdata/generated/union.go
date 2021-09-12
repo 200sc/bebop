@@ -256,9 +256,8 @@ type U struct {
 }
 
 func (bbp U) MarshalBebopTo(buf []byte) int {
-	iohelp.WriteUint32Bytes(buf, uint32(UOpCode))
-	at := 4
-	iohelp.WriteUint32Bytes(buf[at:], uint32(bbp.Size()-8))
+	at := 0
+	iohelp.WriteUint32Bytes(buf[at:], uint32(bbp.Size()-5))
 	at += 4
 	if bbp.A != nil {
 		buf[at] = 1
@@ -285,7 +284,7 @@ func (bbp U) MarshalBebopTo(buf []byte) int {
 }
 
 func (bbp *U) UnmarshalBebop(buf []byte) (err error) {
-	at := 4
+	at := 0
 	_ = iohelp.ReadUint32Bytes(buf[at:])
 	buf = buf[4:]
 	if len(buf) == 0 {
@@ -327,7 +326,7 @@ func (bbp *U) UnmarshalBebop(buf []byte) (err error) {
 }
 
 func (bbp *U) MustUnmarshalBebop(buf []byte) {
-	at := 4
+	at := 0
 	_ = iohelp.ReadUint32Bytes(buf[at:])
 	buf = buf[4:]
 	for {
@@ -358,8 +357,7 @@ func (bbp *U) MustUnmarshalBebop(buf []byte) {
 
 func (bbp U) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
-	iohelp.WriteUint32(w, uint32(UOpCode))
-	iohelp.WriteUint32(w, uint32(bbp.Size()-8))
+	iohelp.WriteUint32(w, uint32(bbp.Size()-5))
 	if bbp.A != nil {
 		w.Write([]byte{1})
 		err = (*bbp.A).EncodeBebop(w)
@@ -389,9 +387,8 @@ func (bbp U) EncodeBebop(iow io.Writer) (err error) {
 
 func (bbp *U) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
-	iohelp.ReadUint32(r)
 	bodyLen := iohelp.ReadUint32(r)
-	r.Reader = &io.LimitedReader{R:r.Reader, N:int64(bodyLen)}
+	r.Reader = &io.LimitedReader{R:r.Reader, N:int64(bodyLen)+1}
 	for {
 		switch iohelp.ReadByte(r) {
 		case 1:
@@ -427,7 +424,6 @@ func (bbp *U) DecodeBebop(ior io.Reader) (err error) {
 
 func (bbp U) Size() int {
 	bodyLen := 4
-	bodyLen += 4
 	if bbp.A != nil {
 		bodyLen += 1
 		bodyLen += (*bbp.A).Size()
@@ -614,7 +610,7 @@ type List struct {
 
 func (bbp List) MarshalBebopTo(buf []byte) int {
 	at := 0
-	iohelp.WriteUint32Bytes(buf[at:], uint32(bbp.Size()-4))
+	iohelp.WriteUint32Bytes(buf[at:], uint32(bbp.Size()-5))
 	at += 4
 	if bbp.Cons != nil {
 		buf[at] = 1
@@ -692,7 +688,7 @@ func (bbp *List) MustUnmarshalBebop(buf []byte) {
 
 func (bbp List) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
-	iohelp.WriteUint32(w, uint32(bbp.Size()-4))
+	iohelp.WriteUint32(w, uint32(bbp.Size()-5))
 	if bbp.Cons != nil {
 		w.Write([]byte{1})
 		err = (*bbp.Cons).EncodeBebop(w)
@@ -715,7 +711,7 @@ func (bbp List) EncodeBebop(iow io.Writer) (err error) {
 func (bbp *List) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
 	bodyLen := iohelp.ReadUint32(r)
-	r.Reader = &io.LimitedReader{R:r.Reader, N:int64(bodyLen)}
+	r.Reader = &io.LimitedReader{R:r.Reader, N:int64(bodyLen)+1}
 	for {
 		switch iohelp.ReadByte(r) {
 		case 1:

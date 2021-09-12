@@ -245,9 +245,8 @@ type PrintRequest struct {
 }
 
 func (bbp PrintRequest) MarshalBebopTo(buf []byte) int {
-	iohelp.WriteUint32Bytes(buf, uint32(PrintRequestOpCode))
-	at := 4
-	iohelp.WriteUint32Bytes(buf[at:], uint32(bbp.Size()-8))
+	at := 0
+	iohelp.WriteUint32Bytes(buf[at:], uint32(bbp.Size()-4))
 	at += 4
 	if bbp.Print != nil {
 		buf[at] = 1
@@ -259,7 +258,7 @@ func (bbp PrintRequest) MarshalBebopTo(buf []byte) int {
 }
 
 func (bbp *PrintRequest) UnmarshalBebop(buf []byte) (err error) {
-	at := 4
+	at := 0
 	_ = iohelp.ReadUint32Bytes(buf[at:])
 	buf = buf[4:]
 	for {
@@ -279,7 +278,7 @@ func (bbp *PrintRequest) UnmarshalBebop(buf []byte) (err error) {
 }
 
 func (bbp *PrintRequest) MustUnmarshalBebop(buf []byte) {
-	at := 4
+	at := 0
 	_ = iohelp.ReadUint32Bytes(buf[at:])
 	buf = buf[4:]
 	for {
@@ -297,8 +296,7 @@ func (bbp *PrintRequest) MustUnmarshalBebop(buf []byte) {
 
 func (bbp PrintRequest) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
-	iohelp.WriteUint32(w, uint32(PrintRequestOpCode))
-	iohelp.WriteUint32(w, uint32(bbp.Size()-8))
+	iohelp.WriteUint32(w, uint32(bbp.Size()-4))
 	if bbp.Print != nil {
 		w.Write([]byte{1})
 		err = (*bbp.Print).EncodeBebop(w)
@@ -312,7 +310,6 @@ func (bbp PrintRequest) EncodeBebop(iow io.Writer) (err error) {
 
 func (bbp *PrintRequest) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
-	iohelp.ReadUint32(r)
 	bodyLen := iohelp.ReadUint32(r)
 	r.Reader = &io.LimitedReader{R:r.Reader, N:int64(bodyLen)}
 	for {
@@ -332,7 +329,6 @@ func (bbp *PrintRequest) DecodeBebop(ior io.Reader) (err error) {
 
 func (bbp PrintRequest) Size() int {
 	bodyLen := 5
-	bodyLen += 4
 	if bbp.Print != nil {
 		bodyLen += 1
 		bodyLen += (*bbp.Print).Size()
@@ -373,9 +369,8 @@ type AddRequest struct {
 }
 
 func (bbp AddRequest) MarshalBebopTo(buf []byte) int {
-	iohelp.WriteUint32Bytes(buf, uint32(AddRequestOpCode))
-	at := 4
-	iohelp.WriteUint32Bytes(buf[at:], uint32(bbp.Size()-8))
+	at := 0
+	iohelp.WriteUint32Bytes(buf[at:], uint32(bbp.Size()-4))
 	at += 4
 	if bbp.Add != nil {
 		buf[at] = 1
@@ -387,7 +382,7 @@ func (bbp AddRequest) MarshalBebopTo(buf []byte) int {
 }
 
 func (bbp *AddRequest) UnmarshalBebop(buf []byte) (err error) {
-	at := 4
+	at := 0
 	_ = iohelp.ReadUint32Bytes(buf[at:])
 	buf = buf[4:]
 	for {
@@ -407,7 +402,7 @@ func (bbp *AddRequest) UnmarshalBebop(buf []byte) (err error) {
 }
 
 func (bbp *AddRequest) MustUnmarshalBebop(buf []byte) {
-	at := 4
+	at := 0
 	_ = iohelp.ReadUint32Bytes(buf[at:])
 	buf = buf[4:]
 	for {
@@ -425,8 +420,7 @@ func (bbp *AddRequest) MustUnmarshalBebop(buf []byte) {
 
 func (bbp AddRequest) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
-	iohelp.WriteUint32(w, uint32(AddRequestOpCode))
-	iohelp.WriteUint32(w, uint32(bbp.Size()-8))
+	iohelp.WriteUint32(w, uint32(bbp.Size()-4))
 	if bbp.Add != nil {
 		w.Write([]byte{1})
 		err = (*bbp.Add).EncodeBebop(w)
@@ -440,7 +434,6 @@ func (bbp AddRequest) EncodeBebop(iow io.Writer) (err error) {
 
 func (bbp *AddRequest) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
-	iohelp.ReadUint32(r)
 	bodyLen := iohelp.ReadUint32(r)
 	r.Reader = &io.LimitedReader{R:r.Reader, N:int64(bodyLen)}
 	for {
@@ -460,7 +453,6 @@ func (bbp *AddRequest) DecodeBebop(ior io.Reader) (err error) {
 
 func (bbp AddRequest) Size() int {
 	bodyLen := 5
-	bodyLen += 4
 	if bbp.Add != nil {
 		bodyLen += 1
 		bodyLen += (*bbp.Add).Size()

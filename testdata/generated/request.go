@@ -145,8 +145,7 @@ type RequestResponse struct {
 }
 
 func (bbp RequestResponse) MarshalBebopTo(buf []byte) int {
-	iohelp.WriteUint32Bytes(buf, uint32(RequestResponseOpCode))
-	at := 4
+	at := 0
 	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.availableFurniture)))
 	at += 4
 	for _, v1 := range bbp.availableFurniture {
@@ -157,7 +156,7 @@ func (bbp RequestResponse) MarshalBebopTo(buf []byte) int {
 }
 
 func (bbp *RequestResponse) UnmarshalBebop(buf []byte) (err error) {
-	at := 4
+	at := 0
 	if len(buf[at:]) < 4 {
 		 return io.ErrUnexpectedEOF
 	}
@@ -174,7 +173,7 @@ func (bbp *RequestResponse) UnmarshalBebop(buf []byte) (err error) {
 }
 
 func (bbp *RequestResponse) MustUnmarshalBebop(buf []byte) {
-	at := 4
+	at := 0
 	bbp.availableFurniture = make([]Furniture, iohelp.ReadUint32Bytes(buf[at:]))
 	at += 4
 	for i1 := range bbp.availableFurniture {
@@ -185,7 +184,6 @@ func (bbp *RequestResponse) MustUnmarshalBebop(buf []byte) {
 
 func (bbp RequestResponse) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
-	iohelp.WriteUint32(w, uint32(RequestResponseOpCode))
 	iohelp.WriteUint32(w, uint32(len(bbp.availableFurniture)))
 	for _, elem := range bbp.availableFurniture {
 		err = (elem).EncodeBebop(w)
@@ -198,10 +196,6 @@ func (bbp RequestResponse) EncodeBebop(iow io.Writer) (err error) {
 
 func (bbp *RequestResponse) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
-	r.Read(make([]byte, 4))
-	if r.Err != nil {
-		return r.Err
-	}
 	bbp.availableFurniture = make([]Furniture, iohelp.ReadUint32(r))
 	for i1 := range bbp.availableFurniture {
 		((bbp.availableFurniture[i1])), err = MakeFurniture(r)
@@ -214,7 +208,6 @@ func (bbp *RequestResponse) DecodeBebop(ior io.Reader) (err error) {
 
 func (bbp RequestResponse) Size() int {
 	bodyLen := 0
-	bodyLen += 4
 	bodyLen += 4
 	for _, elem := range bbp.availableFurniture {
 		bodyLen += (elem).Size()
@@ -269,9 +262,8 @@ type RequestCatalog struct {
 }
 
 func (bbp RequestCatalog) MarshalBebopTo(buf []byte) int {
-	iohelp.WriteUint32Bytes(buf, uint32(RequestCatalogOpCode))
-	at := 4
-	iohelp.WriteUint32Bytes(buf[at:], uint32(bbp.Size()-8))
+	at := 0
+	iohelp.WriteUint32Bytes(buf[at:], uint32(bbp.Size()-4))
 	at += 4
 	if bbp.Family != nil {
 		buf[at] = 1
@@ -283,7 +275,7 @@ func (bbp RequestCatalog) MarshalBebopTo(buf []byte) int {
 }
 
 func (bbp *RequestCatalog) UnmarshalBebop(buf []byte) (err error) {
-	at := 4
+	at := 0
 	_ = iohelp.ReadUint32Bytes(buf[at:])
 	buf = buf[4:]
 	for {
@@ -308,7 +300,7 @@ func (bbp *RequestCatalog) UnmarshalBebop(buf []byte) (err error) {
 }
 
 func (bbp *RequestCatalog) MustUnmarshalBebop(buf []byte) {
-	at := 4
+	at := 0
 	_ = iohelp.ReadUint32Bytes(buf[at:])
 	buf = buf[4:]
 	for {
@@ -331,8 +323,7 @@ func (bbp *RequestCatalog) MustUnmarshalBebop(buf []byte) {
 
 func (bbp RequestCatalog) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
-	iohelp.WriteUint32(w, uint32(RequestCatalogOpCode))
-	iohelp.WriteUint32(w, uint32(bbp.Size()-8))
+	iohelp.WriteUint32(w, uint32(bbp.Size()-4))
 	if bbp.Family != nil {
 		w.Write([]byte{1})
 		iohelp.WriteUint32(w, uint32(*bbp.Family))
@@ -343,7 +334,6 @@ func (bbp RequestCatalog) EncodeBebop(iow io.Writer) (err error) {
 
 func (bbp *RequestCatalog) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
-	iohelp.ReadUint32(r)
 	bodyLen := iohelp.ReadUint32(r)
 	r.Reader = &io.LimitedReader{R:r.Reader, N:int64(bodyLen)}
 	for {
@@ -363,7 +353,6 @@ func (bbp *RequestCatalog) DecodeBebop(ior io.Reader) (err error) {
 
 func (bbp RequestCatalog) Size() int {
 	bodyLen := 5
-	bodyLen += 4
 	if bbp.Family != nil {
 		bodyLen += 1
 		bodyLen += 4
