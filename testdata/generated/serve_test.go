@@ -1,6 +1,7 @@
 package generated
 
 import (
+	"encoding/binary"
 	"fmt"
 	"io"
 	"net"
@@ -43,6 +44,7 @@ func TestServe(t *testing.T) {
 			Printout: "Hello World",
 		},
 	}.MarshalBebop()
+	binary.Write(lhs, binary.LittleEndian, int32(PrintRequestOpCode))
 	lhs.Write(printBytes)
 
 	addBytes := AddRequest{
@@ -51,6 +53,7 @@ func TestServe(t *testing.T) {
 			B: 42,
 		},
 	}.MarshalBebop()
+	binary.Write(lhs, binary.LittleEndian, int32(AddRequestOpCode))
 	_, err := lhs.Write(addBytes)
 	if err != nil {
 		t.Fatal(err)
