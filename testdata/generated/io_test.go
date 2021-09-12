@@ -22,10 +22,8 @@ var tsTests = 0
 
 func TestMarshalCycleRecords(t *testing.T) {
 	type testCase struct {
-		name   string
-		record bebop.Record
-		// notable bug: unmarshalling to a non-empty record
-		// causes random behavior based on the field types of the record.
+		name            string
+		record          bebop.Record
 		unmarshalRecord func() bebop.Record
 		skipEquality    bool
 		tsName          string
@@ -107,7 +105,7 @@ func TestMarshalCycleRecords(t *testing.T) {
 		unmarshalRecord: func() bebop.Record { return &generated.BasicTypes{} },
 	}, {
 		name: "BasicTypes",
-		// minor mismatch (date?)
+		// ts mismatch (date, see https://github.com/RainwayApp/bebop/pull/148)
 		// tsName: "BasicTypes",
 		record: &generated.BasicTypes{
 			A_bool:    true,
@@ -326,7 +324,7 @@ func TestMarshalCycleRecords(t *testing.T) {
 	}, {
 		name: "empty RequestResponse",
 		// failure in js
-		//tsName:          "RequestResponse",
+		tsName:          "RequestResponse",
 		record:          &generated.RequestResponse{},
 		unmarshalRecord: func() bebop.Record { return &generated.RequestResponse{} },
 		skipEquality:    true,
@@ -342,8 +340,8 @@ func TestMarshalCycleRecords(t *testing.T) {
 		unmarshalRecord: func() bebop.Record { return &generated.ReadOnlyMap{} },
 		skipEquality:    true,
 	}, {
-		name: "Union U: A",
-		//tsName: "U",
+		name:   "Union U: A",
+		tsName: "U",
 		record: &generated.U{
 			A: &generated.A{
 				B: uint32p(2),
@@ -351,8 +349,8 @@ func TestMarshalCycleRecords(t *testing.T) {
 		},
 		unmarshalRecord: func() bebop.Record { return &generated.U{} },
 	}, {
-		name: "Union U: B",
-		//tsName: "U",
+		name:   "Union U: B",
+		tsName: "U",
 		record: &generated.U{
 			B: &generated.B{
 				C: true,
@@ -360,15 +358,15 @@ func TestMarshalCycleRecords(t *testing.T) {
 		},
 		unmarshalRecord: func() bebop.Record { return &generated.U{} },
 	}, {
-		name: "Union U: C",
-		//tsName: "U",
+		name:   "Union U: C",
+		tsName: "U",
 		record: &generated.U{
 			C: &generated.C{},
 		},
 		unmarshalRecord: func() bebop.Record { return &generated.U{} },
 	}, {
-		name: "Union List",
-		//tsName: "List",
+		name:   "Union List",
+		tsName: "List",
 		record: &generated.List{
 			Cons: &generated.Cons{
 				Head: 1,
@@ -462,11 +460,10 @@ func TestMarshalCycleRecords(t *testing.T) {
 			}
 			tsTests++
 			fmt.Printf("%d/%d tests covered in typescript\n", tsTests, totalTests)
-			//fmt.Println("execing js")
 
 			marshalData5 := umt.MarshalBebop()
 			inputB64 := base64.URLEncoding.EncodeToString(marshalData5)
-			//fmt.Println(marshalData5, inputB64)
+			fmt.Println("in:", marshalData5, inputB64)
 			jsQuery := fmt.Sprintf(`
 
 			var Buffer = require('buffer').Buffer
@@ -501,12 +498,12 @@ func TestMarshalCycleRecords(t *testing.T) {
 
 			outputB64, _ := io.ReadAll(stdout)
 			if err != nil {
+				fmt.Println(string(outputB64))
 				allErr, _ := io.ReadAll(stderr)
 				fmt.Println(err)
 				fmt.Println(string(allErr))
 				t.Fatalf("node exec failed: %v", err)
 			}
-			fmt.Println("in:", inputB64)
 			fmt.Println("out:", strings.TrimSpace(string(outputB64)))
 
 			outBinary, _ := base64.StdEncoding.DecodeString(string(outputB64))
@@ -517,11 +514,6 @@ func TestMarshalCycleRecords(t *testing.T) {
 			}
 			buf = &bytes.Buffer{}
 			err = umt.EncodeBebop(buf)
-			if b, ok := umt.(*generated.Bar); ok {
-				if b.Y != nil {
-					fmt.Println(*b.Y)
-				}
-			}
 			marshalData6 := buf.Bytes()
 			if err != nil {
 				t.Fatalf("js marshal failed: %v", err)
