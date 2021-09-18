@@ -2,7 +2,7 @@
 package bebop
 
 // Version is the library version. Should be used by CLI tools when passed a '--version' flag.
-const Version = "v0.2.1"
+const Version = "v0.2.2"
 
 // A File is a structured representation of a .bop file.
 type File struct {
@@ -38,7 +38,7 @@ type Struct struct {
 	Name    string
 	Comment string
 	Fields  []Field
-	// If OpCode is defined, wire encodings of the struct will be
+	// If OpCode is defined, wire encodings of the struct can be
 	// preceded by the OpCode.
 	OpCode int32
 	// Namespace is only provided for imported types, and only
@@ -55,6 +55,8 @@ type Field struct {
 	FieldType
 	Name    string
 	Comment string
+	// Tags are not written by default, ard must be enabled via a compiler flag.
+	Tags []Tag
 	// DeprecatedMessage is only provided if Deprecated is true.
 	DeprecatedMessage string
 	Deprecated        bool
@@ -86,6 +88,8 @@ type Union struct {
 type UnionField struct {
 	Message *Message
 	Struct  *Struct
+	// Tags are not written by default, ard must be enabled via a compiler flag.
+	Tags []Tag
 	// DeprecatedMessage is only provided if Deprecated is true.
 	DeprecatedMessage string
 	Deprecated        bool
@@ -135,4 +139,12 @@ type Const struct {
 	Comment    string
 	Name       string
 	Value      string
+}
+
+// A Tag is a Go struct field tag, e.g. `json:"userId,omitempty"`
+type Tag struct {
+	Key   string
+	Value string
+	// Boolean is set if Value is empty, in the form `key`, not `key:""`.
+	Boolean bool
 }

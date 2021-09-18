@@ -83,6 +83,15 @@ func (f Field) equals(f2 Field) error {
 	if f.Deprecated != f2.Deprecated {
 		return fmt.Errorf("deprecation mismatch: %v vs %v", f.Deprecated, f2.Deprecated)
 	}
+	if len(f.Tags) != len(f2.Tags) {
+		return fmt.Errorf("tag length mismatch: %v vs %v", len(f.Tags), len(f2.Tags))
+	}
+	for i, tag := range f.Tags {
+		tag2 := f2.Tags[i]
+		if tag != tag2 {
+			return fmt.Errorf("tag %d mismatch: %v vs %v", i, tag, tag2)
+		}
+	}
 	return f.FieldType.equals(f2.FieldType)
 }
 
@@ -223,6 +232,15 @@ func (uf UnionField) equals(uf2 UnionField) error {
 	}
 	if uf.Message != nil && uf2.Message != nil {
 		return uf.Message.equals(*uf2.Message)
+	}
+	if len(uf.Tags) != len(uf2.Tags) {
+		return fmt.Errorf("tag length mismatch: %v vs %v", len(uf.Tags), len(uf2.Tags))
+	}
+	for i, tag := range uf.Tags {
+		tag2 := uf2.Tags[i]
+		if tag != tag2 {
+			return fmt.Errorf("tag %d mismatch: %v vs %v", i, tag, tag2)
+		}
 	}
 	return nil
 }

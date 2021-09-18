@@ -276,6 +276,7 @@ func readStruct(tr *tokenReader) (Struct, error) {
 	optNewline(tr)
 
 	nextCommentLines := []string{}
+	nextCommentTags := []Tag{}
 	nextDeprecatedMessage := ""
 	nextIsDeprecated := false
 	for tr.Token().kind != tokenKindCloseCurly {
@@ -303,10 +304,12 @@ func readStruct(tr *tokenReader) (Struct, error) {
 				DeprecatedMessage: nextDeprecatedMessage,
 				Deprecated:        nextIsDeprecated,
 				Comment:           strings.Join(nextCommentLines, "\n"),
+				Tags:              nextCommentTags,
 			})
 			nextDeprecatedMessage = ""
 			nextIsDeprecated = false
 			nextCommentLines = []string{}
+			nextCommentTags = []Tag{}
 
 			skipEndOfLineComments(tr)
 		case tokenKindOpenSquare:
@@ -322,7 +325,11 @@ func readStruct(tr *tokenReader) (Struct, error) {
 		case tokenKindBlockComment:
 			nextCommentLines = append(nextCommentLines, readBlockComment(tr, tk))
 		case tokenKindLineComment:
-			nextCommentLines = append(nextCommentLines, sanitizeComment(tk))
+			cmt := sanitizeComment(tk)
+			if tag, ok := parseCommentTag(cmt); ok {
+				nextCommentTags = append(nextCommentTags, tag)
+			}
+			nextCommentLines = append(nextCommentLines, cmt)
 		}
 	}
 
@@ -409,6 +416,7 @@ func readMessage(tr *tokenReader) (Message, error) {
 	optNewline(tr)
 
 	nextCommentLines := []string{}
+	nextCommentTags := []Tag{}
 	nextDeprecatedMessage := ""
 	nextIsDeprecated := false
 	for tr.Token().kind != tokenKindCloseCurly {
@@ -446,10 +454,12 @@ func readMessage(tr *tokenReader) (Message, error) {
 				DeprecatedMessage: nextDeprecatedMessage,
 				Deprecated:        nextIsDeprecated,
 				Comment:           strings.Join(nextCommentLines, "\n"),
+				Tags:              nextCommentTags,
 			}
 			nextDeprecatedMessage = ""
 			nextIsDeprecated = false
 			nextCommentLines = []string{}
+			nextCommentTags = []Tag{}
 
 			skipEndOfLineComments(tr)
 		case tokenKindOpenSquare:
@@ -465,7 +475,11 @@ func readMessage(tr *tokenReader) (Message, error) {
 		case tokenKindBlockComment:
 			nextCommentLines = append(nextCommentLines, readBlockComment(tr, tk))
 		case tokenKindLineComment:
-			nextCommentLines = append(nextCommentLines, sanitizeComment(tk))
+			cmt := sanitizeComment(tk)
+			if tag, ok := parseCommentTag(cmt); ok {
+				nextCommentTags = append(nextCommentTags, tag)
+			}
+			nextCommentLines = append(nextCommentLines, cmt)
 		}
 	}
 
@@ -485,6 +499,7 @@ func readUnion(tr *tokenReader) (Union, error) {
 	optNewline(tr)
 
 	nextCommentLines := []string{}
+	nextCommentTags := []Tag{}
 	nextDeprecatedMessage := ""
 	nextIsDeprecated := false
 	for tr.Token().kind != tokenKindCloseCurly {
@@ -528,6 +543,7 @@ func readUnion(tr *tokenReader) (Union, error) {
 				unionFd.Struct = &st
 			}
 
+			unionFd.Tags = nextCommentTags
 			unionFd.Deprecated = nextIsDeprecated
 			unionFd.DeprecatedMessage = nextDeprecatedMessage
 
@@ -535,6 +551,7 @@ func readUnion(tr *tokenReader) (Union, error) {
 			nextDeprecatedMessage = ""
 			nextIsDeprecated = false
 			nextCommentLines = []string{}
+			nextCommentTags = []Tag{}
 
 			skipEndOfLineComments(tr)
 			tr.Next()
@@ -553,7 +570,11 @@ func readUnion(tr *tokenReader) (Union, error) {
 		case tokenKindBlockComment:
 			nextCommentLines = append(nextCommentLines, readBlockComment(tr, tk))
 		case tokenKindLineComment:
-			nextCommentLines = append(nextCommentLines, sanitizeComment(tk))
+			cmt := sanitizeComment(tk)
+			if tag, ok := parseCommentTag(cmt); ok {
+				nextCommentTags = append(nextCommentTags, tag)
+			}
+			nextCommentLines = append(nextCommentLines, cmt)
 		}
 	}
 
@@ -708,4 +729,31 @@ func kindsStr(ks []tokenKind) string {
 		kindsStrs[i] = k.String()
 	}
 	return strings.Join(kindsStrs, ", ")
+}
+
+func parseCommentTag(s string) (Tag, bool) {
+	//[tag(json="example,omitempty")]
+	if !strings.HasPrefix(s, "[tag(") || !strings.HasSuffix(s, ")]") {
+		return Tag{}, false
+	}
+	s = strings.TrimPrefix(s, "[tag(")
+	s = strings.TrimSuffix(s, ")]")
+	split := strings.Split(s, "=")
+	if len(split) == 1 {
+		return Tag{
+			Key:     split[0],
+			Boolean: true,
+		}, true
+	}
+	if len(split) != 2 {
+		return Tag{}, false
+	}
+	value, err := strconv.Unquote(split[1])
+	if err != nil {
+		return Tag{}, false
+	}
+	return Tag{
+		Key:   split[0],
+		Value: value,
+	}, true
 }

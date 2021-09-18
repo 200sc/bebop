@@ -384,6 +384,7 @@ var genTestFiles = []string{
 	"union_field",
 	"date",
 	"message_1",
+	"tags",
 }
 
 func TestGenerateToFile(t *testing.T) {
@@ -410,6 +411,7 @@ func TestGenerateToFile(t *testing.T) {
 				PackageName:           "generated",
 				GenerateUnsafeMethods: true,
 				SharedMemoryStrings:   false,
+				GenerateFieldTags:     true,
 			})
 			if err != nil {
 				t.Fatalf("generation failed: %v", err)

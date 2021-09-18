@@ -35,6 +35,7 @@ type GenerateSettings struct {
 
 	GenerateUnsafeMethods bool
 	SharedMemoryStrings   bool
+	GenerateFieldTags     bool
 }
 
 type ImportGenerationMode uint8
@@ -446,7 +447,7 @@ func (f File) Generate(w io.Writer, settings GenerateSettings) error {
 		if en.Namespace != "" {
 			continue
 		}
-		en.Generate(w)
+		en.Generate(w, settings)
 	}
 	for _, st := range f.Structs {
 		if st.Namespace != "" {
@@ -470,15 +471,15 @@ func (f File) Generate(w io.Writer, settings GenerateSettings) error {
 }
 
 // Generate writes a .go enum definition out to w.
-func (en Enum) Generate(w io.Writer) {
+func (en Enum) Generate(w io.Writer, settings GenerateSettings) {
 	exposedName := exposeName(en.Name)
-	writeComment(w, 0, en.Comment)
+	writeComment(w, 0, en.Comment, settings)
 	writeLine(w, "type %s uint32", exposedName)
 	writeLine(w, "")
 	if len(en.Options) != 0 {
 		writeLine(w, "const (")
 		for _, opt := range en.Options {
-			writeComment(w, 1, opt.Comment)
+			writeComment(w, 1, opt.Comment, settings)
 			if opt.Deprecated {
 				writeLine(w, "\t// Deprecated: %s", opt.DeprecatedMessage)
 			}
@@ -508,12 +509,12 @@ func (con Const) impossibleGoConst() bool {
 }
 
 func (con Const) Generate(w io.Writer, settings GenerateSettings) {
-	writeComment(w, 0, con.Comment)
+	writeComment(w, 0, con.Comment, settings)
 	writeLine(w, "\t%s = %v", exposeName(con.Name), con.Value)
 }
 
 func writeFieldDefinition(fd Field, w io.Writer, readOnly bool, message bool, settings GenerateSettings) {
-	writeComment(w, 1, fd.Comment)
+	writeComment(w, 1, fd.Comment, settings)
 	if fd.Deprecated {
 		writeLine(w, "\t// Deprecated: %s", fd.DeprecatedMessage)
 	}
@@ -526,7 +527,19 @@ func writeFieldDefinition(fd Field, w io.Writer, readOnly bool, message bool, se
 	if message {
 		typ = "*" + typ
 	}
-	writeLine(w, "\t%s %s", name, typ)
+	if settings.GenerateFieldTags && len(fd.Tags) != 0 {
+		formattedTags := []string{}
+		for _, tag := range fd.Tags {
+			if tag.Boolean {
+				formattedTags = append(formattedTags, tag.Key)
+			} else {
+				formattedTags = append(formattedTags, fmt.Sprintf("%s:%q", tag.Key, tag.Value))
+			}
+		}
+		writeLine(w, "\t%s %s `%s`", name, typ, strings.Join(formattedTags, " "))
+	} else {
+		writeLine(w, "\t%s %s", name, typ)
+	}
 }
 
 func depthName(name string, depth int) string {
@@ -785,7 +798,7 @@ func getLineWithTabs(format string, depth int, args ...string) string {
 	return b.String()
 }
 
-func writeComment(w io.Writer, depth int, comment string) {
+func writeComment(w io.Writer, depth int, comment string, settings GenerateSettings) {
 	if comment == "" {
 		return
 	}
@@ -793,6 +806,13 @@ func writeComment(w io.Writer, depth int, comment string) {
 
 	commentLines := strings.Split(comment, "\n")
 	for _, cm := range commentLines {
+		// If you have tag comments and are generating them as tags,
+		// you probably don't want them showing up in your code as comments too.
+		if settings.GenerateFieldTags {
+			if _, ok := parseCommentTag(cm); ok {
+				continue
+			}
+		}
 		writeLine(w, tbs+"//%s", cm)
 	}
 }
@@ -821,7 +841,7 @@ func writeGoStructDef(w io.Writer, name string) {
 func writeRecordTypeDefinition(w io.Writer, name string, opCode int32, comment string, settings GenerateSettings, fields []fieldWithNumber) {
 	writeOpCode(w, name, opCode)
 	writeRecordAssertion(w, name)
-	writeComment(w, 0, comment)
+	writeComment(w, 0, comment, settings)
 	writeGoStructDef(w, name)
 	for _, fd := range fields {
 		writeFieldDefinition(fd.Field, w, false, true, settings)

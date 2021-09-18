@@ -13,6 +13,93 @@ func TestReadFile(t *testing.T) {
 	}
 	tcs := []testCase{
 		{
+			file: "tags",
+			expected: File{
+				Structs: []Struct{
+					{
+						Name: "TaggedStruct",
+						Fields: []Field{
+							{
+								Name: "foo",
+								FieldType: FieldType{
+									Simple: "string",
+								},
+								Comment: "[tag(json=\"foo,omitempty\")]",
+								Tags: []Tag{
+									{
+										Key:   "json",
+										Value: "foo,omitempty",
+									},
+								},
+							},
+						},
+					},
+				},
+				Messages: []Message{
+					{
+						Name: "TaggedMessage",
+						Fields: map[uint8]Field{
+							1: {
+								Name:    "bar",
+								Comment: "[tag(db=\"bar\")]",
+								FieldType: FieldType{
+									Simple: "uint8",
+								},
+								Tags: []Tag{
+									{
+										Key:   "db",
+										Value: "bar",
+									},
+								},
+							},
+						},
+					},
+				},
+				Unions: []Union{
+					{
+						Name: "TaggedUnion",
+						Fields: map[uint8]UnionField{
+							1: {
+								Tags: []Tag{
+									{
+										Key:   "one",
+										Value: "one",
+									},
+									{
+										Key:   "two",
+										Value: "two",
+									},
+									{
+										Key:     "boolean",
+										Boolean: true,
+									},
+								},
+								Struct: &Struct{
+									Name:    "TaggedSubStruct",
+									Comment: "[tag(one=\"one\")]\n[tag(two=\"two\")]\n[tag(boolean)]",
+									Fields: []Field{
+										{
+											Name: "biz",
+											FieldType: FieldType{
+												Simple: "guid",
+											},
+											Comment: "[tag(four=\"four\")]",
+											Tags: []Tag{
+												{
+													Key:   "four",
+													Value: "four",
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
 			file: "import",
 			expected: File{
 				Structs: []Struct{
