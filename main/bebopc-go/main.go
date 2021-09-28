@@ -9,14 +9,17 @@ import (
 	"github.com/200sc/bebop"
 )
 
-var inputFile = flag.String("i", "", "the name of the file to compile")
-var outputFile = flag.String("o", "", "the name of the output file to write")
-var printVersion = flag.Bool("version", false, "print the version of the compiler")
-var printHelp = flag.Bool("help", false, "print usage text")
-var packageName = flag.String("package", "bebopgen", "specify the name of the package to generate")
-var generateUnsafeMethods = flag.Bool("generate-unsafe", false, "whether unchecked additional methods should be generated")
-var shareStringMemory = flag.Bool("share-string-memory", false, "whether strings read in unmarshalling should share memory with the original byte slice")
-var combinedImports = flag.Bool("combined-imports", false, "whether imported files should be combined and generated as one, or to separate files")
+var (
+	inputFile             = flag.String("i", "", "the name of the file to compile")
+	outputFile            = flag.String("o", "", "the name of the output file to write")
+	printVersion          = flag.Bool("version", false, "print the version of the compiler")
+	printHelp             = flag.Bool("help", false, "print usage text")
+	packageName           = flag.String("package", "bebopgen", "specify the name of the package to generate")
+	generateUnsafeMethods = flag.Bool("generate-unsafe", false, "whether unchecked additional methods should be generated")
+	shareStringMemory     = flag.Bool("share-string-memory", false, "whether strings read in unmarshalling should share memory with the original byte slice")
+	combinedImports       = flag.Bool("combined-imports", false, "whether imported files should be combined and generated as one, or to separate files")
+	generateTags          = flag.Bool("generate-tags", false, "whether field tags found in comments should be parsed and generated")
+)
 
 const version = "bebopc-go " + bebop.Version
 
@@ -75,6 +78,7 @@ func run() error {
 		GenerateUnsafeMethods: *generateUnsafeMethods,
 		SharedMemoryStrings:   *shareStringMemory,
 		ImportGenerationMode:  importMode,
+		GenerateFieldTags:     *generateTags,
 	}
 	if err := bopf.Generate(out, settings); err != nil {
 		return fmt.Errorf("failed to generate file: %w", err)

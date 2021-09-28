@@ -9,7 +9,7 @@ import (
 func (st Struct) generateTypeDefinition(w io.Writer, settings GenerateSettings) {
 	writeOpCode(w, st.Name, st.OpCode)
 	writeRecordAssertion(w, st.Name)
-	writeComment(w, 0, st.Comment)
+	writeComment(w, 0, st.Comment, settings)
 	writeGoStructDef(w, st.Name)
 	for _, fd := range st.Fields {
 		writeFieldDefinition(fd, w, st.ReadOnly, false, settings)

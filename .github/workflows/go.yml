@@ -29,3 +29,8 @@ jobs:
         go test -v ./internal/importgraph
         echo "These packages have no tests-- this line confirms they compile"  
         go test -v ./testdata/incompatible/...
+
+    - name: Lint
+      uses: golangci/golangci-lint-action@v2
+      with:
+        args: "--disable-all -E misspell -E deadcode -E govet"
