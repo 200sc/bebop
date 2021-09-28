@@ -1,5 +1,4 @@
 # bebop
-[![GoDoc](https://godoc.org/github.com/200sc/bebop?status.svg)](https://godoc.org/github.com/200sc/bebop)
 [![Go Reference](https://pkg.go.dev/badge/github.com/200sc/bebop.svg)](https://pkg.go.dev/github.com/200sc/bebop)
 
 bebop is a bebop parser written in Go, for generating Go code.
@@ -7,15 +6,16 @@ bebop is a bebop parser written in Go, for generating Go code.
 bebop can read .bop files and output .go files representing them:
 
 `mybebop.bop:`
+
 ```bebop
 struct Foo {
-	Bar bar;
+    Bar bar;
 }
 
 message Bar {
-	1 -> float64 x;
-	2 -> float64 y;
-	3 -> float64 z;
+    1 -> float64 x;
+    2 -> float64 y;
+    3 -> float64 z;
 }
 ```
 

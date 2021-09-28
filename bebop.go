@@ -55,7 +55,7 @@ type Field struct {
 	FieldType
 	Name    string
 	Comment string
-	// Tags are not written by default, ard must be enabled via a compiler flag.
+	// Tags are not written by default, and must be enabled via a compiler flag.
 	Tags []Tag
 	// DeprecatedMessage is only provided if Deprecated is true.
 	DeprecatedMessage string

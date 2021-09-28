@@ -182,7 +182,7 @@ func TestGenerateToFile_SeperateImports(t *testing.T) {
 				t.Fatalf("failed to read file %s: %v", filedef.filename+".bop", err)
 			}
 			// use a separate directory to ensure duplicate definitions in combined mode
-			// do not cause complation failures
+			// do not cause compilation failures
 			os.MkdirAll(filepath.Join("testdata", "incompatible", filepath.Dir(filedef.outfile)), 0777)
 			outFile := filepath.Join("testdata", "incompatible", filedef.outfile)
 			out, err := os.Create(outFile)
@@ -344,7 +344,7 @@ func TestGenerateToFile_Imports(t *testing.T) {
 				t.Fatalf("failed to read file %s: %v", filename+".bop", err)
 			}
 			// use a separate directory to ensure duplicate definitions in combined mode
-			// do not cause complation failures
+			// do not cause compilation failures
 			os.MkdirAll(filepath.Join("testdata", "generated", filename), 0777)
 			outFile := filepath.Join("testdata", "generated", filename, filename+".go")
 			out, err := os.Create(outFile)
