@@ -31,7 +31,6 @@ jobs:
         go test -v ./testdata/incompatible/...
 
     - name: Lint
-    - name: golangci-lint
       uses: golangci/golangci-lint-action@v2
       with:
         args: "--disable-all -E misspell -E deadcode -E govet"
