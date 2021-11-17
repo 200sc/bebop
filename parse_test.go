@@ -24,7 +24,7 @@ func TestReadFile(t *testing.T) {
 								FieldType: FieldType{
 									Simple: "string",
 								},
-								Comment: "[tag(json=\"foo,omitempty\")]",
+								Comment: "[tag(json:\"foo,omitempty\")]",
 								Tags: []Tag{
 									{
 										Key:   "json",
@@ -41,7 +41,7 @@ func TestReadFile(t *testing.T) {
 						Fields: map[uint8]Field{
 							1: {
 								Name:    "bar",
-								Comment: "[tag(db=\"bar\")]",
+								Comment: "[tag(db:\"bar\")]",
 								FieldType: FieldType{
 									Simple: "uint8",
 								},
@@ -76,14 +76,14 @@ func TestReadFile(t *testing.T) {
 								},
 								Struct: &Struct{
 									Name:    "TaggedSubStruct",
-									Comment: "[tag(one=\"one\")]\n[tag(two=\"two\")]\n[tag(boolean)]",
+									Comment: "[tag(one:\"one\")]\n[tag(two:\"two\")]\n[tag(boolean)]",
 									Fields: []Field{
 										{
 											Name: "biz",
 											FieldType: FieldType{
 												Simple: "guid",
 											},
-											Comment: "[tag(four=\"four\")]",
+											Comment: "[tag(four:\"four\")]",
 											Tags: []Tag{
 												{
 													Key:   "four",
