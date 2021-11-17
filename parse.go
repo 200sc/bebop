@@ -732,23 +732,32 @@ func kindsStr(ks []tokenKind) string {
 }
 
 func parseCommentTag(s string) (Tag, bool) {
-	//[tag(json="example,omitempty")]
+	// OK
+	//[tag(json:"example,omitempty")]
+	//[tag(json:"more colons::")]
+	//[tag(boolean)]
+	// Not OK
+	// [tag(db:unquotedstring)]
+	// [tag()]
+	
 	if !strings.HasPrefix(s, "[tag(") || !strings.HasSuffix(s, ")]") {
 		return Tag{}, false
 	}
 	s = strings.TrimPrefix(s, "[tag(")
 	s = strings.TrimSuffix(s, ")]")
-	split := strings.Split(s, "=")
+	split := strings.Split(s, ":")
+	if len(split) == 0 {
+		return Tag{}, false
+	}
 	if len(split) == 1 {
 		return Tag{
 			Key:     split[0],
 			Boolean: true,
 		}, true
 	}
-	if len(split) != 2 {
-		return Tag{}, false
-	}
-	value, err := strconv.Unquote(split[1])
+	var err error
+	value := strings.Join(split[1:], "")
+	value, err = strconv.Unquote(value)
 	if err != nil {
 		return Tag{}, false
 	}
