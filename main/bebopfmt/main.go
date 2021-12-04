@@ -107,10 +107,13 @@ func formatFile(path string) error {
 		if err != nil {
 			return fmt.Errorf("Failed to open path to rewrite: %w", err)
 		}
-		f.Write(out.Bytes())
+		_, err = f.Write(out.Bytes())
+		if err != nil {
+			return fmt.Errorf("Failed to write to output: %w", err)
+		}
 		f.Close()
 	} else {
-		fmt.Println(string(out.Bytes()))
+		fmt.Println(out.String())
 	}
 	return nil
 }

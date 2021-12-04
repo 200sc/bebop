@@ -10,4 +10,4 @@ Rainway allows overwriting primitive types with message, struct, or enum definit
 
 We do not allow recursive struct definitions, as they will never terminate when encoded or parsed. Rainway does not have a check for this.
 
-See `compatability_test.go` for which files specifically fail for which compilers.
+See `compatibility_test.go` for which files specifically fail for which compilers.
