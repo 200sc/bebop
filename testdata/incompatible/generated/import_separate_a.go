@@ -280,10 +280,124 @@ func MustMakeUnionStructFromBytes(buf []byte) UnionStruct {
 	return v
 }
 
+var _ bebop.Record = &UnionMessage{}
+
+type UnionMessage struct {
+	Goodbye *generatedtwo.ImportedEnum
+}
+
+func (bbp UnionMessage) MarshalBebopTo(buf []byte) int {
+	at := 0
+	iohelp.WriteUint32Bytes(buf[at:], uint32(bbp.Size()-4))
+	at += 4
+	if bbp.Goodbye != nil {
+		buf[at] = 1
+		at++
+		iohelp.WriteUint32Bytes(buf[at:], uint32(*bbp.Goodbye))
+		at += 4
+	}
+	return at
+}
+
+func (bbp *UnionMessage) UnmarshalBebop(buf []byte) (err error) {
+	at := 0
+	_ = iohelp.ReadUint32Bytes(buf[at:])
+	buf = buf[4:]
+	for {
+		switch buf[at] {
+		case 1:
+			at += 1
+			bbp.Goodbye = new(generatedtwo.ImportedEnum)
+			(*bbp.Goodbye) = generatedtwo.ImportedEnum(iohelp.ReadUint32Bytes(buf[at:]))
+			at += 4
+		default:
+			return nil
+		}
+	}
+}
+
+func (bbp *UnionMessage) MustUnmarshalBebop(buf []byte) {
+	at := 0
+	_ = iohelp.ReadUint32Bytes(buf[at:])
+	buf = buf[4:]
+	for {
+		switch buf[at] {
+		case 1:
+			at += 1
+			bbp.Goodbye = new(generatedtwo.ImportedEnum)
+			(*bbp.Goodbye) = generatedtwo.ImportedEnum(iohelp.ReadUint32Bytes(buf[at:]))
+			at += 4
+		default:
+			return
+		}
+	}
+}
+
+func (bbp UnionMessage) EncodeBebop(iow io.Writer) (err error) {
+	w := iohelp.NewErrorWriter(iow)
+	iohelp.WriteUint32(w, uint32(bbp.Size()-4))
+	if bbp.Goodbye != nil {
+		w.Write([]byte{1})
+		iohelp.WriteUint32(w, uint32(*bbp.Goodbye))
+	}
+	w.Write([]byte{0})
+	return w.Err
+}
+
+func (bbp *UnionMessage) DecodeBebop(ior io.Reader) (err error) {
+	r := iohelp.NewErrorReader(ior)
+	bodyLen := iohelp.ReadUint32(r)
+	r.Reader = &io.LimitedReader{R:r.Reader, N:int64(bodyLen)}
+	for {
+		switch iohelp.ReadByte(r) {
+		case 1:
+			bbp.Goodbye = new(generatedtwo.ImportedEnum)
+			*bbp.Goodbye = generatedtwo.ImportedEnum(iohelp.ReadUint32(r))
+		default:
+			io.ReadAll(r)
+			return r.Err
+		}
+	}
+}
+
+func (bbp UnionMessage) Size() int {
+	bodyLen := 5
+	if bbp.Goodbye != nil {
+		bodyLen += 1
+		bodyLen += 4
+	}
+	return bodyLen
+}
+
+func (bbp UnionMessage) MarshalBebop() []byte {
+	buf := make([]byte, bbp.Size())
+	bbp.MarshalBebopTo(buf)
+	return buf
+}
+
+func MakeUnionMessage(r iohelp.ErrorReader) (UnionMessage, error) {
+	v := UnionMessage{}
+	err := v.DecodeBebop(r)
+	return v, err
+}
+
+func MakeUnionMessageFromBytes(buf []byte) (UnionMessage, error) {
+	v := UnionMessage{}
+	err := v.UnmarshalBebop(buf)
+	return v, err
+}
+
+func MustMakeUnionMessageFromBytes(buf []byte) UnionMessage {
+	v := UnionMessage{}
+	v.MustUnmarshalBebop(buf)
+	return v
+}
+
 var _ bebop.Record = &UsesImportUnion{}
 
 type UsesImportUnion struct {
 	UnionStruct *UnionStruct
+	UnionMessage *UnionMessage
 }
 
 func (bbp UsesImportUnion) MarshalBebopTo(buf []byte) int {
@@ -295,6 +409,13 @@ func (bbp UsesImportUnion) MarshalBebopTo(buf []byte) int {
 		at++
 		(*bbp.UnionStruct).MarshalBebopTo(buf[at:])
 		at += (*bbp.UnionStruct).Size()
+		return at
+	}
+	if bbp.UnionMessage != nil {
+		buf[at] = 2
+		at++
+		(*bbp.UnionMessage).MarshalBebopTo(buf[at:])
+		at += (*bbp.UnionMessage).Size()
 		return at
 	}
 	return at
@@ -318,6 +439,15 @@ func (bbp *UsesImportUnion) UnmarshalBebop(buf []byte) (err error) {
 			}
 			at += ((*bbp.UnionStruct)).Size()
 			return nil
+		case 2:
+			at += 1
+			bbp.UnionMessage = new(UnionMessage)
+			(*bbp.UnionMessage), err = MakeUnionMessageFromBytes(buf[at:])
+			if err != nil{
+				return err
+			}
+			at += ((*bbp.UnionMessage)).Size()
+			return nil
 		default:
 			return nil
 		}
@@ -336,6 +466,12 @@ func (bbp *UsesImportUnion) MustUnmarshalBebop(buf []byte) {
 			(*bbp.UnionStruct) = MustMakeUnionStructFromBytes(buf[at:])
 			at += ((*bbp.UnionStruct)).Size()
 			return
+		case 2:
+			at += 1
+			bbp.UnionMessage = new(UnionMessage)
+			(*bbp.UnionMessage) = MustMakeUnionMessageFromBytes(buf[at:])
+			at += ((*bbp.UnionMessage)).Size()
+			return
 		default:
 			return
 		}
@@ -348,6 +484,14 @@ func (bbp UsesImportUnion) EncodeBebop(iow io.Writer) (err error) {
 	if bbp.UnionStruct != nil {
 		w.Write([]byte{1})
 		err = (*bbp.UnionStruct).EncodeBebop(w)
+		if err != nil{
+			return err
+		}
+		return w.Err
+	}
+	if bbp.UnionMessage != nil {
+		w.Write([]byte{2})
+		err = (*bbp.UnionMessage).EncodeBebop(w)
 		if err != nil{
 			return err
 		}
@@ -370,6 +514,14 @@ func (bbp *UsesImportUnion) DecodeBebop(ior io.Reader) (err error) {
 			}
 			io.ReadAll(r)
 			return r.Err
+		case 2:
+			bbp.UnionMessage = new(UnionMessage)
+			(*bbp.UnionMessage), err = MakeUnionMessage(r)
+			if err != nil{
+				return err
+			}
+			io.ReadAll(r)
+			return r.Err
 		default:
 			io.ReadAll(r)
 			return r.Err
@@ -382,6 +534,11 @@ func (bbp UsesImportUnion) Size() int {
 	if bbp.UnionStruct != nil {
 		bodyLen += 1
 		bodyLen += (*bbp.UnionStruct).Size()
+		return bodyLen
+	}
+	if bbp.UnionMessage != nil {
+		bodyLen += 1
+		bodyLen += (*bbp.UnionMessage).Size()
 		return bodyLen
 	}
 	return bodyLen

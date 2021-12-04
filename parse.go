@@ -424,11 +424,19 @@ func readMessage(tr *tokenReader) (Message, error) {
 	nextDeprecatedMessage := ""
 	nextIsDeprecated := false
 	for tr.Token().kind != tokenKindCloseCurly {
-		if !tr.Next() {
-			return msg, readError(tr.nextToken, "message definition ended early")
+		if err := expectAnyOfNext(tr,
+			tokenKindNewline,
+			tokenKindIntegerLiteral,
+			tokenKindOpenSquare,
+			tokenKindBlockComment,
+			tokenKindLineComment,
+			tokenKindCloseCurly); err != nil {
+			return msg, err
 		}
 		tk := tr.Token()
 		switch tk.kind {
+		case tokenKindCloseCurly:
+			// break
 		case tokenKindNewline:
 			nextCommentLines = []string{}
 		case tokenKindIntegerLiteral:
@@ -557,9 +565,11 @@ func readUnion(tr *tokenReader) (Union, error) {
 			nextCommentLines = []string{}
 			nextCommentTags = []Tag{}
 
+			// This is a close curly-- we must advance past it or the union
+			// will read it and believe it is complete
+			tr.Next()
 			skipEndOfLineComments(tr)
-			tr.Next()
-			tr.Next()
+			optNewline(tr)
 
 		case tokenKindOpenSquare:
 			if nextIsDeprecated {
@@ -743,7 +753,7 @@ func parseCommentTag(s string) (Tag, bool) {
 	// Not OK
 	// [tag(db:unquotedstring)]
 	// [tag()]
-	
+
 	if !strings.HasPrefix(s, "[tag(") || !strings.HasSuffix(s, ")]") {
 		return Tag{}, false
 	}

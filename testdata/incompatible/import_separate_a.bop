@@ -16,6 +16,6 @@ union UsesImportUnion {
         ImportedEnum hello;
     }
     2 -> message UnionMessage{
-        ImportedEnum goodbye;
+        1 -> ImportedEnum goodbye;
     }
 }

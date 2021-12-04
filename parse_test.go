@@ -13,6 +13,70 @@ func TestReadFile(t *testing.T) {
 	}
 	tcs := []testCase{
 		{
+			file: "union_2",
+			expected: File{
+				Unions: []Union{
+					{
+						Name: "U2",
+						Fields: map[uint8]UnionField{
+							1: {
+								Struct: &Struct{
+									Name: "U3",
+									Fields: []Field{
+										{
+											Name: "hello",
+											FieldType: FieldType{
+												Simple: "uint32",
+											},
+										},
+									},
+								},
+							},
+							2: {
+								Message: &Message{
+									Name: "U4",
+									Fields: map[uint8]Field{
+										1: {
+											Name: "goodbye",
+											FieldType: FieldType{
+												Simple: "uint32",
+											},
+										},
+									},
+								},
+							},
+							3: {
+								Message: &Message{
+									Name: "U5",
+									Fields: map[uint8]Field{
+										1: {
+											Name: "goodbye",
+											FieldType: FieldType{
+												Simple: "uint32",
+											},
+										},
+									},
+								},
+							},
+							4: {
+								Struct: &Struct{
+									Name: "U6",
+									Fields: []Field{
+										{
+											Name: "hello",
+											FieldType: FieldType{
+												Simple: "uint32",
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
 			file: "tags",
 			expected: File{
 				Structs: []Struct{
@@ -1437,7 +1501,7 @@ func TestReadFileError(t *testing.T) {
 		{file: "invalid_message_double_deprecated", errMessage: "[2:5] expected field following deprecated annotation"},
 		{file: "invalid_message_hex_int", errMessage: "[1:7] strconv.ParseUint: parsing \"0x1\": invalid syntax"},
 		{file: "invalid_message_no_arrow", errMessage: "[1:11] expected (Arrow) got Ident"},
-		{file: "invalid_message_no_close", errMessage: "[1:19] message definition ended early"},
+		{file: "invalid_message_no_close", errMessage: "[1:19] expected (Newline, Integer Literal, Open Square, Block Comment, Line Comment, Close Curly), got no token"},
 		{file: "invalid_message_no_curly", errMessage: "[1:0] expected (Open Curly) got Newline"},
 		{file: "invalid_message_no_field_name", errMessage: "[1:15] expected (Ident) got Semicolon"},
 		{file: "invalid_message_no_name", errMessage: "[0:9] expected (Ident) got Open Curly"},
@@ -1481,6 +1545,7 @@ func TestReadFileError(t *testing.T) {
 		{file: "invalid_array_bad_key", errMessage: "[1:15] expected (Ident, Array, Map) got Close Square"},
 		{file: "invalid_array_no_close_square", errMessage: "[1:19] expected (Close Square) got Ident"},
 		{file: "invalid_array_suffix__no_close_square", errMessage: "[1:13] expected (Close Square) got Ident"},
+		{file: "invalid_union_no_message_int", errMessage: "[5:14] expected (Newline, Integer Literal, Open Square, Block Comment, Line Comment, Close Curly) got Ident"},
 	}
 	for _, tc := range tcs {
 		tc := tc
