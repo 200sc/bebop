@@ -128,7 +128,11 @@ func expectAnyOfNext(tr *tokenReader, kinds ...tokenKind) error {
 		return tr.Err()
 	}
 	if !next {
-		return readError(tr.nextToken, "expected (%v), got no token", kinds)
+		kindsStrs := make([]string, len(kinds))
+		for i, k := range kinds {
+			kindsStrs[i] = k.String()
+		}
+		return readError(tr.nextToken, "expected (%v), got no token", kindsStr(kinds))
 	}
 	tk := tr.Token()
 	found := false
