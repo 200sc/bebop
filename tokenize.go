@@ -71,7 +71,10 @@ func (tr *tokenReader) readByte() (byte, error) {
 }
 
 func (tr *tokenReader) unreadByte() {
-	tr.r.UnreadByte()
+	err := tr.r.UnreadByte()
+	if err != nil {
+		panic(fmt.Errorf("unreadByte failed: %w", err))
+	}
 	tr.loc.inc(-1)
 }
 
@@ -316,7 +319,8 @@ func (tr *tokenReader) nextIdent(firstRune rune) bool {
 		case unicode.IsDigit(rn):
 		case rn == '_':
 		default:
-			tr.r.UnreadRune()
+			// ignore this error, we just called ReadRune
+			_ = tr.r.UnreadRune()
 			tr.loc.inc(-sz)
 			if keywordKind, ok := keywords[string(tk.concrete)]; ok {
 				tk.kind = keywordKind

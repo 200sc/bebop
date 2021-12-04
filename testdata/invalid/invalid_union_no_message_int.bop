@@ -1,0 +1,8 @@
+union UsesImportUnion {
+    1 -> struct UnionStruct{
+        uint32 hello;
+    }
+    2 -> message UnionMessage{
+        uint32 goodbye;
+    }
+}

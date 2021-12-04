@@ -1,0 +1,14 @@
+union U2 {
+    1 -> struct U3{
+        uint32 hello;
+    }
+    2 -> message U4{
+        1 -> uint32 goodbye;
+    }
+    3 -> message U5{
+        1 -> uint32 goodbye;
+    }
+    4 -> struct U6{
+        uint32 hello;
+    }
+}

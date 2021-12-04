@@ -1,10 +1,12 @@
 package bebop
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -61,6 +63,102 @@ func TestUpstreamCompatiblityFailures(t *testing.T) {
 				t.Fatalf("%s should have errored", upsteamCompilerName)
 			}
 			//fmt.Println(string(printed))
+		})
+	}
+}
+
+func TestIncompatibilityExpectations_200sc(t *testing.T) {
+	files, err := os.ReadDir(filepath.Join(".", "testdata", "incompatible"))
+	if err != nil {
+		t.Fatalf("failed to list incompatible files: %v", err)
+	}
+
+	failures := map[string]struct{}{
+		"import_loop_a.bop":             {},
+		"import_loop_b.bop":             {},
+		"import_loop_c.bop":             {},
+		"invalid_enum_primitive.bop":    {},
+		"invalid_import_no_const.bop":   {},
+		"invalid_message_primitive.bop": {},
+		"invalid_struct_primitive.bop":  {},
+		"recursive_struct.bop":          {},
+	}
+
+	for _, f := range files {
+		if f.IsDir() {
+			continue
+		}
+		filename := f.Name()
+		if !strings.HasSuffix(filename, ".bop") {
+			continue
+		}
+		t.Run(filename, func(t *testing.T) {
+			f, err := os.Open(filepath.Join("testdata", "incompatible", filename))
+			if err != nil {
+				t.Fatalf("failed to open test file %s: %v", filename, err)
+			}
+			defer f.Close()
+			bopf, _, err := ReadFile(f)
+			if err != nil {
+				t.Fatalf("failed to read file %s: %v", filename, err)
+			}
+			err = bopf.Generate(bytes.NewBuffer([]byte{}), GenerateSettings{
+				PackageName: "generated",
+			})
+			_, shouldFail := failures[filename]
+			if shouldFail && err == nil {
+				t.Fatal("expected generation failure")
+			}
+			if !shouldFail && err != nil {
+				t.Fatalf("expected generation success: %v", err)
+			}
+		})
+	}
+}
+
+func TestIncompatibilityExpectations_Rainway(t *testing.T) {
+	if testing.Short() {
+		t.Skip("upstream tests skipped by --short")
+	}
+	skipIfUpstreamMissing(t)
+
+	files, err := os.ReadDir(filepath.Join(".", "testdata", "incompatible"))
+	if err != nil {
+		t.Fatalf("failed to list incompatible files: %v", err)
+	}
+
+	failures := map[string]struct{}{
+		"import_loop_a.bop":           {},
+		"import_loop_b.bop":           {},
+		"import_loop_c.bop":           {},
+		"import_separate_a.bop":       {},
+		"invalid_import_no_const.bop": {},
+		"quoted_string.bop":           {},
+		"union.bop":                   {},
+	}
+
+	for _, f := range files {
+		if f.IsDir() {
+			continue
+		}
+		filename := f.Name()
+		if !strings.HasSuffix(filename, ".bop") {
+			continue
+		}
+		t.Run(filename, func(t *testing.T) {
+			cmd := exec.Command(upsteamCompilerName, "--ts", "./out.ts", "--files", filepath.Join(".", "testdata", "incompatible", filename))
+			out, err := cmd.CombinedOutput()
+			bytes.TrimSuffix(out, []byte("\n"))
+
+			_, shouldFail := failures[filename]
+			if shouldFail && err == nil {
+				t.Fatal("expected generation failure")
+			}
+			if !shouldFail && err != nil {
+				t.Fatalf("expected generation success: %v", err)
+			}
+
+			fmt.Printf("filename: %v err: %v out:%v\n", filename, err, string(out))
 		})
 	}
 }
