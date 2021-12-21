@@ -13,6 +13,34 @@ func TestReadFile(t *testing.T) {
 	}
 	tcs := []testCase{
 		{
+			file: "bitflags",
+			expected: File{
+				Enums: []Enum{
+					{
+						Name: "TestFlags",
+						Options: []EnumOption{
+							{
+								Name:  "None",
+								Value: 0,
+							}, {
+								Name:  "Read",
+								Value: 1,
+							}, {
+								Name:  "Write",
+								Value: 2,
+							}, {
+								Name:  "ReadWrite",
+								Value: 1 | 2,
+							}, {
+								Name:  "Complex",
+								Value: (1 | 2) | 0xF0&0x1F,
+							},
+						},
+					},
+				},
+			},
+		},
+		{
 			file: "union_2",
 			expected: File{
 				Unions: []Union{

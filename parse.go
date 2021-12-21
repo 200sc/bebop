@@ -24,6 +24,7 @@ func ReadFile(r io.Reader) (File, []string, error) {
 	nextCommentLines := []string{}
 	nextRecordOpCode := int32(0)
 	nextRecordReadOnly := false
+	nextRecordBitFlags := false
 	warnings := []string{}
 	for tr.Next() {
 		tk := tr.Token()
@@ -49,17 +50,29 @@ func ReadFile(r io.Reader) (File, []string, error) {
 			nextCommentLines = append(nextCommentLines, sanitizeComment(tk))
 			continue
 		case tokenKindOpenSquare:
-			var err error
-			nextRecordOpCode, err = readOpCode(tr)
-			if err != nil {
+			if err := expectAnyOfNext(tr, tokenKindOpCode, tokenKindFlags); err != nil {
 				return f, warnings, err
+			}
+			switch tr.Token().kind {
+			case tokenKindOpCode:
+				tr.UnNext()
+				var err error
+				nextRecordOpCode, err = readOpCode(tr)
+				if err != nil {
+					return f, warnings, err
+				}
+			case tokenKindFlags:
+				nextRecordBitFlags = true
+				if err := expectAnyOfNext(tr, tokenKindCloseSquare); err != nil {
+					return f, warnings, err
+				}
 			}
 			continue
 		case tokenKindEnum:
 			if nextRecordOpCode != 0 {
 				return f, warnings, readError(tk, "enums may not have attached op codes")
 			}
-			en, err := readEnum(tr)
+			en, err := readEnum(tr, nextRecordBitFlags)
 			if err != nil {
 				return f, warnings, err
 			}
@@ -76,6 +89,9 @@ func ReadFile(r io.Reader) (File, []string, error) {
 			}
 			fallthrough
 		case tokenKindStruct:
+			if nextRecordBitFlags {
+				return f, warnings, readError(tk, "structs may not use bitflags")
+			}
 			st, err := readStruct(tr)
 			if err != nil {
 				return f, warnings, err
@@ -86,6 +102,9 @@ func ReadFile(r io.Reader) (File, []string, error) {
 			f.Structs = append(f.Structs, st)
 			nextRecordReadOnly = false
 		case tokenKindMessage:
+			if nextRecordBitFlags {
+				return f, warnings, readError(tk, "messages may not use bitflags")
+			}
 			msg, err := readMessage(tr)
 			if err != nil {
 				return f, warnings, err
@@ -94,6 +113,9 @@ func ReadFile(r io.Reader) (File, []string, error) {
 			msg.OpCode = nextRecordOpCode
 			f.Messages = append(f.Messages, msg)
 		case tokenKindUnion:
+			if nextRecordBitFlags {
+				return f, warnings, readError(tk, "unions may not use bitflags")
+			}
 			union, err := readUnion(tr)
 			if err != nil {
 				return f, warnings, err
@@ -102,6 +124,9 @@ func ReadFile(r io.Reader) (File, []string, error) {
 			union.OpCode = nextRecordOpCode
 			f.Unions = append(f.Unions, union)
 		case tokenKindConst:
+			if nextRecordBitFlags {
+				return f, warnings, readError(tk, "consts may not use bitflags")
+			}
 			if nextRecordOpCode != 0 {
 				return f, warnings, readError(tk, "consts may not have attached op codes")
 			}
@@ -177,7 +202,37 @@ func optNewline(tr *tokenReader) {
 	}
 }
 
-func readEnum(tr *tokenReader) (Enum, error) {
+func readEnumOptionValue(tr *tokenReader, previousOptions []EnumOption, bitflags bool) (int32, error) {
+	if _, err := expectNext(tr, tokenKindEquals); err != nil {
+		return 0, err
+	}
+	if !bitflags {
+		toks, err := expectNext(tr, tokenKindIntegerLiteral, tokenKindSemicolon)
+		if err != nil {
+			return 0, err
+		}
+		optInteger, err := strconv.ParseInt(string(toks[0].concrete), 0, 32)
+		if err != nil {
+			return 0, err
+		}
+		return int32(optInteger), nil
+	}
+	return readBitflagExpr(tr, previousOptions)
+}
+
+func readUntil(tr *tokenReader, kind tokenKind) ([]token, error) {
+	toks := []token{}
+	for tr.Next() {
+		tk := tr.Token()
+		if tk.kind == kind {
+			return toks, nil
+		}
+		toks = append(toks, tk)
+	}
+	return nil, readError(tr.lastToken, "eof reading until %v", kind)
+}
+
+func readEnum(tr *tokenReader, bitflags bool) (Enum, error) {
 	en := Enum{}
 	toks, err := expectNext(tr, tokenKindIdent, tokenKindOpenCurly)
 	if err != nil {
@@ -200,17 +255,14 @@ func readEnum(tr *tokenReader) (Enum, error) {
 			nextCommentLines = []string{}
 		case tokenKindIdent:
 			optName := string(tk.concrete)
-			toks, err = expectNext(tr, tokenKindEquals, tokenKindIntegerLiteral, tokenKindSemicolon)
-			if err != nil {
-				return en, err
-			}
-			optInteger, err := strconv.ParseInt(string(toks[1].concrete), 0, 32)
+
+			optValue, err := readEnumOptionValue(tr, en.Options, bitflags)
 			if err != nil {
 				return en, readError(toks[1], err.Error())
 			}
 			en.Options = append(en.Options, EnumOption{
 				Name:              optName,
-				Value:             int32(optInteger),
+				Value:             optValue,
 				DeprecatedMessage: nextDeprecatedMessage,
 				Deprecated:        nextIsDeprecated,
 				Comment:           strings.Join(nextCommentLines, "\n"),

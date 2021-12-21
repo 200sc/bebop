@@ -23,6 +23,7 @@ var testFiles = []string{
 	"msgpack_comparison",
 	"request",
 	"union",
+	"bitflags",
 }
 
 func TestTokenize(t *testing.T) {

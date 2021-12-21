@@ -32,6 +32,7 @@ const (
 	tokenKindTrue
 	tokenKindFalse
 	tokenKindImport
+	tokenKindFlags
 
 	tokenKindOpenSquare
 	tokenKindCloseSquare
@@ -45,6 +46,10 @@ const (
 	tokenKindArrow
 	tokenKindLineComment
 	tokenKindBlockComment
+	tokenKindVerticalBar
+	tokenKindAmpersand
+	tokenKindDoubleCaretLeft
+	tokenKindDoubleCaretRight
 
 	tokenKindNewline
 
@@ -86,6 +91,7 @@ var tokenStrings = map[tokenKind]string{
 	tokenKindTrue:           "True",
 	tokenKindFalse:          "False",
 	tokenKindImport:         "Import",
+	tokenKindFlags:          "Flags",
 }
 
 func (tk tokenKind) String() string {
