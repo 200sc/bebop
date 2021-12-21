@@ -258,7 +258,7 @@ func readEnum(tr *tokenReader, bitflags bool) (Enum, error) {
 
 			optValue, err := readEnumOptionValue(tr, en.Options, bitflags)
 			if err != nil {
-				return en, readError(toks[1], err.Error())
+				return en, err
 			}
 			en.Options = append(en.Options, EnumOption{
 				Name:              optName,
