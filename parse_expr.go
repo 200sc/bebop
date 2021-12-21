@@ -11,7 +11,7 @@ func readBitflagExpr(tr *tokenReader, previousOptions []EnumOption) (int32, erro
 	if err != nil {
 		return 0, err
 	}
-	// TODO: precedence (although there isn't really a natural precendence for these
+	// TODO: precedence (although there isn't really a natural precedence for these
 	// operations anyway)
 	parsed, err := parseBitflagExpr(toks)
 	if err != nil {
