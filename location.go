@@ -2,7 +2,7 @@ package bebop
 
 import "fmt"
 
-// a locError is an error that occured at a specific file location
+// a locError is an error that occurred at a specific file location
 type locError struct {
 	loc location
 	err error
