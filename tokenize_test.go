@@ -163,19 +163,24 @@ func TestTokenizeError(t *testing.T) {
 		err  string
 	}
 	tcs := []testCase{
-		{file: "invalid_token_arrow_eof", err: "[0:1] eof waiting for [>, i, number] after '-'"},
+		{file: "invalid_token_arrow_eof", err: "[0:1] unexpected EOF: waiting for [>, i, number] after '-'"},
 		{file: "invalid_token_arrow", err: "[0:2] unexpected token '-' waiting for [>, i, number] after '-'"},
-		{file: "invalid_token_comment_eof", err: "[0:1] eof waiting for [*, /] after '/'"},
-		{file: "invalid_token_comment", err: "[0:2] unexpected token 'p' waiting for [*, /] after '/'"},
-		{file: "invalid_token_string", err: "[0:13] eof waiting for string end quote"},
+		{file: "invalid_token_comment_eof", err: "[0:1] unexpected EOF: waiting for [*, /] after '/'"},
+		{file: "invalid_token_comment", err: `[0:2] unexpected token 'p' waiting for [*, /] after '/'
+[0:2] unexpected EOF: block comment missing end token`},
+		{file: "invalid_token_string", err: "[0:13] unexpected EOF: waiting for string end quote"},
 		{file: "invalid_token_unknown", err: "[0:1] unexpected token '*', expected number, letter, or control sequence"},
-		{file: "invalid_token_block_comment_eof", err: "[0:28] block comment missing end token"},
+		{file: "invalid_token_block_comment_eof", err: "[0:28] unexpected EOF: block comment missing end token"},
 		{file: "invalid_token_float_literal", err: "[0:4] unexpected token ' ', expected number following \"-1.\""},
-		{file: "invalid_token_float_literal_eof", err: "[0:3] unexpected eof, expected number following \"-1.\""},
-		{file: "invalid_token_ninf_1", err: "[0:3] eof waiting for [f] after '-in'"},
-		{file: "invalid_token_ninf_2", err: "[0:2] eof waiting for [n] after '-i'"},
-		{file: "invalid_token_ninf_3", err: "[0:3] unexpected token 'i' waiting for [n] after '-i'"},
+		{file: "invalid_token_float_literal_eof", err: "[0:3] unexpected EOF: expected number following \"-1.\""},
+		{file: "invalid_token_ninf_1", err: "[0:3] unexpected EOF: waiting for [f] after '-in'"},
+		{file: "invalid_token_ninf_2", err: "[0:2] unexpected EOF: waiting for [n] after '-i'"},
+		{file: "invalid_token_ninf_3", err: `[0:3] unexpected token 'i' waiting for [n] after '-i'
+[0:4] unexpected token 'i' waiting for [f] after '-in'`},
 		{file: "invalid_token_float_literal_two_periods", err: "[0:5] unexpected second period in float following \"-1.0\""},
+		{file: "invalid_token_multi_err_float", err: `[0:3] unexpected token ' ', expected number following "1."
+[0:6] unexpected token ' ', expected number following "1."
+[0:9] unexpected token ' ', expected number following "1."`},
 	}
 	for _, tc := range tcs {
 		tc := tc
