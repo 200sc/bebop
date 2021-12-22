@@ -5,26 +5,12 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"sort"
 	"strings"
 	"unicode"
 )
 
-type locError struct {
-	loc location
-	err error
-}
-
-func (l locError) Unwrap() error {
-	return l.err
-}
-
-func (l locError) Error() string {
-	return fmt.Sprintf("[%d:%d] %s", l.loc.line, l.loc.lineChar, l.err)
-}
-
 type tokenReader struct {
-	finder             *tokenFinder
+	tree               *tokenTree
 	r                  *bufio.Reader
 	lastToken          token
 	nextToken          token
@@ -39,8 +25,8 @@ func newTokenReader(r io.Reader) *tokenReader {
 	// of actual read calls we make out to a file,
 	// and to ease reading individual bytes
 	return &tokenReader{
-		r:      bufio.NewReader(r),
-		finder: newTokenFinder(),
+		r:    bufio.NewReader(r),
+		tree: newTokenTree(),
 	}
 }
 
@@ -78,6 +64,39 @@ func (tr *tokenReader) addError(err error) {
 	})
 }
 
+func (tr *tokenReader) Err() error {
+	if len(tr.errs) == 0 {
+		return nil
+	}
+	errStrs := []string{}
+	for _, err := range tr.errs {
+		errStrs = append(errStrs, err.Error())
+	}
+	return fmt.Errorf(strings.Join(errStrs, "\n"))
+}
+
+// Token returns the last read token from the underlying reader.
+// If no token has been read, it returns an empty token (token{}).
+func (tr *tokenReader) Token() token {
+	if tr.optionalSemicolons {
+		if tr.nextToken.kind == tokenKindNewline || tr.nextToken.kind == tokenKindCloseCurly || tr.nextToken.kind == tokenKindLineComment {
+			switch tr.lastToken.kind {
+			case tokenKindIdent, tokenKindIntegerLiteral, tokenKindNegativeInf, tokenKindInf,
+				tokenKindStringLiteral, tokenKindNaN, tokenKindTrue, tokenKindFalse:
+				injectedToken := token{
+					kind:     tokenKindSemicolon,
+					concrete: []byte{';'},
+					loc:      tr.loc,
+				}
+				tr.keepNextToken = true
+				tr.lastToken = injectedToken
+				return injectedToken
+			}
+		}
+	}
+	return tr.nextToken
+}
+
 // Next attempts to read the next token in the reader.
 // If a token cannot be found, it returns false. If there
 // are no tokens because EOF was reached, Err() will return
@@ -91,7 +110,7 @@ func (tr *tokenReader) Next() bool {
 		return true
 	}
 	// find all byte-driven tokens
-	tk, ok := tr.finder.findFirst(tr)
+	tk, ok := tr.tree.findFirst(tr)
 	if len(tr.errs) != 0 {
 		lastErr := tr.errs[len(tr.errs)-1]
 		if errors.Is(lastErr, io.EOF) {
@@ -208,154 +227,6 @@ func (tr *tokenReader) skipFollowingWhitespace() {
 		tr.unreadByte()
 		break
 	}
-}
-
-func (tr *tokenReader) Err() error {
-	if len(tr.errs) == 0 {
-		return nil
-	}
-	errStrs := []string{}
-	for _, err := range tr.errs {
-		errStrs = append(errStrs, err.Error())
-	}
-	return fmt.Errorf(strings.Join(errStrs, "\n"))
-}
-
-// Token returns the last read token from the underlying reader.
-// If no token has been read, it returns an empty token (token{}).
-func (tr *tokenReader) Token() token {
-	if tr.optionalSemicolons {
-		if tr.nextToken.kind == tokenKindNewline || tr.nextToken.kind == tokenKindCloseCurly || tr.nextToken.kind == tokenKindLineComment {
-			switch tr.lastToken.kind {
-			case tokenKindIdent, tokenKindIntegerLiteral, tokenKindNegativeInf, tokenKindInf,
-				tokenKindStringLiteral, tokenKindNaN, tokenKindTrue, tokenKindFalse:
-				injectedToken := token{
-					kind:     tokenKindSemicolon,
-					concrete: []byte{';'},
-					loc:      tr.loc,
-				}
-				tr.keepNextToken = true
-				tr.lastToken = injectedToken
-				return injectedToken
-			}
-		}
-	}
-	return tr.nextToken
-}
-
-type location struct {
-	lineChar int
-	line     int
-}
-
-func (l *location) inc(i int) {
-	l.lineChar += i
-}
-
-func (l *location) incLine() {
-	l.line++
-	l.lineChar = 0
-}
-
-type tokenFinder struct {
-	successors map[byte]*tokenFinder
-	skipOver   map[byte]struct{}
-	isTerminal bool
-	build      func(*tokenReader, []byte) token
-}
-
-func (v *tokenFinder) skip(b byte) {
-	if v.skipOver == nil {
-		v.skipOver = make(map[byte]struct{})
-	}
-	v.skipOver[b] = struct{}{}
-}
-
-func (v *tokenFinder) add(str []byte, build func(*tokenReader, []byte) token) {
-	if len(str) == 0 {
-		v.isTerminal = true
-		v.build = build
-		return
-	}
-	if v.successors == nil {
-		v.successors = make(map[byte]*tokenFinder)
-	}
-	if v.successors[str[0]] == nil {
-		v.successors[str[0]] = &tokenFinder{}
-	}
-	v.successors[str[0]].add(str[1:], build)
-}
-
-func (v *tokenFinder) findFirst(tr *tokenReader) (token, bool) {
-	return v.find(tr, []byte{})
-}
-
-func (v *tokenFinder) find(tr *tokenReader, concrete []byte) (token, bool) {
-	// after find is executed, if false is returned, the last read token
-	// (which should be reevaluated for other token cases) will be tr.lastToken.
-	if v.isTerminal {
-		return v.build(tr, concrete), true
-	}
-	var b byte
-	var err error
-	for {
-		b, err = tr.readByte()
-		if err == io.EOF {
-			if len(concrete) != 0 {
-				nextValid := v.nextValidBytes()
-				tr.addError(fmt.Errorf("%w: waiting for [%v] after '%v'", io.ErrUnexpectedEOF, strings.Join(nextValid, ", "), string(concrete)))
-			} else {
-				tr.addError(io.EOF)
-			}
-			return token{}, false
-		}
-		if err != nil {
-			tr.addError(err)
-			return token{}, false
-		}
-		if v.skipOver != nil {
-			if _, ok := v.skipOver[b]; ok {
-				continue
-			}
-		}
-		break
-	}
-	t, ok := v.successors[b]
-	if !ok {
-		if len(concrete) != 0 {
-			nextValid := v.nextValidBytes()
-
-			tr.addError(fmt.Errorf("unexpected token '%v' waiting for [%v] after '%v'", string(b), strings.Join(nextValid, ", "), string(concrete)))
-			// greedily choose the first option
-			b = byte(nextValid[0][0])
-			t = v.successors[b]
-		} else {
-			return token{}, false
-		}
-	}
-	concrete = append(concrete, b)
-	return t.find(tr, concrete)
-}
-
-func (v *tokenFinder) nextValidBytes() []string {
-	opts := make(map[string]struct{}, len(v.successors))
-	for k := range v.successors {
-		if isNumeric(k) {
-			// Assumption: if this accepts a digit, it accepts any number
-			opts["number"] = struct{}{}
-			continue
-		}
-		opts[string(k)] = struct{}{}
-	}
-	strs := make([]string, len(opts))
-	i := 0
-	for k := range opts {
-		strs[i] = k
-		i++
-	}
-	sort.Strings(strs)
-
-	return strs
 }
 
 func simpleToken(k tokenKind) func(*tokenReader, []byte) token {
@@ -500,36 +371,39 @@ func stringLiteralToken(tr *tokenReader, concrete []byte) token {
 	}
 }
 
-func newTokenFinder() *tokenFinder {
-	tf := &tokenFinder{}
-	tf.skip(' ')
-	tf.skip('\t')
-	tf.skip('\r')
-	// TODO: support terminals that are prefixed by other smaller terminals
-	// e.g. right now we can't have == and = as terminals
-	tf.add([]byte{'='}, simpleToken(tokenKindEquals))
-	tf.add([]byte{'['}, simpleToken(tokenKindOpenSquare))
-	tf.add([]byte{']'}, simpleToken(tokenKindCloseSquare))
-	tf.add([]byte{'{'}, simpleToken(tokenKindOpenCurly))
-	tf.add([]byte{'}'}, simpleToken(tokenKindCloseCurly))
-	tf.add([]byte{'('}, simpleToken(tokenKindOpenParen))
-	tf.add([]byte{')'}, simpleToken(tokenKindCloseParen))
-	tf.add([]byte{','}, simpleToken(tokenKindComma))
-	tf.add([]byte{';'}, simpleToken(tokenKindSemicolon))
-	tf.add([]byte{'\n'}, simpleToken(tokenKindNewline))
-	tf.add([]byte{'|'}, simpleToken(tokenKindVerticalBar))
-	tf.add([]byte{'&'}, simpleToken(tokenKindAmpersand))
-	tf.add([]byte{'-', '>'}, simpleToken(tokenKindArrow))
-	tf.add([]byte{'>', '>'}, simpleToken(tokenKindDoubleCaretRight))
-	tf.add([]byte{'<', '<'}, simpleToken(tokenKindDoubleCaretLeft))
-	tf.add([]byte{'-', 'i', 'n', 'f'}, simpleToken(tokenKindNegativeInf))
-	tf.add([]byte{'"'}, stringLiteralToken)
+// build a token tree with our set of non-rune-based tokens
+func newTokenTree() *tokenTree {
+	tt := &tokenTree{}
+	// skip whitespace
+	tt.skip(' ')
+	tt.skip('\t')
+	tt.skip('\r')
+
+	// simple terminals
+	tt.add([]byte{'='}, simpleToken(tokenKindEquals))
+	tt.add([]byte{'['}, simpleToken(tokenKindOpenSquare))
+	tt.add([]byte{']'}, simpleToken(tokenKindCloseSquare))
+	tt.add([]byte{'{'}, simpleToken(tokenKindOpenCurly))
+	tt.add([]byte{'}'}, simpleToken(tokenKindCloseCurly))
+	tt.add([]byte{'('}, simpleToken(tokenKindOpenParen))
+	tt.add([]byte{')'}, simpleToken(tokenKindCloseParen))
+	tt.add([]byte{','}, simpleToken(tokenKindComma))
+	tt.add([]byte{';'}, simpleToken(tokenKindSemicolon))
+	tt.add([]byte{'\n'}, simpleToken(tokenKindNewline))
+	tt.add([]byte{'|'}, simpleToken(tokenKindVerticalBar))
+	tt.add([]byte{'&'}, simpleToken(tokenKindAmpersand))
+	tt.add([]byte{'-', '>'}, simpleToken(tokenKindArrow))
+	tt.add([]byte{'>', '>'}, simpleToken(tokenKindDoubleCaretRight))
+	tt.add([]byte{'<', '<'}, simpleToken(tokenKindDoubleCaretLeft))
+	tt.add([]byte{'-', 'i', 'n', 'f'}, simpleToken(tokenKindNegativeInf))
+
+	// complex terminals
+	tt.add([]byte{'"'}, stringLiteralToken)
+	tt.add([]byte{'/', '/'}, lineCommentToken)
+	tt.add([]byte{'/', '*'}, blockCommentToken)
 	for c := byte('0'); c <= '9'; c++ {
-		tf.add([]byte{'-', c}, numberToken)
-		tf.add([]byte{c}, numberToken)
+		tt.add([]byte{'-', c}, numberToken)
+		tt.add([]byte{c}, numberToken)
 	}
-	tf.add([]byte{'/', '/'}, lineCommentToken)
-	tf.add([]byte{'/', '*'}, blockCommentToken)
-	// */ is also technically a token, but it is parsed as a part of parsing /*
-	return tf
+	return tt
 }
