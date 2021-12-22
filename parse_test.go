@@ -7,6 +7,7 @@ import (
 )
 
 func TestReadFile(t *testing.T) {
+	t.Parallel()
 	type testCase struct {
 		file     string
 		expected File
@@ -1444,6 +1445,7 @@ func TestReadFile(t *testing.T) {
 	for _, tc := range tcs {
 		tc := tc
 		t.Run(tc.file, func(t *testing.T) {
+			t.Parallel()
 			f, err := os.Open(filepath.Join("testdata", "base", tc.file+".bop"))
 			if err != nil {
 				t.Fatalf("failed to open test file %s: %v", tc.file+".bop", err)
@@ -1461,6 +1463,7 @@ func TestReadFile(t *testing.T) {
 }
 
 func TestReadFileErrorWarnings(t *testing.T) {
+	t.Parallel()
 	type testCase struct {
 		file       string
 		errMessage string
@@ -1474,6 +1477,7 @@ func TestReadFileErrorWarnings(t *testing.T) {
 	for _, tc := range tcs {
 		tc := tc
 		t.Run(tc.file, func(t *testing.T) {
+			t.Parallel()
 			f, err := os.Open(filepath.Join("testdata", "warning", tc.file+".bop"))
 			if err != nil {
 				t.Fatalf("failed to open test file %s: %v", tc.file+".bop", err)
@@ -1491,6 +1495,7 @@ func TestReadFileErrorWarnings(t *testing.T) {
 }
 
 func TestReadFileError(t *testing.T) {
+	t.Parallel()
 	type testCase struct {
 		file       string
 		errMessage string
@@ -1578,6 +1583,7 @@ func TestReadFileError(t *testing.T) {
 	for _, tc := range tcs {
 		tc := tc
 		t.Run(tc.file, func(t *testing.T) {
+			t.Parallel()
 			f, err := os.Open(filepath.Join("testdata", "invalid", tc.file+".bop"))
 			if err != nil {
 				t.Fatalf("failed to open test file %s: %v", tc.file+".bop", err)

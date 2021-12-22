@@ -29,9 +29,11 @@ var testFiles = []string{
 }
 
 func TestTokenize(t *testing.T) {
+	t.Parallel()
 	for _, filename := range testFiles {
 		filename := filename
 		t.Run(filename, func(t *testing.T) {
+			t.Parallel()
 			filename += ".bop"
 			f, err := os.Open(filepath.Join("testdata", "base", filename))
 			if err != nil {
@@ -52,6 +54,7 @@ func TestTokenizeIncompatible(t *testing.T) {
 	for _, filename := range testIncompatibleFiles {
 		filename := filename
 		t.Run(filename, func(t *testing.T) {
+			t.Parallel()
 			filename += ".bop"
 			f, err := os.Open(filepath.Join("testdata", "incompatible", filename))
 			if err != nil {
@@ -74,9 +77,11 @@ var testFilesInvalidNoError = []string{
 }
 
 func TestTokenizeInvalidNoError(t *testing.T) {
+	t.Parallel()
 	for _, filename := range testFilesInvalidNoError {
 		filename := filename
 		t.Run(filename, func(t *testing.T) {
+			t.Parallel()
 			filename += ".bop"
 			f, err := os.Open(filepath.Join("testdata", "invalid", filename))
 			if err != nil {
@@ -94,6 +99,7 @@ func TestTokenizeInvalidNoError(t *testing.T) {
 }
 
 func TestTokenizeNoSemis(t *testing.T) {
+	t.Parallel()
 	failingCases := map[string]string{
 		"all_consts":         "we do not inject a semi at EOF",
 		"foo":                "inline semis between fields must stay",
@@ -105,6 +111,7 @@ func TestTokenizeNoSemis(t *testing.T) {
 	for _, filename := range testFiles {
 		filename := filename
 		t.Run(filename, func(t *testing.T) {
+			t.Parallel()
 			if reason, ok := failingCases[filename]; ok {
 				t.Skip(reason)
 			}
@@ -158,6 +165,7 @@ func TestTokenizeNoSemis(t *testing.T) {
 }
 
 func TestTokenizeError(t *testing.T) {
+	t.Parallel()
 	type testCase struct {
 		file string
 		err  string
@@ -185,6 +193,7 @@ func TestTokenizeError(t *testing.T) {
 	for _, tc := range tcs {
 		tc := tc
 		t.Run(tc.file, func(t *testing.T) {
+			t.Parallel()
 			origfilename := tc.file + ".bop"
 			f, err := os.Open(filepath.Join("testdata", "invalid", origfilename))
 			if err != nil {
