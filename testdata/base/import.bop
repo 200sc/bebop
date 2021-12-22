@@ -1,5 +1,5 @@
-import "./jazz.bop"
-import "./lab.bop"
+import "./jazz.bop";
+import "./lab.bop";
 
 struct Hello {
     int32 Yes; 

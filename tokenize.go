@@ -10,13 +10,14 @@ import (
 )
 
 type tokenReader struct {
-	r             *bufio.Reader
-	lastToken     token
-	nextToken     token
-	err           error
-	loc           location
-	keepNextToken bool
-	finder        *tokenFinder
+	finder             *tokenFinder
+	r                  *bufio.Reader
+	lastToken          token
+	nextToken          token
+	err                error
+	loc                location
+	keepNextToken      bool
+	optionalSemicolons bool
 }
 
 func newTokenReader(r io.Reader) *tokenReader {
@@ -190,15 +191,14 @@ func (tr *tokenReader) Err() error {
 	return fmt.Errorf("[%d:%d] %s", tr.loc.line, tr.loc.lineChar, tr.err.Error())
 }
 
-var optionalSemicolons = false
-
 // Token returns the last read token from the underlying reader.
 // If no token has been read, it returns an empty token (token{}).
 func (tr *tokenReader) Token() token {
-	if optionalSemicolons {
-		if tr.nextToken.kind == tokenKindNewline {
+	if tr.optionalSemicolons {
+		if tr.nextToken.kind == tokenKindNewline || tr.nextToken.kind == tokenKindCloseCurly || tr.nextToken.kind == tokenKindLineComment {
 			switch tr.lastToken.kind {
-			case tokenKindIdent, tokenKindIntegerLiteral:
+			case tokenKindIdent, tokenKindIntegerLiteral, tokenKindNegativeInf, tokenKindInf,
+				tokenKindStringLiteral, tokenKindNaN, tokenKindTrue, tokenKindFalse:
 				injectedToken := token{
 					kind:     tokenKindSemicolon,
 					concrete: []byte{';'},

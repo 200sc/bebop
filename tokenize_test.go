@@ -1,6 +1,8 @@
 package bebop
 
 import (
+	"bytes"
+	"io"
 	"os"
 	"path/filepath"
 	"testing"
@@ -91,24 +93,36 @@ func TestTokenizeInvalidNoError(t *testing.T) {
 	}
 }
 
-var testNoSemisFiles = []string{
-	"jazz",
-}
-
 func TestTokenizeNoSemis(t *testing.T) {
-	optionalSemicolons = true
-	for _, filename := range testNoSemisFiles {
+	failingCases := map[string]string{
+		"all_consts":         "we do not inject a semi at EOF",
+		"foo":                "inline semis between fields must stay",
+		"lab":                "inline semis between fields must stay",
+		"map_types":          "inline semis between fields must stay",
+		"union":              "inline semis between fields must stay",
+		"msgpack_comparison": "we are naively removing semis from within comments",
+	}
+	for _, filename := range testFiles {
 		filename := filename
 		t.Run(filename, func(t *testing.T) {
+			if reason, ok := failingCases[filename]; ok {
+				t.Skip(reason)
+			}
 			origfilename := filename + ".bop"
 			f, err := os.Open(filepath.Join("testdata", "base", origfilename))
 			if err != nil {
 				t.Fatalf("failed to open test file %s: %v", origfilename, err)
 			}
-			defer f.Close()
+
+			semiBytes, _ := io.ReadAll(f)
+
+			f.Close()
+
+			noSemiBytes := bytes.ReplaceAll(semiBytes, []byte{';'}, []byte{})
 
 			tokens := []token{}
-			tr := newTokenReader(f)
+			tr := newTokenReader(bytes.NewBuffer(semiBytes))
+			tr.optionalSemicolons = false
 			for tr.Next() {
 				tokens = append(tokens, tr.Token())
 			}
@@ -116,15 +130,9 @@ func TestTokenizeNoSemis(t *testing.T) {
 				t.Fatalf("token reader errored: %v", tr.Err())
 			}
 
-			noSemiFilepath := filename + "_nosemis.bop"
-			f2, err := os.Open(filepath.Join("testdata", "invalid", noSemiFilepath))
-			if err != nil {
-				t.Fatalf("failed to open test file %s: %v", noSemiFilepath, err)
-			}
-			defer f2.Close()
-
 			tokens2 := []token{}
-			tr2 := newTokenReader(f2)
+			tr2 := newTokenReader(bytes.NewBuffer(noSemiBytes))
+			tr2.optionalSemicolons = true
 			for tr2.Next() {
 				tokens2 = append(tokens2, tr2.Token())
 			}
@@ -142,12 +150,11 @@ func TestTokenizeNoSemis(t *testing.T) {
 					t.Fatalf("tokens at pos %d differed: kind %v vs %v", i, tk.kind, tk2.kind)
 				}
 				if string(tk2.concrete) != string(tk.concrete) {
-					t.Fatalf("tokens at pos %d differed: concrete %v vs %v", i, tk.concrete, tk2.concrete)
+					t.Fatalf("tokens at pos %d differed: concrete %v vs %v", i, string(tk.concrete), string(tk2.concrete))
 				}
 			}
 		})
 	}
-	optionalSemicolons = false
 }
 
 func TestTokenizeError(t *testing.T) {
