@@ -390,6 +390,7 @@ var genTestFiles = []string{
 	"array_of_strings",
 	"basic_arrays",
 	"basic_types",
+	"bitflags",
 	"documentation",
 	"enums",
 	"foo",
