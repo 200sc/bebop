@@ -29,9 +29,9 @@ func TestUpstreamCompatiblitySuccess(t *testing.T) {
 	outfile := "./compsuccess-out.ts"
 	defer os.Remove(outfile)
 	cmd := exec.Command(upsteamCompilerName, "--ts", outfile, "--dir", filepath.Join(".", "testdata", "base"))
-	err := cmd.Run()
+	printed, err := cmd.CombinedOutput()
 	if err != nil {
-		//fmt.Println(string(printed))
+		fmt.Println(string(printed))
 		t.Fatalf("%s failed: %v", upsteamCompilerName, err)
 	}
 }

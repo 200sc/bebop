@@ -1,4 +1,4 @@
-import "import.bop";
+import "import.bop"
 
 struct Test22 {
     Instrument noisemaker;
