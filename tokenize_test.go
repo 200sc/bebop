@@ -106,6 +106,8 @@ func TestTokenizeNoSemis(t *testing.T) {
 		"lab":                "inline semis between fields must stay",
 		"map_types":          "inline semis between fields must stay",
 		"union":              "inline semis between fields must stay",
+		"import_b":           "import semis cannot be added",
+		"import":             "import semis cannot be added",
 		"msgpack_comparison": "we are naively removing semis from within comments",
 	}
 	for _, filename := range testFiles {
