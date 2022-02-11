@@ -19,7 +19,7 @@ func skipIfUpstreamMissing(t *testing.T) {
 	}
 }
 
-func TestUpstreamCompatiblitySuccess(t *testing.T) {
+func TestUpstreamCompatibilitySuccess(t *testing.T) {
 	t.Parallel()
 	if testing.Short() {
 		t.Skip("upstream tests skipped by --short")
@@ -36,7 +36,7 @@ func TestUpstreamCompatiblitySuccess(t *testing.T) {
 	}
 }
 
-func TestUpstreamCompatiblityFailures(t *testing.T) {
+func TestUpstreamCompatibilityFailures(t *testing.T) {
 	t.Parallel()
 	if testing.Short() {
 		t.Skip("upstream tests skipped by --short")
