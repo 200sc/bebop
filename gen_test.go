@@ -12,6 +12,7 @@ import (
 )
 
 func TestValidateIncompatibleError(t *testing.T) {
+	t.Parallel()
 	type testCase struct {
 		file string
 		err  string
@@ -32,6 +33,7 @@ func TestValidateIncompatibleError(t *testing.T) {
 	for _, tc := range tcs {
 		tc := tc
 		t.Run(tc.file, func(t *testing.T) {
+			t.Parallel()
 			f, err := os.Open(filepath.Join("testdata", "incompatible", tc.file+".bop"))
 			if err != nil {
 				t.Fatalf("failed to open test file %s: %v", tc.file+".bop", err)
@@ -53,6 +55,7 @@ func TestValidateIncompatibleError(t *testing.T) {
 }
 
 func TestValidateError(t *testing.T) {
+	t.Parallel()
 	type testCase struct {
 		file string
 		err  string
@@ -97,6 +100,7 @@ func TestValidateError(t *testing.T) {
 	for _, tc := range tcs {
 		tc := tc
 		t.Run(tc.file, func(t *testing.T) {
+			t.Parallel()
 			f, err := os.Open(filepath.Join("testdata", "invalid", tc.file+".bop"))
 			if err != nil {
 				t.Fatalf("failed to open test file %s: %v", tc.file+".bop", err)
@@ -118,6 +122,7 @@ func TestValidateError(t *testing.T) {
 }
 
 func TestGenerate_Error(t *testing.T) {
+	t.Parallel()
 	type testCase struct {
 		file string
 		err  string
@@ -132,6 +137,7 @@ func TestGenerate_Error(t *testing.T) {
 	for _, tc := range tcs {
 		tc := tc
 		t.Run(tc.file, func(t *testing.T) {
+			t.Parallel()
 			f, err := os.Open(filepath.Join("testdata", "invalid", tc.file+".bop"))
 			if err != nil {
 				t.Fatalf("failed to open test file %s: %v", tc.file+".bop", err)
@@ -153,6 +159,7 @@ func TestGenerate_Error(t *testing.T) {
 }
 
 func TestGenerateToFile_SeperateImports(t *testing.T) {
+	t.Parallel()
 	type file struct {
 		filename string
 		outfile  string
@@ -172,6 +179,7 @@ func TestGenerateToFile_SeperateImports(t *testing.T) {
 	for _, filedef := range files {
 		filedef := filedef
 		t.Run(filedef.filename, func(t *testing.T) {
+			t.Parallel()
 			f, err := os.Open(filepath.Join("testdata", "incompatible", filedef.filename+".bop"))
 			if err != nil {
 				t.Fatalf("failed to open test file %s: %v", filedef.filename+".bop", err)
@@ -206,6 +214,7 @@ func TestGenerateToFile_SeperateImports(t *testing.T) {
 }
 
 func TestGenerateToFile_SeperateImports_ImportCycle(t *testing.T) {
+	t.Parallel()
 	type file struct {
 		filename   string
 		errMessage string
@@ -219,6 +228,7 @@ func TestGenerateToFile_SeperateImports_ImportCycle(t *testing.T) {
 	for _, filedef := range files {
 		filedef := filedef
 		t.Run(filedef.filename, func(t *testing.T) {
+			t.Parallel()
 			f, err := os.Open(filepath.Join("testdata", "incompatible", filedef.filename+".bop"))
 			if err != nil {
 				t.Fatalf("failed to open test file %s: %v", filedef.filename+".bop", err)
@@ -244,6 +254,7 @@ func TestGenerateToFile_SeperateImports_ImportCycle(t *testing.T) {
 }
 
 func TestGenerateToFile_Error(t *testing.T) {
+	t.Parallel()
 	type testCase struct {
 		name string
 		// provide one of the following two:
@@ -306,6 +317,7 @@ func TestGenerateToFile_Error(t *testing.T) {
 	for _, tc := range tcs {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			if tc.filename != "" {
 				f, err := os.Open(filepath.Join("testdata", "incompatible", tc.filename+".bop"))
 				if err != nil {
@@ -333,10 +345,12 @@ var importFiles = []string{
 }
 
 func TestGenerateToFile_Imports(t *testing.T) {
+	t.Parallel()
 	rand.Seed(time.Now().UnixNano())
 	for _, filename := range importFiles {
 		filename := filename
 		t.Run(filename, func(t *testing.T) {
+			t.Parallel()
 			f, err := os.Open(filepath.Join("testdata", "base", filename+".bop"))
 			if err != nil {
 				t.Fatalf("failed to open test file %s: %v", filename+".bop", err)
@@ -376,6 +390,7 @@ var genTestFiles = []string{
 	"array_of_strings",
 	"basic_arrays",
 	"basic_types",
+	"bitflags",
 	"documentation",
 	"enums",
 	"foo",
@@ -394,10 +409,12 @@ var genTestFiles = []string{
 }
 
 func TestGenerateToFile(t *testing.T) {
+	t.Parallel()
 	rand.Seed(time.Now().UnixNano())
 	for _, filename := range genTestFiles {
 		filename := filename
 		t.Run(filename, func(t *testing.T) {
+			t.Parallel()
 			f, err := os.Open(filepath.Join("testdata", "base", filename+".bop"))
 			if err != nil {
 				t.Fatalf("failed to open test file %s: %v", filename+".bop", err)
@@ -427,10 +444,12 @@ func TestGenerateToFile(t *testing.T) {
 }
 
 func TestGenerateToFileIncompatible(t *testing.T) {
+	t.Parallel()
 	rand.Seed(time.Now().UnixNano())
 	for _, filename := range testIncompatibleFiles {
 		filename := filename
 		t.Run(filename, func(t *testing.T) {
+			t.Parallel()
 			f, err := os.Open(filepath.Join("testdata", "incompatible", filename+".bop"))
 			if err != nil {
 				t.Fatalf("failed to open test file %s: %v", filename+".bop", err)

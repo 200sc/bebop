@@ -3,6 +3,7 @@ package bebop
 import "testing"
 
 func TestTokenKindStrings(t *testing.T) {
+	t.Parallel()
 	// Verify every token kind has a string encoding
 	for tok := tokenKindInvalid; tok < tokenKindFinal; tok++ {
 		s := tok.String()

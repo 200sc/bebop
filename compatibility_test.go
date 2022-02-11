@@ -19,13 +19,16 @@ func skipIfUpstreamMissing(t *testing.T) {
 	}
 }
 
-func TestUpstreamCompatiblitySuccess(t *testing.T) {
+func TestUpstreamCompatibilitySuccess(t *testing.T) {
+	t.Parallel()
 	if testing.Short() {
 		t.Skip("upstream tests skipped by --short")
 	}
 	skipIfUpstreamMissing(t)
 
-	cmd := exec.Command(upsteamCompilerName, "--ts", "./out.ts", "--dir", filepath.Join(".", "testdata", "base"))
+	outfile := "./compsuccess-out.ts"
+	defer os.Remove(outfile)
+	cmd := exec.Command(upsteamCompilerName, "--ts", outfile, "--dir", filepath.Join(".", "testdata", "base"))
 	printed, err := cmd.CombinedOutput()
 	if err != nil {
 		fmt.Println(string(printed))
@@ -33,7 +36,8 @@ func TestUpstreamCompatiblitySuccess(t *testing.T) {
 	}
 }
 
-func TestUpstreamCompatiblityFailures(t *testing.T) {
+func TestUpstreamCompatibilityFailures(t *testing.T) {
+	t.Parallel()
 	if testing.Short() {
 		t.Skip("upstream tests skipped by --short")
 	}
@@ -54,20 +58,23 @@ func TestUpstreamCompatiblityFailures(t *testing.T) {
 		}
 		filename := f.Name()
 		t.Run(filename, func(t *testing.T) {
+			t.Parallel()
 			if reason := exceptions[filename]; reason != "" {
 				t.Skip(reason)
 			}
-			cmd := exec.Command(upsteamCompilerName, "--ts", "./out.ts", "--files", filepath.Join(".", "testdata", "invalid", filename))
-			_, err := cmd.CombinedOutput()
+			outfile := "./compfail-" + filename + "-out.ts"
+			defer os.Remove(outfile)
+			cmd := exec.Command(upsteamCompilerName, "--ts", outfile, "--files", filepath.Join(".", "testdata", "invalid", filename))
+			err := cmd.Run()
 			if err == nil {
 				t.Fatalf("%s should have errored", upsteamCompilerName)
 			}
-			//fmt.Println(string(printed))
 		})
 	}
 }
 
 func TestIncompatibilityExpectations_200sc(t *testing.T) {
+	t.Parallel()
 	files, err := os.ReadDir(filepath.Join(".", "testdata", "incompatible"))
 	if err != nil {
 		t.Fatalf("failed to list incompatible files: %v", err)
@@ -93,6 +100,7 @@ func TestIncompatibilityExpectations_200sc(t *testing.T) {
 			continue
 		}
 		t.Run(filename, func(t *testing.T) {
+			t.Parallel()
 			f, err := os.Open(filepath.Join("testdata", "incompatible", filename))
 			if err != nil {
 				t.Fatalf("failed to open test file %s: %v", filename, err)
@@ -117,6 +125,7 @@ func TestIncompatibilityExpectations_200sc(t *testing.T) {
 }
 
 func TestIncompatibilityExpectations_Rainway(t *testing.T) {
+	t.Parallel()
 	if testing.Short() {
 		t.Skip("upstream tests skipped by --short")
 	}
@@ -146,7 +155,10 @@ func TestIncompatibilityExpectations_Rainway(t *testing.T) {
 			continue
 		}
 		t.Run(filename, func(t *testing.T) {
-			cmd := exec.Command(upsteamCompilerName, "--ts", "./out.ts", "--files", filepath.Join(".", "testdata", "incompatible", filename))
+			t.Parallel()
+			outfile := "./compexpect-" + filename + "-out.ts"
+			defer os.Remove(outfile)
+			cmd := exec.Command(upsteamCompilerName, "--ts", outfile, "--files", filepath.Join(".", "testdata", "incompatible", filename))
 			out, err := cmd.CombinedOutput()
 			bytes.TrimSuffix(out, []byte("\n"))
 

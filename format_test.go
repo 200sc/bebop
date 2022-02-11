@@ -25,9 +25,11 @@ var testFormatFiles = []string{
 }
 
 func TestTokenizeFormat(t *testing.T) {
+	t.Parallel()
 	for _, filename := range testFormatFiles {
 		filename := filename
 		t.Run(filename, func(t *testing.T) {
+			t.Parallel()
 			f, err := os.Open(filepath.Join("testdata", "base", filename+".bop"))
 			if err != nil {
 				t.Fatalf("failed to open test file %s: %v", filename+".bop", err)
@@ -58,9 +60,11 @@ var testIncompatibleFiles = []string{
 }
 
 func TestTokenizeFormatIncompatible(t *testing.T) {
+	t.Parallel()
 	for _, filename := range testIncompatibleFiles {
 		filename := filename
 		t.Run(filename, func(t *testing.T) {
+			t.Parallel()
 			f, err := os.Open(filepath.Join("testdata", "incompatible", filename+".bop"))
 			if err != nil {
 				t.Fatalf("failed to open test file %s: %v", filename+".bop", err)
