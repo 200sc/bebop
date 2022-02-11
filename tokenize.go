@@ -56,6 +56,8 @@ var singleCharTokens = map[byte]tokenKind{
 	',':  tokenKindComma,
 	';':  tokenKindSemicolon,
 	'\n': tokenKindNewline,
+	'|':  tokenKindVerticalBar,
+	'&':  tokenKindAmpersand,
 }
 
 func (tr *tokenReader) setNextToken(tk token) {
@@ -111,6 +113,44 @@ func (tr *tokenReader) Next() bool {
 		case ' ', '\t', '\r':
 			continue
 		// two token sequences
+		case '<':
+			b2, err := tr.readByte()
+			if err == io.EOF {
+				tr.err = fmt.Errorf("eof waiting for '[<]' after '<'")
+				return false
+			}
+			if err != nil {
+				tr.err = err
+				return false
+			}
+			if b2 != '<' {
+				tr.err = fmt.Errorf("unexpected token '%v' waiting for '[<]' after '<'", string(b2))
+				return false
+			}
+			tr.setNextToken(token{
+				concrete: []byte{b, b2},
+				kind:     tokenKindDoubleCaretLeft,
+			})
+			return true
+		case '>':
+			b2, err := tr.readByte()
+			if err == io.EOF {
+				tr.err = fmt.Errorf("eof waiting for '[>]' after '>'")
+				return false
+			}
+			if err != nil {
+				tr.err = err
+				return false
+			}
+			if b2 != '>' {
+				tr.err = fmt.Errorf("unexpected token '%v' waiting for '[>]' after '>'", string(b2))
+				return false
+			}
+			tr.setNextToken(token{
+				concrete: []byte{b, b2},
+				kind:     tokenKindDoubleCaretRight,
+			})
+			return true
 		case '/':
 			b2, err := tr.readByte()
 			if err == io.EOF {
@@ -226,6 +266,7 @@ func (tr *tokenReader) nextNumber(firstBytes []byte) bool {
 	}
 	// second byte is allowed to be 'x' for hex or '.' for floats
 	secondByte := true
+	hex := false
 	invalidLastChar := false
 	for {
 		b, err := tr.readByte()
@@ -243,6 +284,7 @@ func (tr *tokenReader) nextNumber(firstBytes []byte) bool {
 			return false
 		}
 		if secondByte && b == 'x' {
+			hex = true
 			invalidLastChar = true
 			tk.concrete = append(tk.concrete, b)
 		} else if b == '.' {
@@ -250,6 +292,9 @@ func (tr *tokenReader) nextNumber(firstBytes []byte) bool {
 			tk.concrete = append(tk.concrete, b)
 			tk.kind = tokenKindFloatLiteral
 		} else if isNumeric(b) {
+			invalidLastChar = false
+			tk.concrete = append(tk.concrete, b)
+		} else if hex && isHex(b) {
 			invalidLastChar = false
 			tk.concrete = append(tk.concrete, b)
 		} else if b == 'e' {
@@ -272,6 +317,11 @@ func (tr *tokenReader) nextNumber(firstBytes []byte) bool {
 	}
 }
 
+func isHex(b byte) bool {
+	return (b >= 'a' && b <= 'f') ||
+		(b >= 'A' && b <= 'F')
+}
+
 func isNumeric(b byte) bool {
 	return b >= 0x30 && b <= 0x39
 }
@@ -292,6 +342,7 @@ var keywords = map[string]tokenKind{
 	"true":       tokenKindTrue,
 	"false":      tokenKindFalse,
 	"import":     tokenKindImport,
+	"flags":      tokenKindFlags,
 }
 
 func (tr *tokenReader) nextIdent(firstRune rune) bool {
@@ -429,6 +480,5 @@ func (tr *tokenReader) Token() token {
 			}
 		}
 	}
-	//fmt.Println("tr:", tr.nextToken.kind.String(), string(tr.nextToken.concrete))
 	return tr.nextToken
 }

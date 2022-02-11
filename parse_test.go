@@ -13,6 +13,34 @@ func TestReadFile(t *testing.T) {
 	}
 	tcs := []testCase{
 		{
+			file: "bitflags",
+			expected: File{
+				Enums: []Enum{
+					{
+						Name: "TestFlags",
+						Options: []EnumOption{
+							{
+								Name:  "None",
+								Value: 0,
+							}, {
+								Name:  "Read",
+								Value: 1,
+							}, {
+								Name:  "Write",
+								Value: 2,
+							}, {
+								Name:  "ReadWrite",
+								Value: 1 | 2,
+							}, {
+								Name:  "Complex",
+								Value: (1 | 2) | 0xF0&0x1F,
+							},
+						},
+					},
+				},
+			},
+		},
+		{
 			file: "union_2",
 			expected: File{
 				Unions: []Union{
@@ -1472,8 +1500,8 @@ func TestReadFileError(t *testing.T) {
 		{file: "invalid_const_no_semi", errMessage: "[0:34] expected (Semicolon), got no token"},
 		{file: "invalid_const_float_no_semi", errMessage: "[0:37] expected (Semicolon), got no token"},
 		{file: "invalid_enum_with_op_code", errMessage: "[1:4] enums may not have attached op codes"},
-		{file: "invalid_op_code_1", errMessage: "[0:2] expected (OpCode) got Close Square"},
-		{file: "invalid_op_code_2", errMessage: "[0:6] expected (OpCode) got Ident"},
+		{file: "invalid_op_code_1", errMessage: "[0:2] expected (OpCode, Flags) got Close Square"},
+		{file: "invalid_op_code_2", errMessage: "[0:6] expected (OpCode, Flags) got Ident"},
 		{file: "invalid_op_code_3", errMessage: "[0:15] opcode string \"12345\" exceeds 4 ascii characters"},
 		{file: "invalid_op_code_4", errMessage: "[0:8] expected (Open Paren) got Open Square"},
 		{file: "invalid_op_code_5", errMessage: "[0:81] strconv.ParseInt: parsing \"1111111111111111111111111111111111111111111111111111111111111111111111111\": value out of range"},
