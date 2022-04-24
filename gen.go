@@ -394,6 +394,12 @@ func (f File) Generate(w io.Writer, settings GenerateSettings) error {
 	writeLine(w, "")
 	writeLine(w, "package %s", settings.PackageName)
 	writeLine(w, "")
+
+	if len(f.Messages)+len(f.Structs)+len(f.Unions) != 0 {
+		imports = append(imports, "github.com/200sc/bebop")
+		imports = append(imports, "github.com/200sc/bebop/iohelp")
+	}
+
 	if len(f.Messages)+len(f.Structs)+len(f.Unions) != 0 {
 		imports = append(imports, "io")
 	}
@@ -406,10 +412,7 @@ func (f File) Generate(w io.Writer, settings GenerateSettings) error {
 	if usedTypes[typeDate] {
 		imports = append(imports, "time")
 	}
-	if len(f.Messages)+len(f.Structs)+len(f.Unions) != 0 {
-		imports = append(imports, "github.com/200sc/bebop")
-		imports = append(imports, "github.com/200sc/bebop/iohelp")
-	}
+
 	if len(imports) != 0 {
 		writeLine(w, "import (")
 		for _, i := range imports {
@@ -582,7 +585,7 @@ func writeFieldByter(name string, typ FieldType, w io.Writer, settings GenerateS
 
 func writeLengthCheck(w io.Writer, ln string, depth int, args ...string) {
 	writeLineWithTabs(w, "if len(buf[at:]) < "+ln+" {", depth, args...)
-	writeLineWithTabs(w, "\t return io.ErrUnexpectedEOF", depth, args...)
+	writeLineWithTabs(w, "\treturn io.ErrUnexpectedEOF", depth, args...)
 	writeLineWithTabs(w, "}", depth, args...)
 }
 

@@ -3,9 +3,9 @@
 package generated
 
 import (
-	"io"
 	"github.com/200sc/bebop"
 	"github.com/200sc/bebop/iohelp"
+	"io"
 )
 
 var _ bebop.Record = &ReadOnlyMap{}
@@ -48,12 +48,12 @@ func (bbp *ReadOnlyMap) UnmarshalBebop(buf []byte) (err error) {
 			(*bbp.Vals) = make(map[string]uint8,ln1)
 			for i := uint32(0); i < ln1; i++ {
 				k3, err := iohelp.ReadStringBytes(buf[at:])
-				if err != nil{
+				if err != nil {
 					return err
 				}
 				at += 4 + len(k3)
 				if len(buf[at:]) < 1 {
-					 return io.ErrUnexpectedEOF
+					return io.ErrUnexpectedEOF
 				}
 				((*bbp.Vals))[k3] = iohelp.ReadUint8Bytes(buf[at:])
 				at += 1

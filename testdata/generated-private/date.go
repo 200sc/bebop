@@ -3,10 +3,10 @@
 package generated
 
 import (
-	"io"
-	"time"
 	"github.com/200sc/bebop"
 	"github.com/200sc/bebop/iohelp"
+	"io"
+	"time"
 )
 
 var _ bebop.Record = &myObj{}
@@ -24,7 +24,7 @@ func (bbp myObj) MarshalBebopTo(buf []byte) int {
 		buf[at] = 1
 		at++
 		if *bbp.start != (time.Time{}) {
-			iohelp.WriteInt64Bytes(buf[at:], ((*bbp.start).UnixNano()/100))
+			iohelp.WriteInt64Bytes(buf[at:], ((*bbp.start).UnixNano() / 100))
 		} else {
 			iohelp.WriteInt64Bytes(buf[at:], 0)
 		}
@@ -34,7 +34,7 @@ func (bbp myObj) MarshalBebopTo(buf []byte) int {
 		buf[at] = 2
 		at++
 		if *bbp.end != (time.Time{}) {
-			iohelp.WriteInt64Bytes(buf[at:], ((*bbp.end).UnixNano()/100))
+			iohelp.WriteInt64Bytes(buf[at:], ((*bbp.end).UnixNano() / 100))
 		} else {
 			iohelp.WriteInt64Bytes(buf[at:], 0)
 		}
@@ -53,7 +53,7 @@ func (bbp *myObj) UnmarshalBebop(buf []byte) (err error) {
 			at += 1
 			bbp.start = new(time.Time)
 			if len(buf[at:]) < 8 {
-				 return io.ErrUnexpectedEOF
+				return io.ErrUnexpectedEOF
 			}
 			(*bbp.start) = iohelp.ReadDateBytes(buf[at:])
 			at += 8
@@ -61,7 +61,7 @@ func (bbp *myObj) UnmarshalBebop(buf []byte) (err error) {
 			at += 1
 			bbp.end = new(time.Time)
 			if len(buf[at:]) < 8 {
-				 return io.ErrUnexpectedEOF
+				return io.ErrUnexpectedEOF
 			}
 			(*bbp.end) = iohelp.ReadDateBytes(buf[at:])
 			at += 8
@@ -99,7 +99,7 @@ func (bbp myObj) EncodeBebop(iow io.Writer) (err error) {
 	if bbp.start != nil {
 		w.Write([]byte{1})
 		if *bbp.start != (time.Time{}) {
-			iohelp.WriteInt64(w, ((*bbp.start).UnixNano()/100))
+			iohelp.WriteInt64(w, ((*bbp.start).UnixNano() / 100))
 		} else {
 			iohelp.WriteInt64(w, 0)
 		}
@@ -107,7 +107,7 @@ func (bbp myObj) EncodeBebop(iow io.Writer) (err error) {
 	if bbp.end != nil {
 		w.Write([]byte{2})
 		if *bbp.end != (time.Time{}) {
-			iohelp.WriteInt64(w, ((*bbp.end).UnixNano()/100))
+			iohelp.WriteInt64(w, ((*bbp.end).UnixNano() / 100))
 		} else {
 			iohelp.WriteInt64(w, 0)
 		}

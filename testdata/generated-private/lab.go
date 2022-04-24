@@ -3,9 +3,9 @@
 package generated
 
 import (
-	"io"
 	"github.com/200sc/bebop"
 	"github.com/200sc/bebop/iohelp"
+	"io"
 )
 
 type videoCodec uint32
@@ -35,12 +35,12 @@ func (bbp int32s) MarshalBebopTo(buf []byte) int {
 func (bbp *int32s) UnmarshalBebop(buf []byte) (err error) {
 	at := 0
 	if len(buf[at:]) < 4 {
-		 return io.ErrUnexpectedEOF
+		return io.ErrUnexpectedEOF
 	}
 	bbp.a = make([]int32, iohelp.ReadUint32Bytes(buf[at:]))
 	at += 4
 	if len(buf[at:]) < len(bbp.a)*4 {
-		 return io.ErrUnexpectedEOF
+		return io.ErrUnexpectedEOF
 	}
 	for i1 := range bbp.a {
 		(bbp.a)[i1] = iohelp.ReadInt32Bytes(buf[at:])
@@ -128,12 +128,12 @@ func (bbp uint32s) MarshalBebopTo(buf []byte) int {
 func (bbp *uint32s) UnmarshalBebop(buf []byte) (err error) {
 	at := 0
 	if len(buf[at:]) < 4 {
-		 return io.ErrUnexpectedEOF
+		return io.ErrUnexpectedEOF
 	}
 	bbp.a = make([]uint32, iohelp.ReadUint32Bytes(buf[at:]))
 	at += 4
 	if len(buf[at:]) < len(bbp.a)*4 {
-		 return io.ErrUnexpectedEOF
+		return io.ErrUnexpectedEOF
 	}
 	for i1 := range bbp.a {
 		(bbp.a)[i1] = iohelp.ReadUint32Bytes(buf[at:])
@@ -221,12 +221,12 @@ func (bbp float32s) MarshalBebopTo(buf []byte) int {
 func (bbp *float32s) UnmarshalBebop(buf []byte) (err error) {
 	at := 0
 	if len(buf[at:]) < 4 {
-		 return io.ErrUnexpectedEOF
+		return io.ErrUnexpectedEOF
 	}
 	bbp.a = make([]float32, iohelp.ReadUint32Bytes(buf[at:]))
 	at += 4
 	if len(buf[at:]) < len(bbp.a)*4 {
-		 return io.ErrUnexpectedEOF
+		return io.ErrUnexpectedEOF
 	}
 	for i1 := range bbp.a {
 		(bbp.a)[i1] = iohelp.ReadFloat32Bytes(buf[at:])
@@ -314,12 +314,12 @@ func (bbp int64s) MarshalBebopTo(buf []byte) int {
 func (bbp *int64s) UnmarshalBebop(buf []byte) (err error) {
 	at := 0
 	if len(buf[at:]) < 4 {
-		 return io.ErrUnexpectedEOF
+		return io.ErrUnexpectedEOF
 	}
 	bbp.a = make([]int64, iohelp.ReadUint32Bytes(buf[at:]))
 	at += 4
 	if len(buf[at:]) < len(bbp.a)*8 {
-		 return io.ErrUnexpectedEOF
+		return io.ErrUnexpectedEOF
 	}
 	for i1 := range bbp.a {
 		(bbp.a)[i1] = iohelp.ReadInt64Bytes(buf[at:])
@@ -407,12 +407,12 @@ func (bbp uint64s) MarshalBebopTo(buf []byte) int {
 func (bbp *uint64s) UnmarshalBebop(buf []byte) (err error) {
 	at := 0
 	if len(buf[at:]) < 4 {
-		 return io.ErrUnexpectedEOF
+		return io.ErrUnexpectedEOF
 	}
 	bbp.a = make([]uint64, iohelp.ReadUint32Bytes(buf[at:]))
 	at += 4
 	if len(buf[at:]) < len(bbp.a)*8 {
-		 return io.ErrUnexpectedEOF
+		return io.ErrUnexpectedEOF
 	}
 	for i1 := range bbp.a {
 		(bbp.a)[i1] = iohelp.ReadUint64Bytes(buf[at:])
@@ -500,12 +500,12 @@ func (bbp float64s) MarshalBebopTo(buf []byte) int {
 func (bbp *float64s) UnmarshalBebop(buf []byte) (err error) {
 	at := 0
 	if len(buf[at:]) < 4 {
-		 return io.ErrUnexpectedEOF
+		return io.ErrUnexpectedEOF
 	}
 	bbp.a = make([]float64, iohelp.ReadUint32Bytes(buf[at:]))
 	at += 4
 	if len(buf[at:]) < len(bbp.a)*8 {
-		 return io.ErrUnexpectedEOF
+		return io.ErrUnexpectedEOF
 	}
 	for i1 := range bbp.a {
 		(bbp.a)[i1] = iohelp.ReadFloat64Bytes(buf[at:])
@@ -600,27 +600,27 @@ func (bbp videoData) MarshalBebopTo(buf []byte) int {
 func (bbp *videoData) UnmarshalBebop(buf []byte) (err error) {
 	at := 0
 	if len(buf[at:]) < 8 {
-		 return io.ErrUnexpectedEOF
+		return io.ErrUnexpectedEOF
 	}
 	bbp.time = iohelp.ReadFloat64Bytes(buf[at:])
 	at += 8
 	if len(buf[at:]) < 4 {
-		 return io.ErrUnexpectedEOF
+		return io.ErrUnexpectedEOF
 	}
 	bbp.width = iohelp.ReadUint32Bytes(buf[at:])
 	at += 4
 	if len(buf[at:]) < 4 {
-		 return io.ErrUnexpectedEOF
+		return io.ErrUnexpectedEOF
 	}
 	bbp.height = iohelp.ReadUint32Bytes(buf[at:])
 	at += 4
 	if len(buf[at:]) < 4 {
-		 return io.ErrUnexpectedEOF
+		return io.ErrUnexpectedEOF
 	}
 	bbp.fragment = make([]byte, iohelp.ReadUint32Bytes(buf[at:]))
 	at += 4
 	if len(buf[at:]) < len(bbp.fragment)*1 {
-		 return io.ErrUnexpectedEOF
+		return io.ErrUnexpectedEOF
 	}
 	copy(bbp.fragment, buf[at:at+len(bbp.fragment)])
 	at += len(bbp.fragment)
@@ -740,7 +740,7 @@ func (bbp *mediaMessage) UnmarshalBebop(buf []byte) (err error) {
 			at += 1
 			bbp.data = new(videoData)
 			(*bbp.data) = mustMakevideoDataFromBytes(buf[at:])
-			if err != nil{
+			if err != nil {
 				return err
 			}
 			at += ((*bbp.data)).Size()
@@ -782,7 +782,7 @@ func (bbp mediaMessage) EncodeBebop(iow io.Writer) (err error) {
 	if bbp.data != nil {
 		w.Write([]byte{2})
 		err = (*bbp.data).EncodeBebop(w)
-		if err != nil{
+		if err != nil {
 			return err
 		}
 	}
@@ -802,7 +802,7 @@ func (bbp *mediaMessage) DecodeBebop(ior io.Reader) (err error) {
 		case 2:
 			bbp.data = new(videoData)
 			(*bbp.data), err = makevideoData(r)
-			if err != nil{
+			if err != nil {
 				return err
 			}
 		default:
@@ -886,7 +886,7 @@ func (bbp *skipTestOld) UnmarshalBebop(buf []byte) (err error) {
 			at += 1
 			bbp.x = new(int32)
 			if len(buf[at:]) < 4 {
-				 return io.ErrUnexpectedEOF
+				return io.ErrUnexpectedEOF
 			}
 			(*bbp.x) = iohelp.ReadInt32Bytes(buf[at:])
 			at += 4
@@ -894,7 +894,7 @@ func (bbp *skipTestOld) UnmarshalBebop(buf []byte) (err error) {
 			at += 1
 			bbp.y = new(int32)
 			if len(buf[at:]) < 4 {
-				 return io.ErrUnexpectedEOF
+				return io.ErrUnexpectedEOF
 			}
 			(*bbp.y) = iohelp.ReadInt32Bytes(buf[at:])
 			at += 4
@@ -1040,7 +1040,7 @@ func (bbp *skipTestNew) UnmarshalBebop(buf []byte) (err error) {
 			at += 1
 			bbp.x = new(int32)
 			if len(buf[at:]) < 4 {
-				 return io.ErrUnexpectedEOF
+				return io.ErrUnexpectedEOF
 			}
 			(*bbp.x) = iohelp.ReadInt32Bytes(buf[at:])
 			at += 4
@@ -1048,7 +1048,7 @@ func (bbp *skipTestNew) UnmarshalBebop(buf []byte) (err error) {
 			at += 1
 			bbp.y = new(int32)
 			if len(buf[at:]) < 4 {
-				 return io.ErrUnexpectedEOF
+				return io.ErrUnexpectedEOF
 			}
 			(*bbp.y) = iohelp.ReadInt32Bytes(buf[at:])
 			at += 4
@@ -1056,7 +1056,7 @@ func (bbp *skipTestNew) UnmarshalBebop(buf []byte) (err error) {
 			at += 1
 			bbp.z = new(int32)
 			if len(buf[at:]) < 4 {
-				 return io.ErrUnexpectedEOF
+				return io.ErrUnexpectedEOF
 			}
 			(*bbp.z) = iohelp.ReadInt32Bytes(buf[at:])
 			at += 4
@@ -1211,7 +1211,7 @@ func (bbp *skipTestOldContainer) UnmarshalBebop(buf []byte) (err error) {
 			at += 1
 			bbp.s = new(skipTestOld)
 			(*bbp.s) = mustMakeskipTestOldFromBytes(buf[at:])
-			if err != nil{
+			if err != nil {
 				return err
 			}
 			at += ((*bbp.s)).Size()
@@ -1219,7 +1219,7 @@ func (bbp *skipTestOldContainer) UnmarshalBebop(buf []byte) (err error) {
 			at += 1
 			bbp.after = new(int32)
 			if len(buf[at:]) < 4 {
-				 return io.ErrUnexpectedEOF
+				return io.ErrUnexpectedEOF
 			}
 			(*bbp.after) = iohelp.ReadInt32Bytes(buf[at:])
 			at += 4
@@ -1257,7 +1257,7 @@ func (bbp skipTestOldContainer) EncodeBebop(iow io.Writer) (err error) {
 	if bbp.s != nil {
 		w.Write([]byte{1})
 		err = (*bbp.s).EncodeBebop(w)
-		if err != nil{
+		if err != nil {
 			return err
 		}
 	}
@@ -1278,7 +1278,7 @@ func (bbp *skipTestOldContainer) DecodeBebop(ior io.Reader) (err error) {
 		case 1:
 			bbp.s = new(skipTestOld)
 			(*bbp.s), err = makeskipTestOld(r)
-			if err != nil{
+			if err != nil {
 				return err
 			}
 		case 2:
@@ -1364,7 +1364,7 @@ func (bbp *skipTestNewContainer) UnmarshalBebop(buf []byte) (err error) {
 			at += 1
 			bbp.s = new(skipTestNew)
 			(*bbp.s) = mustMakeskipTestNewFromBytes(buf[at:])
-			if err != nil{
+			if err != nil {
 				return err
 			}
 			at += ((*bbp.s)).Size()
@@ -1372,7 +1372,7 @@ func (bbp *skipTestNewContainer) UnmarshalBebop(buf []byte) (err error) {
 			at += 1
 			bbp.after = new(int32)
 			if len(buf[at:]) < 4 {
-				 return io.ErrUnexpectedEOF
+				return io.ErrUnexpectedEOF
 			}
 			(*bbp.after) = iohelp.ReadInt32Bytes(buf[at:])
 			at += 4
@@ -1410,7 +1410,7 @@ func (bbp skipTestNewContainer) EncodeBebop(iow io.Writer) (err error) {
 	if bbp.s != nil {
 		w.Write([]byte{1})
 		err = (*bbp.s).EncodeBebop(w)
-		if err != nil{
+		if err != nil {
 			return err
 		}
 	}
@@ -1431,7 +1431,7 @@ func (bbp *skipTestNewContainer) DecodeBebop(ior io.Reader) (err error) {
 		case 1:
 			bbp.s = new(skipTestNew)
 			(*bbp.s), err = makeskipTestNew(r)
-			if err != nil{
+			if err != nil {
 				return err
 			}
 		case 2:

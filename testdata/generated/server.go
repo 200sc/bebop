@@ -3,9 +3,9 @@
 package generated
 
 import (
-	"io"
 	"github.com/200sc/bebop"
 	"github.com/200sc/bebop/iohelp"
+	"io"
 )
 
 var _ bebop.Record = &Print{}
@@ -25,7 +25,7 @@ func (bbp Print) MarshalBebopTo(buf []byte) int {
 func (bbp *Print) UnmarshalBebop(buf []byte) (err error) {
 	at := 0
 	bbp.Printout, err = iohelp.ReadStringBytes(buf[at:])
-	if err != nil{
+	if err != nil {
 		return err
 	}
 	at += 4 + len(bbp.Printout)
@@ -100,12 +100,12 @@ func (bbp Add) MarshalBebopTo(buf []byte) int {
 func (bbp *Add) UnmarshalBebop(buf []byte) (err error) {
 	at := 0
 	if len(buf[at:]) < 4 {
-		 return io.ErrUnexpectedEOF
+		return io.ErrUnexpectedEOF
 	}
 	bbp.A = iohelp.ReadInt32Bytes(buf[at:])
 	at += 4
 	if len(buf[at:]) < 4 {
-		 return io.ErrUnexpectedEOF
+		return io.ErrUnexpectedEOF
 	}
 	bbp.B = iohelp.ReadInt32Bytes(buf[at:])
 	at += 4
@@ -181,7 +181,7 @@ func (bbp AddResponse) MarshalBebopTo(buf []byte) int {
 func (bbp *AddResponse) UnmarshalBebop(buf []byte) (err error) {
 	at := 0
 	if len(buf[at:]) < 4 {
-		 return io.ErrUnexpectedEOF
+		return io.ErrUnexpectedEOF
 	}
 	bbp.C = iohelp.ReadInt32Bytes(buf[at:])
 	at += 4
@@ -267,7 +267,7 @@ func (bbp *PrintRequest) UnmarshalBebop(buf []byte) (err error) {
 			at += 1
 			bbp.Print = new(Print)
 			(*bbp.Print) = MustMakePrintFromBytes(buf[at:])
-			if err != nil{
+			if err != nil {
 				return err
 			}
 			at += ((*bbp.Print)).Size()
@@ -300,7 +300,7 @@ func (bbp PrintRequest) EncodeBebop(iow io.Writer) (err error) {
 	if bbp.Print != nil {
 		w.Write([]byte{1})
 		err = (*bbp.Print).EncodeBebop(w)
-		if err != nil{
+		if err != nil {
 			return err
 		}
 	}
@@ -317,7 +317,7 @@ func (bbp *PrintRequest) DecodeBebop(ior io.Reader) (err error) {
 		case 1:
 			bbp.Print = new(Print)
 			(*bbp.Print), err = MakePrint(r)
-			if err != nil{
+			if err != nil {
 				return err
 			}
 		default:
@@ -391,7 +391,7 @@ func (bbp *AddRequest) UnmarshalBebop(buf []byte) (err error) {
 			at += 1
 			bbp.Add = new(Add)
 			(*bbp.Add) = MustMakeAddFromBytes(buf[at:])
-			if err != nil{
+			if err != nil {
 				return err
 			}
 			at += ((*bbp.Add)).Size()
@@ -424,7 +424,7 @@ func (bbp AddRequest) EncodeBebop(iow io.Writer) (err error) {
 	if bbp.Add != nil {
 		w.Write([]byte{1})
 		err = (*bbp.Add).EncodeBebop(w)
-		if err != nil{
+		if err != nil {
 			return err
 		}
 	}
@@ -441,7 +441,7 @@ func (bbp *AddRequest) DecodeBebop(ior io.Reader) (err error) {
 		case 1:
 			bbp.Add = new(Add)
 			(*bbp.Add), err = MakeAdd(r)
-			if err != nil{
+			if err != nil {
 				return err
 			}
 		default:

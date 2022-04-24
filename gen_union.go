@@ -103,7 +103,7 @@ func (u Union) generateDecodeBebop(w io.Writer, settings GenerateSettings, field
 	writeLine(w, "func (bbp *%s) DecodeBebop(ior io.Reader) (err error) {", exposedName)
 	writeLine(w, "\tr := iohelp.NewErrorReader(ior)")
 	writeLine(w, "\tbodyLen := iohelp.ReadUint32(r)")
-	writeLine(w, "\tr.Reader = &io.LimitedReader{R:r.Reader, N:int64(bodyLen)+1}")
+	writeLine(w, "\tr.Reader = &io.LimitedReader{R: r.Reader, N: int64(bodyLen) + 1}")
 	writeLine(w, "\tfor {")
 	writeLine(w, "\t\tswitch iohelp.ReadByte(r) {")
 	for _, fd := range fields {

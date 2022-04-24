@@ -139,11 +139,12 @@ func (st Struct) generateReadOnlyGetters(w io.Writer, settings GenerateSettings)
 		writeLine(w, "\treturn bbp.%s", unexposeName(fd.Name))
 		writeCloseBlock(w)
 	}
-	writeLine(w, "func New%s(", exposedName)
+	newFmt := exposeName("New", settings)
+	writeLine(w, "func %s%s(", newFmt, exposedName)
 	for _, fd := range st.Fields {
 		writeLine(w, "\t\t%s %s,", unexposeName(fd.Name), fd.FieldType.goString(settings))
 	}
-	writeLine(w, "\t) %s {", exposedName)
+	writeLine(w, ") %s {", exposedName)
 	writeLine(w, "\treturn %s{", exposedName)
 	for _, fd := range st.Fields {
 		writeLine(w, "\t\t%s: %s,", unexposeName(fd.Name), unexposeName(fd.Name))

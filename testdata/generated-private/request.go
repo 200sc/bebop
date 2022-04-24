@@ -3,9 +3,9 @@
 package generated
 
 import (
-	"io"
 	"github.com/200sc/bebop"
 	"github.com/200sc/bebop/iohelp"
+	"io"
 )
 
 type furnitureFamily uint32
@@ -39,12 +39,12 @@ func (bbp furniture) MarshalBebopTo(buf []byte) int {
 func (bbp *furniture) UnmarshalBebop(buf []byte) (err error) {
 	at := 0
 	bbp.name, err = iohelp.ReadStringBytes(buf[at:])
-	if err != nil{
+	if err != nil {
 		return err
 	}
 	at += 4 + len(bbp.name)
 	if len(buf[at:]) < 4 {
-		 return io.ErrUnexpectedEOF
+		return io.ErrUnexpectedEOF
 	}
 	bbp.price = iohelp.ReadUint32Bytes(buf[at:])
 	at += 4
@@ -124,11 +124,11 @@ func (bbp furniture) Getfamily() furnitureFamily {
 	return bbp.family
 }
 
-func Newfurniture(
+func newfurniture(
 		name string,
 		price uint32,
 		family furnitureFamily,
-	) furniture {
+) furniture {
 	return furniture{
 		name: name,
 		price: price,
@@ -158,13 +158,13 @@ func (bbp requestResponse) MarshalBebopTo(buf []byte) int {
 func (bbp *requestResponse) UnmarshalBebop(buf []byte) (err error) {
 	at := 0
 	if len(buf[at:]) < 4 {
-		 return io.ErrUnexpectedEOF
+		return io.ErrUnexpectedEOF
 	}
 	bbp.availableFurniture = make([]furniture, iohelp.ReadUint32Bytes(buf[at:]))
 	at += 4
 	for i1 := range bbp.availableFurniture {
 		(bbp.availableFurniture)[i1] = mustMakefurnitureFromBytes(buf[at:])
-		if err != nil{
+		if err != nil {
 			return err
 		}
 		at += ((bbp.availableFurniture)[i1]).Size()
@@ -187,7 +187,7 @@ func (bbp requestResponse) EncodeBebop(iow io.Writer) (err error) {
 	iohelp.WriteUint32(w, uint32(len(bbp.availableFurniture)))
 	for _, elem := range bbp.availableFurniture {
 		err = (elem).EncodeBebop(w)
-		if err != nil{
+		if err != nil {
 			return err
 		}
 	}
@@ -199,7 +199,7 @@ func (bbp *requestResponse) DecodeBebop(ior io.Reader) (err error) {
 	bbp.availableFurniture = make([]furniture, iohelp.ReadUint32(r))
 	for i1 := range bbp.availableFurniture {
 		((bbp.availableFurniture[i1])), err = makefurniture(r)
-		if err != nil{
+		if err != nil {
 			return err
 		}
 	}
@@ -243,9 +243,9 @@ func (bbp requestResponse) GetavailableFurniture() []furniture {
 	return bbp.availableFurniture
 }
 
-func NewrequestResponse(
+func newrequestResponse(
 		availableFurniture []furniture,
-	) requestResponse {
+) requestResponse {
 	return requestResponse{
 		availableFurniture: availableFurniture,
 	}
@@ -289,7 +289,7 @@ func (bbp *requestCatalog) UnmarshalBebop(buf []byte) (err error) {
 			at += 1
 			bbp.secretTunnel = new(string)
 			(*bbp.secretTunnel), err = iohelp.ReadStringBytes(buf[at:])
-			if err != nil{
+			if err != nil {
 				return err
 			}
 			at += 4 + len((*bbp.secretTunnel))

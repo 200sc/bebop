@@ -3,9 +3,9 @@
 package generated
 
 import (
-	"io"
 	"github.com/200sc/bebop"
 	"github.com/200sc/bebop/iohelp"
+	"io"
 )
 
 var _ bebop.Record = &TaggedStruct{}
@@ -25,7 +25,7 @@ func (bbp TaggedStruct) MarshalBebopTo(buf []byte) int {
 func (bbp *TaggedStruct) UnmarshalBebop(buf []byte) (err error) {
 	at := 0
 	bbp.Foo, err = iohelp.ReadStringBytes(buf[at:])
-	if err != nil{
+	if err != nil {
 		return err
 	}
 	at += 4 + len(bbp.Foo)
@@ -110,7 +110,7 @@ func (bbp *TaggedMessage) UnmarshalBebop(buf []byte) (err error) {
 			at += 1
 			bbp.Bar = new(uint8)
 			if len(buf[at:]) < 1 {
-				 return io.ErrUnexpectedEOF
+				return io.ErrUnexpectedEOF
 			}
 			(*bbp.Bar) = iohelp.ReadUint8Bytes(buf[at:])
 			at += 1
@@ -213,7 +213,7 @@ func (bbp TaggedSubStruct) MarshalBebopTo(buf []byte) int {
 func (bbp *TaggedSubStruct) UnmarshalBebop(buf []byte) (err error) {
 	at := 0
 	if len(buf[at:]) < 16 {
-		 return io.ErrUnexpectedEOF
+		return io.ErrUnexpectedEOF
 	}
 	bbp.Biz = iohelp.ReadGUIDBytes(buf[at:])
 	at += 16
@@ -301,7 +301,7 @@ func (bbp *TaggedUnion) UnmarshalBebop(buf []byte) (err error) {
 			at += 1
 			bbp.TaggedSubStruct = new(TaggedSubStruct)
 			(*bbp.TaggedSubStruct) = MustMakeTaggedSubStructFromBytes(buf[at:])
-			if err != nil{
+			if err != nil {
 				return err
 			}
 			at += ((*bbp.TaggedSubStruct)).Size()
@@ -336,7 +336,7 @@ func (bbp TaggedUnion) EncodeBebop(iow io.Writer) (err error) {
 	if bbp.TaggedSubStruct != nil {
 		w.Write([]byte{1})
 		err = (*bbp.TaggedSubStruct).EncodeBebop(w)
-		if err != nil{
+		if err != nil {
 			return err
 		}
 		return w.Err
@@ -347,13 +347,13 @@ func (bbp TaggedUnion) EncodeBebop(iow io.Writer) (err error) {
 func (bbp *TaggedUnion) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
 	bodyLen := iohelp.ReadUint32(r)
-	r.Reader = &io.LimitedReader{R:r.Reader, N:int64(bodyLen)+1}
+	r.Reader = &io.LimitedReader{R: r.Reader, N: int64(bodyLen) + 1}
 	for {
 		switch iohelp.ReadByte(r) {
 		case 1:
 			bbp.TaggedSubStruct = new(TaggedSubStruct)
 			(*bbp.TaggedSubStruct), err = MakeTaggedSubStruct(r)
-			if err != nil{
+			if err != nil {
 				return err
 			}
 			io.ReadAll(r)

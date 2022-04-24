@@ -4,9 +4,9 @@ package generated
 
 import (
 	"github.com/200sc/bebop/testdata/incompatible/generatedtwo"
-	"io"
 	"github.com/200sc/bebop"
 	"github.com/200sc/bebop/iohelp"
+	"io"
 )
 
 const (
@@ -29,7 +29,7 @@ func (bbp UsesImport) MarshalBebopTo(buf []byte) int {
 func (bbp *UsesImport) UnmarshalBebop(buf []byte) (err error) {
 	at := 0
 	bbp.Imported = generatedtwo.MustMakeImportedTypeFromBytes(buf[at:])
-	if err != nil{
+	if err != nil {
 		return err
 	}
 	at += (bbp.Imported).Size()
@@ -45,7 +45,7 @@ func (bbp *UsesImport) MustUnmarshalBebop(buf []byte) {
 func (bbp UsesImport) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
 	err = (bbp.Imported).EncodeBebop(w)
-	if err != nil{
+	if err != nil {
 		return err
 	}
 	return w.Err
@@ -54,7 +54,7 @@ func (bbp UsesImport) EncodeBebop(iow io.Writer) (err error) {
 func (bbp *UsesImport) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
 	(bbp.Imported), err = generatedtwo.MakeImportedType(r)
-	if err != nil{
+	if err != nil {
 		return err
 	}
 	return r.Err
@@ -119,7 +119,7 @@ func (bbp *UsesImportMsg) UnmarshalBebop(buf []byte) (err error) {
 			at += 1
 			bbp.Imported = new(generatedtwo.ImportedType)
 			(*bbp.Imported) = generatedtwo.MustMakeImportedTypeFromBytes(buf[at:])
-			if err != nil{
+			if err != nil {
 				return err
 			}
 			at += ((*bbp.Imported)).Size()
@@ -152,7 +152,7 @@ func (bbp UsesImportMsg) EncodeBebop(iow io.Writer) (err error) {
 	if bbp.Imported != nil {
 		w.Write([]byte{1})
 		err = (*bbp.Imported).EncodeBebop(w)
-		if err != nil{
+		if err != nil {
 			return err
 		}
 	}
@@ -169,7 +169,7 @@ func (bbp *UsesImportMsg) DecodeBebop(ior io.Reader) (err error) {
 		case 1:
 			bbp.Imported = new(generatedtwo.ImportedType)
 			(*bbp.Imported), err = generatedtwo.MakeImportedType(r)
-			if err != nil{
+			if err != nil {
 				return err
 			}
 		default:
@@ -434,7 +434,7 @@ func (bbp *UsesImportUnion) UnmarshalBebop(buf []byte) (err error) {
 			at += 1
 			bbp.UnionStruct = new(UnionStruct)
 			(*bbp.UnionStruct) = MustMakeUnionStructFromBytes(buf[at:])
-			if err != nil{
+			if err != nil {
 				return err
 			}
 			at += ((*bbp.UnionStruct)).Size()
@@ -443,7 +443,7 @@ func (bbp *UsesImportUnion) UnmarshalBebop(buf []byte) (err error) {
 			at += 1
 			bbp.UnionMessage = new(UnionMessage)
 			(*bbp.UnionMessage) = MustMakeUnionMessageFromBytes(buf[at:])
-			if err != nil{
+			if err != nil {
 				return err
 			}
 			at += ((*bbp.UnionMessage)).Size()
@@ -484,7 +484,7 @@ func (bbp UsesImportUnion) EncodeBebop(iow io.Writer) (err error) {
 	if bbp.UnionStruct != nil {
 		w.Write([]byte{1})
 		err = (*bbp.UnionStruct).EncodeBebop(w)
-		if err != nil{
+		if err != nil {
 			return err
 		}
 		return w.Err
@@ -492,7 +492,7 @@ func (bbp UsesImportUnion) EncodeBebop(iow io.Writer) (err error) {
 	if bbp.UnionMessage != nil {
 		w.Write([]byte{2})
 		err = (*bbp.UnionMessage).EncodeBebop(w)
-		if err != nil{
+		if err != nil {
 			return err
 		}
 		return w.Err
@@ -503,13 +503,13 @@ func (bbp UsesImportUnion) EncodeBebop(iow io.Writer) (err error) {
 func (bbp *UsesImportUnion) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
 	bodyLen := iohelp.ReadUint32(r)
-	r.Reader = &io.LimitedReader{R:r.Reader, N:int64(bodyLen)+1}
+	r.Reader = &io.LimitedReader{R: r.Reader, N: int64(bodyLen) + 1}
 	for {
 		switch iohelp.ReadByte(r) {
 		case 1:
 			bbp.UnionStruct = new(UnionStruct)
 			(*bbp.UnionStruct), err = MakeUnionStruct(r)
-			if err != nil{
+			if err != nil {
 				return err
 			}
 			io.ReadAll(r)
@@ -517,7 +517,7 @@ func (bbp *UsesImportUnion) DecodeBebop(ior io.Reader) (err error) {
 		case 2:
 			bbp.UnionMessage = new(UnionMessage)
 			(*bbp.UnionMessage), err = MakeUnionMessage(r)
-			if err != nil{
+			if err != nil {
 				return err
 			}
 			io.ReadAll(r)

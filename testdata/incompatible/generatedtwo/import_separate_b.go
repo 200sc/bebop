@@ -3,9 +3,9 @@
 package generatedtwo
 
 import (
-	"io"
 	"github.com/200sc/bebop"
 	"github.com/200sc/bebop/iohelp"
+	"io"
 )
 
 const (
@@ -35,7 +35,7 @@ func (bbp ImportedType) MarshalBebopTo(buf []byte) int {
 func (bbp *ImportedType) UnmarshalBebop(buf []byte) (err error) {
 	at := 0
 	bbp.Foobar, err = iohelp.ReadStringBytes(buf[at:])
-	if err != nil{
+	if err != nil {
 		return err
 	}
 	at += 4 + len(bbp.Foobar)
@@ -139,7 +139,7 @@ func (bbp *ImportedMessage) UnmarshalBebop(buf []byte) (err error) {
 			at += 1
 			bbp.Bar = new(ImportedType)
 			(*bbp.Bar) = MustMakeImportedTypeFromBytes(buf[at:])
-			if err != nil{
+			if err != nil {
 				return err
 			}
 			at += ((*bbp.Bar)).Size()
@@ -147,7 +147,7 @@ func (bbp *ImportedMessage) UnmarshalBebop(buf []byte) (err error) {
 			at += 1
 			bbp.Unin = new(ImportedUnion)
 			(*bbp.Unin) = MustMakeImportedUnionFromBytes(buf[at:])
-			if err != nil{
+			if err != nil {
 				return err
 			}
 			at += ((*bbp.Unin)).Size()
@@ -194,14 +194,14 @@ func (bbp ImportedMessage) EncodeBebop(iow io.Writer) (err error) {
 	if bbp.Bar != nil {
 		w.Write([]byte{2})
 		err = (*bbp.Bar).EncodeBebop(w)
-		if err != nil{
+		if err != nil {
 			return err
 		}
 	}
 	if bbp.Unin != nil {
 		w.Write([]byte{3})
 		err = (*bbp.Unin).EncodeBebop(w)
-		if err != nil{
+		if err != nil {
 			return err
 		}
 	}
@@ -221,13 +221,13 @@ func (bbp *ImportedMessage) DecodeBebop(ior io.Reader) (err error) {
 		case 2:
 			bbp.Bar = new(ImportedType)
 			(*bbp.Bar), err = MakeImportedType(r)
-			if err != nil{
+			if err != nil {
 				return err
 			}
 		case 3:
 			bbp.Unin = new(ImportedUnion)
 			(*bbp.Unin), err = MakeImportedUnion(r)
-			if err != nil{
+			if err != nil {
 				return err
 			}
 		default:
@@ -440,7 +440,7 @@ func (bbp *ImportedUnion) UnmarshalBebop(buf []byte) (err error) {
 			at += 1
 			bbp.WhyAreTheseInline = new(WhyAreTheseInline)
 			(*bbp.WhyAreTheseInline) = MustMakeWhyAreTheseInlineFromBytes(buf[at:])
-			if err != nil{
+			if err != nil {
 				return err
 			}
 			at += ((*bbp.WhyAreTheseInline)).Size()
@@ -449,7 +449,7 @@ func (bbp *ImportedUnion) UnmarshalBebop(buf []byte) (err error) {
 			at += 1
 			bbp.Really = new(Really)
 			(*bbp.Really) = MustMakeReallyFromBytes(buf[at:])
-			if err != nil{
+			if err != nil {
 				return err
 			}
 			at += ((*bbp.Really)).Size()
@@ -490,7 +490,7 @@ func (bbp ImportedUnion) EncodeBebop(iow io.Writer) (err error) {
 	if bbp.WhyAreTheseInline != nil {
 		w.Write([]byte{1})
 		err = (*bbp.WhyAreTheseInline).EncodeBebop(w)
-		if err != nil{
+		if err != nil {
 			return err
 		}
 		return w.Err
@@ -498,7 +498,7 @@ func (bbp ImportedUnion) EncodeBebop(iow io.Writer) (err error) {
 	if bbp.Really != nil {
 		w.Write([]byte{2})
 		err = (*bbp.Really).EncodeBebop(w)
-		if err != nil{
+		if err != nil {
 			return err
 		}
 		return w.Err
@@ -509,13 +509,13 @@ func (bbp ImportedUnion) EncodeBebop(iow io.Writer) (err error) {
 func (bbp *ImportedUnion) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
 	bodyLen := iohelp.ReadUint32(r)
-	r.Reader = &io.LimitedReader{R:r.Reader, N:int64(bodyLen)+1}
+	r.Reader = &io.LimitedReader{R: r.Reader, N: int64(bodyLen) + 1}
 	for {
 		switch iohelp.ReadByte(r) {
 		case 1:
 			bbp.WhyAreTheseInline = new(WhyAreTheseInline)
 			(*bbp.WhyAreTheseInline), err = MakeWhyAreTheseInline(r)
-			if err != nil{
+			if err != nil {
 				return err
 			}
 			io.ReadAll(r)
@@ -523,7 +523,7 @@ func (bbp *ImportedUnion) DecodeBebop(ior io.Reader) (err error) {
 		case 2:
 			bbp.Really = new(Really)
 			(*bbp.Really), err = MakeReally(r)
-			if err != nil{
+			if err != nil {
 				return err
 			}
 			io.ReadAll(r)

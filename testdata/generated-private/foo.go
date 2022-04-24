@@ -3,9 +3,9 @@
 package generated
 
 import (
-	"io"
 	"github.com/200sc/bebop"
 	"github.com/200sc/bebop/iohelp"
+	"io"
 )
 
 var _ bebop.Record = &foo{}
@@ -24,7 +24,7 @@ func (bbp foo) MarshalBebopTo(buf []byte) int {
 func (bbp *foo) UnmarshalBebop(buf []byte) (err error) {
 	at := 0
 	bbp.bar = mustMakebarFromBytes(buf[at:])
-	if err != nil{
+	if err != nil {
 		return err
 	}
 	at += (bbp.bar).Size()
@@ -40,7 +40,7 @@ func (bbp *foo) MustUnmarshalBebop(buf []byte) {
 func (bbp foo) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
 	err = (bbp.bar).EncodeBebop(w)
-	if err != nil{
+	if err != nil {
 		return err
 	}
 	return w.Err
@@ -49,7 +49,7 @@ func (bbp foo) EncodeBebop(iow io.Writer) (err error) {
 func (bbp *foo) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
 	(bbp.bar), err = makebar(r)
-	if err != nil{
+	if err != nil {
 		return err
 	}
 	return r.Err
@@ -128,7 +128,7 @@ func (bbp *bar) UnmarshalBebop(buf []byte) (err error) {
 			at += 1
 			bbp.x = new(float64)
 			if len(buf[at:]) < 8 {
-				 return io.ErrUnexpectedEOF
+				return io.ErrUnexpectedEOF
 			}
 			(*bbp.x) = iohelp.ReadFloat64Bytes(buf[at:])
 			at += 8
@@ -136,7 +136,7 @@ func (bbp *bar) UnmarshalBebop(buf []byte) (err error) {
 			at += 1
 			bbp.y = new(float64)
 			if len(buf[at:]) < 8 {
-				 return io.ErrUnexpectedEOF
+				return io.ErrUnexpectedEOF
 			}
 			(*bbp.y) = iohelp.ReadFloat64Bytes(buf[at:])
 			at += 8
@@ -144,7 +144,7 @@ func (bbp *bar) UnmarshalBebop(buf []byte) (err error) {
 			at += 1
 			bbp.z = new(float64)
 			if len(buf[at:]) < 8 {
-				 return io.ErrUnexpectedEOF
+				return io.ErrUnexpectedEOF
 			}
 			(*bbp.z) = iohelp.ReadFloat64Bytes(buf[at:])
 			at += 8

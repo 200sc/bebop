@@ -3,9 +3,9 @@
 package generated
 
 import (
-	"io"
 	"github.com/200sc/bebop"
 	"github.com/200sc/bebop/iohelp"
+	"io"
 )
 
 var _ bebop.Record = &arrayOfStrings{}
@@ -29,13 +29,13 @@ func (bbp arrayOfStrings) MarshalBebopTo(buf []byte) int {
 func (bbp *arrayOfStrings) UnmarshalBebop(buf []byte) (err error) {
 	at := 0
 	if len(buf[at:]) < 4 {
-		 return io.ErrUnexpectedEOF
+		return io.ErrUnexpectedEOF
 	}
 	bbp.strings = make([]string, iohelp.ReadUint32Bytes(buf[at:]))
 	at += 4
 	for i1 := range bbp.strings {
 		(bbp.strings)[i1], err = iohelp.ReadStringBytes(buf[at:])
-		if err != nil{
+		if err != nil {
 			return err
 		}
 		at += 4 + len((bbp.strings)[i1])

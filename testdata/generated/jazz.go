@@ -3,9 +3,9 @@
 package generated
 
 import (
-	"io"
 	"github.com/200sc/bebop"
 	"github.com/200sc/bebop/iohelp"
+	"io"
 )
 
 type Instrument uint32
@@ -36,7 +36,7 @@ func (bbp Musician) MarshalBebopTo(buf []byte) int {
 func (bbp *Musician) UnmarshalBebop(buf []byte) (err error) {
 	at := 0
 	bbp.name, err = iohelp.ReadStringBytes(buf[at:])
-	if err != nil{
+	if err != nil {
 		return err
 	}
 	at += 4 + len(bbp.name)
@@ -110,7 +110,7 @@ func (bbp Musician) GetPlays() Instrument {
 func NewMusician(
 		name string,
 		plays Instrument,
-	) Musician {
+) Musician {
 	return Musician{
 		name: name,
 		plays: plays,
@@ -143,12 +143,12 @@ func (bbp *Library) UnmarshalBebop(buf []byte) (err error) {
 	bbp.Songs = make(map[[16]byte]Song,ln1)
 	for i := uint32(0); i < ln1; i++ {
 		if len(buf[at:]) < 16 {
-			 return io.ErrUnexpectedEOF
+			return io.ErrUnexpectedEOF
 		}
 		k1 := iohelp.ReadGUIDBytes(buf[at:])
 		at += 16
 		(bbp.Songs)[k1] = MustMakeSongFromBytes(buf[at:])
-		if err != nil{
+		if err != nil {
 			return err
 		}
 		at += ((bbp.Songs)[k1]).Size()
@@ -175,7 +175,7 @@ func (bbp Library) EncodeBebop(iow io.Writer) (err error) {
 	for k1, v1 := range bbp.Songs {
 		iohelp.WriteGUID(w, k1)
 		err = (v1).EncodeBebop(w)
-		if err != nil{
+		if err != nil {
 			return err
 		}
 	}
@@ -189,7 +189,7 @@ func (bbp *Library) DecodeBebop(ior io.Reader) (err error) {
 	for i1 := uint32(0); i1 < ln1; i1++ {
 		k1 := iohelp.ReadGUID(r)
 		((bbp.Songs[k1])), err = MakeSong(r)
-		if err != nil{
+		if err != nil {
 			return err
 		}
 	}
@@ -278,7 +278,7 @@ func (bbp *Song) UnmarshalBebop(buf []byte) (err error) {
 			at += 1
 			bbp.Title = new(string)
 			(*bbp.Title), err = iohelp.ReadStringBytes(buf[at:])
-			if err != nil{
+			if err != nil {
 				return err
 			}
 			at += 4 + len((*bbp.Title))
@@ -286,7 +286,7 @@ func (bbp *Song) UnmarshalBebop(buf []byte) (err error) {
 			at += 1
 			bbp.Year = new(uint16)
 			if len(buf[at:]) < 2 {
-				 return io.ErrUnexpectedEOF
+				return io.ErrUnexpectedEOF
 			}
 			(*bbp.Year) = iohelp.ReadUint16Bytes(buf[at:])
 			at += 2
@@ -294,13 +294,13 @@ func (bbp *Song) UnmarshalBebop(buf []byte) (err error) {
 			at += 1
 			bbp.Performers = new([]Musician)
 			if len(buf[at:]) < 4 {
-				 return io.ErrUnexpectedEOF
+				return io.ErrUnexpectedEOF
 			}
 			(*bbp.Performers) = make([]Musician, iohelp.ReadUint32Bytes(buf[at:]))
 			at += 4
 			for i3 := range (*bbp.Performers) {
 				((*bbp.Performers))[i3] = MustMakeMusicianFromBytes(buf[at:])
-				if err != nil{
+				if err != nil {
 					return err
 				}
 				at += (((*bbp.Performers))[i3]).Size()
@@ -359,7 +359,7 @@ func (bbp Song) EncodeBebop(iow io.Writer) (err error) {
 		iohelp.WriteUint32(w, uint32(len(*bbp.Performers)))
 		for _, elem := range *bbp.Performers {
 			err = (elem).EncodeBebop(w)
-			if err != nil{
+			if err != nil {
 				return err
 			}
 		}
@@ -385,7 +385,7 @@ func (bbp *Song) DecodeBebop(ior io.Reader) (err error) {
 			*bbp.Performers = make([]Musician, iohelp.ReadUint32(r))
 			for i := range *bbp.Performers {
 				((*bbp.Performers)[i]), err = MakeMusician(r)
-				if err != nil{
+				if err != nil {
 					return err
 				}
 			}

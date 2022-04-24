@@ -61,7 +61,7 @@ const (
 	fillKey       = "%KNAME"
 	fillValue     = "%VNAME"
 
-	fmtErrReturn            = "if err != nil{\n\treturn err\n}"
+	fmtErrReturn            = "if err != nil {\n\treturn err\n}"
 	fmtAddSizeToAt          = "at += (%ASGN).Size()"
 	fmtAdd4PlusLenToAt      = "at += 4 + len(%ASGN)"
 	fmtAdd4ToAt             = "at += 4"
@@ -186,7 +186,7 @@ func (f File) typeMarshallers() map[string]string {
 	out[typeString] = "iohelp.WriteUint32(w, uint32(len(%ASGN)))\n" +
 		"w.Write([]byte(%ASGN))"
 	out[typeDate] = "if %ASGN != (time.Time{}) {\n" +
-		"\tiohelp.WriteInt64(w, ((%ASGN).UnixNano()/100))\n" +
+		"\tiohelp.WriteInt64(w, ((%ASGN).UnixNano() / 100))\n" +
 		"} else {\n" +
 		"\tiohelp.WriteInt64(w, 0)\n" +
 		"}"
@@ -270,7 +270,7 @@ func (f File) typeByters() map[string]string {
 		"copy(buf[at+4:at+4+len(%ASGN)], []byte(%ASGN))\n" + fmtAdd4PlusLenToAt
 
 	out[typeDate] = "if %ASGN != (time.Time{}) {\n" +
-		"\tiohelp.WriteInt64Bytes(buf[at:], ((%ASGN).UnixNano()/100))\n" +
+		"\tiohelp.WriteInt64Bytes(buf[at:], ((%ASGN).UnixNano() / 100))\n" +
 		"} else {\n" +
 		"\tiohelp.WriteInt64Bytes(buf[at:], 0)\n" +
 		"}\n" +

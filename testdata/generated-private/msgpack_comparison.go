@@ -3,9 +3,9 @@
 package generated
 
 import (
-	"io"
 	"github.com/200sc/bebop"
 	"github.com/200sc/bebop/iohelp"
+	"io"
 )
 
 var _ bebop.Record = &msgpackComparison{}
@@ -105,126 +105,126 @@ func (bbp msgpackComparison) MarshalBebopTo(buf []byte) int {
 func (bbp *msgpackComparison) UnmarshalBebop(buf []byte) (err error) {
 	at := 0
 	if len(buf[at:]) < 1 {
-		 return io.ErrUnexpectedEOF
+		return io.ErrUnexpectedEOF
 	}
 	bbp.iNT0 = iohelp.ReadUint8Bytes(buf[at:])
 	at += 1
 	if len(buf[at:]) < 1 {
-		 return io.ErrUnexpectedEOF
+		return io.ErrUnexpectedEOF
 	}
 	bbp.iNT1 = iohelp.ReadUint8Bytes(buf[at:])
 	at += 1
 	if len(buf[at:]) < 2 {
-		 return io.ErrUnexpectedEOF
+		return io.ErrUnexpectedEOF
 	}
 	bbp.iNT1_ = iohelp.ReadInt16Bytes(buf[at:])
 	at += 2
 	if len(buf[at:]) < 1 {
-		 return io.ErrUnexpectedEOF
+		return io.ErrUnexpectedEOF
 	}
 	bbp.iNT8 = iohelp.ReadUint8Bytes(buf[at:])
 	at += 1
 	if len(buf[at:]) < 2 {
-		 return io.ErrUnexpectedEOF
+		return io.ErrUnexpectedEOF
 	}
 	bbp.iNT8_ = iohelp.ReadInt16Bytes(buf[at:])
 	at += 2
 	if len(buf[at:]) < 2 {
-		 return io.ErrUnexpectedEOF
+		return io.ErrUnexpectedEOF
 	}
 	bbp.iNT16 = iohelp.ReadInt16Bytes(buf[at:])
 	at += 2
 	if len(buf[at:]) < 2 {
-		 return io.ErrUnexpectedEOF
+		return io.ErrUnexpectedEOF
 	}
 	bbp.iNT16_ = iohelp.ReadInt16Bytes(buf[at:])
 	at += 2
 	if len(buf[at:]) < 4 {
-		 return io.ErrUnexpectedEOF
+		return io.ErrUnexpectedEOF
 	}
 	bbp.iNT32 = iohelp.ReadInt32Bytes(buf[at:])
 	at += 4
 	if len(buf[at:]) < 4 {
-		 return io.ErrUnexpectedEOF
+		return io.ErrUnexpectedEOF
 	}
 	bbp.iNT32_ = iohelp.ReadInt32Bytes(buf[at:])
 	at += 4
 	if len(buf[at:]) < 1 {
-		 return io.ErrUnexpectedEOF
+		return io.ErrUnexpectedEOF
 	}
 	bbp.tRUE = iohelp.ReadBoolBytes(buf[at:])
 	at += 1
 	if len(buf[at:]) < 1 {
-		 return io.ErrUnexpectedEOF
+		return io.ErrUnexpectedEOF
 	}
 	bbp.fALSE = iohelp.ReadBoolBytes(buf[at:])
 	at += 1
 	if len(buf[at:]) < 8 {
-		 return io.ErrUnexpectedEOF
+		return io.ErrUnexpectedEOF
 	}
 	bbp.fLOAT = iohelp.ReadFloat64Bytes(buf[at:])
 	at += 8
 	if len(buf[at:]) < 8 {
-		 return io.ErrUnexpectedEOF
+		return io.ErrUnexpectedEOF
 	}
 	bbp.fLOAT_x = iohelp.ReadFloat64Bytes(buf[at:])
 	at += 8
 	bbp.sTRING0, err = iohelp.ReadStringBytes(buf[at:])
-	if err != nil{
+	if err != nil {
 		return err
 	}
 	at += 4 + len(bbp.sTRING0)
 	bbp.sTRING1, err = iohelp.ReadStringBytes(buf[at:])
-	if err != nil{
+	if err != nil {
 		return err
 	}
 	at += 4 + len(bbp.sTRING1)
 	bbp.sTRING4, err = iohelp.ReadStringBytes(buf[at:])
-	if err != nil{
+	if err != nil {
 		return err
 	}
 	at += 4 + len(bbp.sTRING4)
 	bbp.sTRING8, err = iohelp.ReadStringBytes(buf[at:])
-	if err != nil{
+	if err != nil {
 		return err
 	}
 	at += 4 + len(bbp.sTRING8)
 	bbp.sTRING16, err = iohelp.ReadStringBytes(buf[at:])
-	if err != nil{
+	if err != nil {
 		return err
 	}
 	at += 4 + len(bbp.sTRING16)
 	if len(buf[at:]) < 4 {
-		 return io.ErrUnexpectedEOF
+		return io.ErrUnexpectedEOF
 	}
 	bbp.aRRAY0 = make([]int32, iohelp.ReadUint32Bytes(buf[at:]))
 	at += 4
 	if len(buf[at:]) < len(bbp.aRRAY0)*4 {
-		 return io.ErrUnexpectedEOF
+		return io.ErrUnexpectedEOF
 	}
 	for i1 := range bbp.aRRAY0 {
 		(bbp.aRRAY0)[i1] = iohelp.ReadInt32Bytes(buf[at:])
 		at += 4
 	}
 	if len(buf[at:]) < 4 {
-		 return io.ErrUnexpectedEOF
+		return io.ErrUnexpectedEOF
 	}
 	bbp.aRRAY1 = make([]string, iohelp.ReadUint32Bytes(buf[at:]))
 	at += 4
 	for i1 := range bbp.aRRAY1 {
 		(bbp.aRRAY1)[i1], err = iohelp.ReadStringBytes(buf[at:])
-		if err != nil{
+		if err != nil {
 			return err
 		}
 		at += 4 + len((bbp.aRRAY1)[i1])
 	}
 	if len(buf[at:]) < 4 {
-		 return io.ErrUnexpectedEOF
+		return io.ErrUnexpectedEOF
 	}
 	bbp.aRRAY8 = make([]int32, iohelp.ReadUint32Bytes(buf[at:]))
 	at += 4
 	if len(buf[at:]) < len(bbp.aRRAY8)*4 {
-		 return io.ErrUnexpectedEOF
+		return io.ErrUnexpectedEOF
 	}
 	for i1 := range bbp.aRRAY8 {
 		(bbp.aRRAY8)[i1] = iohelp.ReadInt32Bytes(buf[at:])

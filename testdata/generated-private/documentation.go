@@ -3,9 +3,9 @@
 package generated
 
 import (
-	"io"
 	"github.com/200sc/bebop"
 	"github.com/200sc/bebop/iohelp"
+	"io"
 )
 
 type depE uint32
@@ -46,7 +46,7 @@ func (bbp docS) MarshalBebopTo(buf []byte) int {
 func (bbp *docS) UnmarshalBebop(buf []byte) (err error) {
 	at := 0
 	if len(buf[at:]) < 4 {
-		 return io.ErrUnexpectedEOF
+		return io.ErrUnexpectedEOF
 	}
 	bbp.x = iohelp.ReadInt32Bytes(buf[at:])
 	at += 4
@@ -125,7 +125,7 @@ func (bbp *depM) UnmarshalBebop(buf []byte) (err error) {
 			at += 1
 			bbp.x = new(int32)
 			if len(buf[at:]) < 4 {
-				 return io.ErrUnexpectedEOF
+				return io.ErrUnexpectedEOF
 			}
 			(*bbp.x) = iohelp.ReadInt32Bytes(buf[at:])
 			at += 4
@@ -240,7 +240,7 @@ func (bbp *docM) UnmarshalBebop(buf []byte) (err error) {
 			at += 1
 			bbp.x = new(int32)
 			if len(buf[at:]) < 4 {
-				 return io.ErrUnexpectedEOF
+				return io.ErrUnexpectedEOF
 			}
 			(*bbp.x) = iohelp.ReadInt32Bytes(buf[at:])
 			at += 4
@@ -248,7 +248,7 @@ func (bbp *docM) UnmarshalBebop(buf []byte) (err error) {
 			at += 1
 			bbp.y = new(int32)
 			if len(buf[at:]) < 4 {
-				 return io.ErrUnexpectedEOF
+				return io.ErrUnexpectedEOF
 			}
 			(*bbp.y) = iohelp.ReadInt32Bytes(buf[at:])
 			at += 4
@@ -256,7 +256,7 @@ func (bbp *docM) UnmarshalBebop(buf []byte) (err error) {
 			at += 1
 			bbp.z = new(int32)
 			if len(buf[at:]) < 4 {
-				 return io.ErrUnexpectedEOF
+				return io.ErrUnexpectedEOF
 			}
 			(*bbp.z) = iohelp.ReadInt32Bytes(buf[at:])
 			at += 4
