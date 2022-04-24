@@ -37,7 +37,7 @@ func (bbp *WithUnionField) UnmarshalBebop(buf []byte) (err error) {
 			at += 1
 			bbp.Test = new(List2)
 			(*bbp.Test), err = MakeList2FromBytes(buf[at:])
-			at += ((*bbp.Test)).Size()if err != nil {
+			if err != nil {
 				return err
 			}
 			at += ((*bbp.Test)).Size()

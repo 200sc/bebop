@@ -344,7 +344,7 @@ func (f File) typeByteReaders(gs GenerateSettings) map[string]string {
 func (u Union) typeByteReaders(settings GenerateSettings) map[string]string {
 	out := map[string]string{}
 	out[u.Name] = mustMakeFormat(u.Namespace, settings) + fmtAddSizeToAt
-	out[u.Name+"&safe"] = makeFormat(u.Namespace, settings) + fmtAddSizeToAt + fmtErrReturn + "\n" + fmtAddSizeToAt
+	out[u.Name+"&safe"] = makeFormat(u.Namespace, settings) + fmtErrReturn + "\n" + fmtAddSizeToAt
 	for _, ufd := range u.Fields {
 		if ufd.Struct != nil {
 			st := ufd.Struct

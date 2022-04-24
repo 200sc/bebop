@@ -490,7 +490,7 @@ func (bbp *Cons) UnmarshalBebop(buf []byte) (err error) {
 	bbp.Head = iohelp.ReadUint32Bytes(buf[at:])
 	at += 4
 	bbp.Tail, err = MakeListFromBytes(buf[at:])
-	at += (bbp.Tail).Size()if err != nil {
+	if err != nil {
 		return err
 	}
 	at += (bbp.Tail).Size()

@@ -147,7 +147,7 @@ func (bbp *ImportedMessage) UnmarshalBebop(buf []byte) (err error) {
 			at += 1
 			bbp.Unin = new(ImportedUnion)
 			(*bbp.Unin), err = MakeImportedUnionFromBytes(buf[at:])
-			at += ((*bbp.Unin)).Size()if err != nil {
+			if err != nil {
 				return err
 			}
 			at += ((*bbp.Unin)).Size()
