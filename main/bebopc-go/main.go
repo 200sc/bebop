@@ -19,7 +19,7 @@ var (
 	shareStringMemory     = flag.Bool("share-string-memory", false, "whether strings read in unmarshalling should share memory with the original byte slice")
 	combinedImports       = flag.Bool("combined-imports", false, "whether imported files should be combined and generated as one, or to separate files")
 	generateTags          = flag.Bool("generate-tags", false, "whether field tags found in comments should be parsed and generated")
-	privateDefinitions    = flag.Bool("private-defintions", false, "whether generated code should be private to the generated package")
+	privateDefinitions    = flag.Bool("private-definitions", false, "whether generated code should be private to the generated package")
 )
 
 const version = "bebopc-go " + bebop.Version
