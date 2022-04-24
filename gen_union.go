@@ -7,14 +7,14 @@ import (
 )
 
 func (u Union) generateMarshalBebopTo(w io.Writer, settings GenerateSettings, fields []fieldWithNumber) {
-	exposedName := exposeName(u.Name)
+	exposedName := exposeName(u.Name, settings)
 	writeLine(w, "func (bbp %s) MarshalBebopTo(buf []byte) int {", exposedName)
 	writeLine(w, "\tat := 0")
 	// 5 = 4 bytes of size + 1 byte discriminator
 	writeLine(w, "\tiohelp.WriteUint32Bytes(buf[at:], uint32(bbp.Size()-5))")
 	writeLine(w, "\tat += 4")
 	for _, fd := range fields {
-		name := exposeName(fd.Name)
+		name := exposeName(fd.Name, settings)
 		num := strconv.Itoa(int(fd.num))
 		name = "*bbp." + name
 		writeLineWithTabs(w, "if %RECV != nil {", 1, name)
@@ -29,7 +29,7 @@ func (u Union) generateMarshalBebopTo(w io.Writer, settings GenerateSettings, fi
 }
 
 func (u Union) generateUnmarshalBebop(w io.Writer, settings GenerateSettings, fields []fieldWithNumber) {
-	exposedName := exposeName(u.Name)
+	exposedName := exposeName(u.Name, settings)
 	writeLine(w, "func (bbp *%s) UnmarshalBebop(buf []byte) (err error) {", exposedName)
 	writeLine(w, "\tat := 0")
 	writeLine(w, "\t_ = iohelp.ReadUint32Bytes(buf[at:])")
@@ -40,7 +40,7 @@ func (u Union) generateUnmarshalBebop(w io.Writer, settings GenerateSettings, fi
 	writeLine(w, "\tfor {")
 	writeLine(w, "\t\tswitch buf[at] {")
 	for _, fd := range fields {
-		name := exposeName(fd.Name)
+		name := exposeName(fd.Name, settings)
 		writeLine(w, "\t\tcase %d:", fd.num)
 		writeLine(w, "\t\t\tat += 1")
 		writeLine(w, "\t\t\tbbp.%[1]s = new(%[2]s)", name, fd.FieldType.goString(settings))
@@ -55,7 +55,7 @@ func (u Union) generateUnmarshalBebop(w io.Writer, settings GenerateSettings, fi
 }
 
 func (u Union) generateMustUnmarshalBebop(w io.Writer, settings GenerateSettings, fields []fieldWithNumber) {
-	exposedName := exposeName(u.Name)
+	exposedName := exposeName(u.Name, settings)
 	writeLine(w, "func (bbp *%s) MustUnmarshalBebop(buf []byte) {", exposedName)
 	writeLine(w, "\tat := 0")
 	writeLine(w, "\t_ = iohelp.ReadUint32Bytes(buf[at:])")
@@ -63,7 +63,7 @@ func (u Union) generateMustUnmarshalBebop(w io.Writer, settings GenerateSettings
 	writeLine(w, "\tfor {")
 	writeLine(w, "\t\tswitch buf[at] {")
 	for _, fd := range fields {
-		name := exposeName(fd.Name)
+		name := exposeName(fd.Name, settings)
 		writeLine(w, "\t\tcase %d:", fd.num)
 		writeLine(w, "\t\t\tat += 1")
 		writeLine(w, "\t\t\tbbp.%[1]s = new(%[2]s)", name, fd.FieldType.goString(settings))
@@ -78,13 +78,13 @@ func (u Union) generateMustUnmarshalBebop(w io.Writer, settings GenerateSettings
 }
 
 func (u Union) generateEncodeBebop(w io.Writer, settings GenerateSettings, fields []fieldWithNumber) {
-	exposedName := exposeName(u.Name)
+	exposedName := exposeName(u.Name, settings)
 	*settings.isFirstTopLength = true
 	writeLine(w, "func (bbp %s) EncodeBebop(iow io.Writer) (err error) {", exposedName)
 	writeLine(w, "\tw := iohelp.NewErrorWriter(iow)")
 	writeLine(w, "\tiohelp.WriteUint32(w, uint32(bbp.Size()-5))")
 	for _, fd := range fields {
-		name := exposeName(fd.Name)
+		name := exposeName(fd.Name, settings)
 		num := strconv.Itoa(int(fd.num))
 		name = "*bbp." + name
 		writeLineWithTabs(w, "if %RECV != nil {", 1, name)
@@ -98,7 +98,7 @@ func (u Union) generateEncodeBebop(w io.Writer, settings GenerateSettings, field
 }
 
 func (u Union) generateDecodeBebop(w io.Writer, settings GenerateSettings, fields []fieldWithNumber) {
-	exposedName := exposeName(u.Name)
+	exposedName := exposeName(u.Name, settings)
 	*settings.isFirstTopLength = true
 	writeLine(w, "func (bbp *%s) DecodeBebop(ior io.Reader) (err error) {", exposedName)
 	writeLine(w, "\tr := iohelp.NewErrorReader(ior)")
@@ -108,7 +108,7 @@ func (u Union) generateDecodeBebop(w io.Writer, settings GenerateSettings, field
 	writeLine(w, "\t\tswitch iohelp.ReadByte(r) {")
 	for _, fd := range fields {
 		writeLine(w, "\t\tcase %d:", fd.num)
-		name := exposeName(fd.Name)
+		name := exposeName(fd.Name, settings)
 		writeLine(w, "\t\t\tbbp.%[1]s = new(%[2]s)", name, fd.FieldType.goString(settings))
 		writeMessageFieldUnmarshaller("bbp."+name, fd.FieldType, w, settings, 3)
 		writeLine(w, "\t\t\tio.ReadAll(r)")
@@ -125,12 +125,12 @@ func (u Union) generateDecodeBebop(w io.Writer, settings GenerateSettings, field
 }
 
 func (u Union) generateSize(w io.Writer, settings GenerateSettings, fields []fieldWithNumber) {
-	exposedName := exposeName(u.Name)
+	exposedName := exposeName(u.Name, settings)
 	writeLine(w, "func (bbp %s) Size() int {", exposedName)
 	// size at front (4)
 	writeLine(w, "\tbodyLen := 4")
 	for _, fd := range fields {
-		name := exposeName(fd.Name)
+		name := exposeName(fd.Name, settings)
 		name = "*bbp." + name
 		writeLineWithTabs(w, "if %RECV != nil {", 1, name)
 		writeLineWithTabs(w, "bodyLen += 1", 2)
