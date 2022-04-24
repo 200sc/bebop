@@ -28,7 +28,7 @@ func (bbp UsesImport) MarshalBebopTo(buf []byte) int {
 
 func (bbp *UsesImport) UnmarshalBebop(buf []byte) (err error) {
 	at := 0
-	bbp.Imported, err = generatedtwo.MakeImportedTypeFromBytes(buf[at:])
+	bbp.Imported = generatedtwo.MustMakeImportedTypeFromBytes(buf[at:])
 	if err != nil{
 		return err
 	}
@@ -118,7 +118,7 @@ func (bbp *UsesImportMsg) UnmarshalBebop(buf []byte) (err error) {
 		case 1:
 			at += 1
 			bbp.Imported = new(generatedtwo.ImportedType)
-			(*bbp.Imported), err = generatedtwo.MakeImportedTypeFromBytes(buf[at:])
+			(*bbp.Imported) = generatedtwo.MustMakeImportedTypeFromBytes(buf[at:])
 			if err != nil{
 				return err
 			}
@@ -433,7 +433,7 @@ func (bbp *UsesImportUnion) UnmarshalBebop(buf []byte) (err error) {
 		case 1:
 			at += 1
 			bbp.UnionStruct = new(UnionStruct)
-			(*bbp.UnionStruct), err = MakeUnionStructFromBytes(buf[at:])
+			(*bbp.UnionStruct) = MustMakeUnionStructFromBytes(buf[at:])
 			if err != nil{
 				return err
 			}
@@ -442,7 +442,7 @@ func (bbp *UsesImportUnion) UnmarshalBebop(buf []byte) (err error) {
 		case 2:
 			at += 1
 			bbp.UnionMessage = new(UnionMessage)
-			(*bbp.UnionMessage), err = MakeUnionMessageFromBytes(buf[at:])
+			(*bbp.UnionMessage) = MustMakeUnionMessageFromBytes(buf[at:])
 			if err != nil{
 				return err
 			}

@@ -266,7 +266,7 @@ func (bbp *PrintRequest) UnmarshalBebop(buf []byte) (err error) {
 		case 1:
 			at += 1
 			bbp.Print = new(Print)
-			(*bbp.Print), err = MakePrintFromBytes(buf[at:])
+			(*bbp.Print) = MustMakePrintFromBytes(buf[at:])
 			if err != nil{
 				return err
 			}
@@ -390,7 +390,7 @@ func (bbp *AddRequest) UnmarshalBebop(buf []byte) (err error) {
 		case 1:
 			at += 1
 			bbp.Add = new(Add)
-			(*bbp.Add), err = MakeAddFromBytes(buf[at:])
+			(*bbp.Add) = MustMakeAddFromBytes(buf[at:])
 			if err != nil{
 				return err
 			}

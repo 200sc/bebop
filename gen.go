@@ -369,7 +369,7 @@ func (f File) Generate(w io.Writer, settings GenerateSettings) error {
 	settings.typeMarshallers = f.typeMarshallers()
 	settings.typeByters = f.typeByters()
 	settings.typeByteReaders = f.typeByteReaders(settings)
-	settings.typeUnmarshallers = f.typeUnmarshallers()
+	settings.typeUnmarshallers = f.typeUnmarshallers(settings)
 	settings.typeLengthers = f.typeLengthers()
 	settings.customRecordTypes = f.customRecordTypes()
 

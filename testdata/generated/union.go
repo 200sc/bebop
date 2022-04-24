@@ -295,7 +295,7 @@ func (bbp *U) UnmarshalBebop(buf []byte) (err error) {
 		case 1:
 			at += 1
 			bbp.A = new(A)
-			(*bbp.A), err = MakeAFromBytes(buf[at:])
+			(*bbp.A) = MustMakeAFromBytes(buf[at:])
 			if err != nil{
 				return err
 			}
@@ -304,7 +304,7 @@ func (bbp *U) UnmarshalBebop(buf []byte) (err error) {
 		case 2:
 			at += 1
 			bbp.B = new(B)
-			(*bbp.B), err = MakeBFromBytes(buf[at:])
+			(*bbp.B) = MustMakeBFromBytes(buf[at:])
 			if err != nil{
 				return err
 			}
@@ -313,7 +313,7 @@ func (bbp *U) UnmarshalBebop(buf []byte) (err error) {
 		case 3:
 			at += 1
 			bbp.C = new(C)
-			(*bbp.C), err = MakeCFromBytes(buf[at:])
+			(*bbp.C) = MustMakeCFromBytes(buf[at:])
 			if err != nil{
 				return err
 			}
@@ -489,7 +489,7 @@ func (bbp *Cons) UnmarshalBebop(buf []byte) (err error) {
 	}
 	bbp.Head = iohelp.ReadUint32Bytes(buf[at:])
 	at += 4
-	bbp.Tail, err = MakeListFromBytes(buf[at:])
+	bbp.Tail = MustMakeListFromBytes(buf[at:])
 	if err != nil{
 		return err
 	}
@@ -556,56 +556,56 @@ func MustMakeConsFromBytes(buf []byte) Cons {
 	return v
 }
 
-var _ bebop.Record = &Nil{}
+var _ bebop.Record = &Null{}
 
 // nil is empty
-type Nil struct {
+type Null struct {
 }
 
-func (bbp Nil) MarshalBebopTo(buf []byte) int {
+func (bbp Null) MarshalBebopTo(buf []byte) int {
 	return 0
 }
 
-func (bbp *Nil) UnmarshalBebop(buf []byte) (err error) {
+func (bbp *Null) UnmarshalBebop(buf []byte) (err error) {
 	return nil
 }
 
-func (bbp *Nil) MustUnmarshalBebop(buf []byte) {
+func (bbp *Null) MustUnmarshalBebop(buf []byte) {
 }
 
-func (bbp Nil) EncodeBebop(iow io.Writer) (err error) {
+func (bbp Null) EncodeBebop(iow io.Writer) (err error) {
 	return nil
 }
 
-func (bbp *Nil) DecodeBebop(ior io.Reader) (err error) {
+func (bbp *Null) DecodeBebop(ior io.Reader) (err error) {
 	return nil
 }
 
-func (bbp Nil) Size() int {
+func (bbp Null) Size() int {
 	return 0
 }
 
-func (bbp Nil) MarshalBebop() []byte {
+func (bbp Null) MarshalBebop() []byte {
 	return []byte{}
 }
 
-func MakeNil(r iohelp.ErrorReader) (Nil, error) {
-	return Nil{}, nil
+func MakeNull(r iohelp.ErrorReader) (Null, error) {
+	return Null{}, nil
 }
 
-func MakeNilFromBytes(buf []byte) (Nil, error) {
-	return Nil{}, nil
+func MakeNullFromBytes(buf []byte) (Null, error) {
+	return Null{}, nil
 }
 
-func MustMakeNilFromBytes(buf []byte) Nil {
-	return Nil{}
+func MustMakeNullFromBytes(buf []byte) Null {
+	return Null{}
 }
 
 var _ bebop.Record = &List{}
 
 type List struct {
 	Cons *Cons
-	Nil *Nil
+	Null *Null
 }
 
 func (bbp List) MarshalBebopTo(buf []byte) int {
@@ -619,11 +619,11 @@ func (bbp List) MarshalBebopTo(buf []byte) int {
 		at += (*bbp.Cons).Size()
 		return at
 	}
-	if bbp.Nil != nil {
+	if bbp.Null != nil {
 		buf[at] = 2
 		at++
-		(*bbp.Nil).MarshalBebopTo(buf[at:])
-		at += (*bbp.Nil).Size()
+		(*bbp.Null).MarshalBebopTo(buf[at:])
+		at += (*bbp.Null).Size()
 		return at
 	}
 	return at
@@ -641,7 +641,7 @@ func (bbp *List) UnmarshalBebop(buf []byte) (err error) {
 		case 1:
 			at += 1
 			bbp.Cons = new(Cons)
-			(*bbp.Cons), err = MakeConsFromBytes(buf[at:])
+			(*bbp.Cons) = MustMakeConsFromBytes(buf[at:])
 			if err != nil{
 				return err
 			}
@@ -649,12 +649,12 @@ func (bbp *List) UnmarshalBebop(buf []byte) (err error) {
 			return nil
 		case 2:
 			at += 1
-			bbp.Nil = new(Nil)
-			(*bbp.Nil), err = MakeNilFromBytes(buf[at:])
+			bbp.Null = new(Null)
+			(*bbp.Null) = MustMakeNullFromBytes(buf[at:])
 			if err != nil{
 				return err
 			}
-			at += ((*bbp.Nil)).Size()
+			at += ((*bbp.Null)).Size()
 			return nil
 		default:
 			return nil
@@ -676,9 +676,9 @@ func (bbp *List) MustUnmarshalBebop(buf []byte) {
 			return
 		case 2:
 			at += 1
-			bbp.Nil = new(Nil)
-			(*bbp.Nil) = MustMakeNilFromBytes(buf[at:])
-			at += ((*bbp.Nil)).Size()
+			bbp.Null = new(Null)
+			(*bbp.Null) = MustMakeNullFromBytes(buf[at:])
+			at += ((*bbp.Null)).Size()
 			return
 		default:
 			return
@@ -697,9 +697,9 @@ func (bbp List) EncodeBebop(iow io.Writer) (err error) {
 		}
 		return w.Err
 	}
-	if bbp.Nil != nil {
+	if bbp.Null != nil {
 		w.Write([]byte{2})
-		err = (*bbp.Nil).EncodeBebop(w)
+		err = (*bbp.Null).EncodeBebop(w)
 		if err != nil{
 			return err
 		}
@@ -723,8 +723,8 @@ func (bbp *List) DecodeBebop(ior io.Reader) (err error) {
 			io.ReadAll(r)
 			return r.Err
 		case 2:
-			bbp.Nil = new(Nil)
-			(*bbp.Nil), err = MakeNil(r)
+			bbp.Null = new(Null)
+			(*bbp.Null), err = MakeNull(r)
 			if err != nil{
 				return err
 			}
@@ -744,9 +744,9 @@ func (bbp List) Size() int {
 		bodyLen += (*bbp.Cons).Size()
 		return bodyLen
 	}
-	if bbp.Nil != nil {
+	if bbp.Null != nil {
 		bodyLen += 1
-		bodyLen += (*bbp.Nil).Size()
+		bodyLen += (*bbp.Null).Size()
 		return bodyLen
 	}
 	return bodyLen

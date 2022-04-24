@@ -739,7 +739,7 @@ func (bbp *MediaMessage) UnmarshalBebop(buf []byte) (err error) {
 		case 2:
 			at += 1
 			bbp.Data = new(VideoData)
-			(*bbp.Data), err = MakeVideoDataFromBytes(buf[at:])
+			(*bbp.Data) = MustMakeVideoDataFromBytes(buf[at:])
 			if err != nil{
 				return err
 			}
@@ -1210,7 +1210,7 @@ func (bbp *SkipTestOldContainer) UnmarshalBebop(buf []byte) (err error) {
 		case 1:
 			at += 1
 			bbp.S = new(SkipTestOld)
-			(*bbp.S), err = MakeSkipTestOldFromBytes(buf[at:])
+			(*bbp.S) = MustMakeSkipTestOldFromBytes(buf[at:])
 			if err != nil{
 				return err
 			}
@@ -1363,7 +1363,7 @@ func (bbp *SkipTestNewContainer) UnmarshalBebop(buf []byte) (err error) {
 		case 1:
 			at += 1
 			bbp.S = new(SkipTestNew)
-			(*bbp.S), err = MakeSkipTestNewFromBytes(buf[at:])
+			(*bbp.S) = MustMakeSkipTestNewFromBytes(buf[at:])
 			if err != nil{
 				return err
 			}

@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 
 	"github.com/200sc/bebop"
@@ -20,6 +21,7 @@ var (
 	combinedImports       = flag.Bool("combined-imports", false, "whether imported files should be combined and generated as one, or to separate files")
 	generateTags          = flag.Bool("generate-tags", false, "whether field tags found in comments should be parsed and generated")
 	privateDefinitions    = flag.Bool("private-definitions", false, "whether generated code should be private to the generated package")
+	format                = flag.String("formatter", "", "run the given formatter as '$formatter -w $o' after generation")
 )
 
 const version = "bebopc-go " + bebop.Version
@@ -84,6 +86,11 @@ func run() error {
 	}
 	if err := bopf.Generate(out, settings); err != nil {
 		return fmt.Errorf("failed to generate file: %w", err)
+	}
+	if *format != "" {
+		if err := exec.Command(*format, "-w", *outputFile).Run(); err != nil {
+			return fmt.Errorf("failed to run formatter: %w", err)
+		}
 	}
 	return nil
 }

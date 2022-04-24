@@ -147,7 +147,7 @@ func (bbp *Library) UnmarshalBebop(buf []byte) (err error) {
 		}
 		k1 := iohelp.ReadGUIDBytes(buf[at:])
 		at += 16
-		(bbp.Songs)[k1], err = MakeSongFromBytes(buf[at:])
+		(bbp.Songs)[k1] = MustMakeSongFromBytes(buf[at:])
 		if err != nil{
 			return err
 		}
@@ -299,7 +299,7 @@ func (bbp *Song) UnmarshalBebop(buf []byte) (err error) {
 			(*bbp.Performers) = make([]Musician, iohelp.ReadUint32Bytes(buf[at:]))
 			at += 4
 			for i3 := range (*bbp.Performers) {
-				((*bbp.Performers))[i3], err = MakeMusicianFromBytes(buf[at:])
+				((*bbp.Performers))[i3] = MustMakeMusicianFromBytes(buf[at:])
 				if err != nil{
 					return err
 				}

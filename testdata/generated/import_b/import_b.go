@@ -308,7 +308,7 @@ func (bbp *Library) UnmarshalBebop(buf []byte) (err error) {
 		}
 		k1 := iohelp.ReadGUIDBytes(buf[at:])
 		at += 16
-		(bbp.Songs)[k1], err = MakeSongFromBytes(buf[at:])
+		(bbp.Songs)[k1] = MustMakeSongFromBytes(buf[at:])
 		if err != nil{
 			return err
 		}
@@ -1144,7 +1144,7 @@ func (bbp *Song) UnmarshalBebop(buf []byte) (err error) {
 			(*bbp.Performers) = make([]Musician, iohelp.ReadUint32Bytes(buf[at:]))
 			at += 4
 			for i3 := range (*bbp.Performers) {
-				((*bbp.Performers))[i3], err = MakeMusicianFromBytes(buf[at:])
+				((*bbp.Performers))[i3] = MustMakeMusicianFromBytes(buf[at:])
 				if err != nil{
 					return err
 				}
@@ -1325,7 +1325,7 @@ func (bbp *MediaMessage) UnmarshalBebop(buf []byte) (err error) {
 		case 2:
 			at += 1
 			bbp.Data = new(VideoData)
-			(*bbp.Data), err = MakeVideoDataFromBytes(buf[at:])
+			(*bbp.Data) = MustMakeVideoDataFromBytes(buf[at:])
 			if err != nil{
 				return err
 			}
@@ -1796,7 +1796,7 @@ func (bbp *SkipTestOldContainer) UnmarshalBebop(buf []byte) (err error) {
 		case 1:
 			at += 1
 			bbp.S = new(SkipTestOld)
-			(*bbp.S), err = MakeSkipTestOldFromBytes(buf[at:])
+			(*bbp.S) = MustMakeSkipTestOldFromBytes(buf[at:])
 			if err != nil{
 				return err
 			}
@@ -1949,7 +1949,7 @@ func (bbp *SkipTestNewContainer) UnmarshalBebop(buf []byte) (err error) {
 		case 1:
 			at += 1
 			bbp.S = new(SkipTestNew)
-			(*bbp.S), err = MakeSkipTestNewFromBytes(buf[at:])
+			(*bbp.S) = MustMakeSkipTestNewFromBytes(buf[at:])
 			if err != nil{
 				return err
 			}

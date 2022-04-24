@@ -138,7 +138,7 @@ func (bbp *ImportedMessage) UnmarshalBebop(buf []byte) (err error) {
 		case 2:
 			at += 1
 			bbp.Bar = new(ImportedType)
-			(*bbp.Bar), err = MakeImportedTypeFromBytes(buf[at:])
+			(*bbp.Bar) = MustMakeImportedTypeFromBytes(buf[at:])
 			if err != nil{
 				return err
 			}
@@ -146,7 +146,7 @@ func (bbp *ImportedMessage) UnmarshalBebop(buf []byte) (err error) {
 		case 3:
 			at += 1
 			bbp.Unin = new(ImportedUnion)
-			(*bbp.Unin), err = MakeImportedUnionFromBytes(buf[at:])
+			(*bbp.Unin) = MustMakeImportedUnionFromBytes(buf[at:])
 			if err != nil{
 				return err
 			}
@@ -439,7 +439,7 @@ func (bbp *ImportedUnion) UnmarshalBebop(buf []byte) (err error) {
 		case 1:
 			at += 1
 			bbp.WhyAreTheseInline = new(WhyAreTheseInline)
-			(*bbp.WhyAreTheseInline), err = MakeWhyAreTheseInlineFromBytes(buf[at:])
+			(*bbp.WhyAreTheseInline) = MustMakeWhyAreTheseInlineFromBytes(buf[at:])
 			if err != nil{
 				return err
 			}
@@ -448,7 +448,7 @@ func (bbp *ImportedUnion) UnmarshalBebop(buf []byte) (err error) {
 		case 2:
 			at += 1
 			bbp.Really = new(Really)
-			(*bbp.Really), err = MakeReallyFromBytes(buf[at:])
+			(*bbp.Really) = MustMakeReallyFromBytes(buf[at:])
 			if err != nil{
 				return err
 			}
