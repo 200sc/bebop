@@ -36,8 +36,8 @@ func (bbp *withUnionField) UnmarshalBebop(buf []byte) (err error) {
 		case 1:
 			at += 1
 			bbp.test = new(list2)
-			(*bbp.test) = mustMakelist2FromBytes(buf[at:])
-			if err != nil {
+			(*bbp.test), err = makelist2FromBytes(buf[at:])
+			at += ((*bbp.test)).Size()if err != nil {
 				return err
 			}
 			at += ((*bbp.test)).Size()
@@ -293,7 +293,7 @@ func (bbp *list2) UnmarshalBebop(buf []byte) (err error) {
 		case 1:
 			at += 1
 			bbp.cons2 = new(cons2)
-			(*bbp.cons2) = mustMakecons2FromBytes(buf[at:])
+			(*bbp.cons2), err = makecons2FromBytes(buf[at:])
 			if err != nil {
 				return err
 			}
@@ -302,7 +302,7 @@ func (bbp *list2) UnmarshalBebop(buf []byte) (err error) {
 		case 2:
 			at += 1
 			bbp.nil2 = new(nil2)
-			(*bbp.nil2) = mustMakenil2FromBytes(buf[at:])
+			(*bbp.nil2), err = makenil2FromBytes(buf[at:])
 			if err != nil {
 				return err
 			}

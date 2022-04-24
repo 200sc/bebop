@@ -269,7 +269,7 @@ func (bbp *SomeMaps) UnmarshalBebop(buf []byte) (err error) {
 					}
 					k4 := iohelp.ReadBoolBytes(buf[at:])
 					at += 1
-					((((bbp.M3)[i1])[k2])[i3])[k4] = MustMakeSFromBytes(buf[at:])
+					((((bbp.M3)[i1])[k2])[i3])[k4], err = MakeSFromBytes(buf[at:])
 					if err != nil {
 						return err
 					}
@@ -316,7 +316,7 @@ func (bbp *SomeMaps) UnmarshalBebop(buf []byte) (err error) {
 		}
 		k1 := iohelp.ReadGUIDBytes(buf[at:])
 		at += 16
-		(bbp.M5)[k1] = MustMakeMFromBytes(buf[at:])
+		(bbp.M5)[k1], err = MakeMFromBytes(buf[at:])
 		if err != nil {
 			return err
 		}

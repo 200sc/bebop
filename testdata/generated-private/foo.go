@@ -23,7 +23,7 @@ func (bbp foo) MarshalBebopTo(buf []byte) int {
 
 func (bbp *foo) UnmarshalBebop(buf []byte) (err error) {
 	at := 0
-	bbp.bar = mustMakebarFromBytes(buf[at:])
+	bbp.bar, err = makebarFromBytes(buf[at:])
 	if err != nil {
 		return err
 	}

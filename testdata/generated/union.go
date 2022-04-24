@@ -295,7 +295,7 @@ func (bbp *U) UnmarshalBebop(buf []byte) (err error) {
 		case 1:
 			at += 1
 			bbp.A = new(A)
-			(*bbp.A) = MustMakeAFromBytes(buf[at:])
+			(*bbp.A), err = MakeAFromBytes(buf[at:])
 			if err != nil {
 				return err
 			}
@@ -304,7 +304,7 @@ func (bbp *U) UnmarshalBebop(buf []byte) (err error) {
 		case 2:
 			at += 1
 			bbp.B = new(B)
-			(*bbp.B) = MustMakeBFromBytes(buf[at:])
+			(*bbp.B), err = MakeBFromBytes(buf[at:])
 			if err != nil {
 				return err
 			}
@@ -313,7 +313,7 @@ func (bbp *U) UnmarshalBebop(buf []byte) (err error) {
 		case 3:
 			at += 1
 			bbp.C = new(C)
-			(*bbp.C) = MustMakeCFromBytes(buf[at:])
+			(*bbp.C), err = MakeCFromBytes(buf[at:])
 			if err != nil {
 				return err
 			}
@@ -489,8 +489,8 @@ func (bbp *Cons) UnmarshalBebop(buf []byte) (err error) {
 	}
 	bbp.Head = iohelp.ReadUint32Bytes(buf[at:])
 	at += 4
-	bbp.Tail = MustMakeListFromBytes(buf[at:])
-	if err != nil {
+	bbp.Tail, err = MakeListFromBytes(buf[at:])
+	at += (bbp.Tail).Size()if err != nil {
 		return err
 	}
 	at += (bbp.Tail).Size()
@@ -641,7 +641,7 @@ func (bbp *List) UnmarshalBebop(buf []byte) (err error) {
 		case 1:
 			at += 1
 			bbp.Cons = new(Cons)
-			(*bbp.Cons) = MustMakeConsFromBytes(buf[at:])
+			(*bbp.Cons), err = MakeConsFromBytes(buf[at:])
 			if err != nil {
 				return err
 			}
@@ -650,7 +650,7 @@ func (bbp *List) UnmarshalBebop(buf []byte) (err error) {
 		case 2:
 			at += 1
 			bbp.Null = new(Null)
-			(*bbp.Null) = MustMakeNullFromBytes(buf[at:])
+			(*bbp.Null), err = MakeNullFromBytes(buf[at:])
 			if err != nil {
 				return err
 			}

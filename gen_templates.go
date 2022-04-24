@@ -325,14 +325,12 @@ func (f File) typeByteReaders(gs GenerateSettings) map[string]string {
 		out[en.Name] = "%ASGN = %TYPE(iohelp.ReadUint32Bytes(buf[at:]))\n" + fmtAdd4ToAt
 	}
 	for _, st := range f.Structs {
-		mf := mustMakeFormat(st.Namespace, gs)
-		out[st.Name] = mf + fmtAddSizeToAt
-		out[st.Name+"&safe"] = mf + fmtErrReturn + "\n" + fmtAddSizeToAt
+		out[st.Name] = mustMakeFormat(st.Namespace, gs) + fmtAddSizeToAt
+		out[st.Name+"&safe"] = makeFormat(st.Namespace, gs) + fmtErrReturn + "\n" + fmtAddSizeToAt
 	}
 	for _, msg := range f.Messages {
-		mf := mustMakeFormat(msg.Namespace, gs)
-		out[msg.Name] = mf + fmtAddSizeToAt
-		out[msg.Name+"&safe"] = mf + fmtErrReturn + "\n" + fmtAddSizeToAt
+		out[msg.Name] = mustMakeFormat(msg.Namespace, gs) + fmtAddSizeToAt
+		out[msg.Name+"&safe"] = makeFormat(msg.Namespace, gs) + fmtErrReturn + "\n" + fmtAddSizeToAt
 	}
 	for _, union := range f.Unions {
 		uout := union.typeByteReaders(gs)
@@ -345,21 +343,18 @@ func (f File) typeByteReaders(gs GenerateSettings) map[string]string {
 
 func (u Union) typeByteReaders(settings GenerateSettings) map[string]string {
 	out := map[string]string{}
-	mf := mustMakeFormat(u.Namespace, settings)
-	out[u.Name] = mf + fmtAddSizeToAt
-	out[u.Name+"&safe"] = mf + fmtErrReturn + "\n" + fmtAddSizeToAt
+	out[u.Name] = mustMakeFormat(u.Namespace, settings) + fmtAddSizeToAt
+	out[u.Name+"&safe"] = makeFormat(u.Namespace, settings) + fmtAddSizeToAt + fmtErrReturn + "\n" + fmtAddSizeToAt
 	for _, ufd := range u.Fields {
 		if ufd.Struct != nil {
 			st := ufd.Struct
-			mf := mustMakeFormat(st.Namespace, settings)
-			out[st.Name] = mf + fmtAddSizeToAt
-			out[st.Name+"&safe"] = mf + fmtErrReturn + "\n" + fmtAddSizeToAt
+			out[st.Name] = mustMakeFormat(st.Namespace, settings) + fmtAddSizeToAt
+			out[st.Name+"&safe"] = makeFormat(st.Namespace, settings) + fmtErrReturn + "\n" + fmtAddSizeToAt
 		}
 		if ufd.Message != nil {
 			msg := ufd.Message
-			mf := mustMakeFormat(msg.Namespace, settings)
-			out[msg.Name] = mf + fmtAddSizeToAt
-			out[msg.Name+"&safe"] = mf + fmtErrReturn + "\n" + fmtAddSizeToAt
+			out[msg.Name] = mustMakeFormat(msg.Namespace, settings) + fmtAddSizeToAt
+			out[msg.Name+"&safe"] = makeFormat(msg.Namespace, settings) + fmtErrReturn + "\n" + fmtAddSizeToAt
 		}
 	}
 	return out

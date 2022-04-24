@@ -300,7 +300,7 @@ func (bbp *taggedUnion) UnmarshalBebop(buf []byte) (err error) {
 		case 1:
 			at += 1
 			bbp.taggedSubStruct = new(taggedSubStruct)
-			(*bbp.taggedSubStruct) = mustMaketaggedSubStructFromBytes(buf[at:])
+			(*bbp.taggedSubStruct), err = maketaggedSubStructFromBytes(buf[at:])
 			if err != nil {
 				return err
 			}

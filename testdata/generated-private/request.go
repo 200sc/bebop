@@ -163,7 +163,7 @@ func (bbp *requestResponse) UnmarshalBebop(buf []byte) (err error) {
 	bbp.availableFurniture = make([]furniture, iohelp.ReadUint32Bytes(buf[at:]))
 	at += 4
 	for i1 := range bbp.availableFurniture {
-		(bbp.availableFurniture)[i1] = mustMakefurnitureFromBytes(buf[at:])
+		(bbp.availableFurniture)[i1], err = makefurnitureFromBytes(buf[at:])
 		if err != nil {
 			return err
 		}
