@@ -1433,7 +1433,7 @@ func TestReadFile(t *testing.T) {
 							2: {
 								Struct: &Struct{
 									Comment: " nil is empty",
-									Name:    "Nil",
+									Name:    "Null",
 								},
 							},
 						},

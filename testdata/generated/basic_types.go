@@ -3,10 +3,10 @@
 package generated
 
 import (
-	"io"
-	"time"
 	"github.com/200sc/bebop"
 	"github.com/200sc/bebop/iohelp"
+	"io"
+	"time"
 )
 
 var _ bebop.Record = &BasicTypes{}
@@ -55,7 +55,7 @@ func (bbp BasicTypes) MarshalBebopTo(buf []byte) int {
 	iohelp.WriteGUIDBytes(buf[at:], bbp.A_guid)
 	at += 16
 	if bbp.A_date != (time.Time{}) {
-		iohelp.WriteInt64Bytes(buf[at:], ((bbp.A_date).UnixNano()/100))
+		iohelp.WriteInt64Bytes(buf[at:], ((bbp.A_date).UnixNano() / 100))
 	} else {
 		iohelp.WriteInt64Bytes(buf[at:], 0)
 	}
@@ -66,67 +66,67 @@ func (bbp BasicTypes) MarshalBebopTo(buf []byte) int {
 func (bbp *BasicTypes) UnmarshalBebop(buf []byte) (err error) {
 	at := 0
 	if len(buf[at:]) < 1 {
-		 return io.ErrUnexpectedEOF
+		return io.ErrUnexpectedEOF
 	}
 	bbp.A_bool = iohelp.ReadBoolBytes(buf[at:])
 	at += 1
 	if len(buf[at:]) < 1 {
-		 return io.ErrUnexpectedEOF
+		return io.ErrUnexpectedEOF
 	}
 	bbp.A_byte = iohelp.ReadByteBytes(buf[at:])
 	at += 1
 	if len(buf[at:]) < 2 {
-		 return io.ErrUnexpectedEOF
+		return io.ErrUnexpectedEOF
 	}
 	bbp.A_int16 = iohelp.ReadInt16Bytes(buf[at:])
 	at += 2
 	if len(buf[at:]) < 2 {
-		 return io.ErrUnexpectedEOF
+		return io.ErrUnexpectedEOF
 	}
 	bbp.A_uint16 = iohelp.ReadUint16Bytes(buf[at:])
 	at += 2
 	if len(buf[at:]) < 4 {
-		 return io.ErrUnexpectedEOF
+		return io.ErrUnexpectedEOF
 	}
 	bbp.A_int32 = iohelp.ReadInt32Bytes(buf[at:])
 	at += 4
 	if len(buf[at:]) < 4 {
-		 return io.ErrUnexpectedEOF
+		return io.ErrUnexpectedEOF
 	}
 	bbp.A_uint32 = iohelp.ReadUint32Bytes(buf[at:])
 	at += 4
 	if len(buf[at:]) < 8 {
-		 return io.ErrUnexpectedEOF
+		return io.ErrUnexpectedEOF
 	}
 	bbp.A_int64 = iohelp.ReadInt64Bytes(buf[at:])
 	at += 8
 	if len(buf[at:]) < 8 {
-		 return io.ErrUnexpectedEOF
+		return io.ErrUnexpectedEOF
 	}
 	bbp.A_uint64 = iohelp.ReadUint64Bytes(buf[at:])
 	at += 8
 	if len(buf[at:]) < 4 {
-		 return io.ErrUnexpectedEOF
+		return io.ErrUnexpectedEOF
 	}
 	bbp.A_float32 = iohelp.ReadFloat32Bytes(buf[at:])
 	at += 4
 	if len(buf[at:]) < 8 {
-		 return io.ErrUnexpectedEOF
+		return io.ErrUnexpectedEOF
 	}
 	bbp.A_float64 = iohelp.ReadFloat64Bytes(buf[at:])
 	at += 8
 	bbp.A_string, err = iohelp.ReadStringBytes(buf[at:])
-	if err != nil{
+	if err != nil {
 		return err
 	}
 	at += 4 + len(bbp.A_string)
 	if len(buf[at:]) < 16 {
-		 return io.ErrUnexpectedEOF
+		return io.ErrUnexpectedEOF
 	}
 	bbp.A_guid = iohelp.ReadGUIDBytes(buf[at:])
 	at += 16
 	if len(buf[at:]) < 8 {
-		 return io.ErrUnexpectedEOF
+		return io.ErrUnexpectedEOF
 	}
 	bbp.A_date = iohelp.ReadDateBytes(buf[at:])
 	at += 8
@@ -179,7 +179,7 @@ func (bbp BasicTypes) EncodeBebop(iow io.Writer) (err error) {
 	w.Write([]byte(bbp.A_string))
 	iohelp.WriteGUID(w, bbp.A_guid)
 	if bbp.A_date != (time.Time{}) {
-		iohelp.WriteInt64(w, ((bbp.A_date).UnixNano()/100))
+		iohelp.WriteInt64(w, ((bbp.A_date).UnixNano() / 100))
 	} else {
 		iohelp.WriteInt64(w, 0)
 	}

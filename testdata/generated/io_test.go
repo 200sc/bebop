@@ -374,7 +374,7 @@ func TestMarshalCycleRecords(t *testing.T) {
 					Cons: &generated.Cons{
 						Head: 2,
 						Tail: generated.List{
-							Nil: &generated.Nil{},
+							Null: &generated.Null{},
 						},
 					},
 				},

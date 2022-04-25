@@ -443,6 +443,42 @@ func TestGenerateToFile(t *testing.T) {
 	}
 }
 
+func TestGenerateToFile_Private(t *testing.T) {
+	t.Parallel()
+	rand.Seed(time.Now().UnixNano())
+	for _, filename := range genTestFiles {
+		filename := filename
+		t.Run(filename, func(t *testing.T) {
+			t.Parallel()
+			f, err := os.Open(filepath.Join("testdata", "base", filename+".bop"))
+			if err != nil {
+				t.Fatalf("failed to open test file %s: %v", filename+".bop", err)
+			}
+			defer f.Close()
+			bopf, _, err := ReadFile(f)
+			if err != nil {
+				t.Fatalf("failed to read file %s: %v", filename+".bop", err)
+			}
+			outFile := filepath.Join("testdata", "generated-private", filename+".go")
+			out, err := os.Create(outFile)
+			if err != nil {
+				t.Fatalf("failed to open out file %s: %v", outFile, err)
+			}
+			defer out.Close()
+			err = bopf.Generate(out, GenerateSettings{
+				PackageName:           "generated",
+				GenerateUnsafeMethods: true,
+				SharedMemoryStrings:   false,
+				GenerateFieldTags:     true,
+				PrivateDefinitions:    true,
+			})
+			if err != nil {
+				t.Fatalf("generation failed: %v", err)
+			}
+		})
+	}
+}
+
 func TestGenerateToFileIncompatible(t *testing.T) {
 	t.Parallel()
 	rand.Seed(time.Now().UnixNano())

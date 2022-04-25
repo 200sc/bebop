@@ -9,32 +9,32 @@ import (
 	"time"
 )
 
-var _ bebop.Record = &MyObj{}
+var _ bebop.Record = &myObj{}
 
-type MyObj struct {
-	Start *time.Time
-	End *time.Time
+type myObj struct {
+	start *time.Time
+	end *time.Time
 }
 
-func (bbp MyObj) MarshalBebopTo(buf []byte) int {
+func (bbp myObj) MarshalBebopTo(buf []byte) int {
 	at := 0
 	iohelp.WriteUint32Bytes(buf[at:], uint32(bbp.Size()-4))
 	at += 4
-	if bbp.Start != nil {
+	if bbp.start != nil {
 		buf[at] = 1
 		at++
-		if *bbp.Start != (time.Time{}) {
-			iohelp.WriteInt64Bytes(buf[at:], ((*bbp.Start).UnixNano() / 100))
+		if *bbp.start != (time.Time{}) {
+			iohelp.WriteInt64Bytes(buf[at:], ((*bbp.start).UnixNano() / 100))
 		} else {
 			iohelp.WriteInt64Bytes(buf[at:], 0)
 		}
 		at += 8
 	}
-	if bbp.End != nil {
+	if bbp.end != nil {
 		buf[at] = 2
 		at++
-		if *bbp.End != (time.Time{}) {
-			iohelp.WriteInt64Bytes(buf[at:], ((*bbp.End).UnixNano() / 100))
+		if *bbp.end != (time.Time{}) {
+			iohelp.WriteInt64Bytes(buf[at:], ((*bbp.end).UnixNano() / 100))
 		} else {
 			iohelp.WriteInt64Bytes(buf[at:], 0)
 		}
@@ -43,7 +43,7 @@ func (bbp MyObj) MarshalBebopTo(buf []byte) int {
 	return at
 }
 
-func (bbp *MyObj) UnmarshalBebop(buf []byte) (err error) {
+func (bbp *myObj) UnmarshalBebop(buf []byte) (err error) {
 	at := 0
 	_ = iohelp.ReadUint32Bytes(buf[at:])
 	buf = buf[4:]
@@ -51,19 +51,19 @@ func (bbp *MyObj) UnmarshalBebop(buf []byte) (err error) {
 		switch buf[at] {
 		case 1:
 			at += 1
-			bbp.Start = new(time.Time)
+			bbp.start = new(time.Time)
 			if len(buf[at:]) < 8 {
 				return io.ErrUnexpectedEOF
 			}
-			(*bbp.Start) = iohelp.ReadDateBytes(buf[at:])
+			(*bbp.start) = iohelp.ReadDateBytes(buf[at:])
 			at += 8
 		case 2:
 			at += 1
-			bbp.End = new(time.Time)
+			bbp.end = new(time.Time)
 			if len(buf[at:]) < 8 {
 				return io.ErrUnexpectedEOF
 			}
-			(*bbp.End) = iohelp.ReadDateBytes(buf[at:])
+			(*bbp.end) = iohelp.ReadDateBytes(buf[at:])
 			at += 8
 		default:
 			return nil
@@ -71,7 +71,7 @@ func (bbp *MyObj) UnmarshalBebop(buf []byte) (err error) {
 	}
 }
 
-func (bbp *MyObj) MustUnmarshalBebop(buf []byte) {
+func (bbp *myObj) MustUnmarshalBebop(buf []byte) {
 	at := 0
 	_ = iohelp.ReadUint32Bytes(buf[at:])
 	buf = buf[4:]
@@ -79,13 +79,13 @@ func (bbp *MyObj) MustUnmarshalBebop(buf []byte) {
 		switch buf[at] {
 		case 1:
 			at += 1
-			bbp.Start = new(time.Time)
-			(*bbp.Start) = iohelp.ReadDateBytes(buf[at:])
+			bbp.start = new(time.Time)
+			(*bbp.start) = iohelp.ReadDateBytes(buf[at:])
 			at += 8
 		case 2:
 			at += 1
-			bbp.End = new(time.Time)
-			(*bbp.End) = iohelp.ReadDateBytes(buf[at:])
+			bbp.end = new(time.Time)
+			(*bbp.end) = iohelp.ReadDateBytes(buf[at:])
 			at += 8
 		default:
 			return
@@ -93,21 +93,21 @@ func (bbp *MyObj) MustUnmarshalBebop(buf []byte) {
 	}
 }
 
-func (bbp MyObj) EncodeBebop(iow io.Writer) (err error) {
+func (bbp myObj) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
 	iohelp.WriteUint32(w, uint32(bbp.Size()-4))
-	if bbp.Start != nil {
+	if bbp.start != nil {
 		w.Write([]byte{1})
-		if *bbp.Start != (time.Time{}) {
-			iohelp.WriteInt64(w, ((*bbp.Start).UnixNano() / 100))
+		if *bbp.start != (time.Time{}) {
+			iohelp.WriteInt64(w, ((*bbp.start).UnixNano() / 100))
 		} else {
 			iohelp.WriteInt64(w, 0)
 		}
 	}
-	if bbp.End != nil {
+	if bbp.end != nil {
 		w.Write([]byte{2})
-		if *bbp.End != (time.Time{}) {
-			iohelp.WriteInt64(w, ((*bbp.End).UnixNano() / 100))
+		if *bbp.end != (time.Time{}) {
+			iohelp.WriteInt64(w, ((*bbp.end).UnixNano() / 100))
 		} else {
 			iohelp.WriteInt64(w, 0)
 		}
@@ -116,18 +116,18 @@ func (bbp MyObj) EncodeBebop(iow io.Writer) (err error) {
 	return w.Err
 }
 
-func (bbp *MyObj) DecodeBebop(ior io.Reader) (err error) {
+func (bbp *myObj) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
 	bodyLen := iohelp.ReadUint32(r)
 	r.Reader = &io.LimitedReader{R:r.Reader, N:int64(bodyLen)}
 	for {
 		switch iohelp.ReadByte(r) {
 		case 1:
-			bbp.Start = new(time.Time)
-			*bbp.Start = iohelp.ReadDate(r)
+			bbp.start = new(time.Time)
+			*bbp.start = iohelp.ReadDate(r)
 		case 2:
-			bbp.End = new(time.Time)
-			*bbp.End = iohelp.ReadDate(r)
+			bbp.end = new(time.Time)
+			*bbp.end = iohelp.ReadDate(r)
 		default:
 			io.ReadAll(r)
 			return r.Err
@@ -135,39 +135,39 @@ func (bbp *MyObj) DecodeBebop(ior io.Reader) (err error) {
 	}
 }
 
-func (bbp MyObj) Size() int {
+func (bbp myObj) Size() int {
 	bodyLen := 5
-	if bbp.Start != nil {
+	if bbp.start != nil {
 		bodyLen += 1
 		bodyLen += 8
 	}
-	if bbp.End != nil {
+	if bbp.end != nil {
 		bodyLen += 1
 		bodyLen += 8
 	}
 	return bodyLen
 }
 
-func (bbp MyObj) MarshalBebop() []byte {
+func (bbp myObj) MarshalBebop() []byte {
 	buf := make([]byte, bbp.Size())
 	bbp.MarshalBebopTo(buf)
 	return buf
 }
 
-func MakeMyObj(r iohelp.ErrorReader) (MyObj, error) {
-	v := MyObj{}
+func makemyObj(r iohelp.ErrorReader) (myObj, error) {
+	v := myObj{}
 	err := v.DecodeBebop(r)
 	return v, err
 }
 
-func MakeMyObjFromBytes(buf []byte) (MyObj, error) {
-	v := MyObj{}
+func makemyObjFromBytes(buf []byte) (myObj, error) {
+	v := myObj{}
 	err := v.UnmarshalBebop(buf)
 	return v, err
 }
 
-func MustMakeMyObjFromBytes(buf []byte) MyObj {
-	v := MyObj{}
+func mustMakemyObjFromBytes(buf []byte) myObj {
+	v := myObj{}
 	v.MustUnmarshalBebop(buf)
 	return v
 }

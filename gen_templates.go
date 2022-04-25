@@ -61,20 +61,25 @@ const (
 	fillKey       = "%KNAME"
 	fillValue     = "%VNAME"
 
-	fmtErrReturn            = "if err != nil{\n\treturn err\n}"
+	fmtErrReturn            = "if err != nil {\n\treturn err\n}"
 	fmtAddSizeToAt          = "at += (%ASGN).Size()"
 	fmtAdd4PlusLenToAt      = "at += 4 + len(%ASGN)"
 	fmtAdd4ToAt             = "at += 4"
 	fmtAddSizeToBodyLen     = "bodyLen += (%ASGN).Size()"
 	fmtAdd4PlusLenToBodyLen = "bodyLen += 4 + len(%ASGN)"
 	fmtAdd4ToBodyLen        = "bodyLen += 4"
-	fmtMakeType             = "(%RECV), err = Make%TYPE(r)\n" + fmtErrReturn
-	fmtMakeNamespacedType   = "(%RECV), err = %NAMESPACE.Make%BARETYPE(r)\n" + fmtErrReturn
 
-	fmtMake               = "%ASGN, err = Make%TYPEFromBytes(buf[at:])\n"
-	fmtMakeNamespaced     = "%ASGN, err = %NAMESPACE.Make%BARETYPEFromBytes(buf[at:])\n"
+	fmtMakeType           = "(%RECV), err = Make%TYPE(r)\n" + fmtErrReturn
+	fmtMakeNamespacedType = "(%RECV), err = %NAMESPACE.Make%BARETYPE(r)\n" + fmtErrReturn
+	fmtMakePrivateType    = "(%RECV), err = make%TYPE(r)\n" + fmtErrReturn
+
+	fmtMake           = "%ASGN, err = Make%TYPEFromBytes(buf[at:])\n"
+	fmtMakeNamespaced = "%ASGN, err = %NAMESPACE.Make%BARETYPEFromBytes(buf[at:])\n"
+	fmtMakePrivate    = "%ASGN, err = make%TYPEFromBytes(buf[at:])\n"
+
 	fmtMustMake           = "%ASGN = MustMake%TYPEFromBytes(buf[at:])\n"
 	fmtMustMakeNamespaced = "%ASGN = %NAMESPACE.MustMake%BARETYPEFromBytes(buf[at:])\n"
+	fmtMustMakePrivate    = "%ASGN = mustMake%TYPEFromBytes(buf[at:])\n"
 
 	fmtMarshal = "(%ASGN).MarshalBebopTo(buf[at:])\n"
 	fmtEncode  = "err = (%ASGN).EncodeBebop(w)\n"
@@ -103,7 +108,39 @@ func fixedTitleString(typ string) string {
 	return strings.Title(typ)
 }
 
-func (f File) typeUnmarshallers() map[string]string {
+func makeFormatType(namespace string, settings GenerateSettings) string {
+	// namespacing takes precedence over privacy-- its assumed that
+	// a namespaced import will not be compiled as private.
+	if namespace != "" {
+		return fmtMakeNamespacedType
+	}
+	if settings.PrivateDefinitions {
+		return fmtMakePrivateType
+	}
+	return fmtMakeType
+}
+
+func makeFormat(namespace string, settings GenerateSettings) string {
+	if namespace != "" {
+		return fmtMakeNamespaced
+	}
+	if settings.PrivateDefinitions {
+		return fmtMakePrivate
+	}
+	return fmtMake
+}
+
+func mustMakeFormat(namespace string, settings GenerateSettings) string {
+	if namespace != "" {
+		return fmtMustMakeNamespaced
+	}
+	if settings.PrivateDefinitions {
+		return fmtMustMakePrivate
+	}
+	return fmtMustMake
+}
+
+func (f File) typeUnmarshallers(settings GenerateSettings) map[string]string {
 	out := make(map[string]string)
 	for typ := range fixedSizeTypes {
 		out[typ] = "%RECV = iohelp.Read" + fixedTitleString(typ) + "(r)"
@@ -113,25 +150,13 @@ func (f File) typeUnmarshallers() map[string]string {
 		out[en.Name] = "%RECV = %TYPE(iohelp.ReadUint32(r))"
 	}
 	for _, st := range f.Structs {
-		var format string
-		if st.Namespace != "" {
-			format = fmtMakeNamespacedType
-		} else {
-			format = fmtMakeType
-		}
-		out[st.Name] = format
+		out[st.Name] = makeFormatType(st.Namespace, settings)
 	}
 	for _, msg := range f.Messages {
-		var format string
-		if msg.Namespace != "" {
-			format = fmtMakeNamespacedType
-		} else {
-			format = fmtMakeType
-		}
-		out[msg.Name] = format
+		out[msg.Name] = makeFormatType(msg.Namespace, settings)
 	}
 	for _, union := range f.Unions {
-		uout := union.typeUnmarshallers()
+		uout := union.typeUnmarshallers(settings)
 		for k, v := range uout {
 			out[k] = v
 		}
@@ -139,33 +164,15 @@ func (f File) typeUnmarshallers() map[string]string {
 	return out
 }
 
-func (u Union) typeUnmarshallers() map[string]string {
-	out := make(map[string]string)
-	var format string
-	if u.Namespace != "" {
-		format = fmtMakeNamespacedType
-	} else {
-		format = fmtMakeType
-	}
-	out[u.Name] = format
+func (u Union) typeUnmarshallers(settings GenerateSettings) map[string]string {
+	out := make(map[string]string, 1+len(u.Fields))
+	out[u.Name] = makeFormatType(u.Namespace, settings)
 	for _, ufd := range u.Fields {
 		if ufd.Struct != nil {
-			var format string
-			if ufd.Struct.Namespace != "" {
-				format = fmtMakeNamespacedType
-			} else {
-				format = fmtMakeType
-			}
-			out[ufd.Struct.Name] = format
+			out[ufd.Struct.Name] = makeFormatType(ufd.Struct.Namespace, settings)
 		}
 		if ufd.Message != nil {
-			var format string
-			if ufd.Message.Namespace != "" {
-				format = fmtMakeNamespacedType
-			} else {
-				format = fmtMakeType
-			}
-			out[ufd.Message.Name] = format
+			out[ufd.Message.Name] = makeFormatType(ufd.Message.Namespace, settings)
 		}
 	}
 	return out
@@ -179,7 +186,7 @@ func (f File) typeMarshallers() map[string]string {
 	out[typeString] = "iohelp.WriteUint32(w, uint32(len(%ASGN)))\n" +
 		"w.Write([]byte(%ASGN))"
 	out[typeDate] = "if %ASGN != (time.Time{}) {\n" +
-		"\tiohelp.WriteInt64(w, ((%ASGN).UnixNano()/100))\n" +
+		"\tiohelp.WriteInt64(w, ((%ASGN).UnixNano() / 100))\n" +
 		"} else {\n" +
 		"\tiohelp.WriteInt64(w, 0)\n" +
 		"}"
@@ -263,7 +270,7 @@ func (f File) typeByters() map[string]string {
 		"copy(buf[at+4:at+4+len(%ASGN)], []byte(%ASGN))\n" + fmtAdd4PlusLenToAt
 
 	out[typeDate] = "if %ASGN != (time.Time{}) {\n" +
-		"\tiohelp.WriteInt64Bytes(buf[at:], ((%ASGN).UnixNano()/100))\n" +
+		"\tiohelp.WriteInt64Bytes(buf[at:], ((%ASGN).UnixNano() / 100))\n" +
 		"} else {\n" +
 		"\tiohelp.WriteInt64Bytes(buf[at:], 0)\n" +
 		"}\n" +
@@ -318,25 +325,15 @@ func (f File) typeByteReaders(gs GenerateSettings) map[string]string {
 		out[en.Name] = "%ASGN = %TYPE(iohelp.ReadUint32Bytes(buf[at:]))\n" + fmtAdd4ToAt
 	}
 	for _, st := range f.Structs {
-		if st.Namespace != "" {
-			out[st.Name] = fmtMustMakeNamespaced + fmtAddSizeToAt
-			out[st.Name+"&safe"] = fmtMakeNamespaced + fmtErrReturn + "\n" + fmtAddSizeToAt
-		} else {
-			out[st.Name] = fmtMustMake + fmtAddSizeToAt
-			out[st.Name+"&safe"] = fmtMake + fmtErrReturn + "\n" + fmtAddSizeToAt
-		}
+		out[st.Name] = mustMakeFormat(st.Namespace, gs) + fmtAddSizeToAt
+		out[st.Name+"&safe"] = makeFormat(st.Namespace, gs) + fmtErrReturn + "\n" + fmtAddSizeToAt
 	}
 	for _, msg := range f.Messages {
-		if msg.Namespace != "" {
-			out[msg.Name] = fmtMustMakeNamespaced + fmtAddSizeToAt
-			out[msg.Name+"&safe"] = fmtMakeNamespaced + fmtErrReturn + "\n" + fmtAddSizeToAt
-		} else {
-			out[msg.Name] = fmtMustMake + fmtAddSizeToAt
-			out[msg.Name+"&safe"] = fmtMake + fmtErrReturn + "\n" + fmtAddSizeToAt
-		}
+		out[msg.Name] = mustMakeFormat(msg.Namespace, gs) + fmtAddSizeToAt
+		out[msg.Name+"&safe"] = makeFormat(msg.Namespace, gs) + fmtErrReturn + "\n" + fmtAddSizeToAt
 	}
 	for _, union := range f.Unions {
-		uout := union.typeByteReaders()
+		uout := union.typeByteReaders(gs)
 		for k, v := range uout {
 			out[k] = v
 		}
@@ -344,35 +341,20 @@ func (f File) typeByteReaders(gs GenerateSettings) map[string]string {
 	return out
 }
 
-func (u Union) typeByteReaders() map[string]string {
+func (u Union) typeByteReaders(settings GenerateSettings) map[string]string {
 	out := map[string]string{}
-	if u.Namespace != "" {
-		out[u.Name] = fmtMustMakeNamespaced + fmtAddSizeToAt
-		out[u.Name+"&safe"] = fmtMakeNamespaced + fmtErrReturn + "\n" + fmtAddSizeToAt
-	} else {
-		out[u.Name] = fmtMustMake + fmtAddSizeToAt
-		out[u.Name+"&safe"] = fmtMake + fmtErrReturn + "\n" + fmtAddSizeToAt
-	}
+	out[u.Name] = mustMakeFormat(u.Namespace, settings) + fmtAddSizeToAt
+	out[u.Name+"&safe"] = makeFormat(u.Namespace, settings) + fmtErrReturn + "\n" + fmtAddSizeToAt
 	for _, ufd := range u.Fields {
 		if ufd.Struct != nil {
 			st := ufd.Struct
-			if st.Namespace != "" {
-				out[st.Name] = fmtMustMakeNamespaced + fmtAddSizeToAt
-				out[st.Name+"&safe"] = fmtMakeNamespaced + fmtErrReturn + "\n" + fmtAddSizeToAt
-			} else {
-				out[st.Name] = fmtMustMake + fmtAddSizeToAt
-				out[st.Name+"&safe"] = fmtMake + fmtErrReturn + "\n" + fmtAddSizeToAt
-			}
+			out[st.Name] = mustMakeFormat(st.Namespace, settings) + fmtAddSizeToAt
+			out[st.Name+"&safe"] = makeFormat(st.Namespace, settings) + fmtErrReturn + "\n" + fmtAddSizeToAt
 		}
 		if ufd.Message != nil {
 			msg := ufd.Message
-			if msg.Namespace != "" {
-				out[msg.Name] = fmtMustMakeNamespaced + fmtAddSizeToAt
-				out[msg.Name+"&safe"] = fmtMakeNamespaced + fmtErrReturn + "\n" + fmtAddSizeToAt
-			} else {
-				out[msg.Name] = fmtMustMake + fmtAddSizeToAt
-				out[msg.Name+"&safe"] = fmtMake + fmtErrReturn + "\n" + fmtAddSizeToAt
-			}
+			out[msg.Name] = mustMakeFormat(msg.Namespace, settings) + fmtAddSizeToAt
+			out[msg.Name+"&safe"] = makeFormat(msg.Namespace, settings) + fmtErrReturn + "\n" + fmtAddSizeToAt
 		}
 	}
 	return out

@@ -3,9 +3,9 @@
 package generated
 
 import (
-	"io"
 	"github.com/200sc/bebop"
 	"github.com/200sc/bebop/iohelp"
+	"io"
 )
 
 var _ bebop.Record = &ExampleMessage{}
@@ -51,7 +51,7 @@ func (bbp *ExampleMessage) UnmarshalBebop(buf []byte) (err error) {
 			at += 1
 			bbp.X = new(byte)
 			if len(buf[at:]) < 1 {
-				 return io.ErrUnexpectedEOF
+				return io.ErrUnexpectedEOF
 			}
 			(*bbp.X) = iohelp.ReadByteBytes(buf[at:])
 			at += 1
@@ -59,7 +59,7 @@ func (bbp *ExampleMessage) UnmarshalBebop(buf []byte) (err error) {
 			at += 1
 			bbp.Y = new(int16)
 			if len(buf[at:]) < 2 {
-				 return io.ErrUnexpectedEOF
+				return io.ErrUnexpectedEOF
 			}
 			(*bbp.Y) = iohelp.ReadInt16Bytes(buf[at:])
 			at += 2
@@ -67,7 +67,7 @@ func (bbp *ExampleMessage) UnmarshalBebop(buf []byte) (err error) {
 			at += 1
 			bbp.Z = new(int32)
 			if len(buf[at:]) < 4 {
-				 return io.ErrUnexpectedEOF
+				return io.ErrUnexpectedEOF
 			}
 			(*bbp.Z) = iohelp.ReadInt32Bytes(buf[at:])
 			at += 4

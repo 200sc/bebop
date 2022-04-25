@@ -3,9 +3,9 @@
 package generated
 
 import (
-	"io"
 	"github.com/200sc/bebop"
 	"github.com/200sc/bebop/iohelp"
+	"io"
 )
 
 var _ bebop.Record = &WithUnionField{}
@@ -37,7 +37,7 @@ func (bbp *WithUnionField) UnmarshalBebop(buf []byte) (err error) {
 			at += 1
 			bbp.Test = new(List2)
 			(*bbp.Test), err = MakeList2FromBytes(buf[at:])
-			if err != nil{
+			if err != nil {
 				return err
 			}
 			at += ((*bbp.Test)).Size()
@@ -70,7 +70,7 @@ func (bbp WithUnionField) EncodeBebop(iow io.Writer) (err error) {
 	if bbp.Test != nil {
 		w.Write([]byte{1})
 		err = (*bbp.Test).EncodeBebop(w)
-		if err != nil{
+		if err != nil {
 			return err
 		}
 	}
@@ -87,7 +87,7 @@ func (bbp *WithUnionField) DecodeBebop(ior io.Reader) (err error) {
 		case 1:
 			bbp.Test = new(List2)
 			(*bbp.Test), err = MakeList2(r)
-			if err != nil{
+			if err != nil {
 				return err
 			}
 		default:
@@ -148,7 +148,7 @@ func (bbp Cons2) MarshalBebopTo(buf []byte) int {
 func (bbp *Cons2) UnmarshalBebop(buf []byte) (err error) {
 	at := 0
 	if len(buf[at:]) < 4 {
-		 return io.ErrUnexpectedEOF
+		return io.ErrUnexpectedEOF
 	}
 	bbp.Head = iohelp.ReadUint32Bytes(buf[at:])
 	at += 4
@@ -294,7 +294,7 @@ func (bbp *List2) UnmarshalBebop(buf []byte) (err error) {
 			at += 1
 			bbp.Cons2 = new(Cons2)
 			(*bbp.Cons2), err = MakeCons2FromBytes(buf[at:])
-			if err != nil{
+			if err != nil {
 				return err
 			}
 			at += ((*bbp.Cons2)).Size()
@@ -303,7 +303,7 @@ func (bbp *List2) UnmarshalBebop(buf []byte) (err error) {
 			at += 1
 			bbp.Nil2 = new(Nil2)
 			(*bbp.Nil2), err = MakeNil2FromBytes(buf[at:])
-			if err != nil{
+			if err != nil {
 				return err
 			}
 			at += ((*bbp.Nil2)).Size()
@@ -344,7 +344,7 @@ func (bbp List2) EncodeBebop(iow io.Writer) (err error) {
 	if bbp.Cons2 != nil {
 		w.Write([]byte{1})
 		err = (*bbp.Cons2).EncodeBebop(w)
-		if err != nil{
+		if err != nil {
 			return err
 		}
 		return w.Err
@@ -352,7 +352,7 @@ func (bbp List2) EncodeBebop(iow io.Writer) (err error) {
 	if bbp.Nil2 != nil {
 		w.Write([]byte{2})
 		err = (*bbp.Nil2).EncodeBebop(w)
-		if err != nil{
+		if err != nil {
 			return err
 		}
 		return w.Err
@@ -363,13 +363,13 @@ func (bbp List2) EncodeBebop(iow io.Writer) (err error) {
 func (bbp *List2) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
 	bodyLen := iohelp.ReadUint32(r)
-	r.Reader = &io.LimitedReader{R:r.Reader, N:int64(bodyLen)+1}
+	r.Reader = &io.LimitedReader{R: r.Reader, N: int64(bodyLen) + 1}
 	for {
 		switch iohelp.ReadByte(r) {
 		case 1:
 			bbp.Cons2 = new(Cons2)
 			(*bbp.Cons2), err = MakeCons2(r)
-			if err != nil{
+			if err != nil {
 				return err
 			}
 			io.ReadAll(r)
@@ -377,7 +377,7 @@ func (bbp *List2) DecodeBebop(ior io.Reader) (err error) {
 		case 2:
 			bbp.Nil2 = new(Nil2)
 			(*bbp.Nil2), err = MakeNil2(r)
-			if err != nil{
+			if err != nil {
 				return err
 			}
 			io.ReadAll(r)

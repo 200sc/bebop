@@ -29,6 +29,7 @@ jobs:
         go test -v ./internal/importgraph
         echo "These packages have no tests-- this line confirms they compile"  
         go test -v ./testdata/incompatible/...
+        go test -v ./testdata/generated-private
 
     - name: Lint
       uses: golangci/golangci-lint-action@v2

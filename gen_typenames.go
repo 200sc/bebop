@@ -20,6 +20,9 @@ func (ft FieldType) goString(settings GenerateSettings) string {
 	if ft.Array != nil {
 		return "[]" + ft.Array.goString(settings)
 	}
+	if settings.PrivateDefinitions {
+		return unexposeName(simpleGoString(ft.Simple, settings))
+	}
 	return simpleGoString(ft.Simple, settings)
 }
 

@@ -8,22 +8,22 @@ import (
 	"io"
 )
 
-var _ bebop.Record = &ReadOnlyMap{}
+var _ bebop.Record = &readOnlyMap{}
 
-type ReadOnlyMap struct {
-	Vals *map[string]uint8
+type readOnlyMap struct {
+	vals *map[string]uint8
 }
 
-func (bbp ReadOnlyMap) MarshalBebopTo(buf []byte) int {
+func (bbp readOnlyMap) MarshalBebopTo(buf []byte) int {
 	at := 0
 	iohelp.WriteUint32Bytes(buf[at:], uint32(bbp.Size()-4))
 	at += 4
-	if bbp.Vals != nil {
+	if bbp.vals != nil {
 		buf[at] = 1
 		at++
-		iohelp.WriteUint32Bytes(buf[at:], uint32(len(*bbp.Vals)))
+		iohelp.WriteUint32Bytes(buf[at:], uint32(len(*bbp.vals)))
 		at += 4
-		for k2, v2 := range *bbp.Vals {
+		for k2, v2 := range *bbp.vals {
 			iohelp.WriteUint32Bytes(buf[at:], uint32(len(k2)))
 			copy(buf[at+4:at+4+len(k2)], []byte(k2))
 			at += 4 + len(k2)
@@ -34,7 +34,7 @@ func (bbp ReadOnlyMap) MarshalBebopTo(buf []byte) int {
 	return at
 }
 
-func (bbp *ReadOnlyMap) UnmarshalBebop(buf []byte) (err error) {
+func (bbp *readOnlyMap) UnmarshalBebop(buf []byte) (err error) {
 	at := 0
 	_ = iohelp.ReadUint32Bytes(buf[at:])
 	buf = buf[4:]
@@ -42,10 +42,10 @@ func (bbp *ReadOnlyMap) UnmarshalBebop(buf []byte) (err error) {
 		switch buf[at] {
 		case 1:
 			at += 1
-			bbp.Vals = new(map[string]uint8)
+			bbp.vals = new(map[string]uint8)
 			ln1 := iohelp.ReadUint32Bytes(buf[at:])
 			at += 4
-			(*bbp.Vals) = make(map[string]uint8,ln1)
+			(*bbp.vals) = make(map[string]uint8,ln1)
 			for i := uint32(0); i < ln1; i++ {
 				k3, err := iohelp.ReadStringBytes(buf[at:])
 				if err != nil {
@@ -55,7 +55,7 @@ func (bbp *ReadOnlyMap) UnmarshalBebop(buf []byte) (err error) {
 				if len(buf[at:]) < 1 {
 					return io.ErrUnexpectedEOF
 				}
-				((*bbp.Vals))[k3] = iohelp.ReadUint8Bytes(buf[at:])
+				((*bbp.vals))[k3] = iohelp.ReadUint8Bytes(buf[at:])
 				at += 1
 			}
 		default:
@@ -64,7 +64,7 @@ func (bbp *ReadOnlyMap) UnmarshalBebop(buf []byte) (err error) {
 	}
 }
 
-func (bbp *ReadOnlyMap) MustUnmarshalBebop(buf []byte) {
+func (bbp *readOnlyMap) MustUnmarshalBebop(buf []byte) {
 	at := 0
 	_ = iohelp.ReadUint32Bytes(buf[at:])
 	buf = buf[4:]
@@ -72,14 +72,14 @@ func (bbp *ReadOnlyMap) MustUnmarshalBebop(buf []byte) {
 		switch buf[at] {
 		case 1:
 			at += 1
-			bbp.Vals = new(map[string]uint8)
+			bbp.vals = new(map[string]uint8)
 			ln2 := iohelp.ReadUint32Bytes(buf[at:])
 			at += 4
-			(*bbp.Vals) = make(map[string]uint8,ln2)
+			(*bbp.vals) = make(map[string]uint8,ln2)
 			for i := uint32(0); i < ln2; i++ {
 				k3 := iohelp.MustReadStringBytes(buf[at:])
 				at += 4 + len(k3)
-				((*bbp.Vals))[k3] = iohelp.ReadUint8Bytes(buf[at:])
+				((*bbp.vals))[k3] = iohelp.ReadUint8Bytes(buf[at:])
 				at += 1
 			}
 		default:
@@ -88,13 +88,13 @@ func (bbp *ReadOnlyMap) MustUnmarshalBebop(buf []byte) {
 	}
 }
 
-func (bbp ReadOnlyMap) EncodeBebop(iow io.Writer) (err error) {
+func (bbp readOnlyMap) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
 	iohelp.WriteUint32(w, uint32(bbp.Size()-4))
-	if bbp.Vals != nil {
+	if bbp.vals != nil {
 		w.Write([]byte{1})
-		iohelp.WriteUint32(w, uint32(len(*bbp.Vals)))
-		for k2, v2 := range *bbp.Vals {
+		iohelp.WriteUint32(w, uint32(len(*bbp.vals)))
+		for k2, v2 := range *bbp.vals {
 			iohelp.WriteUint32(w, uint32(len(k2)))
 			w.Write([]byte(k2))
 			iohelp.WriteUint8(w, v2)
@@ -104,19 +104,19 @@ func (bbp ReadOnlyMap) EncodeBebop(iow io.Writer) (err error) {
 	return w.Err
 }
 
-func (bbp *ReadOnlyMap) DecodeBebop(ior io.Reader) (err error) {
+func (bbp *readOnlyMap) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
 	bodyLen := iohelp.ReadUint32(r)
 	r.Reader = &io.LimitedReader{R:r.Reader, N:int64(bodyLen)}
 	for {
 		switch iohelp.ReadByte(r) {
 		case 1:
-			bbp.Vals = new(map[string]uint8)
+			bbp.vals = new(map[string]uint8)
 			ln3 := iohelp.ReadUint32(r)
-			*bbp.Vals = make(map[string]uint8)
+			*bbp.vals = make(map[string]uint8)
 			for i := uint32(0); i < ln3; i++ {
 				k3 := iohelp.ReadString(r)
-				(*bbp.Vals)[k3] = iohelp.ReadUint8(r)
+				(*bbp.vals)[k3] = iohelp.ReadUint8(r)
 			}
 		default:
 			io.ReadAll(r)
@@ -125,12 +125,12 @@ func (bbp *ReadOnlyMap) DecodeBebop(ior io.Reader) (err error) {
 	}
 }
 
-func (bbp ReadOnlyMap) Size() int {
+func (bbp readOnlyMap) Size() int {
 	bodyLen := 5
-	if bbp.Vals != nil {
+	if bbp.vals != nil {
 		bodyLen += 1
 		bodyLen += 4
-		for k2 := range *bbp.Vals {
+		for k2 := range *bbp.vals {
 			bodyLen += 4 + len(k2)
 			bodyLen += 1
 		}
@@ -138,26 +138,26 @@ func (bbp ReadOnlyMap) Size() int {
 	return bodyLen
 }
 
-func (bbp ReadOnlyMap) MarshalBebop() []byte {
+func (bbp readOnlyMap) MarshalBebop() []byte {
 	buf := make([]byte, bbp.Size())
 	bbp.MarshalBebopTo(buf)
 	return buf
 }
 
-func MakeReadOnlyMap(r iohelp.ErrorReader) (ReadOnlyMap, error) {
-	v := ReadOnlyMap{}
+func makereadOnlyMap(r iohelp.ErrorReader) (readOnlyMap, error) {
+	v := readOnlyMap{}
 	err := v.DecodeBebop(r)
 	return v, err
 }
 
-func MakeReadOnlyMapFromBytes(buf []byte) (ReadOnlyMap, error) {
-	v := ReadOnlyMap{}
+func makereadOnlyMapFromBytes(buf []byte) (readOnlyMap, error) {
+	v := readOnlyMap{}
 	err := v.UnmarshalBebop(buf)
 	return v, err
 }
 
-func MustMakeReadOnlyMapFromBytes(buf []byte) ReadOnlyMap {
-	v := ReadOnlyMap{}
+func mustMakereadOnlyMapFromBytes(buf []byte) readOnlyMap {
+	v := readOnlyMap{}
 	v.MustUnmarshalBebop(buf)
 	return v
 }

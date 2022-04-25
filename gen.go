@@ -36,6 +36,7 @@ type GenerateSettings struct {
 	GenerateUnsafeMethods bool
 	SharedMemoryStrings   bool
 	GenerateFieldTags     bool
+	PrivateDefinitions    bool
 }
 
 type ImportGenerationMode uint8
@@ -368,7 +369,7 @@ func (f File) Generate(w io.Writer, settings GenerateSettings) error {
 	settings.typeMarshallers = f.typeMarshallers()
 	settings.typeByters = f.typeByters()
 	settings.typeByteReaders = f.typeByteReaders(settings)
-	settings.typeUnmarshallers = f.typeUnmarshallers()
+	settings.typeUnmarshallers = f.typeUnmarshallers(settings)
 	settings.typeLengthers = f.typeLengthers()
 	settings.customRecordTypes = f.customRecordTypes()
 
@@ -393,6 +394,12 @@ func (f File) Generate(w io.Writer, settings GenerateSettings) error {
 	writeLine(w, "")
 	writeLine(w, "package %s", settings.PackageName)
 	writeLine(w, "")
+
+	if len(f.Messages)+len(f.Structs)+len(f.Unions) != 0 {
+		imports = append(imports, "github.com/200sc/bebop")
+		imports = append(imports, "github.com/200sc/bebop/iohelp")
+	}
+
 	if len(f.Messages)+len(f.Structs)+len(f.Unions) != 0 {
 		imports = append(imports, "io")
 	}
@@ -405,10 +412,7 @@ func (f File) Generate(w io.Writer, settings GenerateSettings) error {
 	if usedTypes[typeDate] {
 		imports = append(imports, "time")
 	}
-	if len(f.Messages)+len(f.Structs)+len(f.Unions) != 0 {
-		imports = append(imports, "github.com/200sc/bebop")
-		imports = append(imports, "github.com/200sc/bebop/iohelp")
-	}
+
 	if len(imports) != 0 {
 		writeLine(w, "import (")
 		for _, i := range imports {
@@ -472,7 +476,7 @@ func (f File) Generate(w io.Writer, settings GenerateSettings) error {
 
 // Generate writes a .go enum definition out to w.
 func (en Enum) Generate(w io.Writer, settings GenerateSettings) {
-	exposedName := exposeName(en.Name)
+	exposedName := exposeName(en.Name, settings)
 	writeComment(w, 0, en.Comment, settings)
 	writeLine(w, "type %s uint32", exposedName)
 	writeLine(w, "")
@@ -492,7 +496,7 @@ func (en Enum) Generate(w io.Writer, settings GenerateSettings) {
 
 func (con Const) impossibleGoConst() bool {
 	// unique floating point values (inf, nan) cannot be represented as consts in go,
-	// at least not intuitively. This probagbly doesn't matter-- its rare to
+	// at least not intuitively. This probably doesn't matter-- its rare to
 	// rely on inf or nan floating points anyway, and even if you could get these as
 	// consts you would need to use math.IsInf or math.IsNaN for many use cases.
 	if con.SimpleType == typeFloat32 || con.SimpleType == typeFloat64 {
@@ -510,7 +514,7 @@ func (con Const) impossibleGoConst() bool {
 
 func (con Const) Generate(w io.Writer, settings GenerateSettings) {
 	writeComment(w, 0, con.Comment, settings)
-	writeLine(w, "\t%s = %v", exposeName(con.Name), con.Value)
+	writeLine(w, "\t%s = %v", exposeName(con.Name, settings), con.Value)
 }
 
 func writeFieldDefinition(fd Field, w io.Writer, readOnly bool, message bool, settings GenerateSettings) {
@@ -519,7 +523,7 @@ func writeFieldDefinition(fd Field, w io.Writer, readOnly bool, message bool, se
 		writeLine(w, "\t// Deprecated: %s", fd.DeprecatedMessage)
 	}
 
-	name := exposeName(fd.Name)
+	name := exposeName(fd.Name, settings)
 	if readOnly {
 		name = unexposeName(fd.Name)
 	}
@@ -581,7 +585,7 @@ func writeFieldByter(name string, typ FieldType, w io.Writer, settings GenerateS
 
 func writeLengthCheck(w io.Writer, ln string, depth int, args ...string) {
 	writeLineWithTabs(w, "if len(buf[at:]) < "+ln+" {", depth, args...)
-	writeLineWithTabs(w, "\t return io.ErrUnexpectedEOF", depth, args...)
+	writeLineWithTabs(w, "\treturn io.ErrUnexpectedEOF", depth, args...)
 	writeLineWithTabs(w, "}", depth, args...)
 }
 
@@ -713,7 +717,10 @@ func writeFieldBodyCount(name string, typ FieldType, w io.Writer, settings Gener
 	}
 }
 
-func exposeName(name string) string {
+func exposeName(name string, settings GenerateSettings) string {
+	if settings.PrivateDefinitions {
+		return unexposeName(name)
+	}
 	if name == "" {
 		return ""
 	}
@@ -728,16 +735,16 @@ func unexposeName(name string) string {
 }
 
 func writeWrappers(w io.Writer, name string, isEmpty bool, settings GenerateSettings) {
-	writeMarshalBebop(w, name, isEmpty)
-	writeMake(w, name, isEmpty)
-	writeMakeFromBytes(w, name, isEmpty)
+	writeMarshalBebop(w, name, isEmpty, settings)
+	writeMake(w, name, isEmpty, settings)
+	writeMakeFromBytes(w, name, isEmpty, settings)
 	if settings.GenerateUnsafeMethods {
-		writeMustMakeFromBytes(w, name, isEmpty)
+		writeMustMakeFromBytes(w, name, isEmpty, settings)
 	}
 }
 
-func writeMarshalBebop(w io.Writer, name string, isEmpty bool) {
-	exposedName := exposeName(name)
+func writeMarshalBebop(w io.Writer, name string, isEmpty bool, settings GenerateSettings) {
+	exposedName := exposeName(name, settings)
 	writeLine(w, "func (bbp %s) MarshalBebop() []byte {", exposedName)
 	if isEmpty {
 		writeLine(w, "\treturn []byte{}")
@@ -749,9 +756,10 @@ func writeMarshalBebop(w io.Writer, name string, isEmpty bool) {
 	writeCloseBlock(w)
 }
 
-func writeMake(w io.Writer, name string, isEmpty bool) {
-	exposedName := exposeName(name)
-	writeLine(w, "func Make%[1]s(r iohelp.ErrorReader) (%[1]s, error) {", exposedName)
+func writeMake(w io.Writer, name string, isEmpty bool, settings GenerateSettings) {
+	exposedName := exposeName(name, settings)
+	makeName := exposeName("Make", settings)
+	writeLine(w, "func %[2]s%[1]s(r iohelp.ErrorReader) (%[1]s, error) {", exposedName, makeName)
 	if isEmpty {
 		writeLine(w, "\treturn %s{}, nil", exposedName)
 	} else {
@@ -762,9 +770,10 @@ func writeMake(w io.Writer, name string, isEmpty bool) {
 	writeCloseBlock(w)
 }
 
-func writeMakeFromBytes(w io.Writer, name string, isEmpty bool) {
-	exposedName := exposeName(name)
-	writeLine(w, "func Make%[1]sFromBytes(buf []byte) (%[1]s, error) {", exposedName)
+func writeMakeFromBytes(w io.Writer, name string, isEmpty bool, settings GenerateSettings) {
+	exposedName := exposeName(name, settings)
+	makeName := exposeName("Make", settings)
+	writeLine(w, "func %[2]s%[1]sFromBytes(buf []byte) (%[1]s, error) {", exposedName, makeName)
 	if isEmpty {
 		writeLine(w, "\treturn %s{}, nil", exposedName)
 	} else {
@@ -775,9 +784,10 @@ func writeMakeFromBytes(w io.Writer, name string, isEmpty bool) {
 	writeCloseBlock(w)
 }
 
-func writeMustMakeFromBytes(w io.Writer, name string, isEmpty bool) {
-	exposedName := exposeName(name)
-	writeLine(w, "func MustMake%[1]sFromBytes(buf []byte) %[1]s {", exposedName)
+func writeMustMakeFromBytes(w io.Writer, name string, isEmpty bool, settings GenerateSettings) {
+	exposedName := exposeName(name, settings)
+	makeName := exposeName("MustMake", settings)
+	writeLine(w, "func %[2]s%[1]sFromBytes(buf []byte) %[1]s {", exposedName, makeName)
 	if isEmpty {
 		writeLine(w, "\treturn %s{}", exposedName)
 	} else {
@@ -822,27 +832,27 @@ func writeCloseBlock(w io.Writer) {
 	writeLine(w, "")
 }
 
-func writeOpCode(w io.Writer, name string, opCode int32) {
+func writeOpCode(w io.Writer, name string, opCode int32, settings GenerateSettings) {
 	if opCode != 0 {
-		writeLine(w, "const %sOpCode = 0x%x", exposeName(name), opCode)
+		writeLine(w, "const %sOpCode = 0x%x", exposeName(name, settings), opCode)
 		writeLine(w, "")
 	}
 }
 
-func writeRecordAssertion(w io.Writer, name string) {
-	writeLine(w, "var _ bebop.Record = &%s{}", exposeName(name))
+func writeRecordAssertion(w io.Writer, name string, settings GenerateSettings) {
+	writeLine(w, "var _ bebop.Record = &%s{}", exposeName(name, settings))
 	writeLine(w, "")
 }
 
-func writeGoStructDef(w io.Writer, name string) {
-	writeLine(w, "type %s struct {", exposeName(name))
+func writeGoStructDef(w io.Writer, name string, settings GenerateSettings) {
+	writeLine(w, "type %s struct {", exposeName(name, settings))
 }
 
 func writeRecordTypeDefinition(w io.Writer, name string, opCode int32, comment string, settings GenerateSettings, fields []fieldWithNumber) {
-	writeOpCode(w, name, opCode)
-	writeRecordAssertion(w, name)
+	writeOpCode(w, name, opCode, settings)
+	writeRecordAssertion(w, name, settings)
 	writeComment(w, 0, comment, settings)
-	writeGoStructDef(w, name)
+	writeGoStructDef(w, name, settings)
 	for _, fd := range fields {
 		writeFieldDefinition(fd.Field, w, false, true, settings)
 	}
