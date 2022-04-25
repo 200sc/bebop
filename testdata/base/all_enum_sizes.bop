@@ -1,0 +1,34 @@
+enum Uint8Enum : uint8 {
+    uint8enum1 = 1;
+    uint8enum2 = 255;
+}
+
+enum Uint16Enum : uint16 {
+    uint16enum1 = 1;
+    uint16enum2 = 65535;
+}
+
+enum Uint32Enum : uint32 {
+    uint32enum1 = 1;
+    uint32enum2 = 0xFFFFFFFF;
+}
+
+enum Uint64Enum : uint64 {
+    uint64enum1 = 1;
+    uint64enum2 = 0xFFFFFFFFFFFFFFFF;
+}
+
+enum int16Enum : int16 {
+    int16enum1 = 1;
+    int16enum2 = 32767;
+}
+
+enum int32Enum : int32 {
+    int32enum1 = 1;
+    int32enum2 = 0x0FFFFFFF;
+}
+
+enum int64Enum : int64 {
+    int64enum1 = 1;
+    int64enum2 = 0x0FFFFFFFFFFFFFFF;
+}

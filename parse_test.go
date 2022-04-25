@@ -1440,6 +1440,8 @@ func TestReadFile(t *testing.T) {
 					},
 				},
 			},
+		}, {
+			file: "all_enum_sizes",
 		},
 	}
 	for _, tc := range tcs {

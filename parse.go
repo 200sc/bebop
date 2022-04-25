@@ -202,7 +202,7 @@ func optNewline(tr *tokenReader) {
 	}
 }
 
-func readEnumOptionValue(tr *tokenReader, previousOptions []EnumOption, bitflags bool) (int32, error) {
+func readEnumOptionValue(tr *tokenReader, previousOptions []EnumOption, bitflags bool) (uint64, error) {
 	if _, err := expectNext(tr, tokenKindEquals); err != nil {
 		return 0, err
 	}
@@ -211,11 +211,11 @@ func readEnumOptionValue(tr *tokenReader, previousOptions []EnumOption, bitflags
 		if err != nil {
 			return 0, err
 		}
-		optInteger, err := strconv.ParseInt(string(toks[0].concrete), 0, 32)
+		optInteger, err := strconv.ParseUint(string(toks[0].concrete), 0, 64)
 		if err != nil {
 			return 0, err
 		}
-		return int32(optInteger), nil
+		return optInteger, nil
 	}
 	return readBitflagExpr(tr, previousOptions)
 }
@@ -232,13 +232,42 @@ func readUntil(tr *tokenReader, kind tokenKind) ([]token, error) {
 	return nil, readError(tr.lastToken, "eof reading until %v", kind)
 }
 
+var enumSizeStrings = map[string]EnumSize{
+	"uint8":  EnumSizeUint8,
+	"uint16": EnumSizeUint16,
+	"uint32": EnumSizeUint32,
+	"uint64": EnumSizeUint64,
+	"int16":  EnumSizeInt16,
+	"int32":  EnumSizeInt32,
+	"int64":  EnumSizeInt64,
+}
+
 func readEnum(tr *tokenReader, bitflags bool) (Enum, error) {
 	en := Enum{}
-	toks, err := expectNext(tr, tokenKindIdent, tokenKindOpenCurly)
+	toks, err := expectNext(tr, tokenKindIdent)
 	if err != nil {
 		return en, err
 	}
 	en.Name = string(toks[0].concrete)
+	en.Size = EnumSizeUint32
+
+	if err := expectAnyOfNext(tr, tokenKindOpenCurly, tokenKindColon); err != nil {
+		return en, err
+	}
+	switch tr.Token().kind {
+	case tokenKindOpenCurly:
+		break
+	case tokenKindColon:
+		toks, err := expectNext(tr, tokenKindIdent, tokenKindOpenCurly)
+		if err != nil {
+			return en, err
+		}
+		var ok bool
+		en.Size, ok = enumSizeStrings[string(toks[0].concrete)]
+		if !ok {
+			return en, readError(tr.nextToken, "undefined enum size %q", string(toks[0].concrete))
+		}
+	}
 
 	optNewline(tr)
 

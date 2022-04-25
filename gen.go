@@ -91,7 +91,7 @@ func (f File) Validate() error {
 		}
 		customTypes[en.Name] = struct{}{}
 		optionNames := map[string]struct{}{}
-		optionValues := map[int32]struct{}{}
+		optionValues := map[uint64]struct{}{}
 		for _, opt := range en.Options {
 			if _, ok := optionNames[opt.Name]; ok {
 				return fmt.Errorf("enum %s has duplicate option name %s", en.Name, opt.Name)
@@ -474,11 +474,22 @@ func (f File) Generate(w io.Writer, settings GenerateSettings) error {
 	return nil
 }
 
+var enumSizes = map[EnumSize]string{
+	EnumSizeUint8:  "uint8",
+	EnumSizeUint16: "uint16",
+	EnumSizeUint32: "uint32",
+	EnumSizeUint64: "uint64",
+	EnumSizeInt16:  "int16",
+	EnumSizeInt32:  "int32",
+	EnumSizeInt64:  "int64",
+}
+
 // Generate writes a .go enum definition out to w.
 func (en Enum) Generate(w io.Writer, settings GenerateSettings) {
 	exposedName := exposeName(en.Name, settings)
 	writeComment(w, 0, en.Comment, settings)
-	writeLine(w, "type %s uint32", exposedName)
+	sizeStr := enumSizes[en.Size]
+	writeLine(w, "type %s %s", exposedName, sizeStr)
 	writeLine(w, "")
 	if len(en.Options) != 0 {
 		writeLine(w, "const (")

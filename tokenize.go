@@ -389,6 +389,7 @@ func newTokenTree() *tokenTree {
 	tt.add([]byte{')'}, simpleToken(tokenKindCloseParen))
 	tt.add([]byte{','}, simpleToken(tokenKindComma))
 	tt.add([]byte{';'}, simpleToken(tokenKindSemicolon))
+	tt.add([]byte{':'}, simpleToken(tokenKindColon))
 	tt.add([]byte{'\n'}, simpleToken(tokenKindNewline))
 	tt.add([]byte{'|'}, simpleToken(tokenKindVerticalBar))
 	tt.add([]byte{'&'}, simpleToken(tokenKindAmpersand))

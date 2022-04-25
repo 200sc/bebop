@@ -50,6 +50,7 @@ const (
 	tokenKindAmpersand
 	tokenKindDoubleCaretLeft
 	tokenKindDoubleCaretRight
+	tokenKindColon
 
 	tokenKindNewline
 
@@ -96,6 +97,7 @@ var tokenStrings = map[tokenKind]string{
 	tokenKindAmpersand:        "Ampersand",
 	tokenKindDoubleCaretLeft:  "Double Caret Left",
 	tokenKindDoubleCaretRight: "Double Caret Right",
+	tokenKindColon:            "Colon",
 }
 
 func (tk tokenKind) String() string {

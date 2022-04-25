@@ -5,7 +5,7 @@ import (
 	"strconv"
 )
 
-func readBitflagExpr(tr *tokenReader, previousOptions []EnumOption) (int32, error) {
+func readBitflagExpr(tr *tokenReader, previousOptions []EnumOption) (uint64, error) {
 	// to simplify this a little bit, read everything up until ;
 	toks, err := readUntil(tr, tokenKindSemicolon)
 	if err != nil {
@@ -59,7 +59,7 @@ type identNode struct {
 
 func (identNode) isNode() {}
 
-func evaluateBitflagExpr(n bitFlagExprNode, opts []EnumOption) (int32, error) {
+func evaluateBitflagExpr(n bitFlagExprNode, opts []EnumOption) (uint64, error) {
 	switch v := n.(type) {
 	case identNode:
 		name := string(v.tk.concrete)
@@ -70,11 +70,11 @@ func evaluateBitflagExpr(n bitFlagExprNode, opts []EnumOption) (int32, error) {
 		}
 		return 0, readError(v.tk, "enum option %v undefined", name)
 	case numberNode:
-		optInteger, err := strconv.ParseInt(string(v.tk.concrete), 0, 32)
+		optInteger, err := strconv.ParseUint(string(v.tk.concrete), 0, 64)
 		if err != nil {
 			return 0, err
 		}
-		return int32(optInteger), nil
+		return optInteger, nil
 	case parenNode:
 		return evaluateBitflagExpr(v.inner, opts)
 	case binOpNode:

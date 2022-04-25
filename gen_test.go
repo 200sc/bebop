@@ -387,6 +387,7 @@ func TestGenerateToFile_Imports(t *testing.T) {
 
 var genTestFiles = []string{
 	"all_consts",
+	"all_enum_sizes",
 	"array_of_strings",
 	"basic_arrays",
 	"basic_types",

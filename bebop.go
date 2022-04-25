@@ -2,7 +2,7 @@
 package bebop
 
 // Version is the library version. Should be used by CLI tools when passed a '--version' flag.
-const Version = "v0.3.1"
+const Version = "v0.3.2"
 
 // A File is a structured representation of a .bop file.
 type File struct {
@@ -100,10 +100,23 @@ type Enum struct {
 	Name    string
 	Comment string
 	Options []EnumOption
+	Size    EnumSize
 	// Namespace is only provided for imported types, and only
 	// used in code generation.
 	Namespace string
 }
+
+type EnumSize uint8
+
+const (
+	EnumSizeUint8  EnumSize = iota
+	EnumSizeUint16 EnumSize = iota
+	EnumSizeUint32 EnumSize = iota
+	EnumSizeUint64 EnumSize = iota
+	EnumSizeInt16  EnumSize = iota
+	EnumSizeInt32  EnumSize = iota
+	EnumSizeInt64  EnumSize = iota
+)
 
 // An EnumOption is one possible value for a field typed as a specific Enum.
 type EnumOption struct {
@@ -111,7 +124,7 @@ type EnumOption struct {
 	Comment string
 	// DeprecatedMessage is only provided if Deprecated is true.
 	DeprecatedMessage string
-	Value             int32
+	Value             uint64
 	Deprecated        bool
 }
 
