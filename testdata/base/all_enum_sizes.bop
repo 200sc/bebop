@@ -10,12 +10,12 @@ enum Uint16Enum : uint16 {
 
 enum Uint32Enum : uint32 {
     uint32enum1 = 1;
-    uint32enum2 = 0xFFFFFFFF;
+    uint32enum2 = 4294967295;
 }
 
 enum Uint64Enum : uint64 {
     uint64enum1 = 1;
-    uint64enum2 = 0xFFFFFFFFFFFFFFFF;
+    uint64enum2 = 18446744073709551615;
 }
 
 enum int16Enum : int16 {

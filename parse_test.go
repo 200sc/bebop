@@ -1442,6 +1442,101 @@ func TestReadFile(t *testing.T) {
 			},
 		}, {
 			file: "all_enum_sizes",
+			expected: File{
+				Enums: []Enum{
+					{
+						Name: "Uint8Enum",
+						Options: []EnumOption{
+							{
+								Name:  "uint8enum1",
+								Value: 1,
+							},
+							{
+								Name:  "uint8enum2",
+								Value: 255,
+							},
+						},
+					},
+					{
+						Name: "Uint16Enum",
+						Options: []EnumOption{
+							{
+								Name:  "uint16enum1",
+								Value: 1,
+							},
+							{
+								Name:  "uint16enum2",
+								Value: 65535,
+							},
+						},
+					},
+					{
+						Name: "Uint32Enum",
+						Options: []EnumOption{
+							{
+								Name:  "uint32enum1",
+								Value: 1,
+							},
+							{
+								Name:  "uint32enum2",
+								Value: 4294967295,
+							},
+						},
+					},
+					{
+						Name: "Uint64Enum",
+						Options: []EnumOption{
+							{
+								Name:  "uint64enum1",
+								Value: 1,
+							},
+							{
+								Name:  "uint64enum2",
+								Value: 18446744073709551615,
+							},
+						},
+					},
+					{
+						Name: "int16Enum",
+						Options: []EnumOption{
+							{
+								Name:  "int16enum1",
+								Value: 1,
+							},
+							{
+								Name:  "int16enum2",
+								Value: 32767,
+							},
+						},
+					},
+					{
+						Name: "int32Enum",
+						Options: []EnumOption{
+							{
+								Name:  "int32enum1",
+								Value: 1,
+							},
+							{
+								Name:  "int32enum2",
+								Value: 268435455,
+							},
+						},
+					},
+					{
+						Name: "int64Enum",
+						Options: []EnumOption{
+							{
+								Name:  "int64enum1",
+								Value: 1,
+							},
+							{
+								Name:  "int64enum2",
+								Value: 1152921504606846975,
+							},
+						},
+					},
+				},
+			},
 		},
 	}
 	for _, tc := range tcs {
@@ -1518,7 +1613,7 @@ func TestReadFileError(t *testing.T) {
 		{file: "invalid_enum_bad_deprecated", errMessage: "[1:17] expected (String Literal) got Equals"},
 		{file: "invalid_enum_double_deprecated", errMessage: "[2:5] expected enum option following deprecated annotation"},
 		{file: "invalid_enum_no_close", errMessage: "[2:0] enum definition ended early"},
-		{file: "invalid_enum_no_curly", errMessage: "[1:0] expected (Open Curly) got Newline"},
+		{file: "invalid_enum_no_curly", errMessage: "[1:0] expected (Open Curly, Colon) got Newline"},
 		{file: "invalid_enum_no_eq", errMessage: "[1:9] expected (Equals) got Integer Literal"},
 		{file: "invalid_enum_no_int", errMessage: "[1:10] expected (Integer Literal) got Semicolon"},
 		{file: "invalid_enum_no_name", errMessage: "[0:6] expected (Ident) got Open Curly"},
