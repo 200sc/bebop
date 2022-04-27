@@ -27,6 +27,9 @@ func newTokenReader(r io.Reader) *tokenReader {
 	return &tokenReader{
 		r:    bufio.NewReader(r),
 		tree: newTokenTree(),
+		loc: location{
+			line: 1,
+		},
 	}
 }
 
@@ -38,13 +41,16 @@ func (tr *tokenReader) UnNext() {
 func (tr *tokenReader) setNextToken(tk token) {
 	tr.lastToken = tr.nextToken
 	tr.nextToken = tk
-	tr.nextToken.loc = tr.loc
+	tr.nextToken.end = tr.loc
 }
 
 func (tr *tokenReader) readByte() (byte, error) {
 	b, err := tr.r.ReadByte()
 	if err != io.EOF {
 		tr.loc.inc(1)
+	}
+	if b == '\n' {
+		tr.loc.incLine()
 	}
 	return b, err
 }
@@ -86,7 +92,8 @@ func (tr *tokenReader) Token() token {
 				injectedToken := token{
 					kind:     tokenKindSemicolon,
 					concrete: []byte{';'},
-					loc:      tr.loc,
+					start:    tr.loc,
+					end:      tr.loc,
 				}
 				tr.keepNextToken = true
 				tr.lastToken = injectedToken
@@ -110,6 +117,7 @@ func (tr *tokenReader) Next() bool {
 		return true
 	}
 	// find all byte-driven tokens
+	start := tr.loc
 	tk, ok := tr.tree.findFirst(tr)
 	if len(tr.errs) != 0 {
 		lastErr := tr.errs[len(tr.errs)-1]
@@ -123,9 +131,7 @@ func (tr *tokenReader) Next() bool {
 		// other errors should have been corrected
 	}
 	if ok {
-		if tk.kind == tokenKindNewline {
-			tr.loc.incLine()
-		}
+		tk.start = start
 		tr.setNextToken(tk)
 		return true
 	}
@@ -174,12 +180,14 @@ var keywords = map[string]tokenKind{
 	"false":      tokenKindFalse,
 	"import":     tokenKindImport,
 	"flags":      tokenKindFlags,
+	"service":    tokenKindService,
 }
 
 func (tr *tokenReader) nextIdent(firstRune rune) bool {
 	tk := token{
 		concrete: []byte(string(firstRune)),
 		kind:     tokenKindIdent,
+		start:    tr.loc,
 	}
 	for {
 		rn, sz, err := tr.r.ReadRune()
@@ -218,10 +226,7 @@ func (tr *tokenReader) skipFollowingWhitespace() {
 	for {
 		b, _ := tr.readByte()
 		switch b {
-		case '\n':
-			tr.loc.incLine()
-			fallthrough
-		case ' ', '\r':
+		case '\n', ' ', '\r':
 			continue
 		}
 		tr.unreadByte()

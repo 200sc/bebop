@@ -2,6 +2,7 @@ package bebop
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -11,6 +12,7 @@ import (
 var testFiles = []string{
 	"array_of_strings",
 	"all_consts",
+	"all_enum_sizes",
 	"basic_arrays",
 	"basic_types",
 	"documentation",
@@ -26,6 +28,7 @@ var testFiles = []string{
 	"request",
 	"union",
 	"bitflags",
+	"wiki_rpc",
 }
 
 func TestTokenize(t *testing.T) {
@@ -41,9 +44,14 @@ func TestTokenize(t *testing.T) {
 			}
 			defer f.Close()
 			tr := newTokenReader(f)
+			toks := []token{}
 			for tr.Next() {
+				toks = append(toks, tr.Token())
 			}
-			if tr.Err() != nil {
+			if tr.Err() != nil || filename == "wiki_rpc.bop" {
+				for _, t := range toks {
+					fmt.Println(t)
+				}
 				t.Fatalf("token reader errored: %v", tr.Err())
 			}
 		})
@@ -109,6 +117,7 @@ func TestTokenizeNoSemis(t *testing.T) {
 		"import_b":           "import semis cannot be added",
 		"import":             "import semis cannot be added",
 		"msgpack_comparison": "we are naively removing semis from within comments",
+		"wiki_rpc":           "?",
 	}
 	for _, filename := range testFiles {
 		filename := filename

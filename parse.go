@@ -140,6 +140,19 @@ func ReadFile(r io.Reader) (File, []string, error) {
 				f.GoPackage, _ = strconv.Unquote(cons.Value)
 			}
 			f.Consts = append(f.Consts, cons)
+		case tokenKindService:
+			if nextRecordBitFlags {
+				return f, warnings, readError(tk, "services may not use bitflags")
+			}
+			if nextRecordOpCode != 0 {
+				return f, warnings, readError(tk, "services may not have attached op codes")
+			}
+			svc, svcWarnings, err := readService(tr)
+			warnings = append(warnings, svcWarnings...)
+			if err != nil {
+				return f, warnings, err
+			}
+			f.Services = append(f.Services, svc)
 		}
 		nextCommentLines = []string{}
 		nextRecordOpCode = 0
@@ -762,6 +775,10 @@ func readConst(tr *tokenReader) (Const, []string, error) {
 	return cons, warnings, nil
 }
 
+func readService(tr *tokenReader) (Service, []string, error) {
+	return Service{}, []string{}, fmt.Errorf("unimplemented")
+}
+
 func readOpCode(tr *tokenReader) (int32, error) {
 	if _, err := expectNext(tr, tokenKindOpCode, tokenKindOpenParen); err != nil {
 		return 0, err
@@ -814,7 +831,7 @@ func bytesToOpCode(data []byte) int32 {
 }
 
 func readError(tk token, format string, args ...interface{}) error {
-	format = fmt.Sprintf("[%d:%d] ", tk.loc.line, tk.loc.lineChar) + format
+	format = tk.start.String() + " " + format
 	return fmt.Errorf(format, args...)
 }
 

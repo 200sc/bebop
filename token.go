@@ -1,9 +1,16 @@
 package bebop
 
+import "fmt"
+
 type token struct {
 	kind     tokenKind
 	concrete []byte
-	loc      location
+	start    location
+	end      location
+}
+
+func (t token) String() string {
+	return fmt.Sprintf("%s-%s %s", t.start.String(), t.end.String(), t.kind.String())
 }
 
 type tokenKind uint8
@@ -33,6 +40,7 @@ const (
 	tokenKindFalse
 	tokenKindImport
 	tokenKindFlags
+	tokenKindService
 
 	tokenKindOpenSquare
 	tokenKindCloseSquare
@@ -98,6 +106,7 @@ var tokenStrings = map[tokenKind]string{
 	tokenKindDoubleCaretLeft:  "Double Caret Left",
 	tokenKindDoubleCaretRight: "Double Caret Right",
 	tokenKindColon:            "Colon",
+	tokenKindService:          "Service",
 }
 
 func (tk tokenKind) String() string {

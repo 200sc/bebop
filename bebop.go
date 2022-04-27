@@ -24,6 +24,7 @@ type File struct {
 	Unions   []Union
 	Consts   []Const
 	Imports  []string
+	Services []Service
 }
 
 // goPackage defines the constant used in bebop files as a hint to
@@ -160,4 +161,19 @@ type Tag struct {
 	Value string
 	// Boolean is set if Value is empty, in the form `key`, not `key:""`.
 	Boolean bool
+}
+
+type Service struct {
+	Functions []ServiceFunction
+}
+
+type ServiceFunction struct {
+	Name   string
+	Output FieldType
+	Inputs []InputField
+}
+
+type InputField struct {
+	FieldType
+	Name string
 }

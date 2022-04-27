@@ -13,7 +13,7 @@ func (l locError) Unwrap() error {
 }
 
 func (l locError) Error() string {
-	return fmt.Sprintf("[%d:%d] %s", l.loc.line, l.loc.lineChar, l.err)
+	return fmt.Sprintf("%s %s", l.loc.String(), l.err)
 }
 
 // a location is a line and character-in-line pair
@@ -29,4 +29,8 @@ func (l *location) inc(i int) {
 func (l *location) incLine() {
 	l.line++
 	l.lineChar = 0
+}
+
+func (l location) String() string {
+	return fmt.Sprintf("[%d:%d]", l.line, l.lineChar)
 }

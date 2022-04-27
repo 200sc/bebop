@@ -1538,6 +1538,9 @@ func TestReadFile(t *testing.T) {
 				},
 			},
 		},
+		{
+			file: "wiki_rpc",
+		},
 	}
 	for _, tc := range tcs {
 		tc := tc

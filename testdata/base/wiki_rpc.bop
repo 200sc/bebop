@@ -1,0 +1,45 @@
+/** A key-value pair. */
+struct KV {
+    string key;
+    string value;
+}
+
+/**
+ * A no-op service for the client as this example is a classic client/server setup and not P2P.
+ * For P2P simply define another service with functionality OR use the same service for both.
+ */
+service NullService {}
+
+/**
+ * A service which stores keys and values like a HashMap.
+ * 
+ * Some variations on this could be instead of storing String values, storing a struct like
+ * 
+ * union StoredData {
+ *   1 -> struct OptA {...};
+ *   2 -> struct OptB {...};
+ *   ...
+ * }
+ */
+service KVStore {
+    /** Retrieve a paginated list of key-value pairs. */
+    1 -> KV[] entries(uint64 page, uint16 pageSize);
+    
+    /** Returns a paginated list of keys. */
+    2 -> string[] keys(uint64 page, uint16 pageSize);
+    
+    /** Returns a paginated list of values. */
+    3 -> string[] values(uint64 page, uint16 pageSize);
+
+    /** Returns true if it was inserted, false if the key was a duplicate and was not inserted. */
+    4 -> bool insert(string key, string value);
+    
+    /** Add multiple entries and return any keys which where already there */
+    5 -> string[] insertMany(KV[] entries);
+    
+    /** Lookup a key. Returns a custom user error of not present. */
+    6 -> string get(string key);
+
+    /** Retrieve a count of the number of entries stored. */
+    7 -> uint64 count();
+}
