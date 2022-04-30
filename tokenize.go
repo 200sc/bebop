@@ -181,6 +181,7 @@ var keywords = map[string]tokenKind{
 	"import":     tokenKindImport,
 	"flags":      tokenKindFlags,
 	"service":    tokenKindService,
+	"void":       tokenKindVoid,
 }
 
 func (tr *tokenReader) nextIdent(firstRune rune) bool {

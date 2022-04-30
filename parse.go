@@ -147,11 +147,11 @@ func ReadFile(r io.Reader) (File, []string, error) {
 			if nextRecordOpCode != 0 {
 				return f, warnings, readError(tk, "services may not have attached op codes")
 			}
-			svc, svcWarnings, err := readService(tr)
-			warnings = append(warnings, svcWarnings...)
+			svc, err := readService(tr)
 			if err != nil {
 				return f, warnings, err
 			}
+			svc.Comment = strings.Join(nextCommentLines, "\n")
 			f.Services = append(f.Services, svc)
 		}
 		nextCommentLines = []string{}
@@ -173,20 +173,16 @@ func expectAnyOfNext(tr *tokenReader, kinds ...tokenKind) error {
 		return readError(tr.nextToken, "expected (%v), got no token", kindsStr(kinds))
 	}
 	tk := tr.Token()
-	found := false
 	for _, k := range kinds {
 		if tk.kind == k {
-			found = true
+			return nil
 		}
 	}
-	if !found {
-		kindsStrs := make([]string, len(kinds))
-		for i, k := range kinds {
-			kindsStrs[i] = k.String()
-		}
-		return readError(tk, "expected (%v) got %s", kindsStr(kinds), tk.kind)
+	kindsStrs := make([]string, len(kinds))
+	for i, k := range kinds {
+		kindsStrs[i] = k.String()
 	}
-	return nil
+	return readError(tk, "expected (%v) got %s", kindsStr(kinds), tk.kind)
 }
 
 func expectNext(tr *tokenReader, kinds ...tokenKind) ([]token, error) {
@@ -775,8 +771,123 @@ func readConst(tr *tokenReader) (Const, []string, error) {
 	return cons, warnings, nil
 }
 
-func readService(tr *tokenReader) (Service, []string, error) {
-	return Service{}, []string{}, fmt.Errorf("unimplemented")
+func readService(tr *tokenReader) (Service, error) {
+	svc := Service{
+		Functions: map[uint32]ServiceFunction{
+			0: {
+				Name: "serviceName",
+				Output: FieldType{
+					Simple: "string",
+				},
+			},
+		},
+	}
+
+	toks, err := expectNext(tr, tokenKindIdent, tokenKindOpenCurly)
+	if err != nil {
+		return svc, err
+	}
+	svc.Name = string(toks[0].concrete)
+
+	optNewline(tr)
+
+	nextCommentLines := []string{}
+	nextDeprecatedMessage := ""
+	nextIsDeprecated := false
+	for tr.Token().kind != tokenKindCloseCurly {
+		if !tr.Next() {
+			return svc, readError(tr.nextToken, "service definition ended early")
+		}
+		tk := tr.Token()
+		switch tk.kind {
+		case tokenKindNewline:
+			nextCommentLines = []string{}
+		case tokenKindIntegerLiteral:
+			fnc := ServiceFunction{}
+
+			funcInteger, err := strconv.ParseUint(string(tr.Token().concrete), 10, 32)
+			if err != nil {
+				return svc, readError(tr.nextToken, err.Error())
+			}
+			if _, ok := svc.Functions[uint32(funcInteger)]; ok {
+				return svc, readError(tr.nextToken, "svc has duplicate function index %d", funcInteger)
+			}
+			if _, err := expectNext(tr, tokenKindArrow); err != nil {
+				return svc, err
+			}
+			if !tr.Next() {
+				return svc, readError(tr.nextToken, "service function ended early")
+			}
+			if tr.Token().kind == tokenKindVoid {
+				fnc.Void = true
+			} else {
+				tr.UnNext()
+				fnc.Output, err = readFieldType(tr)
+				if err != nil {
+					return svc, err
+				}
+			}
+			toks, err = expectNext(tr, tokenKindIdent, tokenKindOpenParen)
+			if err != nil {
+				return svc, err
+			}
+			fnc.Name = string(toks[0].concrete)
+			fnc.Deprecated = nextIsDeprecated
+			fnc.DeprecatedMessage = nextDeprecatedMessage
+			fnc.Comment = strings.Join(nextCommentLines, "\n")
+
+			if !tr.Next() {
+				return svc, readError(tr.nextToken, "service function parameters ended early")
+			}
+			if tr.Token().kind != tokenKindCloseParen {
+				tr.UnNext()
+				for tr.Token().kind != tokenKindCloseParen {
+					fd := InputField{}
+					fd.FieldType, err = readFieldType(tr)
+					if err != nil {
+						return svc, err
+					}
+					toks, err = expectNext(tr, tokenKindIdent)
+					if err != nil {
+						return svc, err
+					}
+					fd.Name = string(toks[0].concrete)
+					fnc.Inputs = append(fnc.Inputs, fd)
+
+					err = expectAnyOfNext(tr, tokenKindComma, tokenKindCloseParen)
+					if err != nil {
+						return svc, err
+					}
+				}
+			}
+
+			svc.Functions[uint32(funcInteger)] = fnc
+			nextDeprecatedMessage = ""
+			nextIsDeprecated = false
+			nextCommentLines = []string{}
+
+			skipEndOfLineComments(tr)
+			optNewline(tr)
+
+		case tokenKindOpenSquare:
+			if nextIsDeprecated {
+				return svc, readError(tk, "expected field following deprecated annotation")
+			}
+			dpMsg, err := readDeprecated(tr)
+			if err != nil {
+				return svc, err
+			}
+			nextIsDeprecated = true
+			nextDeprecatedMessage = dpMsg
+		case tokenKindBlockComment:
+			nextCommentLines = append(nextCommentLines, readBlockComment(tr, tk))
+		case tokenKindLineComment:
+			cmt := sanitizeComment(tk)
+			nextCommentLines = append(nextCommentLines, cmt)
+		}
+	}
+
+	return svc, nil
 }
 
 func readOpCode(tr *tokenReader) (int32, error) {

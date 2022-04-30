@@ -1540,6 +1540,184 @@ func TestReadFile(t *testing.T) {
 		},
 		{
 			file: "wiki_rpc",
+			expected: File{
+				Services: []Service{
+					{
+						Name:    "NullService",
+						Comment: "*\r\n * A no-op service for the client as this example is a classic client/server setup and not P2P.\r\n * For P2P simply define another service with functionality OR use the same service for both.\r\n ",
+						Functions: map[uint32]ServiceFunction{
+							0: {
+								Name: "serviceName",
+								Output: FieldType{
+									Simple: "string",
+								},
+							},
+						},
+					}, {
+						Name:    "KVStore",
+						Comment: "*\r\n * A service which stores keys and values like a HashMap.\r\n * \r\n * Some variations on this could be instead of storing String values, storing a struct like\r\n * \r\n * union StoredData {\r\n *   1 -> struct OptA {...};\r\n *   2 -> struct OptB {...};\r\n *   ...\r\n * }\r\n ",
+						Functions: map[uint32]ServiceFunction{
+							0: {
+								Name: "serviceName",
+								Output: FieldType{
+									Simple: "string",
+								},
+							},
+							1: {
+								Comment: "* Retrieve a paginated list of key-value pairs. ",
+								Name:    "entries",
+								Output: FieldType{
+									Array: &FieldType{
+										Simple: "KV",
+									},
+								},
+								Inputs: []InputField{
+									{
+										Name: "page",
+										FieldType: FieldType{
+											Simple: "uint64",
+										},
+									},
+									{
+										Name: "pageSize",
+										FieldType: FieldType{
+											Simple: "uint16",
+										},
+									},
+								},
+							},
+							2: {
+								Comment: "* Returns a paginated list of keys. ",
+								Name:    "keys",
+								Output: FieldType{
+									Array: &FieldType{
+										Simple: "string",
+									},
+								},
+								Inputs: []InputField{
+									{
+										Name: "page",
+										FieldType: FieldType{
+											Simple: "uint64",
+										},
+									},
+									{
+										Name: "pageSize",
+										FieldType: FieldType{
+											Simple: "uint16",
+										},
+									},
+								},
+							},
+							3: {
+								Comment: "* Returns a paginated list of values. ",
+								Name:    "values",
+								Output: FieldType{
+									Array: &FieldType{
+										Simple: "string",
+									},
+								},
+								Inputs: []InputField{
+									{
+										Name: "page",
+										FieldType: FieldType{
+											Simple: "uint64",
+										},
+									},
+									{
+										Name: "pageSize",
+										FieldType: FieldType{
+											Simple: "uint16",
+										},
+									},
+								},
+							},
+							4: {
+								Comment: "* Returns true if it was inserted, false if the key was a duplicate and was not inserted. ",
+								Name:    "insert",
+								Output: FieldType{
+									Simple: "bool",
+								},
+								Inputs: []InputField{
+									{
+										Name: "key",
+										FieldType: FieldType{
+											Simple: "string",
+										},
+									},
+									{
+										Name: "value",
+										FieldType: FieldType{
+											Simple: "string",
+										},
+									},
+								},
+							},
+							5: {
+								Comment: "* Add multiple entries and return any keys which where already there ",
+								Name:    "insertMany",
+								Output: FieldType{
+									Array: &FieldType{
+										Simple: "string",
+									},
+								},
+								Inputs: []InputField{
+									{
+										Name: "entries",
+										FieldType: FieldType{
+											Array: &FieldType{
+												Simple: "KV",
+											},
+										},
+									},
+								},
+							},
+							6: {
+								Comment: "* Lookup a key. Returns a custom user error of not present. ",
+								Name:    "get",
+								Output: FieldType{
+									Simple: "string",
+								},
+								Inputs: []InputField{
+									{
+										Name: "key",
+										FieldType: FieldType{
+											Simple: "string",
+										},
+									},
+								},
+							},
+							7: {
+								Comment: "* Retrieve a count of the number of entries stored. ",
+								Name:    "count",
+								Output: FieldType{
+									Simple: "uint64",
+								},
+							},
+						},
+					},
+				},
+				Structs: []Struct{
+					{
+						Name:    "KV",
+						Comment: "* A key-value pair. ",
+						Fields: []Field{
+							{
+								Name: "key",
+								FieldType: FieldType{
+									Simple: "string",
+								},
+							},
+							{
+								Name: "value",
+								FieldType: FieldType{
+									Simple: "string",
+								},
+							},
+						},
+					},
+				},
+			},
 		},
 	}
 	for _, tc := range tcs {

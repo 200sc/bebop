@@ -41,6 +41,7 @@ const (
 	tokenKindImport
 	tokenKindFlags
 	tokenKindService
+	tokenKindVoid
 
 	tokenKindOpenSquare
 	tokenKindCloseSquare
@@ -107,6 +108,7 @@ var tokenStrings = map[tokenKind]string{
 	tokenKindDoubleCaretRight: "Double Caret Right",
 	tokenKindColon:            "Colon",
 	tokenKindService:          "Service",
+	tokenKindVoid:             "Void",
 }
 
 func (tk tokenKind) String() string {

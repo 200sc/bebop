@@ -46,6 +46,14 @@ func (f File) equals(f2 File) error {
 			return fmt.Errorf("const %d mismatched: %w", i, err)
 		}
 	}
+	if len(f.Services) != len(f2.Services) {
+		return fmt.Errorf("service count mismatch: %v vs %v", len(f.Services), len(f2.Services))
+	}
+	for i, svc := range f.Services {
+		if err := svc.equals(f2.Services[i]); err != nil {
+			return fmt.Errorf("service %d mismatched: %w", i, err)
+		}
+	}
 	return nil
 }
 
@@ -254,6 +262,64 @@ func (c Const) equals(c2 Const) error {
 	}
 	if c.Value != c2.Value {
 		return fmt.Errorf("value mismatch: %v vs %v", c.Value, c2.Value)
+	}
+	return nil
+}
+
+func (s Service) equals(s2 Service) (err error) {
+	if s.Name != s2.Name {
+		return fmt.Errorf("name mismatch: %v vs %v", s.Name, s2.Name)
+	}
+	if s.Comment != s2.Comment {
+		return fmt.Errorf("comment mismatch: %q vs %q", s.Comment, s2.Comment)
+	}
+	if len(s.Functions) != len(s2.Functions) {
+		return fmt.Errorf("function count mismatch: %v vs %v", len(s.Functions), len(s2.Functions))
+	}
+	for i, fnc := range s.Functions {
+		if err := fnc.equals(s2.Functions[i]); err != nil {
+			return fmt.Errorf("field %d mismatched: %v", i, err)
+		}
+	}
+	return nil
+}
+
+func (s ServiceFunction) equals(s2 ServiceFunction) (err error) {
+	if s.Name != s2.Name {
+		return fmt.Errorf("name mismatch: %v vs %v", s.Name, s2.Name)
+	}
+	if s.Comment != s2.Comment {
+		return fmt.Errorf("comment mismatch: %q vs %q", s.Comment, s2.Comment)
+	}
+	if s.Void != s2.Void {
+		return fmt.Errorf("void mismatch: %v vs %v", s.Void, s2.Void)
+	}
+	if s.DeprecatedMessage != s2.DeprecatedMessage {
+		return fmt.Errorf("deprecated message mismatch: %v vs %v", s.DeprecatedMessage, s2.DeprecatedMessage)
+	}
+	if s.Deprecated != s2.Deprecated {
+		return fmt.Errorf("deprecated mismatch: %v vs %v", s.Deprecated, s2.Deprecated)
+	}
+	if err := s.Output.equals(s2.Output); err != nil {
+		return fmt.Errorf("output mismatch: %v", err)
+	}
+	if len(s.Inputs) != len(s2.Inputs) {
+		return fmt.Errorf("input count mismatch: %v vs %v", len(s.Inputs), len(s2.Inputs))
+	}
+	for i, inp := range s.Inputs {
+		if err := inp.equals(s2.Inputs[i]); err != nil {
+			return fmt.Errorf("input %d mismatch: %v", i, err)
+		}
+	}
+	return nil
+}
+
+func (inp InputField) equals(inp2 InputField) (err error) {
+	if inp.Name != inp2.Name {
+		return fmt.Errorf("name mismatch: %v vs %v", inp.Name, inp2.Name)
+	}
+	if err := inp.FieldType.equals(inp2.FieldType); err != nil {
+		return fmt.Errorf("type mismatch: %v", err)
 	}
 	return nil
 }

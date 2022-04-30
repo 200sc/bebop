@@ -164,13 +164,21 @@ type Tag struct {
 }
 
 type Service struct {
-	Functions []ServiceFunction
+	Name      string
+	Functions map[uint32]ServiceFunction
+	Comment   string
 }
 
 type ServiceFunction struct {
-	Name   string
-	Output FieldType
-	Inputs []InputField
+	Name    string
+	Output  FieldType
+	Void    bool
+	Inputs  []InputField
+	Comment string
+
+	// DeprecatedMessage is only provided if Deprecated is true.
+	DeprecatedMessage string
+	Deprecated        bool
 }
 
 type InputField struct {
