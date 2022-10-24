@@ -1346,7 +1346,7 @@ func TestReadFile(t *testing.T) {
 				Messages: []Message{
 					{
 						Name:   "RequestCatalog",
-						OpCode: bytesToOpCode([]byte("IKEA")),
+						OpCode: 0x41454B49,
 						Fields: map[uint8]Field{
 							1: {
 								Name: "family",
@@ -1373,7 +1373,7 @@ func TestReadFile(t *testing.T) {
 					{
 						Comment: "*\n * This union is so documented!\n ",
 						Name:    "U",
-						OpCode:  bytesToOpCode([]byte("yeah")),
+						OpCode:  bytesToOpCode([4]byte{'y', 'e', 'a', 'h'}),
 						Fields: map[uint8]UnionField{
 							1: {
 								Message: &Message{
@@ -1507,12 +1507,13 @@ func TestReadFileError(t *testing.T) {
 		{file: "invalid_enum_with_op_code", errMessage: "[1:4] enums may not have attached op codes"},
 		{file: "invalid_op_code_1", errMessage: "[0:2] expected (OpCode, Flags) got Close Square"},
 		{file: "invalid_op_code_2", errMessage: "[0:6] expected (OpCode, Flags) got Ident"},
-		{file: "invalid_op_code_3", errMessage: "[0:15] opcode string \"12345\" exceeds 4 ascii characters"},
+		{file: "invalid_op_code_3", errMessage: "[0:15] opcode string \"12345\" not 4 ascii characters"},
 		{file: "invalid_op_code_4", errMessage: "[0:8] expected (Open Paren) got Open Square"},
 		{file: "invalid_op_code_5", errMessage: "[0:81] strconv.ParseInt: parsing \"1111111111111111111111111111111111111111111111111111111111111111111111111\": value out of range"},
 		{file: "invalid_op_code_6", errMessage: "[0:15] expected (Close Paren) got Close Square"},
 		{file: "invalid_op_code_7", errMessage: "[0:16] expected (Close Square) got Equals"},
 		{file: "invalid_op_code_8", errMessage: "[0:13] expected (Integer Literal, String Literal) got Ident"},
+		{file: "invalid_op_code_9", errMessage: "[0:13] opcode string \"123\" not 4 ascii characters"},
 		{file: "invalid_enum_bad_deprecated", errMessage: "[1:17] expected (String Literal) got Equals"},
 		{file: "invalid_enum_double_deprecated", errMessage: "[2:5] expected enum option following deprecated annotation"},
 		{file: "invalid_enum_no_close", errMessage: "[2:0] enum definition ended early"},

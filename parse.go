@@ -751,10 +751,10 @@ func readOpCode(tr *tokenReader) (int32, error) {
 		opCode = int32(opc)
 	} else if tk.kind == tokenKindStringLiteral {
 		tk.concrete = bytes.Trim(tk.concrete, "\"")
-		if len(tk.concrete) > 4 {
-			return 0, readError(tk, "opcode string %q exceeds 4 ascii characters", string(tk.concrete))
+		if len(tk.concrete) != 4 {
+			return 0, readError(tk, "opcode string %q not 4 ascii characters", string(tk.concrete))
 		}
-		opCode = bytesToOpCode(tk.concrete)
+		opCode = bytesToOpCode(*(*[4]byte)(tk.concrete))
 	}
 	if _, err := expectNext(tr, tokenKindCloseParen, tokenKindCloseSquare); err != nil {
 		return 0, err
@@ -775,12 +775,11 @@ func sanitizeComment(tk token) string {
 	return comment
 }
 
-func bytesToOpCode(data []byte) int32 {
-	opCode := int32(0)
-	for _, b := range data {
-		opCode <<= 8
-		opCode |= int32(b)
-	}
+func bytesToOpCode(data [4]byte) int32 {
+	opCode := int32(data[3])
+	opCode |= (int32(data[2]) << 8)
+	opCode |= (int32(data[1]) << 16)
+	opCode |= (int32(data[0]) << 24)
 	return opCode
 }
 
