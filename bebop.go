@@ -2,7 +2,7 @@
 package bebop
 
 // Version is the library version. Should be used by CLI tools when passed a '--version' flag.
-const Version = "v0.3.1"
+const Version = "v0.3.2"
 
 // A File is a structured representation of a .bop file.
 type File struct {
@@ -40,7 +40,7 @@ type Struct struct {
 	Fields  []Field
 	// If OpCode is defined, wire encodings of the struct can be
 	// preceded by the OpCode.
-	OpCode int32
+	OpCode uint32
 	// Namespace is only provided for imported types, and only
 	// used in code generation.
 	Namespace string
@@ -67,7 +67,7 @@ type Message struct {
 	Name    string
 	Comment string
 	Fields  map[uint8]Field
-	OpCode  int32
+	OpCode  uint32
 	// Namespace is only provided for imported types, and only
 	// used in code generation.
 	Namespace string
@@ -78,7 +78,7 @@ type Union struct {
 	Name    string
 	Comment string
 	Fields  map[uint8]UnionField
-	OpCode  int32
+	OpCode  uint32
 	// Namespace is only provided for imported types, and only
 	// used in code generation.
 	Namespace string

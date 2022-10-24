@@ -1,0 +1,5 @@
+[opcode("1234")]
+struct InvalidOpCode10A {}
+
+[opcode("1234")]
+struct InvalidOpCode10B {}

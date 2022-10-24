@@ -1,0 +1,5 @@
+[opcode("4567")]
+message InvalidOpCode12A {}
+
+[opcode("4567")]
+message InvalidOpCode12B {}

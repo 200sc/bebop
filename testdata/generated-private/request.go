@@ -251,7 +251,7 @@ func newrequestResponse(
 	}
 }
 
-const requestCatalogOpCode = 0x494b4541
+const requestCatalogOpCode = 0x41454b49
 
 var _ bebop.Record = &requestCatalog{}
 

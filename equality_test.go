@@ -102,6 +102,9 @@ func (m Message) equals(m2 Message) error {
 	if m.Comment != m2.Comment {
 		return fmt.Errorf("comment mismatch: %q vs %q", m.Comment, m2.Comment)
 	}
+	if m.OpCode != m2.OpCode {
+		return fmt.Errorf("opcode mismatch: %v vs %v", m.OpCode, m2.OpCode)
+	}
 	if len(m.Fields) != len(m2.Fields) {
 		return fmt.Errorf("field count mismatch: %v vs %v", len(m.Fields), len(m2.Fields))
 	}
