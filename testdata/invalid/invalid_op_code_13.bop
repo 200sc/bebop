@@ -1,0 +1,5 @@
+[opcode("8910")]
+union InvalidOpCode13A {}
+
+[opcode("8910")]
+union InvalidOpCode13B {}

@@ -22,7 +22,7 @@ func ReadFile(r io.Reader) (File, []string, error) {
 	}
 	tr := newTokenReader(r)
 	nextCommentLines := []string{}
-	nextRecordOpCode := int32(0)
+	nextRecordOpCode := uint32(0)
 	nextRecordReadOnly := false
 	nextRecordBitFlags := false
 	warnings := []string{}
@@ -733,22 +733,22 @@ func readConst(tr *tokenReader) (Const, []string, error) {
 	return cons, warnings, nil
 }
 
-func readOpCode(tr *tokenReader) (int32, error) {
+func readOpCode(tr *tokenReader) (uint32, error) {
 	if _, err := expectNext(tr, tokenKindOpCode, tokenKindOpenParen); err != nil {
 		return 0, err
 	}
 	if err := expectAnyOfNext(tr, tokenKindIntegerLiteral, tokenKindStringLiteral); err != nil {
 		return 0, err
 	}
-	var opCode int32
+	var opCode uint32
 	tk := tr.Token()
 	if tk.kind == tokenKindIntegerLiteral {
 		content := string(tk.concrete)
-		opc, err := strconv.ParseInt(content, 0, 32)
+		opc, err := strconv.ParseUint(content, 0, 32)
 		if err != nil {
 			return 0, readError(tk, err.Error())
 		}
-		opCode = int32(opc)
+		opCode = uint32(opc)
 	} else if tk.kind == tokenKindStringLiteral {
 		tk.concrete = bytes.Trim(tk.concrete, "\"")
 		if len(tk.concrete) != 4 {
@@ -775,11 +775,11 @@ func sanitizeComment(tk token) string {
 	return comment
 }
 
-func bytesToOpCode(data [4]byte) int32 {
-	opCode := int32(data[3])
-	opCode |= (int32(data[2]) << 8)
-	opCode |= (int32(data[1]) << 16)
-	opCode |= (int32(data[0]) << 24)
+func bytesToOpCode(data [4]byte) uint32 {
+	opCode := uint32(data[0])
+	opCode |= (uint32(data[1]) << 8)
+	opCode |= (uint32(data[2]) << 16)
+	opCode |= (uint32(data[3]) << 24)
 	return opCode
 }
 

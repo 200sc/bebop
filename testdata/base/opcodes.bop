@@ -1,0 +1,15 @@
+[opcode("1234")]
+struct NumericalASCIIOpCode {
+}
+
+[opcode(0x31323335)]
+readonly struct NumericalASCIIOpCode2 {
+}
+
+[opcode("4322")]
+struct NumericalASCIIOpCode3 {
+}
+
+[opcode(0x34333232)]
+readonly struct NumericalASCIIOpCode4 {
+}

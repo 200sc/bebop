@@ -242,7 +242,7 @@ func mustMakecFromBytes(buf []byte) c {
 	return c{}
 }
 
-const uOpCode = 0x79656168
+const uOpCode = 0x68616579
 
 var _ bebop.Record = &u{}
 

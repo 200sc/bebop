@@ -69,6 +69,7 @@ func (gs GenerateSettings) Validate() error {
 
 // Validate verifies a File can be successfully generated.
 func (f File) Validate() error {
+	allOpCodes := map[uint32]string{}
 	allConsts := map[string]struct{}{}
 	for _, c := range f.Consts {
 		if _, ok := allConsts[c.Name]; ok {
@@ -124,6 +125,12 @@ func (f File) Validate() error {
 			}
 			stNames[fd.Name] = struct{}{}
 		}
+		if st.OpCode != 0 {
+			if conflict, ok := allOpCodes[st.OpCode]; ok {
+				return fmt.Errorf("struct %s has duplicate opcode %02x (duplicated in %s)", st.Name, st.OpCode, conflict)
+			}
+			allOpCodes[st.OpCode] = st.Name
+		}
 	}
 	for _, msg := range f.Messages {
 		if _, ok := primitiveTypes[msg.Name]; ok {
@@ -145,6 +152,12 @@ func (f File) Validate() error {
 
 			msgNames[fd.Name] = struct{}{}
 		}
+		if msg.OpCode != 0 {
+			if conflict, ok := allOpCodes[msg.OpCode]; ok {
+				return fmt.Errorf("message %s has duplicate opcode %02x (duplicated in %s)", msg.Name, msg.OpCode, conflict)
+			}
+			allOpCodes[msg.OpCode] = msg.Name
+		}
 	}
 	for _, un := range f.Unions {
 		if _, ok := primitiveTypes[un.Name]; ok {
@@ -164,6 +177,12 @@ func (f File) Validate() error {
 				return fmt.Errorf("union %s has duplicate field name %s", un.Name, fd.name())
 			}
 			unionNames[fd.name()] = struct{}{}
+		}
+		if un.OpCode != 0 {
+			if conflict, ok := allOpCodes[un.OpCode]; ok {
+				return fmt.Errorf("union %s has duplicate opcode %02x (duplicated in %s)", un.Name, un.OpCode, conflict)
+			}
+			allOpCodes[un.OpCode] = un.Name
 		}
 	}
 	allTypes := customTypes
@@ -832,7 +851,7 @@ func writeCloseBlock(w io.Writer) {
 	writeLine(w, "")
 }
 
-func writeOpCode(w io.Writer, name string, opCode int32, settings GenerateSettings) {
+func writeOpCode(w io.Writer, name string, opCode uint32, settings GenerateSettings) {
 	if opCode != 0 {
 		writeLine(w, "const %sOpCode = 0x%x", exposeName(name, settings), opCode)
 		writeLine(w, "")
@@ -848,7 +867,7 @@ func writeGoStructDef(w io.Writer, name string, settings GenerateSettings) {
 	writeLine(w, "type %s struct {", exposeName(name, settings))
 }
 
-func writeRecordTypeDefinition(w io.Writer, name string, opCode int32, comment string, settings GenerateSettings, fields []fieldWithNumber) {
+func writeRecordTypeDefinition(w io.Writer, name string, opCode uint32, comment string, settings GenerateSettings, fields []fieldWithNumber) {
 	writeOpCode(w, name, opCode, settings)
 	writeRecordAssertion(w, name, settings)
 	writeComment(w, 0, comment, settings)

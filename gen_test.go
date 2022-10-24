@@ -96,6 +96,18 @@ func TestValidateError(t *testing.T) {
 	}, {
 		file: "invalid_union_primitive_name",
 		err:  "union shares primitive type name uint8",
+	}, {
+		file: "invalid_op_code_10",
+		err:  "struct InvalidOpCode10B has duplicate opcode 34333231 (duplicated in InvalidOpCode10A)",
+	}, {
+		file: "invalid_op_code_11",
+		err:  "struct InvalidOpCode11B has duplicate opcode 34333231 (duplicated in InvalidOpCode11A)",
+	}, {
+		file: "invalid_op_code_12",
+		err:  "message InvalidOpCode12B has duplicate opcode 37363534 (duplicated in InvalidOpCode12A)",
+	}, {
+		file: "invalid_op_code_13",
+		err:  "union InvalidOpCode13B has duplicate opcode 30313938 (duplicated in InvalidOpCode13A)",
 	}}
 	for _, tc := range tcs {
 		tc := tc

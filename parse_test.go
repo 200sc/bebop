@@ -14,6 +14,31 @@ func TestReadFile(t *testing.T) {
 	}
 	tcs := []testCase{
 		{
+			file: "opcodes",
+			expected: File{
+				Structs: []Struct{
+					{
+						Name:   "NumericalASCIIOpCode",
+						OpCode: 0x34333231,
+					},
+					{
+						Name:     "NumericalASCIIOpCode2",
+						ReadOnly: true,
+						OpCode:   825373493,
+					},
+					{
+						Name:   "NumericalASCIIOpCode3",
+						OpCode: 842150708,
+					},
+					{
+						Name:     "NumericalASCIIOpCode4",
+						ReadOnly: true,
+						OpCode:   875770418,
+					},
+				},
+			},
+		},
+		{
 			file: "bitflags",
 			expected: File{
 				Enums: []Enum{
@@ -1509,7 +1534,7 @@ func TestReadFileError(t *testing.T) {
 		{file: "invalid_op_code_2", errMessage: "[0:6] expected (OpCode, Flags) got Ident"},
 		{file: "invalid_op_code_3", errMessage: "[0:15] opcode string \"12345\" not 4 ascii characters"},
 		{file: "invalid_op_code_4", errMessage: "[0:8] expected (Open Paren) got Open Square"},
-		{file: "invalid_op_code_5", errMessage: "[0:81] strconv.ParseInt: parsing \"1111111111111111111111111111111111111111111111111111111111111111111111111\": value out of range"},
+		{file: "invalid_op_code_5", errMessage: "[0:81] strconv.ParseUint: parsing \"1111111111111111111111111111111111111111111111111111111111111111111111111\": value out of range"},
 		{file: "invalid_op_code_6", errMessage: "[0:15] expected (Close Paren) got Close Square"},
 		{file: "invalid_op_code_7", errMessage: "[0:16] expected (Close Square) got Equals"},
 		{file: "invalid_op_code_8", errMessage: "[0:13] expected (Integer Literal, String Literal) got Ident"},

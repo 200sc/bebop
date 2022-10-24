@@ -242,7 +242,7 @@ func MustMakeCFromBytes(buf []byte) C {
 	return C{}
 }
 
-const UOpCode = 0x79656168
+const UOpCode = 0x68616579
 
 var _ bebop.Record = &U{}
 
