@@ -1,0 +1,4 @@
+struct ArraySamples {
+    array[array[array[byte]]] bytes;
+    byte[][][] bytes2;
+}
