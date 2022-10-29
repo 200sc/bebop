@@ -4,7 +4,7 @@
 //
 //
 //       bebopc version:
-//           2.3.0
+//           2.4.9
 //
 //
 //       bebopc source:
@@ -47,6 +47,102 @@ export const boolconst: boolean = true;
 export const stringconst: string = "1";
 
 export const guidconst: string = "e2722bf7-022a-496a-9f01-7029d7d5563d";
+
+export interface IArraySamples {
+  bytes: Array<Array<Uint8Array>>;
+  bytes2: Array<Array<Uint8Array>>;
+}
+
+export const ArraySamples = {
+  encode(message: IArraySamples): Uint8Array {
+    const view = BebopView.getInstance();
+    view.startWriting();
+    this.encodeInto(message, view);
+    return view.toArray();
+  },
+
+  encodeInto(message: IArraySamples, view: BebopView): number {
+    const before = view.length;
+      {
+        const length0 = message.bytes.length;
+        view.writeUint32(length0);
+        for (let i0 = 0; i0 < length0; i0++) {
+          {
+            const length1 = message.bytes[i0].length;
+            view.writeUint32(length1);
+            for (let i1 = 0; i1 < length1; i1++) {
+              view.writeBytes(message.bytes[i0][i1]);
+            }
+          }
+        }
+      }
+      {
+        const length0 = message.bytes2.length;
+        view.writeUint32(length0);
+        for (let i0 = 0; i0 < length0; i0++) {
+          {
+            const length1 = message.bytes2[i0].length;
+            view.writeUint32(length1);
+            for (let i1 = 0; i1 < length1; i1++) {
+              view.writeBytes(message.bytes2[i0][i1]);
+            }
+          }
+        }
+      }
+    const after = view.length;
+    return after - before;
+  },
+
+  decode(buffer: Uint8Array): IArraySamples {
+    const view = BebopView.getInstance();
+    view.startReading(buffer);
+    return this.readFrom(view);
+  },
+
+  readFrom(view: BebopView): IArraySamples {
+    let field0: Array<Array<Uint8Array>>;
+    {
+      let length0 = view.readUint32();
+      field0 = new Array<Array<Uint8Array>>(length0);
+      for (let i0 = 0; i0 < length0; i0++) {
+        let x0: Array<Uint8Array>;
+        {
+          let length1 = view.readUint32();
+          x0 = new Array<Uint8Array>(length1);
+          for (let i1 = 0; i1 < length1; i1++) {
+            let x1: Uint8Array;
+            x1 = view.readBytes();
+            x0[i1] = x1;
+          }
+        }
+        field0[i0] = x0;
+      }
+    }
+    let field1: Array<Array<Uint8Array>>;
+    {
+      let length0 = view.readUint32();
+      field1 = new Array<Array<Uint8Array>>(length0);
+      for (let i0 = 0; i0 < length0; i0++) {
+        let x0: Array<Uint8Array>;
+        {
+          let length1 = view.readUint32();
+          x0 = new Array<Uint8Array>(length1);
+          for (let i1 = 0; i1 < length1; i1++) {
+            let x1: Uint8Array;
+            x1 = view.readBytes();
+            x0[i1] = x1;
+          }
+        }
+        field1[i0] = x0;
+      }
+    }
+    let message: IArraySamples = {
+      bytes: field0,
+      bytes2: field1,
+    };
+    return message;
+  },
+};
 
 export interface IArrayOfStrings {
   strings: Array<string>;
@@ -485,6 +581,14 @@ export const BasicTypes = {
   },
 };
 
+export enum TestFlags {
+  None = 0,
+  Read = 1,
+  Write = 2,
+  ReadWrite = 3,
+  Complex = 19,
+}
+
 /**
  * block
  */
@@ -838,10 +942,6 @@ export const DocS = {
   },
 };
 
-export enum MyEnum {
-  One = 1,
-}
-
 export enum Test {
   Start = 1,
   End = 2,
@@ -860,6 +960,10 @@ export enum Test2 {
    * @deprecated who knows
    */
   Beginning = 4,
+}
+
+export enum MyEnum {
+  One = 1,
 }
 
 export interface IFoo {
@@ -1023,7 +1127,7 @@ export const Test22 = {
 
   encodeInto(message: ITest22, view: BebopView): number {
     const before = view.length;
-      view.writeEnum(message.noisemaker);
+      view.writeUint32(message.noisemaker);
     const after = view.length;
     return after - before;
   },
@@ -1066,7 +1170,7 @@ export const Musician = {
   encodeInto(message: IMusician, view: BebopView): number {
     const before = view.length;
       view.writeString(message.name);
-      view.writeEnum(message.plays);
+      view.writeUint32(message.plays);
     const after = view.length;
     return after - before;
   },
@@ -1593,7 +1697,7 @@ export const MediaMessage = {
       const start = view.length;
       if (message.codec != null) {
         view.writeByte(1);
-        view.writeEnum(message.codec);
+        view.writeUint32(message.codec);
       }
       if (message.data != null) {
         view.writeByte(2);
@@ -2527,6 +2631,134 @@ export const MsgpackComparison = {
   },
 };
 
+export interface INumericalASCIIOpCode {
+}
+
+export const NumericalASCIIOpCode = {
+  opcode: 0x34333231,
+  encode(message: INumericalASCIIOpCode): Uint8Array {
+    const view = BebopView.getInstance();
+    view.startWriting();
+    this.encodeInto(message, view);
+    return view.toArray();
+  },
+
+  encodeInto(message: INumericalASCIIOpCode, view: BebopView): number {
+    const before = view.length;
+
+    const after = view.length;
+    return after - before;
+  },
+
+  decode(buffer: Uint8Array): INumericalASCIIOpCode {
+    const view = BebopView.getInstance();
+    view.startReading(buffer);
+    return this.readFrom(view);
+  },
+
+  readFrom(view: BebopView): INumericalASCIIOpCode {
+    let message: INumericalASCIIOpCode = {
+    };
+    return message;
+  },
+};
+
+export interface INumericalASCIIOpCode2 {
+}
+
+export const NumericalASCIIOpCode2 = {
+  opcode: 0x31323335,
+  encode(message: INumericalASCIIOpCode2): Uint8Array {
+    const view = BebopView.getInstance();
+    view.startWriting();
+    this.encodeInto(message, view);
+    return view.toArray();
+  },
+
+  encodeInto(message: INumericalASCIIOpCode2, view: BebopView): number {
+    const before = view.length;
+
+    const after = view.length;
+    return after - before;
+  },
+
+  decode(buffer: Uint8Array): INumericalASCIIOpCode2 {
+    const view = BebopView.getInstance();
+    view.startReading(buffer);
+    return this.readFrom(view);
+  },
+
+  readFrom(view: BebopView): INumericalASCIIOpCode2 {
+    let message: INumericalASCIIOpCode2 = {
+    };
+    return message;
+  },
+};
+
+export interface INumericalASCIIOpCode3 {
+}
+
+export const NumericalASCIIOpCode3 = {
+  opcode: 0x32323334,
+  encode(message: INumericalASCIIOpCode3): Uint8Array {
+    const view = BebopView.getInstance();
+    view.startWriting();
+    this.encodeInto(message, view);
+    return view.toArray();
+  },
+
+  encodeInto(message: INumericalASCIIOpCode3, view: BebopView): number {
+    const before = view.length;
+
+    const after = view.length;
+    return after - before;
+  },
+
+  decode(buffer: Uint8Array): INumericalASCIIOpCode3 {
+    const view = BebopView.getInstance();
+    view.startReading(buffer);
+    return this.readFrom(view);
+  },
+
+  readFrom(view: BebopView): INumericalASCIIOpCode3 {
+    let message: INumericalASCIIOpCode3 = {
+    };
+    return message;
+  },
+};
+
+export interface INumericalASCIIOpCode4 {
+}
+
+export const NumericalASCIIOpCode4 = {
+  opcode: 0x34333232,
+  encode(message: INumericalASCIIOpCode4): Uint8Array {
+    const view = BebopView.getInstance();
+    view.startWriting();
+    this.encodeInto(message, view);
+    return view.toArray();
+  },
+
+  encodeInto(message: INumericalASCIIOpCode4, view: BebopView): number {
+    const before = view.length;
+
+    const after = view.length;
+    return after - before;
+  },
+
+  decode(buffer: Uint8Array): INumericalASCIIOpCode4 {
+    const view = BebopView.getInstance();
+    view.startReading(buffer);
+    return this.readFrom(view);
+  },
+
+  readFrom(view: BebopView): INumericalASCIIOpCode4 {
+    let message: INumericalASCIIOpCode4 = {
+    };
+    return message;
+  },
+};
+
 export enum FurnitureFamily {
   Bed = 0,
   Table = 1,
@@ -2551,7 +2783,7 @@ export const Furniture = {
     const before = view.length;
       view.writeString(message.name);
       view.writeUint32(message.price);
-      view.writeEnum(message.family);
+      view.writeUint32(message.family);
     const after = view.length;
     return after - before;
   },
@@ -2601,7 +2833,7 @@ export const RequestCatalog = {
       const start = view.length;
       if (message.family != null) {
         view.writeByte(1);
-        view.writeEnum(message.family);
+        view.writeUint32(message.family);
       }
       view.writeByte(0);
       const end = view.length;
@@ -2911,6 +3143,177 @@ export const AddResponse = {
   },
 };
 
+export interface ITaggedStruct {
+  foo: string;
+}
+
+export const TaggedStruct = {
+  encode(message: ITaggedStruct): Uint8Array {
+    const view = BebopView.getInstance();
+    view.startWriting();
+    this.encodeInto(message, view);
+    return view.toArray();
+  },
+
+  encodeInto(message: ITaggedStruct, view: BebopView): number {
+    const before = view.length;
+      view.writeString(message.foo);
+    const after = view.length;
+    return after - before;
+  },
+
+  decode(buffer: Uint8Array): ITaggedStruct {
+    const view = BebopView.getInstance();
+    view.startReading(buffer);
+    return this.readFrom(view);
+  },
+
+  readFrom(view: BebopView): ITaggedStruct {
+    let field0: string;
+    field0 = view.readString();
+    let message: ITaggedStruct = {
+      foo: field0,
+    };
+    return message;
+  },
+};
+
+export interface ITaggedMessage {
+  bar?: number;
+}
+
+export const TaggedMessage = {
+  encode(message: ITaggedMessage): Uint8Array {
+    const view = BebopView.getInstance();
+    view.startWriting();
+    this.encodeInto(message, view);
+    return view.toArray();
+  },
+
+  encodeInto(message: ITaggedMessage, view: BebopView): number {
+    const before = view.length;
+      const pos = view.reserveMessageLength();
+      const start = view.length;
+      if (message.bar != null) {
+        view.writeByte(1);
+        view.writeByte(message.bar);
+      }
+      view.writeByte(0);
+      const end = view.length;
+      view.fillMessageLength(pos, end - start);
+    const after = view.length;
+    return after - before;
+  },
+
+  decode(buffer: Uint8Array): ITaggedMessage {
+    const view = BebopView.getInstance();
+    view.startReading(buffer);
+    return this.readFrom(view);
+  },
+
+  readFrom(view: BebopView): ITaggedMessage {
+    let message: ITaggedMessage = {};
+    const length = view.readMessageLength();
+    const end = view.index + length;
+    while (true) {
+      switch (view.readByte()) {
+        case 0:
+          return message;
+
+        case 1:
+          message.bar = view.readByte();
+          break;
+
+        default:
+          view.index = end;
+          return message;
+      }
+    }
+  },
+};
+
+export interface ITaggedSubStruct {
+  biz: string;
+}
+
+export const TaggedSubStruct = {
+  discriminator: 1 as 1,
+  encode(message: ITaggedSubStruct): Uint8Array {
+    const view = BebopView.getInstance();
+    view.startWriting();
+    this.encodeInto(message, view);
+    return view.toArray();
+  },
+
+  encodeInto(message: ITaggedSubStruct, view: BebopView): number {
+    const before = view.length;
+      view.writeGuid(message.biz);
+    const after = view.length;
+    return after - before;
+  },
+
+  decode(buffer: Uint8Array): ITaggedSubStruct {
+    const view = BebopView.getInstance();
+    view.startReading(buffer);
+    return this.readFrom(view);
+  },
+
+  readFrom(view: BebopView): ITaggedSubStruct {
+    let field0: string;
+    field0 = view.readGuid();
+    let message: ITaggedSubStruct = {
+      biz: field0,
+    };
+    return message;
+  },
+};
+
+export type ITaggedUnion
+  = { discriminator: 1, value: ITaggedSubStruct };
+
+export const TaggedUnion = {
+  encode(message: ITaggedUnion): Uint8Array {
+    const view = BebopView.getInstance();
+    view.startWriting();
+    this.encodeInto(message, view);
+    return view.toArray();
+  },
+
+  encodeInto(message: ITaggedUnion, view: BebopView): number {
+    const before = view.length;
+      const pos = view.reserveMessageLength();
+      const start = view.length + 1;
+      view.writeByte(message.discriminator);
+      switch (message.discriminator) {
+        case 1:
+          TaggedSubStruct.encodeInto(message.value, view);
+          break;
+      }
+      const end = view.length;
+      view.fillMessageLength(pos, end - start);
+    const after = view.length;
+    return after - before;
+  },
+
+  decode(buffer: Uint8Array): ITaggedUnion {
+    const view = BebopView.getInstance();
+    view.startReading(buffer);
+    return this.readFrom(view);
+  },
+
+  readFrom(view: BebopView): ITaggedUnion {
+    const length = view.readMessageLength();
+    const end = view.index + 1 + length;
+    switch (view.readByte()) {
+      case 1:
+        return { discriminator: 1, value: TaggedSubStruct.readFrom(view) };
+      default:
+        view.index = end;
+        throw new BebopRuntimeError("Unrecognized discriminator while decoding TaggedUnion");
+    }
+  },
+};
+
 export interface IA {
   b?: number;
 }
@@ -3140,33 +3543,33 @@ export const Cons = {
   },
 };
 
-export interface INil {
+export interface INull {
 }
 
-export const Nil = {
+export const Null = {
   discriminator: 2 as 2,
-  encode(message: INil): Uint8Array {
+  encode(message: INull): Uint8Array {
     const view = BebopView.getInstance();
     view.startWriting();
     this.encodeInto(message, view);
     return view.toArray();
   },
 
-  encodeInto(message: INil, view: BebopView): number {
+  encodeInto(message: INull, view: BebopView): number {
     const before = view.length;
 
     const after = view.length;
     return after - before;
   },
 
-  decode(buffer: Uint8Array): INil {
+  decode(buffer: Uint8Array): INull {
     const view = BebopView.getInstance();
     view.startReading(buffer);
     return this.readFrom(view);
   },
 
-  readFrom(view: BebopView): INil {
-    let message: INil = {
+  readFrom(view: BebopView): INull {
+    let message: INull = {
     };
     return message;
   },
@@ -3174,7 +3577,7 @@ export const Nil = {
 
 export type IList
   = { discriminator: 1, value: ICons }
-  | { discriminator: 2, value: INil };
+  | { discriminator: 2, value: INull };
 
 export const List = {
   encode(message: IList): Uint8Array {
@@ -3194,7 +3597,7 @@ export const List = {
           Cons.encodeInto(message.value, view);
           break;
         case 2:
-          Nil.encodeInto(message.value, view);
+          Null.encodeInto(message.value, view);
           break;
       }
       const end = view.length;
@@ -3216,10 +3619,256 @@ export const List = {
       case 1:
         return { discriminator: 1, value: Cons.readFrom(view) };
       case 2:
-        return { discriminator: 2, value: Nil.readFrom(view) };
+        return { discriminator: 2, value: Null.readFrom(view) };
       default:
         view.index = end;
         throw new BebopRuntimeError("Unrecognized discriminator while decoding List");
+    }
+  },
+};
+
+export interface IU3 {
+  hello: number;
+}
+
+export const U3 = {
+  discriminator: 1 as 1,
+  encode(message: IU3): Uint8Array {
+    const view = BebopView.getInstance();
+    view.startWriting();
+    this.encodeInto(message, view);
+    return view.toArray();
+  },
+
+  encodeInto(message: IU3, view: BebopView): number {
+    const before = view.length;
+      view.writeUint32(message.hello);
+    const after = view.length;
+    return after - before;
+  },
+
+  decode(buffer: Uint8Array): IU3 {
+    const view = BebopView.getInstance();
+    view.startReading(buffer);
+    return this.readFrom(view);
+  },
+
+  readFrom(view: BebopView): IU3 {
+    let field0: number;
+    field0 = view.readUint32();
+    let message: IU3 = {
+      hello: field0,
+    };
+    return message;
+  },
+};
+
+export interface IU4 {
+  goodbye?: number;
+}
+
+export const U4 = {
+  discriminator: 2 as 2,
+  encode(message: IU4): Uint8Array {
+    const view = BebopView.getInstance();
+    view.startWriting();
+    this.encodeInto(message, view);
+    return view.toArray();
+  },
+
+  encodeInto(message: IU4, view: BebopView): number {
+    const before = view.length;
+      const pos = view.reserveMessageLength();
+      const start = view.length;
+      if (message.goodbye != null) {
+        view.writeByte(1);
+        view.writeUint32(message.goodbye);
+      }
+      view.writeByte(0);
+      const end = view.length;
+      view.fillMessageLength(pos, end - start);
+    const after = view.length;
+    return after - before;
+  },
+
+  decode(buffer: Uint8Array): IU4 {
+    const view = BebopView.getInstance();
+    view.startReading(buffer);
+    return this.readFrom(view);
+  },
+
+  readFrom(view: BebopView): IU4 {
+    let message: IU4 = {};
+    const length = view.readMessageLength();
+    const end = view.index + length;
+    while (true) {
+      switch (view.readByte()) {
+        case 0:
+          return message;
+
+        case 1:
+          message.goodbye = view.readUint32();
+          break;
+
+        default:
+          view.index = end;
+          return message;
+      }
+    }
+  },
+};
+
+export interface IU5 {
+  goodbye?: number;
+}
+
+export const U5 = {
+  discriminator: 3 as 3,
+  encode(message: IU5): Uint8Array {
+    const view = BebopView.getInstance();
+    view.startWriting();
+    this.encodeInto(message, view);
+    return view.toArray();
+  },
+
+  encodeInto(message: IU5, view: BebopView): number {
+    const before = view.length;
+      const pos = view.reserveMessageLength();
+      const start = view.length;
+      if (message.goodbye != null) {
+        view.writeByte(1);
+        view.writeUint32(message.goodbye);
+      }
+      view.writeByte(0);
+      const end = view.length;
+      view.fillMessageLength(pos, end - start);
+    const after = view.length;
+    return after - before;
+  },
+
+  decode(buffer: Uint8Array): IU5 {
+    const view = BebopView.getInstance();
+    view.startReading(buffer);
+    return this.readFrom(view);
+  },
+
+  readFrom(view: BebopView): IU5 {
+    let message: IU5 = {};
+    const length = view.readMessageLength();
+    const end = view.index + length;
+    while (true) {
+      switch (view.readByte()) {
+        case 0:
+          return message;
+
+        case 1:
+          message.goodbye = view.readUint32();
+          break;
+
+        default:
+          view.index = end;
+          return message;
+      }
+    }
+  },
+};
+
+export interface IU6 {
+  hello: number;
+}
+
+export const U6 = {
+  discriminator: 4 as 4,
+  encode(message: IU6): Uint8Array {
+    const view = BebopView.getInstance();
+    view.startWriting();
+    this.encodeInto(message, view);
+    return view.toArray();
+  },
+
+  encodeInto(message: IU6, view: BebopView): number {
+    const before = view.length;
+      view.writeUint32(message.hello);
+    const after = view.length;
+    return after - before;
+  },
+
+  decode(buffer: Uint8Array): IU6 {
+    const view = BebopView.getInstance();
+    view.startReading(buffer);
+    return this.readFrom(view);
+  },
+
+  readFrom(view: BebopView): IU6 {
+    let field0: number;
+    field0 = view.readUint32();
+    let message: IU6 = {
+      hello: field0,
+    };
+    return message;
+  },
+};
+
+export type IU2
+  = { discriminator: 1, value: IU3 }
+  | { discriminator: 2, value: IU4 }
+  | { discriminator: 3, value: IU5 }
+  | { discriminator: 4, value: IU6 };
+
+export const U2 = {
+  encode(message: IU2): Uint8Array {
+    const view = BebopView.getInstance();
+    view.startWriting();
+    this.encodeInto(message, view);
+    return view.toArray();
+  },
+
+  encodeInto(message: IU2, view: BebopView): number {
+    const before = view.length;
+      const pos = view.reserveMessageLength();
+      const start = view.length + 1;
+      view.writeByte(message.discriminator);
+      switch (message.discriminator) {
+        case 1:
+          U3.encodeInto(message.value, view);
+          break;
+        case 2:
+          U4.encodeInto(message.value, view);
+          break;
+        case 3:
+          U5.encodeInto(message.value, view);
+          break;
+        case 4:
+          U6.encodeInto(message.value, view);
+          break;
+      }
+      const end = view.length;
+      view.fillMessageLength(pos, end - start);
+    const after = view.length;
+    return after - before;
+  },
+
+  decode(buffer: Uint8Array): IU2 {
+    const view = BebopView.getInstance();
+    view.startReading(buffer);
+    return this.readFrom(view);
+  },
+
+  readFrom(view: BebopView): IU2 {
+    const length = view.readMessageLength();
+    const end = view.index + 1 + length;
+    switch (view.readByte()) {
+      case 1:
+        return { discriminator: 1, value: U3.readFrom(view) };
+      case 2:
+        return { discriminator: 2, value: U4.readFrom(view) };
+      case 3:
+        return { discriminator: 3, value: U5.readFrom(view) };
+      case 4:
+        return { discriminator: 4, value: U6.readFrom(view) };
+      default:
+        view.index = end;
+        throw new BebopRuntimeError("Unrecognized discriminator while decoding U2");
     }
   },
 };
@@ -3402,3 +4051,4 @@ export const List2 = {
     }
   },
 };
+

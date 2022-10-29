@@ -46,6 +46,42 @@ func TestMarshalCycleRecords(t *testing.T) {
 		},
 		unmarshalRecord: func() bebop.Record { return &generated.ArrayOfStrings{} },
 	}, {
+		name:   "ArraySamples",
+		tsName: "ArraySamples",
+		record: &generated.ArraySamples{
+			Bytes: [][][]byte{
+				{
+					{
+						'a', 'b', 'c', 'd', 'e', 'f', 'g',
+					}, {
+						'h', 'i', 'j', 'k', 'l', 'm', 'n',
+					},
+				}, {
+					{
+						'q', 'r', 's', 't', 'u', 'v', 'w',
+					}, {
+						'x', 'y', 'z',
+					},
+				},
+			},
+			Bytes2: [][][]byte{
+				{
+					{
+						'a', 'b', 'c', 'd', 'e', 'f', 'g',
+					}, {
+						'h', 'i', 'j', 'k', 'l', 'm', 'n',
+					},
+				}, {
+					{
+						'q', 'r', 's', 't', 'u', 'v', 'w',
+					}, {
+						'x', 'y', 'z',
+					},
+				},
+			},
+		},
+		unmarshalRecord: func() bebop.Record { return &generated.ArraySamples{} },
+	}, {
 		name:   "empty BasicArrays",
 		tsName: "BasicArrays",
 		record: &generated.BasicArrays{
@@ -506,7 +542,10 @@ func TestMarshalCycleRecords(t *testing.T) {
 			}
 			fmt.Println("out:", strings.TrimSpace(string(outputB64)))
 
-			outBinary, _ := base64.StdEncoding.DecodeString(string(outputB64))
+			outBinary, err := base64.StdEncoding.DecodeString(string(outputB64))
+			if err != nil {
+				t.Fatalf("failed to parse base64: %v", err)
+			}
 			umt = tc.unmarshalRecord()
 			err = umt.DecodeBebop(bytes.NewBuffer(outBinary))
 			if err != nil {

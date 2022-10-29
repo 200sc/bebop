@@ -400,6 +400,7 @@ func TestGenerateToFile_Imports(t *testing.T) {
 var genTestFiles = []string{
 	"all_consts",
 	"array_of_strings",
+	"arrays",
 	"basic_arrays",
 	"basic_types",
 	"bitflags",

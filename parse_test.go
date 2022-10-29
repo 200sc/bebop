@@ -14,6 +14,42 @@ func TestReadFile(t *testing.T) {
 	}
 	tcs := []testCase{
 		{
+			file: "arrays",
+			expected: File{
+				Structs: []Struct{
+					{
+						Name: "ArraySamples",
+						Fields: []Field{
+							{
+								Name: "bytes",
+								FieldType: FieldType{
+									Array: &FieldType{
+										Array: &FieldType{
+											Array: &FieldType{
+												Simple: "byte",
+											},
+										},
+									},
+								},
+							},
+							{
+								Name: "bytes2",
+								FieldType: FieldType{
+									Array: &FieldType{
+										Array: &FieldType{
+											Array: &FieldType{
+												Simple: "byte",
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
 			file: "opcodes",
 			expected: File{
 				Structs: []Struct{

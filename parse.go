@@ -446,13 +446,18 @@ func readFieldType(tr *tokenReader) (FieldType, error) {
 	if tr.Next() {
 		// this might have been followed by []
 		nextTk := tr.Token()
-		if nextTk.kind == tokenKindOpenSquare {
+		for nextTk.kind == tokenKindOpenSquare {
 			if _, err := expectNext(tr, tokenKindCloseSquare); err != nil {
 				return ft, err
 			}
-			return FieldType{
-				Array: &ft,
-			}, nil
+			ft3 := ft
+			ft = FieldType{
+				Array: &ft3,
+			}
+			if !tr.Next() {
+				return ft, nil
+			}
+			nextTk = tr.Token()
 		}
 		tr.UnNext()
 	}
