@@ -15,7 +15,7 @@ type S struct {
 	y int32
 }
 
-func (bbp S) MarshalBebopTo(buf []byte) int {
+func (bbp *S) MarshalBebopTo(buf []byte) int {
 	at := 0
 	iohelp.WriteInt32Bytes(buf[at:], bbp.x)
 	at += 4
@@ -47,7 +47,7 @@ func (bbp *S) MustUnmarshalBebop(buf []byte) {
 	at += 4
 }
 
-func (bbp S) EncodeBebop(iow io.Writer) (err error) {
+func (bbp *S) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
 	iohelp.WriteInt32(w, bbp.x)
 	iohelp.WriteInt32(w, bbp.y)
@@ -61,14 +61,14 @@ func (bbp *S) DecodeBebop(ior io.Reader) (err error) {
 	return r.Err
 }
 
-func (bbp S) Size() int {
+func (bbp *S) Size() int {
 	bodyLen := 0
 	bodyLen += 4
 	bodyLen += 4
 	return bodyLen
 }
 
-func (bbp S) MarshalBebop() []byte {
+func (bbp *S) MarshalBebop() []byte {
 	buf := make([]byte, bbp.Size())
 	bbp.MarshalBebopTo(buf)
 	return buf
@@ -92,11 +92,11 @@ func MustMakeSFromBytes(buf []byte) S {
 	return v
 }
 
-func (bbp S) GetX() int32 {
+func (bbp *S) GetX() int32 {
 	return bbp.x
 }
 
-func (bbp S) GetY() int32 {
+func (bbp *S) GetY() int32 {
 	return bbp.y
 }
 
@@ -120,7 +120,7 @@ type SomeMaps struct {
 	M5 map[[16]byte]M
 }
 
-func (bbp SomeMaps) MarshalBebopTo(buf []byte) int {
+func (bbp *SomeMaps) MarshalBebopTo(buf []byte) int {
 	at := 0
 	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.M1)))
 	at += 4
@@ -404,7 +404,7 @@ func (bbp *SomeMaps) MustUnmarshalBebop(buf []byte) {
 	}
 }
 
-func (bbp SomeMaps) EncodeBebop(iow io.Writer) (err error) {
+func (bbp *SomeMaps) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
 	iohelp.WriteUint32(w, uint32(len(bbp.M1)))
 	for k1, v1 := range bbp.M1 {
@@ -527,7 +527,7 @@ func (bbp *SomeMaps) DecodeBebop(ior io.Reader) (err error) {
 	return r.Err
 }
 
-func (bbp SomeMaps) Size() int {
+func (bbp *SomeMaps) Size() int {
 	bodyLen := 0
 	bodyLen += 4
 	for range bbp.M1 {
@@ -575,7 +575,7 @@ func (bbp SomeMaps) Size() int {
 	return bodyLen
 }
 
-func (bbp SomeMaps) MarshalBebop() []byte {
+func (bbp *SomeMaps) MarshalBebop() []byte {
 	buf := make([]byte, bbp.Size())
 	bbp.MarshalBebopTo(buf)
 	return buf
@@ -722,7 +722,7 @@ func (bbp M) Size() int {
 	return bodyLen
 }
 
-func (bbp M) MarshalBebop() []byte {
+func (bbp *M) MarshalBebop() []byte {
 	buf := make([]byte, bbp.Size())
 	bbp.MarshalBebopTo(buf)
 	return buf

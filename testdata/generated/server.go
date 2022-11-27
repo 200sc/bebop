@@ -14,7 +14,7 @@ type Print struct {
 	Printout string
 }
 
-func (bbp Print) MarshalBebopTo(buf []byte) int {
+func (bbp *Print) MarshalBebopTo(buf []byte) int {
 	at := 0
 	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.Printout)))
 	copy(buf[at+4:at+4+len(bbp.Printout)], []byte(bbp.Printout))
@@ -38,7 +38,7 @@ func (bbp *Print) MustUnmarshalBebop(buf []byte) {
 	at += 4 + len(bbp.Printout)
 }
 
-func (bbp Print) EncodeBebop(iow io.Writer) (err error) {
+func (bbp *Print) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
 	iohelp.WriteUint32(w, uint32(len(bbp.Printout)))
 	w.Write([]byte(bbp.Printout))
@@ -51,13 +51,13 @@ func (bbp *Print) DecodeBebop(ior io.Reader) (err error) {
 	return r.Err
 }
 
-func (bbp Print) Size() int {
+func (bbp *Print) Size() int {
 	bodyLen := 0
 	bodyLen += 4 + len(bbp.Printout)
 	return bodyLen
 }
 
-func (bbp Print) MarshalBebop() []byte {
+func (bbp *Print) MarshalBebop() []byte {
 	buf := make([]byte, bbp.Size())
 	bbp.MarshalBebopTo(buf)
 	return buf
@@ -88,7 +88,7 @@ type Add struct {
 	B int32
 }
 
-func (bbp Add) MarshalBebopTo(buf []byte) int {
+func (bbp *Add) MarshalBebopTo(buf []byte) int {
 	at := 0
 	iohelp.WriteInt32Bytes(buf[at:], bbp.A)
 	at += 4
@@ -120,7 +120,7 @@ func (bbp *Add) MustUnmarshalBebop(buf []byte) {
 	at += 4
 }
 
-func (bbp Add) EncodeBebop(iow io.Writer) (err error) {
+func (bbp *Add) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
 	iohelp.WriteInt32(w, bbp.A)
 	iohelp.WriteInt32(w, bbp.B)
@@ -134,14 +134,14 @@ func (bbp *Add) DecodeBebop(ior io.Reader) (err error) {
 	return r.Err
 }
 
-func (bbp Add) Size() int {
+func (bbp *Add) Size() int {
 	bodyLen := 0
 	bodyLen += 4
 	bodyLen += 4
 	return bodyLen
 }
 
-func (bbp Add) MarshalBebop() []byte {
+func (bbp *Add) MarshalBebop() []byte {
 	buf := make([]byte, bbp.Size())
 	bbp.MarshalBebopTo(buf)
 	return buf
@@ -171,7 +171,7 @@ type AddResponse struct {
 	C int32
 }
 
-func (bbp AddResponse) MarshalBebopTo(buf []byte) int {
+func (bbp *AddResponse) MarshalBebopTo(buf []byte) int {
 	at := 0
 	iohelp.WriteInt32Bytes(buf[at:], bbp.C)
 	at += 4
@@ -194,7 +194,7 @@ func (bbp *AddResponse) MustUnmarshalBebop(buf []byte) {
 	at += 4
 }
 
-func (bbp AddResponse) EncodeBebop(iow io.Writer) (err error) {
+func (bbp *AddResponse) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
 	iohelp.WriteInt32(w, bbp.C)
 	return w.Err
@@ -206,13 +206,13 @@ func (bbp *AddResponse) DecodeBebop(ior io.Reader) (err error) {
 	return r.Err
 }
 
-func (bbp AddResponse) Size() int {
+func (bbp *AddResponse) Size() int {
 	bodyLen := 0
 	bodyLen += 4
 	return bodyLen
 }
 
-func (bbp AddResponse) MarshalBebop() []byte {
+func (bbp *AddResponse) MarshalBebop() []byte {
 	buf := make([]byte, bbp.Size())
 	bbp.MarshalBebopTo(buf)
 	return buf
@@ -336,7 +336,7 @@ func (bbp PrintRequest) Size() int {
 	return bodyLen
 }
 
-func (bbp PrintRequest) MarshalBebop() []byte {
+func (bbp *PrintRequest) MarshalBebop() []byte {
 	buf := make([]byte, bbp.Size())
 	bbp.MarshalBebopTo(buf)
 	return buf
@@ -460,7 +460,7 @@ func (bbp AddRequest) Size() int {
 	return bodyLen
 }
 
-func (bbp AddRequest) MarshalBebop() []byte {
+func (bbp *AddRequest) MarshalBebop() []byte {
 	buf := make([]byte, bbp.Size())
 	bbp.MarshalBebopTo(buf)
 	return buf

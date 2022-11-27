@@ -24,7 +24,7 @@ type ImportedType struct {
 	Foobar string
 }
 
-func (bbp ImportedType) MarshalBebopTo(buf []byte) int {
+func (bbp *ImportedType) MarshalBebopTo(buf []byte) int {
 	at := 0
 	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.Foobar)))
 	copy(buf[at+4:at+4+len(bbp.Foobar)], []byte(bbp.Foobar))
@@ -48,7 +48,7 @@ func (bbp *ImportedType) MustUnmarshalBebop(buf []byte) {
 	at += 4 + len(bbp.Foobar)
 }
 
-func (bbp ImportedType) EncodeBebop(iow io.Writer) (err error) {
+func (bbp *ImportedType) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
 	iohelp.WriteUint32(w, uint32(len(bbp.Foobar)))
 	w.Write([]byte(bbp.Foobar))
@@ -61,13 +61,13 @@ func (bbp *ImportedType) DecodeBebop(ior io.Reader) (err error) {
 	return r.Err
 }
 
-func (bbp ImportedType) Size() int {
+func (bbp *ImportedType) Size() int {
 	bodyLen := 0
 	bodyLen += 4 + len(bbp.Foobar)
 	return bodyLen
 }
 
-func (bbp ImportedType) MarshalBebop() []byte {
+func (bbp *ImportedType) MarshalBebop() []byte {
 	buf := make([]byte, bbp.Size())
 	bbp.MarshalBebopTo(buf)
 	return buf
@@ -254,7 +254,7 @@ func (bbp ImportedMessage) Size() int {
 	return bodyLen
 }
 
-func (bbp ImportedMessage) MarshalBebop() []byte {
+func (bbp *ImportedMessage) MarshalBebop() []byte {
 	buf := make([]byte, bbp.Size())
 	bbp.MarshalBebopTo(buf)
 	return buf
@@ -339,7 +339,7 @@ func (bbp WhyAreTheseInline) Size() int {
 	return bodyLen
 }
 
-func (bbp WhyAreTheseInline) MarshalBebop() []byte {
+func (bbp *WhyAreTheseInline) MarshalBebop() []byte {
 	return []byte{}
 }
 
@@ -360,7 +360,7 @@ var _ bebop.Record = &Really{}
 type Really struct {
 }
 
-func (bbp Really) MarshalBebopTo(buf []byte) int {
+func (bbp *Really) MarshalBebopTo(buf []byte) int {
 	return 0
 }
 
@@ -371,7 +371,7 @@ func (bbp *Really) UnmarshalBebop(buf []byte) (err error) {
 func (bbp *Really) MustUnmarshalBebop(buf []byte) {
 }
 
-func (bbp Really) EncodeBebop(iow io.Writer) (err error) {
+func (bbp *Really) EncodeBebop(iow io.Writer) (err error) {
 	return nil
 }
 
@@ -379,11 +379,11 @@ func (bbp *Really) DecodeBebop(ior io.Reader) (err error) {
 	return nil
 }
 
-func (bbp Really) Size() int {
+func (bbp *Really) Size() int {
 	return 0
 }
 
-func (bbp Really) MarshalBebop() []byte {
+func (bbp *Really) MarshalBebop() []byte {
 	return []byte{}
 }
 
@@ -550,7 +550,7 @@ func (bbp ImportedUnion) Size() int {
 	return bodyLen
 }
 
-func (bbp ImportedUnion) MarshalBebop() []byte {
+func (bbp *ImportedUnion) MarshalBebop() []byte {
 	buf := make([]byte, bbp.Size())
 	bbp.MarshalBebopTo(buf)
 	return buf

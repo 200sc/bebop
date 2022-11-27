@@ -17,7 +17,7 @@ var _ bebop.Record = &NotImported{}
 type NotImported struct {
 }
 
-func (bbp NotImported) MarshalBebopTo(buf []byte) int {
+func (bbp *NotImported) MarshalBebopTo(buf []byte) int {
 	return 0
 }
 
@@ -28,7 +28,7 @@ func (bbp *NotImported) UnmarshalBebop(buf []byte) (err error) {
 func (bbp *NotImported) MustUnmarshalBebop(buf []byte) {
 }
 
-func (bbp NotImported) EncodeBebop(iow io.Writer) (err error) {
+func (bbp *NotImported) EncodeBebop(iow io.Writer) (err error) {
 	return nil
 }
 
@@ -36,11 +36,11 @@ func (bbp *NotImported) DecodeBebop(ior io.Reader) (err error) {
 	return nil
 }
 
-func (bbp NotImported) Size() int {
+func (bbp *NotImported) Size() int {
 	return 0
 }
 
-func (bbp NotImported) MarshalBebop() []byte {
+func (bbp *NotImported) MarshalBebop() []byte {
 	return []byte{}
 }
 

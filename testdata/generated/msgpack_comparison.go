@@ -37,7 +37,7 @@ type MsgpackComparison struct {
 	ARRAY8 []int32
 }
 
-func (bbp MsgpackComparison) MarshalBebopTo(buf []byte) int {
+func (bbp *MsgpackComparison) MarshalBebopTo(buf []byte) int {
 	at := 0
 	iohelp.WriteUint8Bytes(buf[at:], bbp.INT0)
 	at += 1
@@ -291,7 +291,7 @@ func (bbp *MsgpackComparison) MustUnmarshalBebop(buf []byte) {
 	}
 }
 
-func (bbp MsgpackComparison) EncodeBebop(iow io.Writer) (err error) {
+func (bbp *MsgpackComparison) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
 	iohelp.WriteUint8(w, bbp.INT0)
 	iohelp.WriteUint8(w, bbp.INT1)
@@ -367,7 +367,7 @@ func (bbp *MsgpackComparison) DecodeBebop(ior io.Reader) (err error) {
 	return r.Err
 }
 
-func (bbp MsgpackComparison) Size() int {
+func (bbp *MsgpackComparison) Size() int {
 	bodyLen := 0
 	bodyLen += 1
 	bodyLen += 1
@@ -398,7 +398,7 @@ func (bbp MsgpackComparison) Size() int {
 	return bodyLen
 }
 
-func (bbp MsgpackComparison) MarshalBebop() []byte {
+func (bbp *MsgpackComparison) MarshalBebop() []byte {
 	buf := make([]byte, bbp.Size())
 	bbp.MarshalBebopTo(buf)
 	return buf

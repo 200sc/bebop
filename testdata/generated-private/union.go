@@ -100,7 +100,7 @@ func (bbp a) Size() int {
 	return bodyLen
 }
 
-func (bbp a) MarshalBebop() []byte {
+func (bbp *a) MarshalBebop() []byte {
 	buf := make([]byte, bbp.Size())
 	bbp.MarshalBebopTo(buf)
 	return buf
@@ -133,7 +133,7 @@ type b struct {
 	c bool
 }
 
-func (bbp b) MarshalBebopTo(buf []byte) int {
+func (bbp *b) MarshalBebopTo(buf []byte) int {
 	at := 0
 	iohelp.WriteBoolBytes(buf[at:], bbp.c)
 	at += 1
@@ -156,7 +156,7 @@ func (bbp *b) MustUnmarshalBebop(buf []byte) {
 	at += 1
 }
 
-func (bbp b) EncodeBebop(iow io.Writer) (err error) {
+func (bbp *b) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
 	iohelp.WriteBool(w, bbp.c)
 	return w.Err
@@ -168,13 +168,13 @@ func (bbp *b) DecodeBebop(ior io.Reader) (err error) {
 	return r.Err
 }
 
-func (bbp b) Size() int {
+func (bbp *b) Size() int {
 	bodyLen := 0
 	bodyLen += 1
 	return bodyLen
 }
 
-func (bbp b) MarshalBebop() []byte {
+func (bbp *b) MarshalBebop() []byte {
 	buf := make([]byte, bbp.Size())
 	bbp.MarshalBebopTo(buf)
 	return buf
@@ -203,7 +203,7 @@ var _ bebop.Record = &c{}
 type c struct {
 }
 
-func (bbp c) MarshalBebopTo(buf []byte) int {
+func (bbp *c) MarshalBebopTo(buf []byte) int {
 	return 0
 }
 
@@ -214,7 +214,7 @@ func (bbp *c) UnmarshalBebop(buf []byte) (err error) {
 func (bbp *c) MustUnmarshalBebop(buf []byte) {
 }
 
-func (bbp c) EncodeBebop(iow io.Writer) (err error) {
+func (bbp *c) EncodeBebop(iow io.Writer) (err error) {
 	return nil
 }
 
@@ -222,11 +222,11 @@ func (bbp *c) DecodeBebop(ior io.Reader) (err error) {
 	return nil
 }
 
-func (bbp c) Size() int {
+func (bbp *c) Size() int {
 	return 0
 }
 
-func (bbp c) MarshalBebop() []byte {
+func (bbp *c) MarshalBebop() []byte {
 	return []byte{}
 }
 
@@ -442,7 +442,7 @@ func (bbp u) Size() int {
 	return bodyLen
 }
 
-func (bbp u) MarshalBebop() []byte {
+func (bbp *u) MarshalBebop() []byte {
 	buf := make([]byte, bbp.Size())
 	bbp.MarshalBebopTo(buf)
 	return buf
@@ -473,7 +473,7 @@ type cons struct {
 	tail list
 }
 
-func (bbp cons) MarshalBebopTo(buf []byte) int {
+func (bbp *cons) MarshalBebopTo(buf []byte) int {
 	at := 0
 	iohelp.WriteUint32Bytes(buf[at:], bbp.head)
 	at += 4
@@ -505,7 +505,7 @@ func (bbp *cons) MustUnmarshalBebop(buf []byte) {
 	at += (bbp.tail).Size()
 }
 
-func (bbp cons) EncodeBebop(iow io.Writer) (err error) {
+func (bbp *cons) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
 	iohelp.WriteUint32(w, bbp.head)
 	err = (bbp.tail).EncodeBebop(w)
@@ -525,14 +525,14 @@ func (bbp *cons) DecodeBebop(ior io.Reader) (err error) {
 	return r.Err
 }
 
-func (bbp cons) Size() int {
+func (bbp *cons) Size() int {
 	bodyLen := 0
 	bodyLen += 4
 	bodyLen += (bbp.tail).Size()
 	return bodyLen
 }
 
-func (bbp cons) MarshalBebop() []byte {
+func (bbp *cons) MarshalBebop() []byte {
 	buf := make([]byte, bbp.Size())
 	bbp.MarshalBebopTo(buf)
 	return buf
@@ -562,7 +562,7 @@ var _ bebop.Record = &null{}
 type null struct {
 }
 
-func (bbp null) MarshalBebopTo(buf []byte) int {
+func (bbp *null) MarshalBebopTo(buf []byte) int {
 	return 0
 }
 
@@ -573,7 +573,7 @@ func (bbp *null) UnmarshalBebop(buf []byte) (err error) {
 func (bbp *null) MustUnmarshalBebop(buf []byte) {
 }
 
-func (bbp null) EncodeBebop(iow io.Writer) (err error) {
+func (bbp *null) EncodeBebop(iow io.Writer) (err error) {
 	return nil
 }
 
@@ -581,11 +581,11 @@ func (bbp *null) DecodeBebop(ior io.Reader) (err error) {
 	return nil
 }
 
-func (bbp null) Size() int {
+func (bbp *null) Size() int {
 	return 0
 }
 
-func (bbp null) MarshalBebop() []byte {
+func (bbp *null) MarshalBebop() []byte {
 	return []byte{}
 }
 
@@ -752,7 +752,7 @@ func (bbp list) Size() int {
 	return bodyLen
 }
 
-func (bbp list) MarshalBebop() []byte {
+func (bbp *list) MarshalBebop() []byte {
 	buf := make([]byte, bbp.Size())
 	bbp.MarshalBebopTo(buf)
 	return buf

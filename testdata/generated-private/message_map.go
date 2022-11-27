@@ -138,7 +138,7 @@ func (bbp readOnlyMap) Size() int {
 	return bodyLen
 }
 
-func (bbp readOnlyMap) MarshalBebop() []byte {
+func (bbp *readOnlyMap) MarshalBebop() []byte {
 	buf := make([]byte, bbp.Size())
 	bbp.MarshalBebopTo(buf)
 	return buf

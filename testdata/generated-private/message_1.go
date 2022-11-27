@@ -162,7 +162,7 @@ func (bbp exampleMessage) Size() int {
 	return bodyLen
 }
 
-func (bbp exampleMessage) MarshalBebop() []byte {
+func (bbp *exampleMessage) MarshalBebop() []byte {
 	buf := make([]byte, bbp.Size())
 	bbp.MarshalBebopTo(buf)
 	return buf

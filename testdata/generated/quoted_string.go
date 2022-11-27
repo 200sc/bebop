@@ -19,7 +19,7 @@ type QuotedString struct {
 	Z int32
 }
 
-func (bbp QuotedString) MarshalBebopTo(buf []byte) int {
+func (bbp *QuotedString) MarshalBebopTo(buf []byte) int {
 	at := 0
 	iohelp.WriteInt32Bytes(buf[at:], bbp.X)
 	at += 4
@@ -60,7 +60,7 @@ func (bbp *QuotedString) MustUnmarshalBebop(buf []byte) {
 	at += 4
 }
 
-func (bbp QuotedString) EncodeBebop(iow io.Writer) (err error) {
+func (bbp *QuotedString) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
 	iohelp.WriteInt32(w, bbp.X)
 	iohelp.WriteInt32(w, bbp.Y)
@@ -76,7 +76,7 @@ func (bbp *QuotedString) DecodeBebop(ior io.Reader) (err error) {
 	return r.Err
 }
 
-func (bbp QuotedString) Size() int {
+func (bbp *QuotedString) Size() int {
 	bodyLen := 0
 	bodyLen += 4
 	bodyLen += 4
@@ -84,7 +84,7 @@ func (bbp QuotedString) Size() int {
 	return bodyLen
 }
 
-func (bbp QuotedString) MarshalBebop() []byte {
+func (bbp *QuotedString) MarshalBebop() []byte {
 	buf := make([]byte, bbp.Size())
 	bbp.MarshalBebopTo(buf)
 	return buf

@@ -27,7 +27,7 @@ type basicTypes struct {
 	a_date time.Time
 }
 
-func (bbp basicTypes) MarshalBebopTo(buf []byte) int {
+func (bbp *basicTypes) MarshalBebopTo(buf []byte) int {
 	at := 0
 	iohelp.WriteBoolBytes(buf[at:], bbp.a_bool)
 	at += 1
@@ -163,7 +163,7 @@ func (bbp *basicTypes) MustUnmarshalBebop(buf []byte) {
 	at += 8
 }
 
-func (bbp basicTypes) EncodeBebop(iow io.Writer) (err error) {
+func (bbp *basicTypes) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
 	iohelp.WriteBool(w, bbp.a_bool)
 	iohelp.WriteByte(w, bbp.a_byte)
@@ -204,7 +204,7 @@ func (bbp *basicTypes) DecodeBebop(ior io.Reader) (err error) {
 	return r.Err
 }
 
-func (bbp basicTypes) Size() int {
+func (bbp *basicTypes) Size() int {
 	bodyLen := 0
 	bodyLen += 1
 	bodyLen += 1
@@ -222,7 +222,7 @@ func (bbp basicTypes) Size() int {
 	return bodyLen
 }
 
-func (bbp basicTypes) MarshalBebop() []byte {
+func (bbp *basicTypes) MarshalBebop() []byte {
 	buf := make([]byte, bbp.Size())
 	bbp.MarshalBebopTo(buf)
 	return buf

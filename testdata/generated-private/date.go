@@ -148,7 +148,7 @@ func (bbp myObj) Size() int {
 	return bodyLen
 }
 
-func (bbp myObj) MarshalBebop() []byte {
+func (bbp *myObj) MarshalBebop() []byte {
 	buf := make([]byte, bbp.Size())
 	bbp.MarshalBebopTo(buf)
 	return buf

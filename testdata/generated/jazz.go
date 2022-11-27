@@ -23,7 +23,7 @@ type Musician struct {
 	plays Instrument
 }
 
-func (bbp Musician) MarshalBebopTo(buf []byte) int {
+func (bbp *Musician) MarshalBebopTo(buf []byte) int {
 	at := 0
 	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.name)))
 	copy(buf[at+4:at+4+len(bbp.name)], []byte(bbp.name))
@@ -53,7 +53,7 @@ func (bbp *Musician) MustUnmarshalBebop(buf []byte) {
 	at += 4
 }
 
-func (bbp Musician) EncodeBebop(iow io.Writer) (err error) {
+func (bbp *Musician) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
 	iohelp.WriteUint32(w, uint32(len(bbp.name)))
 	w.Write([]byte(bbp.name))
@@ -68,14 +68,14 @@ func (bbp *Musician) DecodeBebop(ior io.Reader) (err error) {
 	return r.Err
 }
 
-func (bbp Musician) Size() int {
+func (bbp *Musician) Size() int {
 	bodyLen := 0
 	bodyLen += 4 + len(bbp.name)
 	bodyLen += 4
 	return bodyLen
 }
 
-func (bbp Musician) MarshalBebop() []byte {
+func (bbp *Musician) MarshalBebop() []byte {
 	buf := make([]byte, bbp.Size())
 	bbp.MarshalBebopTo(buf)
 	return buf
@@ -99,11 +99,11 @@ func MustMakeMusicianFromBytes(buf []byte) Musician {
 	return v
 }
 
-func (bbp Musician) GetName() string {
+func (bbp *Musician) GetName() string {
 	return bbp.name
 }
 
-func (bbp Musician) GetPlays() Instrument {
+func (bbp *Musician) GetPlays() Instrument {
 	return bbp.plays
 }
 
@@ -123,7 +123,7 @@ type Library struct {
 	Songs map[[16]byte]Song
 }
 
-func (bbp Library) MarshalBebopTo(buf []byte) int {
+func (bbp *Library) MarshalBebopTo(buf []byte) int {
 	at := 0
 	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.Songs)))
 	at += 4
@@ -169,7 +169,7 @@ func (bbp *Library) MustUnmarshalBebop(buf []byte) {
 	}
 }
 
-func (bbp Library) EncodeBebop(iow io.Writer) (err error) {
+func (bbp *Library) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
 	iohelp.WriteUint32(w, uint32(len(bbp.Songs)))
 	for k1, v1 := range bbp.Songs {
@@ -196,7 +196,7 @@ func (bbp *Library) DecodeBebop(ior io.Reader) (err error) {
 	return r.Err
 }
 
-func (bbp Library) Size() int {
+func (bbp *Library) Size() int {
 	bodyLen := 0
 	bodyLen += 4
 	for _, v1 := range bbp.Songs {
@@ -206,7 +206,7 @@ func (bbp Library) Size() int {
 	return bodyLen
 }
 
-func (bbp Library) MarshalBebop() []byte {
+func (bbp *Library) MarshalBebop() []byte {
 	buf := make([]byte, bbp.Size())
 	bbp.MarshalBebopTo(buf)
 	return buf
@@ -416,7 +416,7 @@ func (bbp Song) Size() int {
 	return bodyLen
 }
 
-func (bbp Song) MarshalBebop() []byte {
+func (bbp *Song) MarshalBebop() []byte {
 	buf := make([]byte, bbp.Size())
 	bbp.MarshalBebopTo(buf)
 	return buf

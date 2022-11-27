@@ -764,7 +764,7 @@ func writeWrappers(w io.Writer, name string, isEmpty bool, settings GenerateSett
 
 func writeMarshalBebop(w io.Writer, name string, isEmpty bool, settings GenerateSettings) {
 	exposedName := exposeName(name, settings)
-	writeLine(w, "func (bbp %s) MarshalBebop() []byte {", exposedName)
+	writeLine(w, "func (bbp *%s) MarshalBebop() []byte {", exposedName)
 	if isEmpty {
 		writeLine(w, "\treturn []byte{}")
 	} else {

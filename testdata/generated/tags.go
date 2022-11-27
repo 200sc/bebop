@@ -14,7 +14,7 @@ type TaggedStruct struct {
 	Foo string `json:"foo,omitempty"`
 }
 
-func (bbp TaggedStruct) MarshalBebopTo(buf []byte) int {
+func (bbp *TaggedStruct) MarshalBebopTo(buf []byte) int {
 	at := 0
 	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.Foo)))
 	copy(buf[at+4:at+4+len(bbp.Foo)], []byte(bbp.Foo))
@@ -38,7 +38,7 @@ func (bbp *TaggedStruct) MustUnmarshalBebop(buf []byte) {
 	at += 4 + len(bbp.Foo)
 }
 
-func (bbp TaggedStruct) EncodeBebop(iow io.Writer) (err error) {
+func (bbp *TaggedStruct) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
 	iohelp.WriteUint32(w, uint32(len(bbp.Foo)))
 	w.Write([]byte(bbp.Foo))
@@ -51,13 +51,13 @@ func (bbp *TaggedStruct) DecodeBebop(ior io.Reader) (err error) {
 	return r.Err
 }
 
-func (bbp TaggedStruct) Size() int {
+func (bbp *TaggedStruct) Size() int {
 	bodyLen := 0
 	bodyLen += 4 + len(bbp.Foo)
 	return bodyLen
 }
 
-func (bbp TaggedStruct) MarshalBebop() []byte {
+func (bbp *TaggedStruct) MarshalBebop() []byte {
 	buf := make([]byte, bbp.Size())
 	bbp.MarshalBebopTo(buf)
 	return buf
@@ -173,7 +173,7 @@ func (bbp TaggedMessage) Size() int {
 	return bodyLen
 }
 
-func (bbp TaggedMessage) MarshalBebop() []byte {
+func (bbp *TaggedMessage) MarshalBebop() []byte {
 	buf := make([]byte, bbp.Size())
 	bbp.MarshalBebopTo(buf)
 	return buf
@@ -203,7 +203,7 @@ type TaggedSubStruct struct {
 	Biz [16]byte `four:"four"`
 }
 
-func (bbp TaggedSubStruct) MarshalBebopTo(buf []byte) int {
+func (bbp *TaggedSubStruct) MarshalBebopTo(buf []byte) int {
 	at := 0
 	iohelp.WriteGUIDBytes(buf[at:], bbp.Biz)
 	at += 16
@@ -226,7 +226,7 @@ func (bbp *TaggedSubStruct) MustUnmarshalBebop(buf []byte) {
 	at += 16
 }
 
-func (bbp TaggedSubStruct) EncodeBebop(iow io.Writer) (err error) {
+func (bbp *TaggedSubStruct) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
 	iohelp.WriteGUID(w, bbp.Biz)
 	return w.Err
@@ -238,13 +238,13 @@ func (bbp *TaggedSubStruct) DecodeBebop(ior io.Reader) (err error) {
 	return r.Err
 }
 
-func (bbp TaggedSubStruct) Size() int {
+func (bbp *TaggedSubStruct) Size() int {
 	bodyLen := 0
 	bodyLen += 16
 	return bodyLen
 }
 
-func (bbp TaggedSubStruct) MarshalBebop() []byte {
+func (bbp *TaggedSubStruct) MarshalBebop() []byte {
 	buf := make([]byte, bbp.Size())
 	bbp.MarshalBebopTo(buf)
 	return buf
@@ -375,7 +375,7 @@ func (bbp TaggedUnion) Size() int {
 	return bodyLen
 }
 
-func (bbp TaggedUnion) MarshalBebop() []byte {
+func (bbp *TaggedUnion) MarshalBebop() []byte {
 	buf := make([]byte, bbp.Size())
 	bbp.MarshalBebopTo(buf)
 	return buf

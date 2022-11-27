@@ -25,7 +25,7 @@ type basicArrays struct {
 	a_guid [][16]byte
 }
 
-func (bbp basicArrays) MarshalBebopTo(buf []byte) int {
+func (bbp *basicArrays) MarshalBebopTo(buf []byte) int {
 	at := 0
 	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.a_bool)))
 	at += 4
@@ -322,7 +322,7 @@ func (bbp *basicArrays) MustUnmarshalBebop(buf []byte) {
 	}
 }
 
-func (bbp basicArrays) EncodeBebop(iow io.Writer) (err error) {
+func (bbp *basicArrays) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
 	iohelp.WriteUint32(w, uint32(len(bbp.a_bool)))
 	for _, elem := range bbp.a_bool {
@@ -429,7 +429,7 @@ func (bbp *basicArrays) DecodeBebop(ior io.Reader) (err error) {
 	return r.Err
 }
 
-func (bbp basicArrays) Size() int {
+func (bbp *basicArrays) Size() int {
 	bodyLen := 0
 	bodyLen += 4
 	bodyLen += len(bbp.a_bool) * 1
@@ -460,7 +460,7 @@ func (bbp basicArrays) Size() int {
 	return bodyLen
 }
 
-func (bbp basicArrays) MarshalBebop() []byte {
+func (bbp *basicArrays) MarshalBebop() []byte {
 	buf := make([]byte, bbp.Size())
 	bbp.MarshalBebopTo(buf)
 	return buf
@@ -490,7 +490,7 @@ type testInt32Array struct {
 	a []int32
 }
 
-func (bbp testInt32Array) MarshalBebopTo(buf []byte) int {
+func (bbp *testInt32Array) MarshalBebopTo(buf []byte) int {
 	at := 0
 	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.a)))
 	at += 4
@@ -528,7 +528,7 @@ func (bbp *testInt32Array) MustUnmarshalBebop(buf []byte) {
 	}
 }
 
-func (bbp testInt32Array) EncodeBebop(iow io.Writer) (err error) {
+func (bbp *testInt32Array) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
 	iohelp.WriteUint32(w, uint32(len(bbp.a)))
 	for _, elem := range bbp.a {
@@ -546,14 +546,14 @@ func (bbp *testInt32Array) DecodeBebop(ior io.Reader) (err error) {
 	return r.Err
 }
 
-func (bbp testInt32Array) Size() int {
+func (bbp *testInt32Array) Size() int {
 	bodyLen := 0
 	bodyLen += 4
 	bodyLen += len(bbp.a) * 4
 	return bodyLen
 }
 
-func (bbp testInt32Array) MarshalBebop() []byte {
+func (bbp *testInt32Array) MarshalBebop() []byte {
 	buf := make([]byte, bbp.Size())
 	bbp.MarshalBebopTo(buf)
 	return buf

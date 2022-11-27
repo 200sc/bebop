@@ -36,7 +36,7 @@ type DocS struct {
 	X int32
 }
 
-func (bbp DocS) MarshalBebopTo(buf []byte) int {
+func (bbp *DocS) MarshalBebopTo(buf []byte) int {
 	at := 0
 	iohelp.WriteInt32Bytes(buf[at:], bbp.X)
 	at += 4
@@ -59,7 +59,7 @@ func (bbp *DocS) MustUnmarshalBebop(buf []byte) {
 	at += 4
 }
 
-func (bbp DocS) EncodeBebop(iow io.Writer) (err error) {
+func (bbp *DocS) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
 	iohelp.WriteInt32(w, bbp.X)
 	return w.Err
@@ -71,13 +71,13 @@ func (bbp *DocS) DecodeBebop(ior io.Reader) (err error) {
 	return r.Err
 }
 
-func (bbp DocS) Size() int {
+func (bbp *DocS) Size() int {
 	bodyLen := 0
 	bodyLen += 4
 	return bodyLen
 }
 
-func (bbp DocS) MarshalBebop() []byte {
+func (bbp *DocS) MarshalBebop() []byte {
 	buf := make([]byte, bbp.Size())
 	bbp.MarshalBebopTo(buf)
 	return buf
@@ -180,7 +180,7 @@ func (bbp DepM) Size() int {
 	return bodyLen
 }
 
-func (bbp DepM) MarshalBebop() []byte {
+func (bbp *DepM) MarshalBebop() []byte {
 	buf := make([]byte, bbp.Size())
 	bbp.MarshalBebopTo(buf)
 	return buf
@@ -335,7 +335,7 @@ func (bbp DocM) Size() int {
 	return bodyLen
 }
 
-func (bbp DocM) MarshalBebop() []byte {
+func (bbp *DocM) MarshalBebop() []byte {
 	buf := make([]byte, bbp.Size())
 	bbp.MarshalBebopTo(buf)
 	return buf

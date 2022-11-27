@@ -24,7 +24,7 @@ type furniture struct {
 	family furnitureFamily
 }
 
-func (bbp furniture) MarshalBebopTo(buf []byte) int {
+func (bbp *furniture) MarshalBebopTo(buf []byte) int {
 	at := 0
 	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.name)))
 	copy(buf[at+4:at+4+len(bbp.name)], []byte(bbp.name))
@@ -63,7 +63,7 @@ func (bbp *furniture) MustUnmarshalBebop(buf []byte) {
 	at += 4
 }
 
-func (bbp furniture) EncodeBebop(iow io.Writer) (err error) {
+func (bbp *furniture) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
 	iohelp.WriteUint32(w, uint32(len(bbp.name)))
 	w.Write([]byte(bbp.name))
@@ -80,7 +80,7 @@ func (bbp *furniture) DecodeBebop(ior io.Reader) (err error) {
 	return r.Err
 }
 
-func (bbp furniture) Size() int {
+func (bbp *furniture) Size() int {
 	bodyLen := 0
 	bodyLen += 4 + len(bbp.name)
 	bodyLen += 4
@@ -88,7 +88,7 @@ func (bbp furniture) Size() int {
 	return bodyLen
 }
 
-func (bbp furniture) MarshalBebop() []byte {
+func (bbp *furniture) MarshalBebop() []byte {
 	buf := make([]byte, bbp.Size())
 	bbp.MarshalBebopTo(buf)
 	return buf
@@ -112,15 +112,15 @@ func mustMakefurnitureFromBytes(buf []byte) furniture {
 	return v
 }
 
-func (bbp furniture) Getname() string {
+func (bbp *furniture) Getname() string {
 	return bbp.name
 }
 
-func (bbp furniture) Getprice() uint32 {
+func (bbp *furniture) Getprice() uint32 {
 	return bbp.price
 }
 
-func (bbp furniture) Getfamily() furnitureFamily {
+func (bbp *furniture) Getfamily() furnitureFamily {
 	return bbp.family
 }
 
@@ -144,7 +144,7 @@ type requestResponse struct {
 	availableFurniture []furniture
 }
 
-func (bbp requestResponse) MarshalBebopTo(buf []byte) int {
+func (bbp *requestResponse) MarshalBebopTo(buf []byte) int {
 	at := 0
 	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.availableFurniture)))
 	at += 4
@@ -182,7 +182,7 @@ func (bbp *requestResponse) MustUnmarshalBebop(buf []byte) {
 	}
 }
 
-func (bbp requestResponse) EncodeBebop(iow io.Writer) (err error) {
+func (bbp *requestResponse) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
 	iohelp.WriteUint32(w, uint32(len(bbp.availableFurniture)))
 	for _, elem := range bbp.availableFurniture {
@@ -206,7 +206,7 @@ func (bbp *requestResponse) DecodeBebop(ior io.Reader) (err error) {
 	return r.Err
 }
 
-func (bbp requestResponse) Size() int {
+func (bbp *requestResponse) Size() int {
 	bodyLen := 0
 	bodyLen += 4
 	for _, elem := range bbp.availableFurniture {
@@ -215,7 +215,7 @@ func (bbp requestResponse) Size() int {
 	return bodyLen
 }
 
-func (bbp requestResponse) MarshalBebop() []byte {
+func (bbp *requestResponse) MarshalBebop() []byte {
 	buf := make([]byte, bbp.Size())
 	bbp.MarshalBebopTo(buf)
 	return buf
@@ -239,7 +239,7 @@ func mustMakerequestResponseFromBytes(buf []byte) requestResponse {
 	return v
 }
 
-func (bbp requestResponse) GetavailableFurniture() []furniture {
+func (bbp *requestResponse) GetavailableFurniture() []furniture {
 	return bbp.availableFurniture
 }
 
@@ -360,7 +360,7 @@ func (bbp requestCatalog) Size() int {
 	return bodyLen
 }
 
-func (bbp requestCatalog) MarshalBebop() []byte {
+func (bbp *requestCatalog) MarshalBebop() []byte {
 	buf := make([]byte, bbp.Size())
 	bbp.MarshalBebopTo(buf)
 	return buf

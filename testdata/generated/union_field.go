@@ -106,7 +106,7 @@ func (bbp WithUnionField) Size() int {
 	return bodyLen
 }
 
-func (bbp WithUnionField) MarshalBebop() []byte {
+func (bbp *WithUnionField) MarshalBebop() []byte {
 	buf := make([]byte, bbp.Size())
 	bbp.MarshalBebopTo(buf)
 	return buf
@@ -137,7 +137,7 @@ type Cons2 struct {
 	Tail List
 }
 
-func (bbp Cons2) MarshalBebopTo(buf []byte) int {
+func (bbp *Cons2) MarshalBebopTo(buf []byte) int {
 	at := 0
 	iohelp.WriteUint32Bytes(buf[at:], bbp.Head)
 	at += 4
@@ -163,7 +163,7 @@ func (bbp *Cons2) MustUnmarshalBebop(buf []byte) {
 	
 }
 
-func (bbp Cons2) EncodeBebop(iow io.Writer) (err error) {
+func (bbp *Cons2) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
 	iohelp.WriteUint32(w, bbp.Head)
 	
@@ -177,14 +177,14 @@ func (bbp *Cons2) DecodeBebop(ior io.Reader) (err error) {
 	return r.Err
 }
 
-func (bbp Cons2) Size() int {
+func (bbp *Cons2) Size() int {
 	bodyLen := 0
 	bodyLen += 4
 	
 	return bodyLen
 }
 
-func (bbp Cons2) MarshalBebop() []byte {
+func (bbp *Cons2) MarshalBebop() []byte {
 	buf := make([]byte, bbp.Size())
 	bbp.MarshalBebopTo(buf)
 	return buf
@@ -214,7 +214,7 @@ var _ bebop.Record = &Nil2{}
 type Nil2 struct {
 }
 
-func (bbp Nil2) MarshalBebopTo(buf []byte) int {
+func (bbp *Nil2) MarshalBebopTo(buf []byte) int {
 	return 0
 }
 
@@ -225,7 +225,7 @@ func (bbp *Nil2) UnmarshalBebop(buf []byte) (err error) {
 func (bbp *Nil2) MustUnmarshalBebop(buf []byte) {
 }
 
-func (bbp Nil2) EncodeBebop(iow io.Writer) (err error) {
+func (bbp *Nil2) EncodeBebop(iow io.Writer) (err error) {
 	return nil
 }
 
@@ -233,11 +233,11 @@ func (bbp *Nil2) DecodeBebop(ior io.Reader) (err error) {
 	return nil
 }
 
-func (bbp Nil2) Size() int {
+func (bbp *Nil2) Size() int {
 	return 0
 }
 
-func (bbp Nil2) MarshalBebop() []byte {
+func (bbp *Nil2) MarshalBebop() []byte {
 	return []byte{}
 }
 
@@ -404,7 +404,7 @@ func (bbp List2) Size() int {
 	return bodyLen
 }
 
-func (bbp List2) MarshalBebop() []byte {
+func (bbp *List2) MarshalBebop() []byte {
 	buf := make([]byte, bbp.Size())
 	bbp.MarshalBebopTo(buf)
 	return buf

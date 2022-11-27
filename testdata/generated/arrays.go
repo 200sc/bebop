@@ -15,7 +15,7 @@ type ArraySamples struct {
 	Bytes2 [][][]byte
 }
 
-func (bbp ArraySamples) MarshalBebopTo(buf []byte) int {
+func (bbp *ArraySamples) MarshalBebopTo(buf []byte) int {
 	at := 0
 	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.Bytes)))
 	at += 4
@@ -125,7 +125,7 @@ func (bbp *ArraySamples) MustUnmarshalBebop(buf []byte) {
 	}
 }
 
-func (bbp ArraySamples) EncodeBebop(iow io.Writer) (err error) {
+func (bbp *ArraySamples) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
 	iohelp.WriteUint32(w, uint32(len(bbp.Bytes)))
 	for _, elem := range bbp.Bytes {
@@ -175,7 +175,7 @@ func (bbp *ArraySamples) DecodeBebop(ior io.Reader) (err error) {
 	return r.Err
 }
 
-func (bbp ArraySamples) Size() int {
+func (bbp *ArraySamples) Size() int {
 	bodyLen := 0
 	bodyLen += 4
 	for _, elem := range bbp.Bytes {
@@ -196,7 +196,7 @@ func (bbp ArraySamples) Size() int {
 	return bodyLen
 }
 
-func (bbp ArraySamples) MarshalBebop() []byte {
+func (bbp *ArraySamples) MarshalBebop() []byte {
 	buf := make([]byte, bbp.Size())
 	bbp.MarshalBebopTo(buf)
 	return buf

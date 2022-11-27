@@ -19,7 +19,7 @@ type UsesImport struct {
 	Imported generatedtwo.ImportedType
 }
 
-func (bbp UsesImport) MarshalBebopTo(buf []byte) int {
+func (bbp *UsesImport) MarshalBebopTo(buf []byte) int {
 	at := 0
 	(bbp.Imported).MarshalBebopTo(buf[at:])
 	at += (bbp.Imported).Size()
@@ -42,7 +42,7 @@ func (bbp *UsesImport) MustUnmarshalBebop(buf []byte) {
 	at += (bbp.Imported).Size()
 }
 
-func (bbp UsesImport) EncodeBebop(iow io.Writer) (err error) {
+func (bbp *UsesImport) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
 	err = (bbp.Imported).EncodeBebop(w)
 	if err != nil {
@@ -60,13 +60,13 @@ func (bbp *UsesImport) DecodeBebop(ior io.Reader) (err error) {
 	return r.Err
 }
 
-func (bbp UsesImport) Size() int {
+func (bbp *UsesImport) Size() int {
 	bodyLen := 0
 	bodyLen += (bbp.Imported).Size()
 	return bodyLen
 }
 
-func (bbp UsesImport) MarshalBebop() []byte {
+func (bbp *UsesImport) MarshalBebop() []byte {
 	buf := make([]byte, bbp.Size())
 	bbp.MarshalBebopTo(buf)
 	return buf
@@ -188,7 +188,7 @@ func (bbp UsesImportMsg) Size() int {
 	return bodyLen
 }
 
-func (bbp UsesImportMsg) MarshalBebop() []byte {
+func (bbp *UsesImportMsg) MarshalBebop() []byte {
 	buf := make([]byte, bbp.Size())
 	bbp.MarshalBebopTo(buf)
 	return buf
@@ -218,7 +218,7 @@ type UnionStruct struct {
 	Hello generatedtwo.ImportedEnum
 }
 
-func (bbp UnionStruct) MarshalBebopTo(buf []byte) int {
+func (bbp *UnionStruct) MarshalBebopTo(buf []byte) int {
 	at := 0
 	iohelp.WriteUint32Bytes(buf[at:], uint32(bbp.Hello))
 	at += 4
@@ -238,7 +238,7 @@ func (bbp *UnionStruct) MustUnmarshalBebop(buf []byte) {
 	at += 4
 }
 
-func (bbp UnionStruct) EncodeBebop(iow io.Writer) (err error) {
+func (bbp *UnionStruct) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
 	iohelp.WriteUint32(w, uint32(bbp.Hello))
 	return w.Err
@@ -250,13 +250,13 @@ func (bbp *UnionStruct) DecodeBebop(ior io.Reader) (err error) {
 	return r.Err
 }
 
-func (bbp UnionStruct) Size() int {
+func (bbp *UnionStruct) Size() int {
 	bodyLen := 0
 	bodyLen += 4
 	return bodyLen
 }
 
-func (bbp UnionStruct) MarshalBebop() []byte {
+func (bbp *UnionStruct) MarshalBebop() []byte {
 	buf := make([]byte, bbp.Size())
 	bbp.MarshalBebopTo(buf)
 	return buf
@@ -369,7 +369,7 @@ func (bbp UnionMessage) Size() int {
 	return bodyLen
 }
 
-func (bbp UnionMessage) MarshalBebop() []byte {
+func (bbp *UnionMessage) MarshalBebop() []byte {
 	buf := make([]byte, bbp.Size())
 	bbp.MarshalBebopTo(buf)
 	return buf
@@ -544,7 +544,7 @@ func (bbp UsesImportUnion) Size() int {
 	return bodyLen
 }
 
-func (bbp UsesImportUnion) MarshalBebop() []byte {
+func (bbp *UsesImportUnion) MarshalBebop() []byte {
 	buf := make([]byte, bbp.Size())
 	bbp.MarshalBebopTo(buf)
 	return buf
