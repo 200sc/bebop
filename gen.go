@@ -92,16 +92,24 @@ func (f File) Validate() error {
 		}
 		customTypes[en.Name] = struct{}{}
 		optionNames := map[string]struct{}{}
-		optionValues := map[int32]struct{}{}
+		optionValues := map[int64]struct{}{}
+		unsignedOptionValues := map[uint64]struct{}{}
 		for _, opt := range en.Options {
 			if _, ok := optionNames[opt.Name]; ok {
 				return fmt.Errorf("enum %s has duplicate option name %s", en.Name, opt.Name)
 			}
-			if _, ok := optionValues[opt.Value]; ok {
-				return fmt.Errorf("enum %s has duplicate option value %d", en.Name, opt.Value)
-			}
 			optionNames[opt.Name] = struct{}{}
-			optionValues[opt.Value] = struct{}{}
+			if en.Unsigned {
+				if _, ok := unsignedOptionValues[opt.UintValue]; ok {
+					return fmt.Errorf("enum %s has duplicate option value %d", en.Name, opt.UintValue)
+				}
+				unsignedOptionValues[opt.UintValue] = struct{}{}
+			} else {
+				if _, ok := optionValues[opt.Value]; ok {
+					return fmt.Errorf("enum %s has duplicate option value %d", en.Name, opt.Value)
+				}
+				optionValues[opt.Value] = struct{}{}
+			}
 		}
 	}
 	for _, st := range f.Structs {
@@ -497,7 +505,7 @@ func (f File) Generate(w io.Writer, settings GenerateSettings) error {
 func (en Enum) Generate(w io.Writer, settings GenerateSettings) {
 	exposedName := exposeName(en.Name, settings)
 	writeComment(w, 0, en.Comment, settings)
-	writeLine(w, "type %s uint32", exposedName)
+	writeLine(w, "type %s %s", exposedName, en.SimpleType)
 	writeLine(w, "")
 	if len(en.Options) != 0 {
 		writeLine(w, "const (")
@@ -506,7 +514,11 @@ func (en Enum) Generate(w io.Writer, settings GenerateSettings) {
 			if opt.Deprecated {
 				writeLine(w, "\t// Deprecated: %s", opt.DeprecatedMessage)
 			}
-			writeLine(w, "\t%s_%s %s = %d", exposedName, opt.Name, exposedName, opt.Value)
+			if en.Unsigned {
+				writeLine(w, "\t%s_%s %s = %d", exposedName, opt.Name, exposedName, opt.UintValue)
+			} else {
+				writeLine(w, "\t%s_%s %s = %d", exposedName, opt.Name, exposedName, opt.Value)
+			}
 		}
 		writeLine(w, ")")
 		writeLine(w, "")

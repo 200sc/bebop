@@ -14,6 +14,130 @@ func TestReadFile(t *testing.T) {
 	}
 	tcs := []testCase{
 		{
+			file: "typed_enums",
+			expected: File{
+				Enums: []Enum{
+					{
+						Name:       "EnumU8",
+						SimpleType: "uint8",
+						Unsigned:   true,
+						Options: []EnumOption{
+							{
+								Name:      "EnumU81",
+								UintValue: 1,
+							},
+							{
+								Name:      "EnumU82",
+								UintValue: 2,
+							},
+						},
+					},
+					{
+						Name:       "EnumByte",
+						SimpleType: "byte",
+						Unsigned:   true,
+						Options: []EnumOption{
+							{
+								Name:      "EnumByte1",
+								UintValue: 1,
+							},
+							{
+								Name:      "EnumByte2",
+								UintValue: 2,
+							},
+						},
+					},
+					{
+						Name:       "EnumU16",
+						SimpleType: "uint16",
+						Unsigned:   true,
+						Options: []EnumOption{
+							{
+								Name:      "EnumU161",
+								UintValue: 1,
+							},
+							{
+								Name:      "EnumU162",
+								UintValue: 2,
+							},
+						},
+					},
+					{
+						Name:       "EnumU32",
+						SimpleType: "uint32",
+						Unsigned:   true,
+						Options: []EnumOption{
+							{
+								Name:      "EnumU321",
+								UintValue: 1,
+							},
+							{
+								Name:      "EnumU322",
+								UintValue: 2,
+							},
+						},
+					},
+					{
+						Name:       "EnumU64",
+						SimpleType: "uint64",
+						Unsigned:   true,
+						Options: []EnumOption{
+							{
+								Name:      "EnumU641",
+								UintValue: 1,
+							},
+							{
+								Name:      "EnumU642",
+								UintValue: 2,
+							},
+						},
+					},
+					{
+						Name:       "Enum16",
+						SimpleType: "int16",
+						Options: []EnumOption{
+							{
+								Name:  "Enum161",
+								Value: 1,
+							},
+							{
+								Name:  "Enum162",
+								Value: 2,
+							},
+						},
+					},
+					{
+						Name:       "Enum32",
+						SimpleType: "int32",
+						Options: []EnumOption{
+							{
+								Name:  "Enum321",
+								Value: 1,
+							},
+							{
+								Name:  "Enum322",
+								Value: 2,
+							},
+						},
+					},
+					{
+						Name:       "Enum64",
+						SimpleType: "int64",
+						Options: []EnumOption{
+							{
+								Name:  "Enum641",
+								Value: 1,
+							},
+							{
+								Name:  "Enum642",
+								Value: 2,
+							},
+						},
+					},
+				},
+			},
+		},
+		{
 			file: "arrays",
 			expected: File{
 				Structs: []Struct{
@@ -79,23 +203,25 @@ func TestReadFile(t *testing.T) {
 			expected: File{
 				Enums: []Enum{
 					{
-						Name: "TestFlags",
+						Name:       "TestFlags",
+						SimpleType: "uint32",
+						Unsigned:   true,
 						Options: []EnumOption{
 							{
-								Name:  "None",
-								Value: 0,
+								Name:      "None",
+								UintValue: 0,
 							}, {
-								Name:  "Read",
-								Value: 1,
+								Name:      "Read",
+								UintValue: 1,
 							}, {
-								Name:  "Write",
-								Value: 2,
+								Name:      "Write",
+								UintValue: 2,
 							}, {
-								Name:  "ReadWrite",
-								Value: 1 | 2,
+								Name:      "ReadWrite",
+								UintValue: 1 | 2,
 							}, {
-								Name:  "Complex",
-								Value: (1 | 2) | 0xF0&0x1F,
+								Name:      "Complex",
+								UintValue: (1 | 2) | 0xF0&0x1F,
 							},
 						},
 					},
@@ -300,11 +426,13 @@ func TestReadFile(t *testing.T) {
 			expected: File{
 				Enums: []Enum{
 					{
-						Name: "MyEnum",
+						Name:       "MyEnum",
+						SimpleType: "uint32",
+						Unsigned:   true,
 						Options: []EnumOption{
 							{
-								Name:  "One",
-								Value: 1,
+								Name:      "One",
+								UintValue: 1,
 							},
 						},
 					},
@@ -530,13 +658,15 @@ func TestReadFile(t *testing.T) {
 			expected: File{
 				Enums: []Enum{
 					{
-						Name:    "BlockComments",
-						Comment: " block \n line",
+						Name:       "BlockComments",
+						Comment:    " block \n line",
+						SimpleType: "uint32",
+						Unsigned:   true,
 						Options: []EnumOption{
 							{
-								Value:   1,
-								Name:    "Block",
-								Comment: " block \n line",
+								UintValue: 1,
+								Name:      "Block",
+								Comment:   " block \n line",
 							},
 						},
 					},
@@ -627,31 +757,35 @@ func TestReadFile(t *testing.T) {
 				},
 				Enums: []Enum{
 					{
-						Name: "DepE",
+						Name:       "DepE",
+						SimpleType: "uint32",
+						Unsigned:   true,
 						Options: []EnumOption{
 							{
 								Name:              "X",
-								Value:             1,
+								UintValue:         1,
 								Deprecated:        true,
 								DeprecatedMessage: "X in DepE",
 							},
 						},
 					}, {
-						Name:    "DocE",
-						Comment: " Documented enum ",
+						Name:       "DocE",
+						SimpleType: "uint32",
+						Unsigned:   true,
+						Comment:    " Documented enum ",
 						Options: []EnumOption{
 							{
-								Name:    "X",
-								Value:   1,
-								Comment: " Documented constant ",
+								Name:      "X",
+								UintValue: 1,
+								Comment:   " Documented constant ",
 							}, {
 								Name:              "Y",
-								Value:             2,
+								UintValue:         2,
 								Deprecated:        true,
 								DeprecatedMessage: "Y in DocE",
 							}, {
 								Name:              "Z",
-								Value:             3,
+								UintValue:         3,
 								Comment:           " Deprecated, documented constant ",
 								Deprecated:        true,
 								DeprecatedMessage: "Z in DocE",
@@ -666,20 +800,22 @@ func TestReadFile(t *testing.T) {
 			expected: File{
 				Enums: []Enum{
 					{
-						Name: "Test",
+						Name:       "Test",
+						SimpleType: "uint32",
+						Unsigned:   true,
 						Options: []EnumOption{
 							{
-								Name:  "Start",
-								Value: 1,
+								Name:      "Start",
+								UintValue: 1,
 							}, {
-								Name:  "End",
-								Value: 2,
+								Name:      "End",
+								UintValue: 2,
 							}, {
-								Name:  "Middle",
-								Value: 3,
+								Name:      "Middle",
+								UintValue: 3,
 							}, {
 								Name:              "Beginning",
-								Value:             4,
+								UintValue:         4,
 								DeprecatedMessage: "who knows",
 								Deprecated:        true,
 							},
@@ -693,22 +829,24 @@ func TestReadFile(t *testing.T) {
 			expected: File{
 				Enums: []Enum{
 					{
-						Name:    "Test2",
-						Comment: " test 2 has a line comment",
+						Name:       "Test2",
+						SimpleType: "uint32",
+						Unsigned:   true,
+						Comment:    " test 2 has a line comment",
 						Options: []EnumOption{
 							{
-								Name:  "Start",
-								Value: 1,
+								Name:      "Start",
+								UintValue: 1,
 							}, {
-								Name:    "End",
-								Comment: " end has a line comment too",
-								Value:   2,
+								Name:      "End",
+								Comment:   " end has a line comment too",
+								UintValue: 2,
 							}, {
-								Name:  "Middle",
-								Value: 3,
+								Name:      "Middle",
+								UintValue: 3,
 							}, {
 								Name:              "Beginning",
-								Value:             4,
+								UintValue:         4,
 								DeprecatedMessage: "who knows",
 								Deprecated:        true,
 							},
@@ -765,19 +903,21 @@ func TestReadFile(t *testing.T) {
 			expected: File{
 				Enums: []Enum{
 					{
-						Name: "Instrument",
+						Name:       "Instrument",
+						SimpleType: "uint32",
+						Unsigned:   true,
 						Options: []EnumOption{
 							{
-								Name:  "Sax",
-								Value: 0,
+								Name:      "Sax",
+								UintValue: 0,
 							},
 							{
-								Name:  "Trumpet",
-								Value: 1,
+								Name:      "Trumpet",
+								UintValue: 1,
 							},
 							{
-								Name:  "Clarinet",
-								Value: 2,
+								Name:      "Clarinet",
+								UintValue: 2,
 							},
 						},
 					},
@@ -852,15 +992,17 @@ func TestReadFile(t *testing.T) {
 			expected: File{
 				Enums: []Enum{
 					{
-						Name: "VideoCodec",
+						Name:       "VideoCodec",
+						SimpleType: "uint32",
+						Unsigned:   true,
 						Options: []EnumOption{
 							{
-								Name:  "H264",
-								Value: 0,
+								Name:      "H264",
+								UintValue: 0,
 							},
 							{
-								Name:  "H265",
-								Value: 1,
+								Name:      "H265",
+								UintValue: 1,
 							},
 						},
 					},
@@ -1346,19 +1488,21 @@ func TestReadFile(t *testing.T) {
 			expected: File{
 				Enums: []Enum{
 					{
-						Name: "FurnitureFamily",
+						Name:       "FurnitureFamily",
+						SimpleType: "uint32",
+						Unsigned:   true,
 						Options: []EnumOption{
 							{
-								Name:  "Bed",
-								Value: 0,
+								Name:      "Bed",
+								UintValue: 0,
 							},
 							{
-								Name:  "Table",
-								Value: 1,
+								Name:      "Table",
+								UintValue: 1,
 							},
 							{
-								Name:  "Shoe",
-								Value: 2,
+								Name:      "Shoe",
+								UintValue: 2,
 							},
 						},
 					},
@@ -1578,7 +1722,7 @@ func TestReadFileError(t *testing.T) {
 		{file: "invalid_enum_bad_deprecated", errMessage: "[1:17] expected (String Literal) got Equals"},
 		{file: "invalid_enum_double_deprecated", errMessage: "[2:5] expected enum option following deprecated annotation"},
 		{file: "invalid_enum_no_close", errMessage: "[2:0] enum definition ended early"},
-		{file: "invalid_enum_no_curly", errMessage: "[1:0] expected (Open Curly) got Newline"},
+		{file: "invalid_enum_no_curly", errMessage: "[1:0] expected (Colon, Open Curly) got Newline"},
 		{file: "invalid_enum_no_eq", errMessage: "[1:9] expected (Equals) got Integer Literal"},
 		{file: "invalid_enum_no_int", errMessage: "[1:10] expected (Integer Literal) got Semicolon"},
 		{file: "invalid_enum_no_name", errMessage: "[0:6] expected (Ident) got Open Curly"},

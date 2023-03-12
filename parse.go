@@ -202,22 +202,30 @@ func optNewline(tr *tokenReader) {
 	}
 }
 
-func readEnumOptionValue(tr *tokenReader, previousOptions []EnumOption, bitflags bool) (int32, error) {
+func readEnumOptionValue(tr *tokenReader, previousOptions []EnumOption, bitflags, uinttype bool, bitsize int) (int64, uint64, error) {
 	if _, err := expectNext(tr, tokenKindEquals); err != nil {
-		return 0, err
+		return 0, 0, err
 	}
 	if !bitflags {
 		toks, err := expectNext(tr, tokenKindIntegerLiteral, tokenKindSemicolon)
 		if err != nil {
-			return 0, err
+			return 0, 0, err
 		}
-		optInteger, err := strconv.ParseInt(string(toks[0].concrete), 0, 32)
-		if err != nil {
-			return 0, err
+		if uinttype {
+			optInteger, err := strconv.ParseUint(string(toks[0].concrete), 0, bitsize)
+			if err != nil {
+				return 0, 0, err
+			}
+			return 0, optInteger, nil
+		} else {
+			optInteger, err := strconv.ParseInt(string(toks[0].concrete), 0, bitsize)
+			if err != nil {
+				return 0, 0, err
+			}
+			return optInteger, 0, nil
 		}
-		return int32(optInteger), nil
 	}
-	return readBitflagExpr(tr, previousOptions)
+	return readBitflagExpr(tr, previousOptions, uinttype, bitsize)
 }
 
 func readUntil(tr *tokenReader, kind tokenKind) ([]token, error) {
@@ -233,15 +241,38 @@ func readUntil(tr *tokenReader, kind tokenKind) ([]token, error) {
 }
 
 func readEnum(tr *tokenReader, bitflags bool) (Enum, error) {
-	en := Enum{}
-	toks, err := expectNext(tr, tokenKindIdent, tokenKindOpenCurly)
+	en := Enum{
+		SimpleType: "uint32",
+	}
+
+	toks, err := expectNext(tr, tokenKindIdent)
 	if err != nil {
 		return en, err
 	}
 	en.Name = string(toks[0].concrete)
+	err = expectAnyOfNext(tr, tokenKindColon, tokenKindOpenCurly)
+	if err != nil {
+		return en, err
+	}
 
+	switch tr.Token().kind {
+	case tokenKindOpenCurly:
+		break
+	case tokenKindColon:
+		enumSizeTokens, err := expectNext(tr, tokenKindIdent, tokenKindOpenCurly)
+		if err != nil {
+			return en, err
+		}
+		enumSize := string(enumSizeTokens[0].concrete)
+		if !isUintPrimitive(enumSize) && !isIntPrimitive(enumSize) {
+			return en, readError(enumSizeTokens[0], "expected an integer enum type")
+		}
+		en.SimpleType = enumSize
+	}
 	optNewline(tr)
 
+	bitsize, uinttype := decodeIntegerType(en.SimpleType)
+	en.Unsigned = uinttype
 	nextCommentLines := []string{}
 	nextDeprecatedMessage := ""
 	nextIsDeprecated := false
@@ -256,13 +287,14 @@ func readEnum(tr *tokenReader, bitflags bool) (Enum, error) {
 		case tokenKindIdent:
 			optName := string(tk.concrete)
 
-			optValue, err := readEnumOptionValue(tr, en.Options, bitflags)
+			signedValue, unsignedValue, err := readEnumOptionValue(tr, en.Options, bitflags, uinttype, bitsize)
 			if err != nil {
 				return en, err
 			}
 			en.Options = append(en.Options, EnumOption{
 				Name:              optName,
-				Value:             optValue,
+				Value:             signedValue,
+				UintValue:         unsignedValue,
 				DeprecatedMessage: nextDeprecatedMessage,
 				Deprecated:        nextIsDeprecated,
 				Comment:           strings.Join(nextCommentLines, "\n"),

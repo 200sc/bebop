@@ -136,6 +136,12 @@ func (e Enum) equals(e2 Enum) error {
 			return fmt.Errorf("option %d mismatched: %v", i, err)
 		}
 	}
+	if e.SimpleType != e2.SimpleType {
+		return fmt.Errorf("simple type mismatch: %q vs %q", e.SimpleType, e2.SimpleType)
+	}
+	if e.Unsigned != e2.Unsigned {
+		return fmt.Errorf("unsigned mismatch: %v vs %v", e.Unsigned, e2.Unsigned)
+	}
 	return nil
 }
 

@@ -419,6 +419,7 @@ var genTestFiles = []string{
 	"date",
 	"message_1",
 	"tags",
+	"typed_enums",
 }
 
 func TestGenerateToFile(t *testing.T) {

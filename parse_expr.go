@@ -2,26 +2,25 @@ package bebop
 
 import (
 	"fmt"
-	"strconv"
 )
 
-func readBitflagExpr(tr *tokenReader, previousOptions []EnumOption) (int32, error) {
+func readBitflagExpr(tr *tokenReader, previousOptions []EnumOption, uinttype bool, bitsize int) (int64, uint64, error) {
 	// to simplify this a little bit, read everything up until ;
 	toks, err := readUntil(tr, tokenKindSemicolon)
 	if err != nil {
-		return 0, err
+		return 0, 0, err
 	}
 	// TODO: precedence (although there isn't really a natural precedence for these
 	// operations anyway)
 	parsed, err := parseBitflagExpr(toks)
 	if err != nil {
-		return 0, err
+		return 0, 0, err
 	}
-	val, err := evaluateBitflagExpr(parsed, previousOptions)
+	val, uval, err := evaluateBitflagExpr(parsed, previousOptions, uinttype, bitsize)
 	if err != nil {
-		return 0, err
+		return 0, 0, err
 	}
-	return val, nil
+	return val, uval, nil
 }
 
 // productions
@@ -58,53 +57,6 @@ type identNode struct {
 }
 
 func (identNode) isNode() {}
-
-func evaluateBitflagExpr(n bitFlagExprNode, opts []EnumOption) (int32, error) {
-	switch v := n.(type) {
-	case identNode:
-		name := string(v.tk.concrete)
-		for _, o := range opts {
-			if o.Name == name {
-				return o.Value, nil
-			}
-		}
-		return 0, readError(v.tk, "enum option %v undefined", name)
-	case numberNode:
-		optInteger, err := strconv.ParseInt(string(v.tk.concrete), 0, 32)
-		if err != nil {
-			return 0, err
-		}
-		return int32(optInteger), nil
-	case parenNode:
-		return evaluateBitflagExpr(v.inner, opts)
-	case binOpNode:
-		lhs, err := evaluateBitflagExpr(v.lhs, opts)
-		if err != nil {
-			return 0, err
-		}
-		rhs, err := evaluateBitflagExpr(v.rhs, opts)
-		if err != nil {
-			return 0, err
-		}
-		switch v.op {
-		// TODO: confirm that the behavior of these operators in Go
-		// matches the expected behavior in bebop
-		case tokenKindAmpersand:
-			return lhs & rhs, nil
-		case tokenKindVerticalBar:
-			return lhs | rhs, nil
-		case tokenKindDoubleCaretLeft:
-			return lhs << rhs, nil
-		case tokenKindDoubleCaretRight:
-			return lhs >> rhs, nil
-		default:
-			return 0, fmt.Errorf("undefined binary operator for bitflag %v", v.op)
-			// TODO: plus, minus, multiply, the options are endless
-		}
-	default:
-		return 0, fmt.Errorf("undefined bit flag node type %T", n)
-	}
-}
 
 func parseBitflagExpr(toks []token) (bitFlagExprNode, error) {
 	if len(toks) == 0 {

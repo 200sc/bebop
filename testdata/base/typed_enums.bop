@@ -1,0 +1,39 @@
+enum EnumU8 : uint8 {
+    EnumU81 = 1; 
+    EnumU82 = 2; 
+}
+
+enum EnumByte : byte {
+    EnumByte1 = 1; 
+    EnumByte2 = 2; 
+}
+
+enum EnumU16 : uint16 {
+    EnumU161 = 1; 
+    EnumU162 = 2; 
+}
+
+enum EnumU32 : uint32 {
+    EnumU321 = 1; 
+    EnumU322 = 2; 
+}
+
+enum EnumU64 : uint64 {
+    EnumU641 = 1; 
+    EnumU642 = 2; 
+}
+
+enum Enum16 : int16 {
+    Enum161 = 1; 
+    Enum162 = 2; 
+}
+
+enum Enum32 : int32 {
+    Enum321 = 1; 
+    Enum322 = 2; 
+}
+
+enum Enum64 : int64 {
+    Enum641 = 1; 
+    Enum642 = 2; 
+}
