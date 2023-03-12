@@ -49,7 +49,10 @@ func TestUpstreamCompatibilityFailures(t *testing.T) {
 	}
 
 	var exceptions = map[string]string{
-		"invalid_readonly_comment.bop": "bebopc 2.2.4 errors where 2.3.0 does not, without a changelog note",
+		"invalid_readonly_comment.bop":              "bebopc 2.2.4 errors where 2.3.0 does not, without a changelog note",
+		"invalid_bitflags_unparseable_uint_rhs.bop": "bebopc does not care about negative rhs uint values",
+		"invalid_bitflags_on_message.bop":           "bebopc does not care about misplaced [flags] on messages",
+		"invalid_bitflags_on_struct.bop":            "bebopc does not care about misplaced [flags] on structs",
 	}
 
 	for _, f := range files {
@@ -144,6 +147,7 @@ func TestIncompatibilityExpectations_Rainway(t *testing.T) {
 		"invalid_import_no_const.bop": {},
 		"quoted_string.bop":           {},
 		"union.bop":                   {},
+		"bitflags_right_caret.bop":    {},
 	}
 
 	for _, f := range files {

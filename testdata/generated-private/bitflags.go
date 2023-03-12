@@ -12,3 +12,13 @@ const (
 	testFlags_Complex testFlags = 19
 )
 
+type testFlags2 int64
+
+const (
+	testFlags2_None testFlags2 = 0
+	testFlags2_Read testFlags2 = 1
+	testFlags2_Write testFlags2 = 2
+	testFlags2_ReadWrite testFlags2 = 3
+	testFlags2_Complex testFlags2 = 19
+)
+

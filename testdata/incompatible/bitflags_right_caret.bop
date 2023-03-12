@@ -1,0 +1,9 @@
+[flags]
+enum RightCaretUint {
+    Val = 256 >> 1;
+}
+
+[flags]
+enum RightCaretInt : int64 {
+    Val = 256 >> 1;
+}

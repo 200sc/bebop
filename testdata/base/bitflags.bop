@@ -6,3 +6,12 @@ enum TestFlags {
     ReadWrite = Read | Write;
     Complex = (Read | Write) | 0xF0 & 0x1F;
 }
+
+[flags]
+enum TestFlags2 : int64 {
+    None = 0;
+    Read = 0x0001;
+    Write = 1 << 1;
+    ReadWrite = Read | Write;
+    Complex = (Read | Write) | 0xF0 & 0x1F;
+}

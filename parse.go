@@ -34,10 +34,8 @@ func ReadFile(r io.Reader) (File, []string, error) {
 			if err != nil {
 				return f, warnings, err
 			}
-			imported, err := strconv.Unquote(string(toks[0].concrete))
-			if err != nil {
-				return f, warnings, err
-			}
+			// This cannot fail; string literals are always quoted correctly
+			imported, _ := strconv.Unquote(string(toks[0].concrete))
 			f.Imports = append(f.Imports, imported)
 			continue
 		case tokenKindNewline:
@@ -330,10 +328,9 @@ func readDeprecated(tr *tokenReader) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	msg, err := strconv.Unquote(string(toks[2].concrete))
-	if err != nil {
-		return "", err
-	}
+	// this cannot errors; token readers cannot parse strings
+	// with missing terminal quotes.
+	msg, _ := strconv.Unquote(string(toks[2].concrete))
 	optNewline(tr)
 	return msg, nil
 }
@@ -847,24 +844,20 @@ func parseCommentTag(s string) (Tag, bool) {
 	}
 	s = strings.TrimPrefix(s, "[tag(")
 	s = strings.TrimSuffix(s, ")]")
-	split := strings.Split(s, ":")
-	if len(split) == 0 {
-		return Tag{}, false
-	}
-	if len(split) == 1 {
+	key, value, split := strings.Cut(s, ":")
+	if !split {
 		return Tag{
-			Key:     split[0],
+			Key:     key,
 			Boolean: true,
 		}, true
 	}
 	var err error
-	value := strings.Join(split[1:], "")
 	value, err = strconv.Unquote(value)
 	if err != nil {
 		return Tag{}, false
 	}
 	return Tag{
-		Key:   split[0],
+		Key:   key,
 		Value: value,
 	}, true
 }

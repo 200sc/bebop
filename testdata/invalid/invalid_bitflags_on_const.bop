@@ -1,0 +1,2 @@
+[flags]
+const uint8 uint8const = 1;

@@ -225,6 +225,28 @@ func TestReadFile(t *testing.T) {
 							},
 						},
 					},
+					{
+						Name:       "TestFlags2",
+						SimpleType: "int64",
+						Options: []EnumOption{
+							{
+								Name:  "None",
+								Value: 0,
+							}, {
+								Name:  "Read",
+								Value: 1,
+							}, {
+								Name:  "Write",
+								Value: 2,
+							}, {
+								Name:  "ReadWrite",
+								Value: 1 | 2,
+							}, {
+								Name:  "Complex",
+								Value: (1 | 2) | 0xF0&0x1F,
+							},
+						},
+					},
 				},
 			},
 		},
@@ -1785,6 +1807,23 @@ func TestReadFileError(t *testing.T) {
 		{file: "invalid_array_no_close_square", errMessage: "[1:19] expected (Close Square) got Ident"},
 		{file: "invalid_array_suffix__no_close_square", errMessage: "[1:13] expected (Close Square) got Ident"},
 		{file: "invalid_union_no_message_int", errMessage: "[5:14] expected (Newline, Integer Literal, Open Square, Block Comment, Line Comment, Close Curly) got Ident"},
+		{file: "invalid_bitflags_unknown_name_uint", errMessage: "[2:9] enum option B undefined"},
+		{file: "invalid_bitflags_unknown_name", errMessage: "[2:9] enum option B undefined"},
+		{file: "invalid_bitflags_unparseable_int", errMessage: "strconv.ParseInt: parsing \"1111111111111111111111111111111111111111111111111111111111111111111111\": value out of range"},
+		{file: "invalid_bitflags_unparseable_uint", errMessage: "strconv.ParseUint: parsing \"-1\": invalid syntax"},
+		{file: "invalid_bitflags_unparseable_rhs", errMessage: "strconv.ParseInt: parsing \"1111111111111111111111111111111111111111111111111111111111111111111111\": value out of range"},
+		{file: "invalid_bitflags_unparseable_uint_rhs", errMessage: "strconv.ParseUint: parsing \"-1\": invalid syntax"},
+		{file: "invalid_array_no_close", errMessage: "[1:12] expected (Ident, Semicolon), got no token"},
+		{file: "invalid_enum_bad_type", errMessage: "[0:15] expected an integer enum type"},
+		{file: "invalid_enum_no_type", errMessage: "[0:10] expected (Ident) got Open Curly"},
+		{file: "invalid_enum_unparseable", errMessage: "strconv.ParseInt: parsing \"77777777\": value out of range"},
+		{file: "invalid_enum_unparseable_uint", errMessage: "strconv.ParseUint: parsing \"77777777\": value out of range"},
+		{file: "invalid_bitflags_no_semi", errMessage: "[3:0] eof reading until Semicolon"},
+		{file: "invalid_bitflags_on_struct", errMessage: "[1:6] structs may not use bitflags"},
+		{file: "invalid_bitflags_on_message", errMessage: "[1:7] messages may not use bitflags"},
+		{file: "invalid_bitflags_on_union", errMessage: "[1:5] unions may not use bitflags"},
+		{file: "invalid_bitflags_on_const", errMessage: "[1:5] consts may not use bitflags"},
+		{file: "invalid_bitflags_no_close_bracket", errMessage: "[0:6] expected (Close Square), got no token"},
 	}
 	for _, tc := range tcs {
 		tc := tc
@@ -1804,4 +1843,16 @@ func TestReadFileError(t *testing.T) {
 			}
 		})
 	}
+}
+
+func Test_parseCommentTag(t *testing.T) {
+	t.Parallel()
+	t.Run("un-unquoteable", func(t *testing.T) {
+		t.Parallel()
+		s := "[tag(k:\"foo)]"
+		_, ok := parseCommentTag(s)
+		if ok {
+			t.Fatalf("parseCommentTag should have failed")
+		}
+	})
 }

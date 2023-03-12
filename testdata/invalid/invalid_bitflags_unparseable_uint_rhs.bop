@@ -1,0 +1,4 @@
+[flags]
+enum Flags : uint16 {
+    A = (0 & -1);
+}
