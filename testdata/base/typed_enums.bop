@@ -37,3 +37,14 @@ enum Enum64 : int64 {
     Enum641 = 1; 
     Enum642 = 2; 
 }
+
+struct UsesAllEnums {
+    EnumU8 one;
+    EnumU16 two;
+    EnumU32 three;
+    EnumU64 four; 
+    Enum16 five;
+    Enum32 six;
+    Enum64 seven; 
+}
+

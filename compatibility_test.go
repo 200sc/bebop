@@ -28,6 +28,9 @@ func TestUpstreamCompatibilitySuccess(t *testing.T) {
 
 	outfile := "./compsuccess-out.ts"
 	defer os.Remove(outfile)
+	// Note if using this and comparing go vs ts outputs: respect typescript warnings e.g.
+	//  Type ... can only be iterated through when using the '--downlevelIteration' flag or with a '--target' of 'es2015' or higher.
+	// If these are not respected tsc compiled javascript may silently fail.
 	cmd := exec.Command(upsteamCompilerName, "--ts", outfile, "--dir", filepath.Join(".", "testdata", "base"))
 	printed, err := cmd.CombinedOutput()
 	if err != nil {

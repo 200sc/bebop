@@ -16,6 +16,20 @@ func TestReadFile(t *testing.T) {
 		{
 			file: "typed_enums",
 			expected: File{
+				Structs: []Struct{
+					{
+						Name: "UsesAllEnums",
+						Fields: []Field{
+							{FieldType: FieldType{Simple: "EnumU8"}, Name: "one"},
+							{FieldType: FieldType{Simple: "EnumU16"}, Name: "two"},
+							{FieldType: FieldType{Simple: "EnumU32"}, Name: "three"},
+							{FieldType: FieldType{Simple: "EnumU64"}, Name: "four"},
+							{FieldType: FieldType{Simple: "Enum16"}, Name: "five"},
+							{FieldType: FieldType{Simple: "Enum32"}, Name: "six"},
+							{FieldType: FieldType{Simple: "Enum64"}, Name: "seven"},
+						},
+					},
+				},
 				Enums: []Enum{
 					{
 						Name:       "EnumU8",

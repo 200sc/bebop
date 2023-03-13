@@ -2,6 +2,12 @@
 
 package generated
 
+import (
+	"github.com/200sc/bebop"
+	"github.com/200sc/bebop/iohelp"
+	"io"
+)
+
 type enumU8 uint8
 
 const (
@@ -57,4 +63,132 @@ const (
 	enum64_Enum641 enum64 = 1
 	enum64_Enum642 enum64 = 2
 )
+
+var _ bebop.Record = &usesAllEnums{}
+
+type usesAllEnums struct {
+	one enumU8
+	two enumU16
+	three enumU32
+	four enumU64
+	five enum16
+	six enum32
+	seven enum64
+}
+
+func (bbp usesAllEnums) MarshalBebopTo(buf []byte) int {
+	at := 0
+	iohelp.WriteUint8Bytes(buf[at:], uint8(bbp.one))
+	at += 1
+	iohelp.WriteUint16Bytes(buf[at:], uint16(bbp.two))
+	at += 2
+	iohelp.WriteUint32Bytes(buf[at:], uint32(bbp.three))
+	at += 4
+	iohelp.WriteUint64Bytes(buf[at:], uint64(bbp.four))
+	at += 8
+	iohelp.WriteInt16Bytes(buf[at:], int16(bbp.five))
+	at += 2
+	iohelp.WriteInt32Bytes(buf[at:], int32(bbp.six))
+	at += 4
+	iohelp.WriteInt64Bytes(buf[at:], int64(bbp.seven))
+	at += 8
+	return at
+}
+
+func (bbp *usesAllEnums) UnmarshalBebop(buf []byte) (err error) {
+	at := 0
+	bbp.one = enumU8(iohelp.ReadUint8Bytes(buf[at:]))
+	at += 1
+	bbp.two = enumU16(iohelp.ReadUint16Bytes(buf[at:]))
+	at += 2
+	bbp.three = enumU32(iohelp.ReadUint32Bytes(buf[at:]))
+	at += 4
+	bbp.four = enumU64(iohelp.ReadUint64Bytes(buf[at:]))
+	at += 8
+	bbp.five = enum16(iohelp.ReadInt16Bytes(buf[at:]))
+	at += 2
+	bbp.six = enum32(iohelp.ReadInt32Bytes(buf[at:]))
+	at += 4
+	bbp.seven = enum64(iohelp.ReadInt64Bytes(buf[at:]))
+	at += 8
+	return nil
+}
+
+func (bbp *usesAllEnums) MustUnmarshalBebop(buf []byte) {
+	at := 0
+	bbp.one = enumU8(iohelp.ReadUint8Bytes(buf[at:]))
+	at += 1
+	bbp.two = enumU16(iohelp.ReadUint16Bytes(buf[at:]))
+	at += 2
+	bbp.three = enumU32(iohelp.ReadUint32Bytes(buf[at:]))
+	at += 4
+	bbp.four = enumU64(iohelp.ReadUint64Bytes(buf[at:]))
+	at += 8
+	bbp.five = enum16(iohelp.ReadInt16Bytes(buf[at:]))
+	at += 2
+	bbp.six = enum32(iohelp.ReadInt32Bytes(buf[at:]))
+	at += 4
+	bbp.seven = enum64(iohelp.ReadInt64Bytes(buf[at:]))
+	at += 8
+}
+
+func (bbp usesAllEnums) EncodeBebop(iow io.Writer) (err error) {
+	w := iohelp.NewErrorWriter(iow)
+	iohelp.WriteUint8(w, uint8(bbp.one))
+	iohelp.WriteUint16(w, uint16(bbp.two))
+	iohelp.WriteUint32(w, uint32(bbp.three))
+	iohelp.WriteUint64(w, uint64(bbp.four))
+	iohelp.WriteInt16(w, int16(bbp.five))
+	iohelp.WriteInt32(w, int32(bbp.six))
+	iohelp.WriteInt64(w, int64(bbp.seven))
+	return w.Err
+}
+
+func (bbp *usesAllEnums) DecodeBebop(ior io.Reader) (err error) {
+	r := iohelp.NewErrorReader(ior)
+	bbp.one = enumU8(iohelp.ReadUint8(r))
+	bbp.two = enumU16(iohelp.ReadUint16(r))
+	bbp.three = enumU32(iohelp.ReadUint32(r))
+	bbp.four = enumU64(iohelp.ReadUint64(r))
+	bbp.five = enum16(iohelp.ReadInt16(r))
+	bbp.six = enum32(iohelp.ReadInt32(r))
+	bbp.seven = enum64(iohelp.ReadInt64(r))
+	return r.Err
+}
+
+func (bbp usesAllEnums) Size() int {
+	bodyLen := 0
+	bodyLen += 1
+	bodyLen += 2
+	bodyLen += 4
+	bodyLen += 8
+	bodyLen += 2
+	bodyLen += 4
+	bodyLen += 8
+	return bodyLen
+}
+
+func (bbp usesAllEnums) MarshalBebop() []byte {
+	buf := make([]byte, bbp.Size())
+	bbp.MarshalBebopTo(buf)
+	return buf
+}
+
+func makeusesAllEnums(r iohelp.ErrorReader) (usesAllEnums, error) {
+	v := usesAllEnums{}
+	err := v.DecodeBebop(r)
+	return v, err
+}
+
+func makeusesAllEnumsFromBytes(buf []byte) (usesAllEnums, error) {
+	v := usesAllEnums{}
+	err := v.UnmarshalBebop(buf)
+	return v, err
+}
+
+func mustMakeusesAllEnumsFromBytes(buf []byte) usesAllEnums {
+	v := usesAllEnums{}
+	v.MustUnmarshalBebop(buf)
+	return v
+}
 

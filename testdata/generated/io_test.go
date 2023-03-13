@@ -29,6 +29,19 @@ func TestMarshalCycleRecords(t *testing.T) {
 		tsName          string
 	}
 	tcs := []testCase{{
+		name:   "UsesAllEnums",
+		tsName: "UsesAllEnums",
+		record: &generated.UsesAllEnums{
+			One:   1,
+			Two:   2,
+			Three: 1,
+			Four:  2,
+			Five:  1,
+			Six:   2,
+			Seven: 1,
+		},
+		unmarshalRecord: func() bebop.Record { return &generated.UsesAllEnums{} },
+	}, {
 		name:   "empty ArrayOfStrings",
 		tsName: "ArrayOfStrings",
 		record: &generated.ArrayOfStrings{
