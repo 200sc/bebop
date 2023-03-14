@@ -64,10 +64,8 @@ const (
 	fmtErrReturn            = "if err != nil {\n\treturn err\n}"
 	fmtAddSizeToAt          = "at += (%ASGN).Size()"
 	fmtAdd4PlusLenToAt      = "at += 4 + len(%ASGN)"
-	fmtAdd4ToAt             = "at += 4"
 	fmtAddSizeToBodyLen     = "bodyLen += (%ASGN).Size()"
 	fmtAdd4PlusLenToBodyLen = "bodyLen += 4 + len(%ASGN)"
-	fmtAdd4ToBodyLen        = "bodyLen += 4"
 
 	fmtMakeType           = "(%RECV), err = Make%TYPE(r)\n" + fmtErrReturn
 	fmtMakeNamespacedType = "(%RECV), err = %NAMESPACE.Make%BARETYPE(r)\n" + fmtErrReturn
