@@ -32,6 +32,6 @@ jobs:
         go test -v ./testdata/generated-private
 
     - name: Lint
-      uses: golangci/golangci-lint-action@v2
+      uses: golangci/golangci-lint-action@v3
       with:
         args: "--disable-all -E misspell -E deadcode -E govet"
