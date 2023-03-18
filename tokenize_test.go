@@ -26,6 +26,7 @@ var testFiles = []string{
 	"request",
 	"union",
 	"bitflags",
+	"typed_enums",
 }
 
 func TestTokenize(t *testing.T) {

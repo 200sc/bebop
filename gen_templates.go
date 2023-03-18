@@ -64,10 +64,8 @@ const (
 	fmtErrReturn            = "if err != nil {\n\treturn err\n}"
 	fmtAddSizeToAt          = "at += (%ASGN).Size()"
 	fmtAdd4PlusLenToAt      = "at += 4 + len(%ASGN)"
-	fmtAdd4ToAt             = "at += 4"
 	fmtAddSizeToBodyLen     = "bodyLen += (%ASGN).Size()"
 	fmtAdd4PlusLenToBodyLen = "bodyLen += 4 + len(%ASGN)"
-	fmtAdd4ToBodyLen        = "bodyLen += 4"
 
 	fmtMakeType           = "(%RECV), err = Make%TYPE(r)\n" + fmtErrReturn
 	fmtMakeNamespacedType = "(%RECV), err = %NAMESPACE.Make%BARETYPE(r)\n" + fmtErrReturn
@@ -145,10 +143,10 @@ func (f File) typeUnmarshallers(settings GenerateSettings) map[string]string {
 	for typ := range fixedSizeTypes {
 		out[typ] = "%RECV = iohelp.Read" + fixedTitleString(typ) + "(r)"
 	}
-	out[typeString] = "%RECV = iohelp.ReadString(r)"
 	for _, en := range f.Enums {
-		out[en.Name] = "%RECV = %TYPE(iohelp.ReadUint32(r))"
+		out[en.Name] = "%RECV = %TYPE(iohelp.Read" + fixedTitleString(en.SimpleType) + "(r))"
 	}
+	out[typeString] = "%RECV = iohelp.ReadString(r)"
 	for _, st := range f.Structs {
 		out[st.Name] = makeFormatType(st.Namespace, settings)
 	}
@@ -183,6 +181,9 @@ func (f File) typeMarshallers() map[string]string {
 	for typ := range fixedSizeTypes {
 		out[typ] = "iohelp.Write" + fixedTitleString(typ) + "(w, %ASGN)"
 	}
+	for _, en := range f.Enums {
+		out[en.Name] = "iohelp.Write" + fixedTitleString(en.SimpleType) + "(w, " + en.SimpleType + "(%ASGN))"
+	}
 	out[typeString] = "iohelp.WriteUint32(w, uint32(len(%ASGN)))\n" +
 		"w.Write([]byte(%ASGN))"
 	out[typeDate] = "if %ASGN != (time.Time{}) {\n" +
@@ -190,9 +191,6 @@ func (f File) typeMarshallers() map[string]string {
 		"} else {\n" +
 		"\tiohelp.WriteInt64(w, 0)\n" +
 		"}"
-	for _, en := range f.Enums {
-		out[en.Name] = "iohelp.WriteUint32(w, uint32(%ASGN))"
-	}
 	for _, st := range f.Structs {
 		out[st.Name] = fmtEncode + fmtErrReturn
 	}
@@ -227,10 +225,11 @@ func (f File) typeLengthers() map[string]string {
 	for typ, sz := range fixedSizeTypes {
 		out[typ] = "bodyLen += " + strconv.Itoa(int(sz))
 	}
-	out[typeString] = fmtAdd4PlusLenToBodyLen
 	for _, en := range f.Enums {
-		out[en.Name] = fmtAdd4ToBodyLen
+		sz := fixedSizeTypes[en.SimpleType]
+		out[en.Name] = "bodyLen += " + strconv.Itoa(int(sz))
 	}
+	out[typeString] = fmtAdd4PlusLenToBodyLen
 	for _, st := range f.Structs {
 		out[st.Name] = fmtAddSizeToBodyLen
 	}
@@ -266,6 +265,11 @@ func (f File) typeByters() map[string]string {
 		out[typ] = "iohelp.Write" + fixedTitleString(typ) + "Bytes(buf[at:], %ASGN)\n" +
 			"at += " + strconv.Itoa(int(sz))
 	}
+	for _, en := range f.Enums {
+		sz := fixedSizeTypes[en.SimpleType]
+		out[en.Name] = "iohelp.Write" + fixedTitleString(en.SimpleType) + "Bytes(buf[at:], " + en.SimpleType + "(%ASGN))\n" +
+			"at += " + strconv.Itoa(int(sz))
+	}
 	out[typeString] = "iohelp.WriteUint32Bytes(buf[at:], uint32(len(%ASGN)))\n" +
 		"copy(buf[at+4:at+4+len(%ASGN)], []byte(%ASGN))\n" + fmtAdd4PlusLenToAt
 
@@ -275,9 +279,6 @@ func (f File) typeByters() map[string]string {
 		"\tiohelp.WriteInt64Bytes(buf[at:], 0)\n" +
 		"}\n" +
 		"at += 8"
-	for _, en := range f.Enums {
-		out[en.Name] = "iohelp.WriteUint32Bytes(buf[at:], uint32(%ASGN))\n" + fmtAdd4ToAt
-	}
 	for _, st := range f.Structs {
 		out[st.Name] = fmtMarshal + fmtAddSizeToAt
 	}
@@ -313,6 +314,11 @@ func (f File) typeByteReaders(gs GenerateSettings) map[string]string {
 		out[typ] = "%ASGN = iohelp.Read" + fixedTitleString(typ) + "Bytes(buf[at:])\n" +
 			"at += " + strconv.Itoa(int(sz))
 	}
+	for _, en := range f.Enums {
+		sz := fixedSizeTypes[en.SimpleType]
+		out[en.Name] = "%ASGN = %TYPE(iohelp.Read" + fixedTitleString(en.SimpleType) + "Bytes(buf[at:]))\n" +
+			"at += " + strconv.Itoa(int(sz))
+	}
 	stringRead := "ReadStringBytes(buf[at:])"
 	if gs.SharedMemoryStrings {
 		stringRead = "ReadStringBytesSharedMemory(buf[at:])"
@@ -321,9 +327,6 @@ func (f File) typeByteReaders(gs GenerateSettings) map[string]string {
 	out[typeString] = "%ASGN = iohelp.Must" + stringRead + "\n" + fmtAdd4PlusLenToAt
 	out["string&safe"] = "%ASGN, err = iohelp." + stringRead + "\n" + fmtErrReturn + "\n" + fmtAdd4PlusLenToAt
 
-	for _, en := range f.Enums {
-		out[en.Name] = "%ASGN = %TYPE(iohelp.ReadUint32Bytes(buf[at:]))\n" + fmtAdd4ToAt
-	}
 	for _, st := range f.Structs {
 		out[st.Name] = mustMakeFormat(st.Namespace, gs) + fmtAddSizeToAt
 		out[st.Name+"&safe"] = makeFormat(st.Namespace, gs) + fmtErrReturn + "\n" + fmtAddSizeToAt

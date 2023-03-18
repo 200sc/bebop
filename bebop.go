@@ -2,7 +2,7 @@
 package bebop
 
 // Version is the library version. Should be used by CLI tools when passed a '--version' flag.
-const Version = "v0.3.3"
+const Version = "v0.4.0"
 
 // A File is a structured representation of a .bop file.
 type File struct {
@@ -103,6 +103,10 @@ type Enum struct {
 	// Namespace is only provided for imported types, and only
 	// used in code generation.
 	Namespace string
+	// SimpleType is an integer or unsigned integer type. If not
+	// otherwise specified, it defaults to uint32
+	SimpleType string
+	Unsigned   bool
 }
 
 // An EnumOption is one possible value for a field typed as a specific Enum.
@@ -111,8 +115,11 @@ type EnumOption struct {
 	Comment string
 	// DeprecatedMessage is only provided if Deprecated is true.
 	DeprecatedMessage string
-	Value             int32
-	Deprecated        bool
+	// Only one of Value or UintValue should e populated, dependant on
+	// if the enum this option applies to is unsigned.
+	Value      int64
+	UintValue  uint64
+	Deprecated bool
 }
 
 // A FieldType is a union of three choices: Simple types, array types, and map types.

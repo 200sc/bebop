@@ -1,0 +1,4 @@
+[flags]
+enum Flags : int32 {
+    A = B;
+}

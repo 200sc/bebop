@@ -72,3 +72,24 @@ var intTypes = map[string]struct{}{
 	typeInt32: {},
 	typeInt64: {},
 }
+
+func decodeIntegerType(typ string) (bitsize int, uintype bool) {
+	switch typ {
+	case typeByte, typeUint8:
+		return 8, true
+	case typeUint16:
+		return 16, true
+	case typeUint32:
+		return 32, true
+	case typeUint64:
+		return 64, true
+	case typeInt16:
+		return 16, false
+	case typeInt32:
+		return 32, false
+	case typeInt64:
+		return 64, false
+	default:
+		panic("decodeIntegerType was provided a non-integer")
+	}
+}

@@ -1,0 +1,4 @@
+[flags]
+enum Flags : uint8 {
+    A = B;
+}

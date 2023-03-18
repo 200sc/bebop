@@ -34,10 +34,8 @@ func ReadFile(r io.Reader) (File, []string, error) {
 			if err != nil {
 				return f, warnings, err
 			}
-			imported, err := strconv.Unquote(string(toks[0].concrete))
-			if err != nil {
-				return f, warnings, err
-			}
+			// This cannot fail; string literals are always quoted correctly
+			imported, _ := strconv.Unquote(string(toks[0].concrete))
 			f.Imports = append(f.Imports, imported)
 			continue
 		case tokenKindNewline:
@@ -202,22 +200,30 @@ func optNewline(tr *tokenReader) {
 	}
 }
 
-func readEnumOptionValue(tr *tokenReader, previousOptions []EnumOption, bitflags bool) (int32, error) {
+func readEnumOptionValue(tr *tokenReader, previousOptions []EnumOption, bitflags, uinttype bool, bitsize int) (int64, uint64, error) {
 	if _, err := expectNext(tr, tokenKindEquals); err != nil {
-		return 0, err
+		return 0, 0, err
 	}
 	if !bitflags {
 		toks, err := expectNext(tr, tokenKindIntegerLiteral, tokenKindSemicolon)
 		if err != nil {
-			return 0, err
+			return 0, 0, err
 		}
-		optInteger, err := strconv.ParseInt(string(toks[0].concrete), 0, 32)
-		if err != nil {
-			return 0, err
+		if uinttype {
+			optInteger, err := strconv.ParseUint(string(toks[0].concrete), 0, bitsize)
+			if err != nil {
+				return 0, 0, err
+			}
+			return 0, optInteger, nil
+		} else {
+			optInteger, err := strconv.ParseInt(string(toks[0].concrete), 0, bitsize)
+			if err != nil {
+				return 0, 0, err
+			}
+			return optInteger, 0, nil
 		}
-		return int32(optInteger), nil
 	}
-	return readBitflagExpr(tr, previousOptions)
+	return readBitflagExpr(tr, previousOptions, uinttype, bitsize)
 }
 
 func readUntil(tr *tokenReader, kind tokenKind) ([]token, error) {
@@ -233,15 +239,38 @@ func readUntil(tr *tokenReader, kind tokenKind) ([]token, error) {
 }
 
 func readEnum(tr *tokenReader, bitflags bool) (Enum, error) {
-	en := Enum{}
-	toks, err := expectNext(tr, tokenKindIdent, tokenKindOpenCurly)
+	en := Enum{
+		SimpleType: "uint32",
+	}
+
+	toks, err := expectNext(tr, tokenKindIdent)
 	if err != nil {
 		return en, err
 	}
 	en.Name = string(toks[0].concrete)
+	err = expectAnyOfNext(tr, tokenKindColon, tokenKindOpenCurly)
+	if err != nil {
+		return en, err
+	}
 
+	switch tr.Token().kind {
+	case tokenKindOpenCurly:
+		break
+	case tokenKindColon:
+		enumSizeTokens, err := expectNext(tr, tokenKindIdent, tokenKindOpenCurly)
+		if err != nil {
+			return en, err
+		}
+		enumSize := string(enumSizeTokens[0].concrete)
+		if !isUintPrimitive(enumSize) && !isIntPrimitive(enumSize) {
+			return en, readError(enumSizeTokens[0], "expected an integer enum type")
+		}
+		en.SimpleType = enumSize
+	}
 	optNewline(tr)
 
+	bitsize, uinttype := decodeIntegerType(en.SimpleType)
+	en.Unsigned = uinttype
 	nextCommentLines := []string{}
 	nextDeprecatedMessage := ""
 	nextIsDeprecated := false
@@ -256,13 +285,14 @@ func readEnum(tr *tokenReader, bitflags bool) (Enum, error) {
 		case tokenKindIdent:
 			optName := string(tk.concrete)
 
-			optValue, err := readEnumOptionValue(tr, en.Options, bitflags)
+			signedValue, unsignedValue, err := readEnumOptionValue(tr, en.Options, bitflags, uinttype, bitsize)
 			if err != nil {
 				return en, err
 			}
 			en.Options = append(en.Options, EnumOption{
 				Name:              optName,
-				Value:             optValue,
+				Value:             signedValue,
+				UintValue:         unsignedValue,
 				DeprecatedMessage: nextDeprecatedMessage,
 				Deprecated:        nextIsDeprecated,
 				Comment:           strings.Join(nextCommentLines, "\n"),
@@ -298,10 +328,9 @@ func readDeprecated(tr *tokenReader) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	msg, err := strconv.Unquote(string(toks[2].concrete))
-	if err != nil {
-		return "", err
-	}
+	// this cannot errors; token readers cannot parse strings
+	// with missing terminal quotes.
+	msg, _ := strconv.Unquote(string(toks[2].concrete))
 	optNewline(tr)
 	return msg, nil
 }
@@ -815,24 +844,20 @@ func parseCommentTag(s string) (Tag, bool) {
 	}
 	s = strings.TrimPrefix(s, "[tag(")
 	s = strings.TrimSuffix(s, ")]")
-	split := strings.Split(s, ":")
-	if len(split) == 0 {
-		return Tag{}, false
-	}
-	if len(split) == 1 {
+	key, value, split := strings.Cut(s, ":")
+	if !split {
 		return Tag{
-			Key:     split[0],
+			Key:     key,
 			Boolean: true,
 		}, true
 	}
 	var err error
-	value := strings.Join(split[1:], "")
 	value, err = strconv.Unquote(value)
 	if err != nil {
 		return Tag{}, false
 	}
 	return Tag{
-		Key:   split[0],
+		Key:   key,
 		Value: value,
 	}, true
 }
