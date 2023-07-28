@@ -179,9 +179,13 @@ func (msg Message) Generate(w io.Writer, settings GenerateSettings) {
 func writeMessageFieldUnmarshaller(name string, typ FieldType, w io.Writer, settings GenerateSettings, depth int) {
 	if typ.Array != nil {
 		writeLineWithTabs(w, "%RECV = make([]%TYPE, iohelp.ReadUint32(r))", depth, name, typ.Array.goString(settings))
-		writeLineWithTabs(w, "for i := range %RECV {", depth, name)
-		writeMessageFieldUnmarshaller("("+name+")[i]", *typ.Array, w, settings, depth+1)
-		writeLineWithTabs(w, "}", depth)
+		if typ.Array.Simple == typeByte {
+			writeLineWithTabs(w, "r.Read(%RECV)", depth, name)
+		} else {
+			writeLineWithTabs(w, "for i := range %RECV {", depth, name)
+			writeMessageFieldUnmarshaller("("+name+")[i]", *typ.Array, w, settings, depth+1)
+			writeLineWithTabs(w, "}", depth)
+		}
 	} else if typ.Map != nil {
 		lnName := depthName("ln", depth)
 		writeLineWithTabs(w, lnName+" := iohelp.ReadUint32(r)", depth)

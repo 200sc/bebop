@@ -680,9 +680,13 @@ func writeFieldReadByter(name string, typ FieldType, w io.Writer, settings Gener
 func writeFieldMarshaller(name string, typ FieldType, w io.Writer, settings GenerateSettings, depth int) {
 	if typ.Array != nil {
 		writeLineWithTabs(w, "iohelp.WriteUint32(w, uint32(len(%ASGN)))", depth, name)
-		writeLineWithTabs(w, "for _, elem := range %ASGN {", depth, name)
-		writeFieldMarshaller("elem", *typ.Array, w, settings, depth+1)
-		writeLineWithTabs(w, "}", depth)
+		if typ.Array.Simple == typeByte {
+			writeLineWithTabs(w, "w.Write(%ASGN)", depth, name)
+		} else {
+			writeLineWithTabs(w, "for _, elem := range %ASGN {", depth, name)
+			writeFieldMarshaller("elem", *typ.Array, w, settings, depth+1)
+			writeLineWithTabs(w, "}", depth)
+		}
 	} else if typ.Map != nil {
 		writeLineWithTabs(w, "iohelp.WriteUint32(w, uint32(len(%ASGN)))", depth, name)
 		writeLineWithTabs(w, "for %KNAME, %VNAME := range %ASGN {", depth, name)
@@ -834,7 +838,7 @@ func writeLine(w io.Writer, format string, args ...interface{}) {
 }
 
 func getLineWithTabs(format string, depth int, args ...string) string {
-	var b = new(bytes.Buffer)
+	b := new(bytes.Buffer)
 	writeLineWithTabs(b, format, depth, args...)
 	return b.String()
 }

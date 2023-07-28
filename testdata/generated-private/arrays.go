@@ -132,9 +132,7 @@ func (bbp arraySamples) EncodeBebop(iow io.Writer) (err error) {
 		iohelp.WriteUint32(w, uint32(len(elem)))
 		for _, elem := range elem {
 			iohelp.WriteUint32(w, uint32(len(elem)))
-			for _, elem := range elem {
-				iohelp.WriteByte(w, elem)
-			}
+			w.Write(elem)
 		}
 	}
 	iohelp.WriteUint32(w, uint32(len(bbp.bytes2)))
@@ -142,9 +140,7 @@ func (bbp arraySamples) EncodeBebop(iow io.Writer) (err error) {
 		iohelp.WriteUint32(w, uint32(len(elem)))
 		for _, elem := range elem {
 			iohelp.WriteUint32(w, uint32(len(elem)))
-			for _, elem := range elem {
-				iohelp.WriteByte(w, elem)
-			}
+			w.Write(elem)
 		}
 	}
 	return w.Err
@@ -157,9 +153,7 @@ func (bbp *arraySamples) DecodeBebop(ior io.Reader) (err error) {
 		(bbp.bytes[i1]) = make([][]byte, iohelp.ReadUint32(r))
 		for i2 := range (bbp.bytes[i1]) {
 			((bbp.bytes[i1])[i2]) = make([]byte, iohelp.ReadUint32(r))
-			for i3 := range ((bbp.bytes[i1])[i2]) {
-				(((bbp.bytes[i1])[i2])[i3]) = iohelp.ReadByte(r)
-			}
+			r.Read(((bbp.bytes[i1])[i2]))
 		}
 	}
 	bbp.bytes2 = make([][][]byte, iohelp.ReadUint32(r))
@@ -167,9 +161,7 @@ func (bbp *arraySamples) DecodeBebop(ior io.Reader) (err error) {
 		(bbp.bytes2[i1]) = make([][]byte, iohelp.ReadUint32(r))
 		for i2 := range (bbp.bytes2[i1]) {
 			((bbp.bytes2[i1])[i2]) = make([]byte, iohelp.ReadUint32(r))
-			for i3 := range ((bbp.bytes2[i1])[i2]) {
-				(((bbp.bytes2[i1])[i2])[i3]) = iohelp.ReadByte(r)
-			}
+			r.Read(((bbp.bytes2[i1])[i2]))
 		}
 	}
 	return r.Err

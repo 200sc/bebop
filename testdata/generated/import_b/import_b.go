@@ -1023,9 +1023,7 @@ func (bbp VideoData) EncodeBebop(iow io.Writer) (err error) {
 	iohelp.WriteUint32(w, bbp.Width)
 	iohelp.WriteUint32(w, bbp.Height)
 	iohelp.WriteUint32(w, uint32(len(bbp.Fragment)))
-	for _, elem := range bbp.Fragment {
-		iohelp.WriteByte(w, elem)
-	}
+	w.Write(bbp.Fragment)
 	return w.Err
 }
 
@@ -1035,9 +1033,7 @@ func (bbp *VideoData) DecodeBebop(ior io.Reader) (err error) {
 	bbp.Width = iohelp.ReadUint32(r)
 	bbp.Height = iohelp.ReadUint32(r)
 	bbp.Fragment = make([]byte, iohelp.ReadUint32(r))
-	for i1 := range bbp.Fragment {
-		(bbp.Fragment[i1]) = iohelp.ReadByte(r)
-	}
+	r.Read(bbp.Fragment)
 	return r.Err
 }
 

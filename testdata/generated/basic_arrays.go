@@ -329,9 +329,7 @@ func (bbp BasicArrays) EncodeBebop(iow io.Writer) (err error) {
 		iohelp.WriteBool(w, elem)
 	}
 	iohelp.WriteUint32(w, uint32(len(bbp.A_byte)))
-	for _, elem := range bbp.A_byte {
-		iohelp.WriteByte(w, elem)
-	}
+	w.Write(bbp.A_byte)
 	iohelp.WriteUint32(w, uint32(len(bbp.A_int16)))
 	for _, elem := range bbp.A_int16 {
 		iohelp.WriteInt16(w, elem)
@@ -383,9 +381,7 @@ func (bbp *BasicArrays) DecodeBebop(ior io.Reader) (err error) {
 		(bbp.A_bool[i1]) = iohelp.ReadBool(r)
 	}
 	bbp.A_byte = make([]byte, iohelp.ReadUint32(r))
-	for i1 := range bbp.A_byte {
-		(bbp.A_byte[i1]) = iohelp.ReadByte(r)
-	}
+	r.Read(bbp.A_byte)
 	bbp.A_int16 = make([]int16, iohelp.ReadUint32(r))
 	for i1 := range bbp.A_int16 {
 		(bbp.A_int16[i1]) = iohelp.ReadInt16(r)
