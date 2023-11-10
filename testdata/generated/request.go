@@ -94,7 +94,7 @@ func (bbp Furniture) MarshalBebop() []byte {
 	return buf
 }
 
-func MakeFurniture(r iohelp.ErrorReader) (Furniture, error) {
+func MakeFurniture(r *iohelp.ErrorReader) (Furniture, error) {
 	v := Furniture{}
 	err := v.DecodeBebop(r)
 	return v, err
@@ -150,7 +150,8 @@ func (bbp RequestResponse) MarshalBebopTo(buf []byte) int {
 	at += 4
 	for _, v1 := range bbp.availableFurniture {
 		(v1).MarshalBebopTo(buf[at:])
-		tmp883 := (v1); at += tmp883.Size()
+		tmp := (v1)
+		at += tmp.Size()
 	}
 	return at
 }
@@ -167,7 +168,8 @@ func (bbp *RequestResponse) UnmarshalBebop(buf []byte) (err error) {
 		if err != nil {
 			return err
 		}
-		tmp914 := ((bbp.availableFurniture)[i1]); at += tmp914.Size()
+		tmp := ((bbp.availableFurniture)[i1])
+		at += tmp.Size()
 	}
 	return nil
 }
@@ -178,7 +180,8 @@ func (bbp *RequestResponse) MustUnmarshalBebop(buf []byte) {
 	at += 4
 	for i1 := range bbp.availableFurniture {
 		(bbp.availableFurniture)[i1] = MustMakeFurnitureFromBytes(buf[at:])
-		tmp936 := ((bbp.availableFurniture)[i1]); at += tmp936.Size()
+		tmp := ((bbp.availableFurniture)[i1])
+		at += tmp.Size()
 	}
 }
 
@@ -210,7 +213,8 @@ func (bbp RequestResponse) Size() int {
 	bodyLen := 0
 	bodyLen += 4
 	for _, elem := range bbp.availableFurniture {
-		tmp979 := (elem); bodyLen += tmp979.Size()
+		tmp := (elem)
+		bodyLen += tmp.Size()
 	}
 	return bodyLen
 }
@@ -221,7 +225,7 @@ func (bbp RequestResponse) MarshalBebop() []byte {
 	return buf
 }
 
-func MakeRequestResponse(r iohelp.ErrorReader) (RequestResponse, error) {
+func MakeRequestResponse(r *iohelp.ErrorReader) (RequestResponse, error) {
 	v := RequestResponse{}
 	err := v.DecodeBebop(r)
 	return v, err
@@ -345,7 +349,7 @@ func (bbp *RequestCatalog) DecodeBebop(ior io.Reader) (err error) {
 			bbp.SecretTunnel = new(string)
 			*bbp.SecretTunnel = iohelp.ReadString(r)
 		default:
-			io.ReadAll(r)
+			r.Drain()
 			return r.Err
 		}
 	}
@@ -366,7 +370,7 @@ func (bbp RequestCatalog) MarshalBebop() []byte {
 	return buf
 }
 
-func MakeRequestCatalog(r iohelp.ErrorReader) (RequestCatalog, error) {
+func MakeRequestCatalog(r *iohelp.ErrorReader) (RequestCatalog, error) {
 	v := RequestCatalog{}
 	err := v.DecodeBebop(r)
 	return v, err

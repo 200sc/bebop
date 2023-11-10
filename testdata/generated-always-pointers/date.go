@@ -129,7 +129,7 @@ func (bbp *MyObj) DecodeBebop(ior io.Reader) (err error) {
 			bbp.End = new(time.Time)
 			*bbp.End = iohelp.ReadDate(r)
 		default:
-			io.ReadAll(r)
+			r.Drain()
 			return r.Err
 		}
 	}
@@ -154,7 +154,7 @@ func (bbp *MyObj) MarshalBebop() []byte {
 	return buf
 }
 
-func MakeMyObj(r iohelp.ErrorReader) (MyObj, error) {
+func MakeMyObj(r *iohelp.ErrorReader) (MyObj, error) {
 	v := MyObj{}
 	err := v.DecodeBebop(r)
 	return v, err

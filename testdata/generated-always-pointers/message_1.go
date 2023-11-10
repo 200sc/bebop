@@ -139,7 +139,7 @@ func (bbp *ExampleMessage) DecodeBebop(ior io.Reader) (err error) {
 			bbp.Z = new(int32)
 			*bbp.Z = iohelp.ReadInt32(r)
 		default:
-			io.ReadAll(r)
+			r.Drain()
 			return r.Err
 		}
 	}
@@ -168,7 +168,7 @@ func (bbp *ExampleMessage) MarshalBebop() []byte {
 	return buf
 }
 
-func MakeExampleMessage(r iohelp.ErrorReader) (ExampleMessage, error) {
+func MakeExampleMessage(r *iohelp.ErrorReader) (ExampleMessage, error) {
 	v := ExampleMessage{}
 	err := v.DecodeBebop(r)
 	return v, err

@@ -174,7 +174,7 @@ func (bbp UsesAllEnums) MarshalBebop() []byte {
 	return buf
 }
 
-func MakeUsesAllEnums(r iohelp.ErrorReader) (UsesAllEnums, error) {
+func MakeUsesAllEnums(r *iohelp.ErrorReader) (UsesAllEnums, error) {
 	v := UsesAllEnums{}
 	err := v.DecodeBebop(r)
 	return v, err

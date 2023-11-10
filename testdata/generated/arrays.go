@@ -194,7 +194,7 @@ func (bbp ArraySamples) MarshalBebop() []byte {
 	return buf
 }
 
-func MakeArraySamples(r iohelp.ErrorReader) (ArraySamples, error) {
+func MakeArraySamples(r *iohelp.ErrorReader) (ArraySamples, error) {
 	v := ArraySamples{}
 	err := v.DecodeBebop(r)
 	return v, err

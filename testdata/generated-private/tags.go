@@ -63,7 +63,7 @@ func (bbp taggedStruct) MarshalBebop() []byte {
 	return buf
 }
 
-func maketaggedStruct(r iohelp.ErrorReader) (taggedStruct, error) {
+func maketaggedStruct(r *iohelp.ErrorReader) (taggedStruct, error) {
 	v := taggedStruct{}
 	err := v.DecodeBebop(r)
 	return v, err
@@ -158,7 +158,7 @@ func (bbp *taggedMessage) DecodeBebop(ior io.Reader) (err error) {
 			bbp.bar = new(uint8)
 			*bbp.bar = iohelp.ReadUint8(r)
 		default:
-			io.ReadAll(r)
+			r.Drain()
 			return r.Err
 		}
 	}
@@ -179,7 +179,7 @@ func (bbp taggedMessage) MarshalBebop() []byte {
 	return buf
 }
 
-func maketaggedMessage(r iohelp.ErrorReader) (taggedMessage, error) {
+func maketaggedMessage(r *iohelp.ErrorReader) (taggedMessage, error) {
 	v := taggedMessage{}
 	err := v.DecodeBebop(r)
 	return v, err
@@ -250,7 +250,7 @@ func (bbp taggedSubStruct) MarshalBebop() []byte {
 	return buf
 }
 
-func maketaggedSubStruct(r iohelp.ErrorReader) (taggedSubStruct, error) {
+func maketaggedSubStruct(r *iohelp.ErrorReader) (taggedSubStruct, error) {
 	v := taggedSubStruct{}
 	err := v.DecodeBebop(r)
 	return v, err
@@ -282,7 +282,8 @@ func (bbp taggedUnion) MarshalBebopTo(buf []byte) int {
 		buf[at] = 1
 		at++
 		(*bbp.taggedSubStruct).MarshalBebopTo(buf[at:])
-		tmp6116 := (*bbp.taggedSubStruct); at += tmp6116.Size()
+		tmp := (*bbp.taggedSubStruct)
+		at += tmp.Size()
 		return at
 	}
 	return at
@@ -304,7 +305,8 @@ func (bbp *taggedUnion) UnmarshalBebop(buf []byte) (err error) {
 			if err != nil {
 				return err
 			}
-			tmp6135 := ((*bbp.taggedSubStruct)); at += tmp6135.Size()
+			tmp := ((*bbp.taggedSubStruct))
+			at += tmp.Size()
 			return nil
 		default:
 			return nil
@@ -322,7 +324,8 @@ func (bbp *taggedUnion) MustUnmarshalBebop(buf []byte) {
 			at += 1
 			bbp.taggedSubStruct = new(taggedSubStruct)
 			(*bbp.taggedSubStruct) = mustMaketaggedSubStructFromBytes(buf[at:])
-			tmp6144 := ((*bbp.taggedSubStruct)); at += tmp6144.Size()
+			tmp := ((*bbp.taggedSubStruct))
+			at += tmp.Size()
 			return
 		default:
 			return
@@ -356,10 +359,10 @@ func (bbp *taggedUnion) DecodeBebop(ior io.Reader) (err error) {
 			if err != nil {
 				return err
 			}
-			io.ReadAll(r)
+			r.Drain()
 			return r.Err
 		default:
-			io.ReadAll(r)
+			r.Drain()
 			return r.Err
 		}
 	}
@@ -369,7 +372,8 @@ func (bbp taggedUnion) Size() int {
 	bodyLen := 4
 	if bbp.taggedSubStruct != nil {
 		bodyLen += 1
-		tmp6382 := (*bbp.taggedSubStruct); bodyLen += tmp6382.Size()
+		tmp := (*bbp.taggedSubStruct)
+		bodyLen += tmp.Size()
 		return bodyLen
 	}
 	return bodyLen
@@ -381,7 +385,7 @@ func (bbp taggedUnion) MarshalBebop() []byte {
 	return buf
 }
 
-func maketaggedUnion(r iohelp.ErrorReader) (taggedUnion, error) {
+func maketaggedUnion(r *iohelp.ErrorReader) (taggedUnion, error) {
 	v := taggedUnion{}
 	err := v.DecodeBebop(r)
 	return v, err

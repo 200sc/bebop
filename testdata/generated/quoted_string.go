@@ -90,7 +90,7 @@ func (bbp QuotedString) MarshalBebop() []byte {
 	return buf
 }
 
-func MakeQuotedString(r iohelp.ErrorReader) (QuotedString, error) {
+func MakeQuotedString(r *iohelp.ErrorReader) (QuotedString, error) {
 	v := QuotedString{}
 	err := v.DecodeBebop(r)
 	return v, err

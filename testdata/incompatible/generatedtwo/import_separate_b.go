@@ -73,7 +73,7 @@ func (bbp ImportedType) MarshalBebop() []byte {
 	return buf
 }
 
-func MakeImportedType(r iohelp.ErrorReader) (ImportedType, error) {
+func MakeImportedType(r *iohelp.ErrorReader) (ImportedType, error) {
 	v := ImportedType{}
 	err := v.DecodeBebop(r)
 	return v, err
@@ -113,13 +113,15 @@ func (bbp ImportedMessage) MarshalBebopTo(buf []byte) int {
 		buf[at] = 2
 		at++
 		(*bbp.Bar).MarshalBebopTo(buf[at:])
-		tmp5512 := (*bbp.Bar); at += tmp5512.Size()
+		tmp := (*bbp.Bar)
+		at += tmp.Size()
 	}
 	if bbp.Unin != nil {
 		buf[at] = 3
 		at++
 		(*bbp.Unin).MarshalBebopTo(buf[at:])
-		tmp5520 := (*bbp.Unin); at += tmp5520.Size()
+		tmp := (*bbp.Unin)
+		at += tmp.Size()
 	}
 	return at
 }
@@ -142,7 +144,8 @@ func (bbp *ImportedMessage) UnmarshalBebop(buf []byte) (err error) {
 			if err != nil {
 				return err
 			}
-			tmp5607 := ((*bbp.Bar)); at += tmp5607.Size()
+			tmp := ((*bbp.Bar))
+			at += tmp.Size()
 		case 3:
 			at += 1
 			bbp.Unin = new(ImportedUnion)
@@ -150,7 +153,8 @@ func (bbp *ImportedMessage) UnmarshalBebop(buf []byte) (err error) {
 			if err != nil {
 				return err
 			}
-			tmp5609 := ((*bbp.Unin)); at += tmp5609.Size()
+			tmp := ((*bbp.Unin))
+			at += tmp.Size()
 		default:
 			return nil
 		}
@@ -172,12 +176,14 @@ func (bbp *ImportedMessage) MustUnmarshalBebop(buf []byte) {
 			at += 1
 			bbp.Bar = new(ImportedType)
 			(*bbp.Bar) = MustMakeImportedTypeFromBytes(buf[at:])
-			tmp5635 := ((*bbp.Bar)); at += tmp5635.Size()
+			tmp := ((*bbp.Bar))
+			at += tmp.Size()
 		case 3:
 			at += 1
 			bbp.Unin = new(ImportedUnion)
 			(*bbp.Unin) = MustMakeImportedUnionFromBytes(buf[at:])
-			tmp5636 := ((*bbp.Unin)); at += tmp5636.Size()
+			tmp := ((*bbp.Unin))
+			at += tmp.Size()
 		default:
 			return
 		}
@@ -231,7 +237,7 @@ func (bbp *ImportedMessage) DecodeBebop(ior io.Reader) (err error) {
 				return err
 			}
 		default:
-			io.ReadAll(r)
+			r.Drain()
 			return r.Err
 		}
 	}
@@ -245,11 +251,13 @@ func (bbp ImportedMessage) Size() int {
 	}
 	if bbp.Bar != nil {
 		bodyLen += 1
-		tmp5690 := (*bbp.Bar); bodyLen += tmp5690.Size()
+		tmp := (*bbp.Bar)
+		bodyLen += tmp.Size()
 	}
 	if bbp.Unin != nil {
 		bodyLen += 1
-		tmp5694 := (*bbp.Unin); bodyLen += tmp5694.Size()
+		tmp := (*bbp.Unin)
+		bodyLen += tmp.Size()
 	}
 	return bodyLen
 }
@@ -260,7 +268,7 @@ func (bbp ImportedMessage) MarshalBebop() []byte {
 	return buf
 }
 
-func MakeImportedMessage(r iohelp.ErrorReader) (ImportedMessage, error) {
+func MakeImportedMessage(r *iohelp.ErrorReader) (ImportedMessage, error) {
 	v := ImportedMessage{}
 	err := v.DecodeBebop(r)
 	return v, err
@@ -328,7 +336,7 @@ func (bbp *WhyAreTheseInline) DecodeBebop(ior io.Reader) (err error) {
 	for {
 		switch iohelp.ReadByte(r) {
 		default:
-			io.ReadAll(r)
+			r.Drain()
 			return r.Err
 		}
 	}
@@ -343,7 +351,7 @@ func (bbp WhyAreTheseInline) MarshalBebop() []byte {
 	return []byte{}
 }
 
-func MakeWhyAreTheseInline(r iohelp.ErrorReader) (WhyAreTheseInline, error) {
+func MakeWhyAreTheseInline(r *iohelp.ErrorReader) (WhyAreTheseInline, error) {
 	return WhyAreTheseInline{}, nil
 }
 
@@ -387,7 +395,7 @@ func (bbp Really) MarshalBebop() []byte {
 	return []byte{}
 }
 
-func MakeReally(r iohelp.ErrorReader) (Really, error) {
+func MakeReally(r *iohelp.ErrorReader) (Really, error) {
 	return Really{}, nil
 }
 
@@ -414,14 +422,16 @@ func (bbp ImportedUnion) MarshalBebopTo(buf []byte) int {
 		buf[at] = 1
 		at++
 		(*bbp.WhyAreTheseInline).MarshalBebopTo(buf[at:])
-		tmp5721 := (*bbp.WhyAreTheseInline); at += tmp5721.Size()
+		tmp := (*bbp.WhyAreTheseInline)
+		at += tmp.Size()
 		return at
 	}
 	if bbp.Really != nil {
 		buf[at] = 2
 		at++
 		(*bbp.Really).MarshalBebopTo(buf[at:])
-		tmp5727 := (*bbp.Really); at += tmp5727.Size()
+		tmp := (*bbp.Really)
+		at += tmp.Size()
 		return at
 	}
 	return at
@@ -443,7 +453,8 @@ func (bbp *ImportedUnion) UnmarshalBebop(buf []byte) (err error) {
 			if err != nil {
 				return err
 			}
-			tmp5730 := ((*bbp.WhyAreTheseInline)); at += tmp5730.Size()
+			tmp := ((*bbp.WhyAreTheseInline))
+			at += tmp.Size()
 			return nil
 		case 2:
 			at += 1
@@ -452,7 +463,8 @@ func (bbp *ImportedUnion) UnmarshalBebop(buf []byte) (err error) {
 			if err != nil {
 				return err
 			}
-			tmp5735 := ((*bbp.Really)); at += tmp5735.Size()
+			tmp := ((*bbp.Really))
+			at += tmp.Size()
 			return nil
 		default:
 			return nil
@@ -470,13 +482,15 @@ func (bbp *ImportedUnion) MustUnmarshalBebop(buf []byte) {
 			at += 1
 			bbp.WhyAreTheseInline = new(WhyAreTheseInline)
 			(*bbp.WhyAreTheseInline) = MustMakeWhyAreTheseInlineFromBytes(buf[at:])
-			tmp5745 := ((*bbp.WhyAreTheseInline)); at += tmp5745.Size()
+			tmp := ((*bbp.WhyAreTheseInline))
+			at += tmp.Size()
 			return
 		case 2:
 			at += 1
 			bbp.Really = new(Really)
 			(*bbp.Really) = MustMakeReallyFromBytes(buf[at:])
-			tmp5753 := ((*bbp.Really)); at += tmp5753.Size()
+			tmp := ((*bbp.Really))
+			at += tmp.Size()
 			return
 		default:
 			return
@@ -518,7 +532,7 @@ func (bbp *ImportedUnion) DecodeBebop(ior io.Reader) (err error) {
 			if err != nil {
 				return err
 			}
-			io.ReadAll(r)
+			r.Drain()
 			return r.Err
 		case 2:
 			bbp.Really = new(Really)
@@ -526,10 +540,10 @@ func (bbp *ImportedUnion) DecodeBebop(ior io.Reader) (err error) {
 			if err != nil {
 				return err
 			}
-			io.ReadAll(r)
+			r.Drain()
 			return r.Err
 		default:
-			io.ReadAll(r)
+			r.Drain()
 			return r.Err
 		}
 	}
@@ -539,12 +553,14 @@ func (bbp ImportedUnion) Size() int {
 	bodyLen := 4
 	if bbp.WhyAreTheseInline != nil {
 		bodyLen += 1
-		tmp5820 := (*bbp.WhyAreTheseInline); bodyLen += tmp5820.Size()
+		tmp := (*bbp.WhyAreTheseInline)
+		bodyLen += tmp.Size()
 		return bodyLen
 	}
 	if bbp.Really != nil {
 		bodyLen += 1
-		tmp5829 := (*bbp.Really); bodyLen += tmp5829.Size()
+		tmp := (*bbp.Really)
+		bodyLen += tmp.Size()
 		return bodyLen
 	}
 	return bodyLen
@@ -556,7 +572,7 @@ func (bbp ImportedUnion) MarshalBebop() []byte {
 	return buf
 }
 
-func MakeImportedUnion(r iohelp.ErrorReader) (ImportedUnion, error) {
+func MakeImportedUnion(r *iohelp.ErrorReader) (ImportedUnion, error) {
 	v := ImportedUnion{}
 	err := v.DecodeBebop(r)
 	return v, err

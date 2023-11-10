@@ -94,7 +94,7 @@ func (bbp furniture) MarshalBebop() []byte {
 	return buf
 }
 
-func makefurniture(r iohelp.ErrorReader) (furniture, error) {
+func makefurniture(r *iohelp.ErrorReader) (furniture, error) {
 	v := furniture{}
 	err := v.DecodeBebop(r)
 	return v, err
@@ -150,7 +150,8 @@ func (bbp requestResponse) MarshalBebopTo(buf []byte) int {
 	at += 4
 	for _, v1 := range bbp.availableFurniture {
 		(v1).MarshalBebopTo(buf[at:])
-		tmp6673 := (v1); at += tmp6673.Size()
+		tmp := (v1)
+		at += tmp.Size()
 	}
 	return at
 }
@@ -167,7 +168,8 @@ func (bbp *requestResponse) UnmarshalBebop(buf []byte) (err error) {
 		if err != nil {
 			return err
 		}
-		tmp6705 := ((bbp.availableFurniture)[i1]); at += tmp6705.Size()
+		tmp := ((bbp.availableFurniture)[i1])
+		at += tmp.Size()
 	}
 	return nil
 }
@@ -178,7 +180,8 @@ func (bbp *requestResponse) MustUnmarshalBebop(buf []byte) {
 	at += 4
 	for i1 := range bbp.availableFurniture {
 		(bbp.availableFurniture)[i1] = mustMakefurnitureFromBytes(buf[at:])
-		tmp6710 := ((bbp.availableFurniture)[i1]); at += tmp6710.Size()
+		tmp := ((bbp.availableFurniture)[i1])
+		at += tmp.Size()
 	}
 }
 
@@ -210,7 +213,8 @@ func (bbp requestResponse) Size() int {
 	bodyLen := 0
 	bodyLen += 4
 	for _, elem := range bbp.availableFurniture {
-		tmp6749 := (elem); bodyLen += tmp6749.Size()
+		tmp := (elem)
+		bodyLen += tmp.Size()
 	}
 	return bodyLen
 }
@@ -221,7 +225,7 @@ func (bbp requestResponse) MarshalBebop() []byte {
 	return buf
 }
 
-func makerequestResponse(r iohelp.ErrorReader) (requestResponse, error) {
+func makerequestResponse(r *iohelp.ErrorReader) (requestResponse, error) {
 	v := requestResponse{}
 	err := v.DecodeBebop(r)
 	return v, err
@@ -345,7 +349,7 @@ func (bbp *requestCatalog) DecodeBebop(ior io.Reader) (err error) {
 			bbp.secretTunnel = new(string)
 			*bbp.secretTunnel = iohelp.ReadString(r)
 		default:
-			io.ReadAll(r)
+			r.Drain()
 			return r.Err
 		}
 	}
@@ -366,7 +370,7 @@ func (bbp requestCatalog) MarshalBebop() []byte {
 	return buf
 }
 
-func makerequestCatalog(r iohelp.ErrorReader) (requestCatalog, error) {
+func makerequestCatalog(r *iohelp.ErrorReader) (requestCatalog, error) {
 	v := requestCatalog{}
 	err := v.DecodeBebop(r)
 	return v, err
