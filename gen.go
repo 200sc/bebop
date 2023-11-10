@@ -799,7 +799,7 @@ func writeMarshalBebop(w io.Writer, name string, isEmpty bool, settings Generate
 func writeMake(w io.Writer, name string, isEmpty bool, settings GenerateSettings) {
 	exposedName := exposeName(name, settings)
 	makeName := exposeName("Make", settings)
-	writeLine(w, "func %[2]s%[1]s(r iohelp.ErrorReader) (%[1]s, error) {", exposedName, makeName)
+	writeLine(w, "func %[2]s%[1]s(r *iohelp.ErrorReader) (%[1]s, error) {", exposedName, makeName)
 	if isEmpty {
 		writeLine(w, "\treturn %s{}, nil", exposedName)
 	} else {

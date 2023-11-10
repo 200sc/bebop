@@ -26,17 +26,17 @@ type ErrorReader struct {
 
 // NewErrorReader wraps a reader with error tracking. An ErrorReader not created
 // via NewErrorReader is not safe to use.
-func NewErrorReader(r io.Reader) ErrorReader {
-	if er, ok := r.(ErrorReader); ok {
+func NewErrorReader(r io.Reader) *ErrorReader {
+	if er, ok := r.(*ErrorReader); ok {
 		return er
 	}
-	return ErrorReader{
+	return &ErrorReader{
 		Reader: r,
 		buffer: make([]byte, 8),
 	}
 }
 
-func (er ErrorReader) Read(b []byte) (n int, err error) {
+func (er *ErrorReader) Read(b []byte) (n int, err error) {
 	n, err = io.ReadFull(er.Reader, b)
 	if err != nil {
 		er.Err = err
@@ -58,11 +58,11 @@ type ErrorWriter struct {
 
 // NewErrorWriter wraps a writer with error tracking. An ErrorWriter not created
 // via NewErrorWriter is not safe to use.
-func NewErrorWriter(w io.Writer) ErrorWriter {
-	if ew, ok := w.(ErrorWriter); ok {
+func NewErrorWriter(w io.Writer) *ErrorWriter {
+	if ew, ok := w.(*ErrorWriter); ok {
 		return ew
 	}
-	return ErrorWriter{
+	return &ErrorWriter{
 		Writer: w,
 		buffer: make([]byte, 8),
 	}
@@ -76,7 +76,7 @@ func (ew ErrorWriter) Write(b []byte) (n int, err error) {
 	return n, err
 }
 
-func ReadString(r ErrorReader) string {
+func ReadString(r *ErrorReader) string {
 	data := make([]byte, ReadUint32(r))
 	r.Read(data)
 	return string(data)
@@ -116,7 +116,7 @@ func ReadStringBytesSharedMemory(buf []byte) (string, error) {
 	return *(*string)(unsafe.Pointer(&cut)), nil
 }
 
-func ReadDate(r ErrorReader) time.Time {
+func ReadDate(r *ErrorReader) time.Time {
 	io.ReadFull(r, r.buffer)
 	return ReadDateBytes(r.buffer)
 }
@@ -131,7 +131,7 @@ func ReadDateBytes(buf []byte) time.Time {
 	return time.Unix(0, tm).UTC()
 }
 
-func ReadGUID(r ErrorReader) [16]byte {
+func ReadGUID(r *ErrorReader) [16]byte {
 	data := make([]byte, 16)
 	r.Read(data)
 	return ReadGUIDBytes(data)
@@ -146,7 +146,7 @@ func ReadGUIDBytes(buf []byte) [16]byte {
 	}
 }
 
-func ReadBool(r ErrorReader) bool {
+func ReadBool(r *ErrorReader) bool {
 	io.ReadFull(r, r.buffer[:1])
 	return r.buffer[0] == 1
 }
@@ -156,7 +156,7 @@ func ReadBoolBytes(buf []byte) bool {
 	return buf[0] == 1
 }
 
-func ReadByte(r ErrorReader) byte {
+func ReadByte(r *ErrorReader) byte {
 	_, err := io.ReadFull(r, r.buffer[:1])
 	if err != nil {
 		r.Err = err
@@ -169,7 +169,7 @@ func ReadByteBytes(buf []byte) byte {
 	return buf[0]
 }
 
-func ReadUint8(r ErrorReader) uint8 {
+func ReadUint8(r *ErrorReader) uint8 {
 	_, err := io.ReadFull(r, r.buffer[:1])
 	if err != nil {
 		r.Err = err
@@ -181,63 +181,69 @@ func ReadUint8Bytes(buf []byte) uint8 {
 	return buf[0]
 }
 
-func ReadUint16(r ErrorReader) uint16 {
+func ReadUint16(r *ErrorReader) uint16 {
 	io.ReadFull(r, r.buffer[:2])
 	return ReadUint16Bytes(r.buffer)
 }
 
 func ReadUint16Bytes(buf []byte) uint16 {
+	_ = buf[1]
 	return uint16(buf[0]) | uint16(buf[1])<<8
 }
 
-func ReadInt16(r ErrorReader) int16 {
+func ReadInt16(r *ErrorReader) int16 {
 	io.ReadFull(r, r.buffer[:2])
 	return ReadInt16Bytes(r.buffer)
 }
 
 func ReadInt16Bytes(buf []byte) int16 {
+	_ = buf[1]
 	return int16(buf[0]) | int16(buf[1])<<8
 }
 
-func ReadUint32(r ErrorReader) uint32 {
+func ReadUint32(r *ErrorReader) uint32 {
 	io.ReadFull(r, r.buffer[:4])
 	return ReadUint32Bytes(r.buffer)
 }
 
 func ReadUint32Bytes(buf []byte) uint32 {
+	_ = buf[3]
 	return uint32(buf[0]) | uint32(buf[1])<<8 | uint32(buf[2])<<16 | uint32(buf[3])<<24
 }
 
-func ReadInt32(r ErrorReader) int32 {
+func ReadInt32(r *ErrorReader) int32 {
 	io.ReadFull(r, r.buffer[:4])
 	return ReadInt32Bytes(r.buffer)
 }
 
 func ReadInt32Bytes(buf []byte) int32 {
+	_ = buf[3]
 	return int32(buf[0]) | int32(buf[1])<<8 | int32(buf[2])<<16 | int32(buf[3])<<24
 }
 
-func ReadUint64(r ErrorReader) uint64 {
+func ReadUint64(r *ErrorReader) uint64 {
 	io.ReadFull(r, r.buffer)
 	return ReadUint64Bytes(r.buffer)
 }
 
 func ReadUint64Bytes(buf []byte) uint64 {
+	_ = buf[7]
 	return uint64(buf[0]) | uint64(buf[1])<<8 | uint64(buf[2])<<16 | uint64(buf[3])<<24 |
 		uint64(buf[4])<<32 | uint64(buf[5])<<40 | uint64(buf[6])<<48 | uint64(buf[7])<<56
 }
 
-func ReadInt64(r ErrorReader) int64 {
+func ReadInt64(r *ErrorReader) int64 {
 	io.ReadFull(r, r.buffer)
 	return ReadInt64Bytes(r.buffer)
 }
 
 func ReadInt64Bytes(buf []byte) int64 {
+	_ = buf[7]
 	return int64(buf[0]) | int64(buf[1])<<8 | int64(buf[2])<<16 | int64(buf[3])<<24 |
 		int64(buf[4])<<32 | int64(buf[5])<<40 | int64(buf[6])<<48 | int64(buf[7])<<56
 }
 
-func ReadFloat32(r ErrorReader) float32 {
+func ReadFloat32(r *ErrorReader) float32 {
 	return math.Float32frombits(ReadUint32(r))
 }
 
@@ -245,7 +251,7 @@ func ReadFloat32Bytes(buf []byte) float32 {
 	return math.Float32frombits(ReadUint32Bytes(buf))
 }
 
-func ReadFloat64(r ErrorReader) float64 {
+func ReadFloat64(r *ErrorReader) float64 {
 	return math.Float64frombits(ReadUint64(r))
 }
 
@@ -253,7 +259,7 @@ func ReadFloat64Bytes(buf []byte) float64 {
 	return math.Float64frombits(ReadUint64Bytes(buf))
 }
 
-func WriteGUID(w ErrorWriter, guid [16]byte) {
+func WriteGUID(w *ErrorWriter, guid [16]byte) {
 	// 3 2 1 0
 	// 5 4
 	// 7 6
@@ -287,7 +293,7 @@ func WriteGUIDBytes(b []byte, guid [16]byte) {
 	b[15] = guid[15]
 }
 
-func WriteInt64(w ErrorWriter, i int64) {
+func WriteInt64(w *ErrorWriter, i int64) {
 	WriteInt64Bytes(w.buffer, i)
 	w.Write(w.buffer)
 }
@@ -304,7 +310,7 @@ func WriteInt64Bytes(b []byte, i int64) {
 	b[7] = byte(i >> 56)
 }
 
-func WriteUint64(w ErrorWriter, i uint64) {
+func WriteUint64(w *ErrorWriter, i uint64) {
 	WriteUint64Bytes(w.buffer, i)
 	w.Write(w.buffer)
 }
@@ -321,7 +327,7 @@ func WriteUint64Bytes(b []byte, i uint64) {
 	b[7] = byte(i >> 56)
 }
 
-func WriteInt32(w ErrorWriter, i int32) {
+func WriteInt32(w *ErrorWriter, i int32) {
 	WriteInt32Bytes(w.buffer, i)
 	w.Write(w.buffer[:4])
 }
@@ -334,7 +340,7 @@ func WriteInt32Bytes(b []byte, i int32) {
 	b[3] = byte(i >> 24)
 }
 
-func WriteUint32(w ErrorWriter, i uint32) {
+func WriteUint32(w *ErrorWriter, i uint32) {
 	WriteUint32Bytes(w.buffer, i)
 	w.Write(w.buffer[:4])
 }
@@ -347,7 +353,7 @@ func WriteUint32Bytes(b []byte, i uint32) {
 	b[3] = byte(i >> 24)
 }
 
-func WriteInt16(w ErrorWriter, i int16) {
+func WriteInt16(w *ErrorWriter, i int16) {
 	WriteInt16Bytes(w.buffer, i)
 	w.Write(w.buffer[:2])
 }
@@ -358,7 +364,7 @@ func WriteInt16Bytes(b []byte, i int16) {
 	b[1] = byte(i >> 8)
 }
 
-func WriteUint16(w ErrorWriter, i uint16) {
+func WriteUint16(w *ErrorWriter, i uint16) {
 	WriteUint16Bytes(w.buffer, i)
 	w.Write(w.buffer[:2])
 }
@@ -369,7 +375,7 @@ func WriteUint16Bytes(b []byte, i uint16) {
 	b[1] = byte(i >> 8)
 }
 
-func WriteByte(w ErrorWriter, b byte) {
+func WriteByte(w *ErrorWriter, b byte) {
 	w.Write([]byte{b})
 }
 
@@ -377,7 +383,7 @@ func WriteByteBytes(b []byte, by byte) {
 	b[0] = by
 }
 
-func WriteUint8(w ErrorWriter, b uint8) {
+func WriteUint8(w *ErrorWriter, b uint8) {
 	w.Write([]byte{b})
 }
 
@@ -385,7 +391,7 @@ func WriteUint8Bytes(b []byte, by uint8) {
 	b[0] = by
 }
 
-func WriteBool(w ErrorWriter, b bool) {
+func WriteBool(w *ErrorWriter, b bool) {
 	if b {
 		w.Write([]byte{1})
 	} else {
@@ -401,7 +407,7 @@ func WriteBoolBytes(b []byte, bl bool) {
 	}
 }
 
-func WriteFloat32(w ErrorWriter, f float32) {
+func WriteFloat32(w *ErrorWriter, f float32) {
 	WriteUint32(w, math.Float32bits(f))
 }
 
@@ -409,7 +415,7 @@ func WriteFloat32Bytes(b []byte, f float32) {
 	WriteUint32Bytes(b, math.Float32bits(f))
 }
 
-func WriteFloat64(w ErrorWriter, f float64) {
+func WriteFloat64(w *ErrorWriter, f float64) {
 	WriteUint64(w, math.Float64bits(f))
 }
 
