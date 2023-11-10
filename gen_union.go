@@ -119,13 +119,13 @@ func (u Union) generateDecodeBebop(w io.Writer, settings GenerateSettings, field
 		name := exposeName(fd.Name, settings)
 		writeLine(w, "\t\t\tbbp.%[1]s = new(%[2]s)", name, fd.FieldType.goString(settings))
 		writeMessageFieldUnmarshaller("bbp."+name, fd.FieldType, w, settings, 3)
-		writeLine(w, "\t\t\tio.ReadAll(r)")
+		writeLine(w, "\t\t\tr.Drain()")
 		writeLine(w, "\t\t\treturn r.Err")
 	}
 	// ref: https://github.com/RainwayApp/bebop/wiki/Wire-format#messages, final paragraph
 	// we're allowed to skip parsing all remaining fields if we see one that we don't know about.
 	writeLine(w, "\t\tdefault:")
-	writeLine(w, "\t\t\tio.ReadAll(r)")
+	writeLine(w, "\t\t\tr.Drain()")
 	writeLine(w, "\t\t\treturn r.Err")
 	writeLine(w, "\t\t}")
 	writeLine(w, "\t}")

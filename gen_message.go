@@ -129,7 +129,7 @@ func (msg Message) generateDecodeBebop(w io.Writer, settings GenerateSettings, f
 	// ref: https://github.com/RainwayApp/bebop/wiki/Wire-format#messages, final paragraph
 	// we're allowed to skip parsing all remaining fields if we see one that we don't know about.
 	writeLine(w, "\t\tdefault:")
-	writeLine(w, "\t\t\tio.ReadAll(r)")
+	writeLine(w, "\t\t\tr.Drain()")
 	writeLine(w, "\t\t\treturn r.Err")
 	writeLine(w, "\t\t}")
 	writeLine(w, "\t}")

@@ -44,6 +44,10 @@ func (er ErrorReader) Read(b []byte) (n int, err error) {
 	return n, err
 }
 
+func (er ErrorReader) Drain() {
+	io.ReadAll(er.Reader)
+}
+
 // An ErrorWriter wraps an io.Writer with a reusable buffer for small allocations
 // of structured data types and persistent error tracking.
 type ErrorWriter struct {
