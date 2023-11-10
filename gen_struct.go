@@ -19,7 +19,11 @@ func (st Struct) generateTypeDefinition(w io.Writer, settings GenerateSettings) 
 
 func (st Struct) generateMarshalBebopTo(w io.Writer, settings GenerateSettings) {
 	exposedName := exposeName(st.Name, settings)
-	writeLine(w, "func (bbp %s) MarshalBebopTo(buf []byte) int {", exposedName)
+	if settings.AlwaysUsePointerReceivers {
+		writeLine(w, "func (bbp *%s) MarshalBebopTo(buf []byte) int {", exposedName)
+	} else {
+		writeLine(w, "func (bbp %s) MarshalBebopTo(buf []byte) int {", exposedName)
+	}
 	startAt := "0"
 	if len(st.Fields) == 0 {
 		writeLine(w, "\treturn "+startAt)
@@ -74,7 +78,11 @@ func (st Struct) generateMustUnmarshalBebop(w io.Writer, settings GenerateSettin
 func (st Struct) generateEncodeBebop(w io.Writer, settings GenerateSettings) {
 	exposedName := exposeName(st.Name, settings)
 	*settings.isFirstTopLength = true
-	writeLine(w, "func (bbp %s) EncodeBebop(iow io.Writer) (err error) {", exposedName)
+	if settings.AlwaysUsePointerReceivers {
+		writeLine(w, "func (bbp *%s) EncodeBebop(iow io.Writer) (err error) {", exposedName)
+	} else {
+		writeLine(w, "func (bbp %s) EncodeBebop(iow io.Writer) (err error) {", exposedName)
+	}
 	if len(st.Fields) == 0 {
 		writeLine(w, "\treturn nil")
 	} else {
@@ -113,7 +121,11 @@ func (st Struct) generateDecodeBebop(w io.Writer, settings GenerateSettings) {
 
 func (st Struct) generateSize(w io.Writer, settings GenerateSettings) {
 	exposedName := exposeName(st.Name, settings)
-	writeLine(w, "func (bbp %s) Size() int {", exposedName)
+	if settings.AlwaysUsePointerReceivers {
+		writeLine(w, "func (bbp *%s) Size() int {", exposedName)
+	} else {
+		writeLine(w, "func (bbp %s) Size() int {", exposedName)
+	}
 	if len(st.Fields) == 0 {
 		writeLine(w, "\treturn 0")
 	} else {
@@ -135,7 +147,11 @@ func (st Struct) generateReadOnlyGetters(w io.Writer, settings GenerateSettings)
 	// TODO: slices are not read only, we need to return a copy.
 	exposedName := exposeName(st.Name, settings)
 	for _, fd := range st.Fields {
-		writeLine(w, "func (bbp %s) Get%s() %s {", exposedName, exposeName(fd.Name, settings), fd.FieldType.goString(settings))
+		if settings.AlwaysUsePointerReceivers {
+			writeLine(w, "func (bbp *%s) Get%s() %s {", exposedName, exposeName(fd.Name, settings), fd.FieldType.goString(settings))
+		} else {
+			writeLine(w, "func (bbp %s) Get%s() %s {", exposedName, exposeName(fd.Name, settings), fd.FieldType.goString(settings))
+		}
 		writeLine(w, "\treturn bbp.%s", unexposeName(fd.Name))
 		writeCloseBlock(w)
 	}

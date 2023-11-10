@@ -3,12 +3,10 @@ package bebop
 import (
 	"bytes"
 	"io"
-	"math/rand"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
-	"time"
 )
 
 func TestValidateIncompatibleError(t *testing.T) {
@@ -358,7 +356,6 @@ var importFiles = []string{
 
 func TestGenerateToFile_Imports(t *testing.T) {
 	t.Parallel()
-	rand.Seed(time.Now().UnixNano())
 	for _, filename := range importFiles {
 		filename := filename
 		t.Run(filename, func(t *testing.T) {
@@ -424,7 +421,6 @@ var genTestFiles = []string{
 
 func TestGenerateToFile(t *testing.T) {
 	t.Parallel()
-	rand.Seed(time.Now().UnixNano())
 	for _, filename := range genTestFiles {
 		filename := filename
 		t.Run(filename, func(t *testing.T) {
@@ -459,7 +455,7 @@ func TestGenerateToFile(t *testing.T) {
 
 func TestGenerateToFile_Private(t *testing.T) {
 	t.Parallel()
-	rand.Seed(time.Now().UnixNano())
+	os.MkdirAll(filepath.Join("testdata", "generated-private"), 0666)
 	for _, filename := range genTestFiles {
 		filename := filename
 		t.Run(filename, func(t *testing.T) {
@@ -493,9 +489,44 @@ func TestGenerateToFile_Private(t *testing.T) {
 	}
 }
 
+func TestGenerateToFile_AlwaysPointers(t *testing.T) {
+	t.Parallel()
+	os.MkdirAll(filepath.Join("testdata", "generated-always-pointers"), 0666)
+	for _, filename := range genTestFiles {
+		filename := filename
+		t.Run(filename, func(t *testing.T) {
+			t.Parallel()
+			f, err := os.Open(filepath.Join("testdata", "base", filename+".bop"))
+			if err != nil {
+				t.Fatalf("failed to open test file %s: %v", filename+".bop", err)
+			}
+			defer f.Close()
+			bopf, _, err := ReadFile(f)
+			if err != nil {
+				t.Fatalf("failed to read file %s: %v", filename+".bop", err)
+			}
+			outFile := filepath.Join("testdata", "generated-always-pointers", filename+".go")
+			out, err := os.Create(outFile)
+			if err != nil {
+				t.Fatalf("failed to open out file %s: %v", outFile, err)
+			}
+			defer out.Close()
+			err = bopf.Generate(out, GenerateSettings{
+				PackageName:               "generated",
+				GenerateUnsafeMethods:     true,
+				SharedMemoryStrings:       false,
+				GenerateFieldTags:         true,
+				AlwaysUsePointerReceivers: true,
+			})
+			if err != nil {
+				t.Fatalf("generation failed: %v", err)
+			}
+		})
+	}
+}
+
 func TestGenerateToFileIncompatible(t *testing.T) {
 	t.Parallel()
-	rand.Seed(time.Now().UnixNano())
 	for _, filename := range testIncompatibleFiles {
 		filename := filename
 		t.Run(filename, func(t *testing.T) {

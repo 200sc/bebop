@@ -33,10 +33,11 @@ type GenerateSettings struct {
 	nextLength       *int
 	isFirstTopLength *bool
 
-	GenerateUnsafeMethods bool
-	SharedMemoryStrings   bool
-	GenerateFieldTags     bool
-	PrivateDefinitions    bool
+	GenerateUnsafeMethods     bool
+	SharedMemoryStrings       bool
+	GenerateFieldTags         bool
+	PrivateDefinitions        bool
+	AlwaysUsePointerReceivers bool
 }
 
 type ImportGenerationMode uint8
@@ -776,7 +777,11 @@ func writeWrappers(w io.Writer, name string, isEmpty bool, settings GenerateSett
 
 func writeMarshalBebop(w io.Writer, name string, isEmpty bool, settings GenerateSettings) {
 	exposedName := exposeName(name, settings)
-	writeLine(w, "func (bbp %s) MarshalBebop() []byte {", exposedName)
+	if settings.AlwaysUsePointerReceivers {
+		writeLine(w, "func (bbp *%s) MarshalBebop() []byte {", exposedName)
+	} else {
+		writeLine(w, "func (bbp %s) MarshalBebop() []byte {", exposedName)
+	}
 	if isEmpty {
 		writeLine(w, "\treturn []byte{}")
 	} else {

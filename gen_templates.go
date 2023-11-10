@@ -5,7 +5,10 @@ import (
 	"io"
 	"strconv"
 	"strings"
+	"sync/atomic"
 )
+
+var nextTmp atomic.Int64
 
 func writeLineWithTabs(w io.Writer, format string, depth int, args ...string) {
 	var assigner string
@@ -47,6 +50,8 @@ func writeLineWithTabs(w io.Writer, format string, depth int, args ...string) {
 	format = strings.Replace(format, fillNamespace, namespace, -1)
 	format = strings.Replace(format, fillKey, depthName("k", depth), -1)
 	format = strings.Replace(format, fillValue, depthName("v", depth), -1)
+	tmp := nextTmp.Add(1)
+	format = strings.Replace(format, fillTmpVar, "tmp"+strconv.FormatInt(tmp, 10), -1)
 
 	fmt.Fprint(w, format+"\n")
 }
@@ -60,11 +65,12 @@ const (
 	fillNamespace = "%NAMESPACE"
 	fillKey       = "%KNAME"
 	fillValue     = "%VNAME"
+	fillTmpVar    = "%TMP"
 
 	fmtErrReturn            = "if err != nil {\n\treturn err\n}"
-	fmtAddSizeToAt          = "at += (%ASGN).Size()"
+	fmtAddSizeToAt          = "%TMP := (%ASGN); at += %TMP.Size()"
 	fmtAdd4PlusLenToAt      = "at += 4 + len(%ASGN)"
-	fmtAddSizeToBodyLen     = "bodyLen += (%ASGN).Size()"
+	fmtAddSizeToBodyLen     = "%TMP := (%ASGN); bodyLen += %TMP.Size()"
 	fmtAdd4PlusLenToBodyLen = "bodyLen += 4 + len(%ASGN)"
 
 	fmtMakeType           = "(%RECV), err = Make%TYPE(r)\n" + fmtErrReturn
