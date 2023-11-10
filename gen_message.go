@@ -15,7 +15,11 @@ type fieldWithNumber struct {
 
 func (msg Message) generateMarshalBebopTo(w io.Writer, settings GenerateSettings, fields []fieldWithNumber) {
 	exposedName := exposeName(msg.Name, settings)
-	writeLine(w, "func (bbp %s) MarshalBebopTo(buf []byte) int {", exposedName)
+	if settings.AlwaysUsePointerReceivers {
+		writeLine(w, "func (bbp *%s) MarshalBebopTo(buf []byte) int {", exposedName)
+	} else {
+		writeLine(w, "func (bbp %s) MarshalBebopTo(buf []byte) int {", exposedName)
+	}
 	writeLine(w, "\tat := 0")
 	writeLine(w, "\tiohelp.WriteUint32Bytes(buf[at:], uint32(bbp.Size()-4))")
 	writeLine(w, "\tat += 4")
@@ -83,7 +87,11 @@ func (msg Message) generateMustUnmarshalBebop(w io.Writer, settings GenerateSett
 func (msg Message) generateEncodeBebop(w io.Writer, settings GenerateSettings, fields []fieldWithNumber) {
 	exposedName := exposeName(msg.Name, settings)
 	*settings.isFirstTopLength = true
-	writeLine(w, "func (bbp %s) EncodeBebop(iow io.Writer) (err error) {", exposedName)
+	if settings.AlwaysUsePointerReceivers {
+		writeLine(w, "func (bbp *%s) EncodeBebop(iow io.Writer) (err error) {", exposedName)
+	} else {
+		writeLine(w, "func (bbp %s) EncodeBebop(iow io.Writer) (err error) {", exposedName)
+	}
 	writeLine(w, "\tw := iohelp.NewErrorWriter(iow)")
 	writeLine(w, "\tiohelp.WriteUint32(w, uint32(bbp.Size()-4))")
 	for _, fd := range fields {
@@ -130,7 +138,11 @@ func (msg Message) generateDecodeBebop(w io.Writer, settings GenerateSettings, f
 
 func (msg Message) generateSize(w io.Writer, settings GenerateSettings, fields []fieldWithNumber) {
 	exposedName := exposeName(msg.Name, settings)
-	writeLine(w, "func (bbp %s) Size() int {", exposedName)
+	if settings.AlwaysUsePointerReceivers {
+		writeLine(w, "func (bbp *%s) Size() int {", exposedName)
+	} else {
+		writeLine(w, "func (bbp %s) Size() int {", exposedName)
+	}
 	// size at front (4) + 0 byte (1)
 	// q: why do messages end in a 0 byte?
 	// a: (I think) because then we can loop reading a single byte for each field, and if we read 0

@@ -8,7 +8,11 @@ import (
 
 func (u Union) generateMarshalBebopTo(w io.Writer, settings GenerateSettings, fields []fieldWithNumber) {
 	exposedName := exposeName(u.Name, settings)
-	writeLine(w, "func (bbp %s) MarshalBebopTo(buf []byte) int {", exposedName)
+	if settings.AlwaysUsePointerReceivers {
+		writeLine(w, "func (bbp *%s) MarshalBebopTo(buf []byte) int {", exposedName)
+	} else {
+		writeLine(w, "func (bbp %s) MarshalBebopTo(buf []byte) int {", exposedName)
+	}
 	writeLine(w, "\tat := 0")
 	// 5 = 4 bytes of size + 1 byte discriminator
 	writeLine(w, "\tiohelp.WriteUint32Bytes(buf[at:], uint32(bbp.Size()-5))")
@@ -80,7 +84,11 @@ func (u Union) generateMustUnmarshalBebop(w io.Writer, settings GenerateSettings
 func (u Union) generateEncodeBebop(w io.Writer, settings GenerateSettings, fields []fieldWithNumber) {
 	exposedName := exposeName(u.Name, settings)
 	*settings.isFirstTopLength = true
-	writeLine(w, "func (bbp %s) EncodeBebop(iow io.Writer) (err error) {", exposedName)
+	if settings.AlwaysUsePointerReceivers {
+		writeLine(w, "func (bbp *%s) EncodeBebop(iow io.Writer) (err error) {", exposedName)
+	} else {
+		writeLine(w, "func (bbp %s) EncodeBebop(iow io.Writer) (err error) {", exposedName)
+	}
 	writeLine(w, "\tw := iohelp.NewErrorWriter(iow)")
 	writeLine(w, "\tiohelp.WriteUint32(w, uint32(bbp.Size()-5))")
 	for _, fd := range fields {
@@ -126,7 +134,11 @@ func (u Union) generateDecodeBebop(w io.Writer, settings GenerateSettings, field
 
 func (u Union) generateSize(w io.Writer, settings GenerateSettings, fields []fieldWithNumber) {
 	exposedName := exposeName(u.Name, settings)
-	writeLine(w, "func (bbp %s) Size() int {", exposedName)
+	if settings.AlwaysUsePointerReceivers {
+		writeLine(w, "func (bbp *%s) Size() int {", exposedName)
+	} else {
+		writeLine(w, "func (bbp %s) Size() int {", exposedName)
+	}
 	// size at front (4)
 	writeLine(w, "\tbodyLen := 4")
 	for _, fd := range fields {

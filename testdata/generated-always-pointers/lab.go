@@ -21,7 +21,7 @@ type Int32s struct {
 	A []int32
 }
 
-func (bbp Int32s) MarshalBebopTo(buf []byte) int {
+func (bbp *Int32s) MarshalBebopTo(buf []byte) int {
 	at := 0
 	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.A)))
 	at += 4
@@ -59,7 +59,7 @@ func (bbp *Int32s) MustUnmarshalBebop(buf []byte) {
 	}
 }
 
-func (bbp Int32s) EncodeBebop(iow io.Writer) (err error) {
+func (bbp *Int32s) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
 	iohelp.WriteUint32(w, uint32(len(bbp.A)))
 	for _, elem := range bbp.A {
@@ -77,14 +77,14 @@ func (bbp *Int32s) DecodeBebop(ior io.Reader) (err error) {
 	return r.Err
 }
 
-func (bbp Int32s) Size() int {
+func (bbp *Int32s) Size() int {
 	bodyLen := 0
 	bodyLen += 4
 	bodyLen += len(bbp.A) * 4
 	return bodyLen
 }
 
-func (bbp Int32s) MarshalBebop() []byte {
+func (bbp *Int32s) MarshalBebop() []byte {
 	buf := make([]byte, bbp.Size())
 	bbp.MarshalBebopTo(buf)
 	return buf
@@ -114,7 +114,7 @@ type Uint32s struct {
 	A []uint32
 }
 
-func (bbp Uint32s) MarshalBebopTo(buf []byte) int {
+func (bbp *Uint32s) MarshalBebopTo(buf []byte) int {
 	at := 0
 	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.A)))
 	at += 4
@@ -152,7 +152,7 @@ func (bbp *Uint32s) MustUnmarshalBebop(buf []byte) {
 	}
 }
 
-func (bbp Uint32s) EncodeBebop(iow io.Writer) (err error) {
+func (bbp *Uint32s) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
 	iohelp.WriteUint32(w, uint32(len(bbp.A)))
 	for _, elem := range bbp.A {
@@ -170,14 +170,14 @@ func (bbp *Uint32s) DecodeBebop(ior io.Reader) (err error) {
 	return r.Err
 }
 
-func (bbp Uint32s) Size() int {
+func (bbp *Uint32s) Size() int {
 	bodyLen := 0
 	bodyLen += 4
 	bodyLen += len(bbp.A) * 4
 	return bodyLen
 }
 
-func (bbp Uint32s) MarshalBebop() []byte {
+func (bbp *Uint32s) MarshalBebop() []byte {
 	buf := make([]byte, bbp.Size())
 	bbp.MarshalBebopTo(buf)
 	return buf
@@ -207,7 +207,7 @@ type Float32s struct {
 	A []float32
 }
 
-func (bbp Float32s) MarshalBebopTo(buf []byte) int {
+func (bbp *Float32s) MarshalBebopTo(buf []byte) int {
 	at := 0
 	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.A)))
 	at += 4
@@ -245,7 +245,7 @@ func (bbp *Float32s) MustUnmarshalBebop(buf []byte) {
 	}
 }
 
-func (bbp Float32s) EncodeBebop(iow io.Writer) (err error) {
+func (bbp *Float32s) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
 	iohelp.WriteUint32(w, uint32(len(bbp.A)))
 	for _, elem := range bbp.A {
@@ -263,14 +263,14 @@ func (bbp *Float32s) DecodeBebop(ior io.Reader) (err error) {
 	return r.Err
 }
 
-func (bbp Float32s) Size() int {
+func (bbp *Float32s) Size() int {
 	bodyLen := 0
 	bodyLen += 4
 	bodyLen += len(bbp.A) * 4
 	return bodyLen
 }
 
-func (bbp Float32s) MarshalBebop() []byte {
+func (bbp *Float32s) MarshalBebop() []byte {
 	buf := make([]byte, bbp.Size())
 	bbp.MarshalBebopTo(buf)
 	return buf
@@ -300,7 +300,7 @@ type Int64s struct {
 	A []int64
 }
 
-func (bbp Int64s) MarshalBebopTo(buf []byte) int {
+func (bbp *Int64s) MarshalBebopTo(buf []byte) int {
 	at := 0
 	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.A)))
 	at += 4
@@ -338,7 +338,7 @@ func (bbp *Int64s) MustUnmarshalBebop(buf []byte) {
 	}
 }
 
-func (bbp Int64s) EncodeBebop(iow io.Writer) (err error) {
+func (bbp *Int64s) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
 	iohelp.WriteUint32(w, uint32(len(bbp.A)))
 	for _, elem := range bbp.A {
@@ -356,14 +356,14 @@ func (bbp *Int64s) DecodeBebop(ior io.Reader) (err error) {
 	return r.Err
 }
 
-func (bbp Int64s) Size() int {
+func (bbp *Int64s) Size() int {
 	bodyLen := 0
 	bodyLen += 4
 	bodyLen += len(bbp.A) * 8
 	return bodyLen
 }
 
-func (bbp Int64s) MarshalBebop() []byte {
+func (bbp *Int64s) MarshalBebop() []byte {
 	buf := make([]byte, bbp.Size())
 	bbp.MarshalBebopTo(buf)
 	return buf
@@ -393,7 +393,7 @@ type Uint64s struct {
 	A []uint64
 }
 
-func (bbp Uint64s) MarshalBebopTo(buf []byte) int {
+func (bbp *Uint64s) MarshalBebopTo(buf []byte) int {
 	at := 0
 	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.A)))
 	at += 4
@@ -431,7 +431,7 @@ func (bbp *Uint64s) MustUnmarshalBebop(buf []byte) {
 	}
 }
 
-func (bbp Uint64s) EncodeBebop(iow io.Writer) (err error) {
+func (bbp *Uint64s) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
 	iohelp.WriteUint32(w, uint32(len(bbp.A)))
 	for _, elem := range bbp.A {
@@ -449,14 +449,14 @@ func (bbp *Uint64s) DecodeBebop(ior io.Reader) (err error) {
 	return r.Err
 }
 
-func (bbp Uint64s) Size() int {
+func (bbp *Uint64s) Size() int {
 	bodyLen := 0
 	bodyLen += 4
 	bodyLen += len(bbp.A) * 8
 	return bodyLen
 }
 
-func (bbp Uint64s) MarshalBebop() []byte {
+func (bbp *Uint64s) MarshalBebop() []byte {
 	buf := make([]byte, bbp.Size())
 	bbp.MarshalBebopTo(buf)
 	return buf
@@ -486,7 +486,7 @@ type Float64s struct {
 	A []float64
 }
 
-func (bbp Float64s) MarshalBebopTo(buf []byte) int {
+func (bbp *Float64s) MarshalBebopTo(buf []byte) int {
 	at := 0
 	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.A)))
 	at += 4
@@ -524,7 +524,7 @@ func (bbp *Float64s) MustUnmarshalBebop(buf []byte) {
 	}
 }
 
-func (bbp Float64s) EncodeBebop(iow io.Writer) (err error) {
+func (bbp *Float64s) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
 	iohelp.WriteUint32(w, uint32(len(bbp.A)))
 	for _, elem := range bbp.A {
@@ -542,14 +542,14 @@ func (bbp *Float64s) DecodeBebop(ior io.Reader) (err error) {
 	return r.Err
 }
 
-func (bbp Float64s) Size() int {
+func (bbp *Float64s) Size() int {
 	bodyLen := 0
 	bodyLen += 4
 	bodyLen += len(bbp.A) * 8
 	return bodyLen
 }
 
-func (bbp Float64s) MarshalBebop() []byte {
+func (bbp *Float64s) MarshalBebop() []byte {
 	buf := make([]byte, bbp.Size())
 	bbp.MarshalBebopTo(buf)
 	return buf
@@ -582,7 +582,7 @@ type VideoData struct {
 	Fragment []byte
 }
 
-func (bbp VideoData) MarshalBebopTo(buf []byte) int {
+func (bbp *VideoData) MarshalBebopTo(buf []byte) int {
 	at := 0
 	iohelp.WriteFloat64Bytes(buf[at:], bbp.Time)
 	at += 8
@@ -641,13 +641,15 @@ func (bbp *VideoData) MustUnmarshalBebop(buf []byte) {
 	at += len(bbp.Fragment)
 }
 
-func (bbp VideoData) EncodeBebop(iow io.Writer) (err error) {
+func (bbp *VideoData) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
 	iohelp.WriteFloat64(w, bbp.Time)
 	iohelp.WriteUint32(w, bbp.Width)
 	iohelp.WriteUint32(w, bbp.Height)
 	iohelp.WriteUint32(w, uint32(len(bbp.Fragment)))
-	w.Write(bbp.Fragment)
+	for _, elem := range bbp.Fragment {
+		iohelp.WriteByte(w, elem)
+	}
 	return w.Err
 }
 
@@ -657,11 +659,13 @@ func (bbp *VideoData) DecodeBebop(ior io.Reader) (err error) {
 	bbp.Width = iohelp.ReadUint32(r)
 	bbp.Height = iohelp.ReadUint32(r)
 	bbp.Fragment = make([]byte, iohelp.ReadUint32(r))
-	r.Read(bbp.Fragment)
+	for i1 := range bbp.Fragment {
+		(bbp.Fragment[i1]) = iohelp.ReadByte(r)
+	}
 	return r.Err
 }
 
-func (bbp VideoData) Size() int {
+func (bbp *VideoData) Size() int {
 	bodyLen := 0
 	bodyLen += 8
 	bodyLen += 4
@@ -671,7 +675,7 @@ func (bbp VideoData) Size() int {
 	return bodyLen
 }
 
-func (bbp VideoData) MarshalBebop() []byte {
+func (bbp *VideoData) MarshalBebop() []byte {
 	buf := make([]byte, bbp.Size())
 	bbp.MarshalBebopTo(buf)
 	return buf
@@ -702,7 +706,7 @@ type MediaMessage struct {
 	Data *VideoData
 }
 
-func (bbp MediaMessage) MarshalBebopTo(buf []byte) int {
+func (bbp *MediaMessage) MarshalBebopTo(buf []byte) int {
 	at := 0
 	iohelp.WriteUint32Bytes(buf[at:], uint32(bbp.Size()-4))
 	at += 4
@@ -716,7 +720,7 @@ func (bbp MediaMessage) MarshalBebopTo(buf []byte) int {
 		buf[at] = 2
 		at++
 		(*bbp.Data).MarshalBebopTo(buf[at:])
-		tmp292 := (*bbp.Data); at += tmp292.Size()
+		tmp4692 := (*bbp.Data); at += tmp4692.Size()
 	}
 	return at
 }
@@ -739,7 +743,7 @@ func (bbp *MediaMessage) UnmarshalBebop(buf []byte) (err error) {
 			if err != nil {
 				return err
 			}
-			tmp295 := ((*bbp.Data)); at += tmp295.Size()
+			tmp4725 := ((*bbp.Data)); at += tmp4725.Size()
 		default:
 			return nil
 		}
@@ -761,14 +765,14 @@ func (bbp *MediaMessage) MustUnmarshalBebop(buf []byte) {
 			at += 1
 			bbp.Data = new(VideoData)
 			(*bbp.Data) = MustMakeVideoDataFromBytes(buf[at:])
-			tmp297 := ((*bbp.Data)); at += tmp297.Size()
+			tmp4745 := ((*bbp.Data)); at += tmp4745.Size()
 		default:
 			return
 		}
 	}
 }
 
-func (bbp MediaMessage) EncodeBebop(iow io.Writer) (err error) {
+func (bbp *MediaMessage) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
 	iohelp.WriteUint32(w, uint32(bbp.Size()-4))
 	if bbp.Codec != nil {
@@ -808,7 +812,7 @@ func (bbp *MediaMessage) DecodeBebop(ior io.Reader) (err error) {
 	}
 }
 
-func (bbp MediaMessage) Size() int {
+func (bbp *MediaMessage) Size() int {
 	bodyLen := 5
 	if bbp.Codec != nil {
 		bodyLen += 1
@@ -816,12 +820,12 @@ func (bbp MediaMessage) Size() int {
 	}
 	if bbp.Data != nil {
 		bodyLen += 1
-		tmp329 := (*bbp.Data); bodyLen += tmp329.Size()
+		tmp4874 := (*bbp.Data); bodyLen += tmp4874.Size()
 	}
 	return bodyLen
 }
 
-func (bbp MediaMessage) MarshalBebop() []byte {
+func (bbp *MediaMessage) MarshalBebop() []byte {
 	buf := make([]byte, bbp.Size())
 	bbp.MarshalBebopTo(buf)
 	return buf
@@ -853,7 +857,7 @@ type SkipTestOld struct {
 	Y *int32
 }
 
-func (bbp SkipTestOld) MarshalBebopTo(buf []byte) int {
+func (bbp *SkipTestOld) MarshalBebopTo(buf []byte) int {
 	at := 0
 	iohelp.WriteUint32Bytes(buf[at:], uint32(bbp.Size()-4))
 	at += 4
@@ -922,7 +926,7 @@ func (bbp *SkipTestOld) MustUnmarshalBebop(buf []byte) {
 	}
 }
 
-func (bbp SkipTestOld) EncodeBebop(iow io.Writer) (err error) {
+func (bbp *SkipTestOld) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
 	iohelp.WriteUint32(w, uint32(bbp.Size()-4))
 	if bbp.X != nil {
@@ -956,7 +960,7 @@ func (bbp *SkipTestOld) DecodeBebop(ior io.Reader) (err error) {
 	}
 }
 
-func (bbp SkipTestOld) Size() int {
+func (bbp *SkipTestOld) Size() int {
 	bodyLen := 5
 	if bbp.X != nil {
 		bodyLen += 1
@@ -969,7 +973,7 @@ func (bbp SkipTestOld) Size() int {
 	return bodyLen
 }
 
-func (bbp SkipTestOld) MarshalBebop() []byte {
+func (bbp *SkipTestOld) MarshalBebop() []byte {
 	buf := make([]byte, bbp.Size())
 	bbp.MarshalBebopTo(buf)
 	return buf
@@ -1001,7 +1005,7 @@ type SkipTestNew struct {
 	Z *int32
 }
 
-func (bbp SkipTestNew) MarshalBebopTo(buf []byte) int {
+func (bbp *SkipTestNew) MarshalBebopTo(buf []byte) int {
 	at := 0
 	iohelp.WriteUint32Bytes(buf[at:], uint32(bbp.Size()-4))
 	at += 4
@@ -1089,7 +1093,7 @@ func (bbp *SkipTestNew) MustUnmarshalBebop(buf []byte) {
 	}
 }
 
-func (bbp SkipTestNew) EncodeBebop(iow io.Writer) (err error) {
+func (bbp *SkipTestNew) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
 	iohelp.WriteUint32(w, uint32(bbp.Size()-4))
 	if bbp.X != nil {
@@ -1130,7 +1134,7 @@ func (bbp *SkipTestNew) DecodeBebop(ior io.Reader) (err error) {
 	}
 }
 
-func (bbp SkipTestNew) Size() int {
+func (bbp *SkipTestNew) Size() int {
 	bodyLen := 5
 	if bbp.X != nil {
 		bodyLen += 1
@@ -1147,7 +1151,7 @@ func (bbp SkipTestNew) Size() int {
 	return bodyLen
 }
 
-func (bbp SkipTestNew) MarshalBebop() []byte {
+func (bbp *SkipTestNew) MarshalBebop() []byte {
 	buf := make([]byte, bbp.Size())
 	bbp.MarshalBebopTo(buf)
 	return buf
@@ -1178,7 +1182,7 @@ type SkipTestOldContainer struct {
 	After *int32
 }
 
-func (bbp SkipTestOldContainer) MarshalBebopTo(buf []byte) int {
+func (bbp *SkipTestOldContainer) MarshalBebopTo(buf []byte) int {
 	at := 0
 	iohelp.WriteUint32Bytes(buf[at:], uint32(bbp.Size()-4))
 	at += 4
@@ -1186,7 +1190,7 @@ func (bbp SkipTestOldContainer) MarshalBebopTo(buf []byte) int {
 		buf[at] = 1
 		at++
 		(*bbp.S).MarshalBebopTo(buf[at:])
-		tmp486 := (*bbp.S); at += tmp486.Size()
+		tmp5126 := (*bbp.S); at += tmp5126.Size()
 	}
 	if bbp.After != nil {
 		buf[at] = 2
@@ -1210,7 +1214,7 @@ func (bbp *SkipTestOldContainer) UnmarshalBebop(buf []byte) (err error) {
 			if err != nil {
 				return err
 			}
-			tmp494 := ((*bbp.S)); at += tmp494.Size()
+			tmp5133 := ((*bbp.S)); at += tmp5133.Size()
 		case 2:
 			at += 1
 			bbp.After = new(int32)
@@ -1235,7 +1239,7 @@ func (bbp *SkipTestOldContainer) MustUnmarshalBebop(buf []byte) {
 			at += 1
 			bbp.S = new(SkipTestOld)
 			(*bbp.S) = MustMakeSkipTestOldFromBytes(buf[at:])
-			tmp507 := ((*bbp.S)); at += tmp507.Size()
+			tmp5138 := ((*bbp.S)); at += tmp5138.Size()
 		case 2:
 			at += 1
 			bbp.After = new(int32)
@@ -1247,7 +1251,7 @@ func (bbp *SkipTestOldContainer) MustUnmarshalBebop(buf []byte) {
 	}
 }
 
-func (bbp SkipTestOldContainer) EncodeBebop(iow io.Writer) (err error) {
+func (bbp *SkipTestOldContainer) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
 	iohelp.WriteUint32(w, uint32(bbp.Size()-4))
 	if bbp.S != nil {
@@ -1287,11 +1291,11 @@ func (bbp *SkipTestOldContainer) DecodeBebop(ior io.Reader) (err error) {
 	}
 }
 
-func (bbp SkipTestOldContainer) Size() int {
+func (bbp *SkipTestOldContainer) Size() int {
 	bodyLen := 5
 	if bbp.S != nil {
 		bodyLen += 1
-		tmp523 := (*bbp.S); bodyLen += tmp523.Size()
+		tmp5152 := (*bbp.S); bodyLen += tmp5152.Size()
 	}
 	if bbp.After != nil {
 		bodyLen += 1
@@ -1300,7 +1304,7 @@ func (bbp SkipTestOldContainer) Size() int {
 	return bodyLen
 }
 
-func (bbp SkipTestOldContainer) MarshalBebop() []byte {
+func (bbp *SkipTestOldContainer) MarshalBebop() []byte {
 	buf := make([]byte, bbp.Size())
 	bbp.MarshalBebopTo(buf)
 	return buf
@@ -1331,7 +1335,7 @@ type SkipTestNewContainer struct {
 	After *int32
 }
 
-func (bbp SkipTestNewContainer) MarshalBebopTo(buf []byte) int {
+func (bbp *SkipTestNewContainer) MarshalBebopTo(buf []byte) int {
 	at := 0
 	iohelp.WriteUint32Bytes(buf[at:], uint32(bbp.Size()-4))
 	at += 4
@@ -1339,7 +1343,7 @@ func (bbp SkipTestNewContainer) MarshalBebopTo(buf []byte) int {
 		buf[at] = 1
 		at++
 		(*bbp.S).MarshalBebopTo(buf[at:])
-		tmp540 := (*bbp.S); at += tmp540.Size()
+		tmp5161 := (*bbp.S); at += tmp5161.Size()
 	}
 	if bbp.After != nil {
 		buf[at] = 2
@@ -1363,7 +1367,7 @@ func (bbp *SkipTestNewContainer) UnmarshalBebop(buf []byte) (err error) {
 			if err != nil {
 				return err
 			}
-			tmp547 := ((*bbp.S)); at += tmp547.Size()
+			tmp5168 := ((*bbp.S)); at += tmp5168.Size()
 		case 2:
 			at += 1
 			bbp.After = new(int32)
@@ -1388,7 +1392,7 @@ func (bbp *SkipTestNewContainer) MustUnmarshalBebop(buf []byte) {
 			at += 1
 			bbp.S = new(SkipTestNew)
 			(*bbp.S) = MustMakeSkipTestNewFromBytes(buf[at:])
-			tmp558 := ((*bbp.S)); at += tmp558.Size()
+			tmp5173 := ((*bbp.S)); at += tmp5173.Size()
 		case 2:
 			at += 1
 			bbp.After = new(int32)
@@ -1400,7 +1404,7 @@ func (bbp *SkipTestNewContainer) MustUnmarshalBebop(buf []byte) {
 	}
 }
 
-func (bbp SkipTestNewContainer) EncodeBebop(iow io.Writer) (err error) {
+func (bbp *SkipTestNewContainer) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
 	iohelp.WriteUint32(w, uint32(bbp.Size()-4))
 	if bbp.S != nil {
@@ -1440,11 +1444,11 @@ func (bbp *SkipTestNewContainer) DecodeBebop(ior io.Reader) (err error) {
 	}
 }
 
-func (bbp SkipTestNewContainer) Size() int {
+func (bbp *SkipTestNewContainer) Size() int {
 	bodyLen := 5
 	if bbp.S != nil {
 		bodyLen += 1
-		tmp591 := (*bbp.S); bodyLen += tmp591.Size()
+		tmp5205 := (*bbp.S); bodyLen += tmp5205.Size()
 	}
 	if bbp.After != nil {
 		bodyLen += 1
@@ -1453,7 +1457,7 @@ func (bbp SkipTestNewContainer) Size() int {
 	return bodyLen
 }
 
-func (bbp SkipTestNewContainer) MarshalBebop() []byte {
+func (bbp *SkipTestNewContainer) MarshalBebop() []byte {
 	buf := make([]byte, bbp.Size())
 	bbp.MarshalBebopTo(buf)
 	return buf

@@ -164,7 +164,7 @@ func (bbp SomeMaps) MarshalBebopTo(buf []byte) int {
 					iohelp.WriteBoolBytes(buf[at:], k4)
 					at += 1
 					(v4).MarshalBebopTo(buf[at:])
-					at += (v4).Size()
+					tmp1350 := (v4); at += tmp1350.Size()
 				}
 			}
 		}
@@ -192,7 +192,7 @@ func (bbp SomeMaps) MarshalBebopTo(buf []byte) int {
 		iohelp.WriteGUIDBytes(buf[at:], k1)
 		at += 16
 		(v1).MarshalBebopTo(buf[at:])
-		at += (v1).Size()
+		tmp1391 := (v1); at += tmp1391.Size()
 	}
 	return at
 }
@@ -273,7 +273,7 @@ func (bbp *SomeMaps) UnmarshalBebop(buf []byte) (err error) {
 					if err != nil {
 						return err
 					}
-					at += (((((bbp.M3)[i1])[k2])[i3])[k4]).Size()
+					tmp1481 := (((((bbp.M3)[i1])[k2])[i3])[k4]); at += tmp1481.Size()
 				}
 			}
 		}
@@ -320,7 +320,7 @@ func (bbp *SomeMaps) UnmarshalBebop(buf []byte) (err error) {
 		if err != nil {
 			return err
 		}
-		at += ((bbp.M5)[k1]).Size()
+		tmp1544 := ((bbp.M5)[k1]); at += tmp1544.Size()
 	}
 	return nil
 }
@@ -371,7 +371,7 @@ func (bbp *SomeMaps) MustUnmarshalBebop(buf []byte) {
 					k4 := iohelp.ReadBoolBytes(buf[at:])
 					at += 1
 					((((bbp.M3)[i1])[k2])[i3])[k4] = MustMakeSFromBytes(buf[at:])
-					at += (((((bbp.M3)[i1])[k2])[i3])[k4]).Size()
+					tmp1597 := (((((bbp.M3)[i1])[k2])[i3])[k4]); at += tmp1597.Size()
 				}
 			}
 		}
@@ -400,7 +400,7 @@ func (bbp *SomeMaps) MustUnmarshalBebop(buf []byte) {
 		k1 := iohelp.ReadGUIDBytes(buf[at:])
 		at += 16
 		(bbp.M5)[k1] = MustMakeMFromBytes(buf[at:])
-		at += ((bbp.M5)[k1]).Size()
+		tmp1634 := ((bbp.M5)[k1]); at += tmp1634.Size()
 	}
 }
 
@@ -553,7 +553,7 @@ func (bbp SomeMaps) Size() int {
 				bodyLen += 4
 				for _, v4 := range elem {
 					bodyLen += 1
-					bodyLen += (v4).Size()
+					tmp1799 := (v4); bodyLen += tmp1799.Size()
 				}
 			}
 		}
@@ -570,7 +570,7 @@ func (bbp SomeMaps) Size() int {
 	bodyLen += 4
 	for _, v1 := range bbp.M5 {
 		bodyLen += 16
-		bodyLen += (v1).Size()
+		tmp1823 := (v1); bodyLen += tmp1823.Size()
 	}
 	return bodyLen
 }

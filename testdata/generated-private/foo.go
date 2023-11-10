@@ -17,7 +17,7 @@ type foo struct {
 func (bbp foo) MarshalBebopTo(buf []byte) int {
 	at := 0
 	(bbp.bar).MarshalBebopTo(buf[at:])
-	at += (bbp.bar).Size()
+	tmp7570 := (bbp.bar); at += tmp7570.Size()
 	return at
 }
 
@@ -27,14 +27,14 @@ func (bbp *foo) UnmarshalBebop(buf []byte) (err error) {
 	if err != nil {
 		return err
 	}
-	at += (bbp.bar).Size()
+	tmp7574 := (bbp.bar); at += tmp7574.Size()
 	return nil
 }
 
 func (bbp *foo) MustUnmarshalBebop(buf []byte) {
 	at := 0
 	bbp.bar = mustMakebarFromBytes(buf[at:])
-	at += (bbp.bar).Size()
+	tmp7581 := (bbp.bar); at += tmp7581.Size()
 }
 
 func (bbp foo) EncodeBebop(iow io.Writer) (err error) {
@@ -57,7 +57,7 @@ func (bbp *foo) DecodeBebop(ior io.Reader) (err error) {
 
 func (bbp foo) Size() int {
 	bodyLen := 0
-	bodyLen += (bbp.bar).Size()
+	tmp7596 := (bbp.bar); bodyLen += tmp7596.Size()
 	return bodyLen
 }
 
