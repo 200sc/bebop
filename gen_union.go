@@ -4,9 +4,11 @@ import (
 	"io"
 	"sort"
 	"strconv"
+
+	"github.com/200sc/bebop/iohelp"
 )
 
-func (u Union) generateMarshalBebopTo(w io.Writer, settings GenerateSettings, fields []fieldWithNumber) {
+func (u Union) generateMarshalBebopTo(w *iohelp.ErrorWriter, settings GenerateSettings, fields []fieldWithNumber) {
 	exposedName := exposeName(u.Name, settings)
 	if settings.AlwaysUsePointerReceivers {
 		writeLine(w, "func (bbp *%s) MarshalBebopTo(buf []byte) int {", exposedName)
@@ -32,7 +34,7 @@ func (u Union) generateMarshalBebopTo(w io.Writer, settings GenerateSettings, fi
 	writeCloseBlock(w)
 }
 
-func (u Union) generateUnmarshalBebop(w io.Writer, settings GenerateSettings, fields []fieldWithNumber) {
+func (u Union) generateUnmarshalBebop(w *iohelp.ErrorWriter, settings GenerateSettings, fields []fieldWithNumber) {
 	exposedName := exposeName(u.Name, settings)
 	writeLine(w, "func (bbp *%s) UnmarshalBebop(buf []byte) (err error) {", exposedName)
 	writeLine(w, "\tat := 0")
@@ -58,7 +60,7 @@ func (u Union) generateUnmarshalBebop(w io.Writer, settings GenerateSettings, fi
 	writeCloseBlock(w)
 }
 
-func (u Union) generateMustUnmarshalBebop(w io.Writer, settings GenerateSettings, fields []fieldWithNumber) {
+func (u Union) generateMustUnmarshalBebop(w *iohelp.ErrorWriter, settings GenerateSettings, fields []fieldWithNumber) {
 	exposedName := exposeName(u.Name, settings)
 	writeLine(w, "func (bbp *%s) MustUnmarshalBebop(buf []byte) {", exposedName)
 	writeLine(w, "\tat := 0")
@@ -81,7 +83,7 @@ func (u Union) generateMustUnmarshalBebop(w io.Writer, settings GenerateSettings
 	writeCloseBlock(w)
 }
 
-func (u Union) generateEncodeBebop(w io.Writer, settings GenerateSettings, fields []fieldWithNumber) {
+func (u Union) generateEncodeBebop(w *iohelp.ErrorWriter, settings GenerateSettings, fields []fieldWithNumber) {
 	exposedName := exposeName(u.Name, settings)
 	*settings.isFirstTopLength = true
 	if settings.AlwaysUsePointerReceivers {
@@ -105,7 +107,7 @@ func (u Union) generateEncodeBebop(w io.Writer, settings GenerateSettings, field
 	writeCloseBlock(w)
 }
 
-func (u Union) generateDecodeBebop(w io.Writer, settings GenerateSettings, fields []fieldWithNumber) {
+func (u Union) generateDecodeBebop(w *iohelp.ErrorWriter, settings GenerateSettings, fields []fieldWithNumber) {
 	exposedName := exposeName(u.Name, settings)
 	*settings.isFirstTopLength = true
 	writeLine(w, "func (bbp *%s) DecodeBebop(ior io.Reader) (err error) {", exposedName)
@@ -119,20 +121,20 @@ func (u Union) generateDecodeBebop(w io.Writer, settings GenerateSettings, field
 		name := exposeName(fd.Name, settings)
 		writeLine(w, "\t\t\tbbp.%[1]s = new(%[2]s)", name, fd.FieldType.goString(settings))
 		writeMessageFieldUnmarshaller("bbp."+name, fd.FieldType, w, settings, 3)
-		writeLine(w, "\t\t\tio.ReadAll(r)")
+		writeLine(w, "\t\t\tr.Drain()")
 		writeLine(w, "\t\t\treturn r.Err")
 	}
 	// ref: https://github.com/RainwayApp/bebop/wiki/Wire-format#messages, final paragraph
 	// we're allowed to skip parsing all remaining fields if we see one that we don't know about.
 	writeLine(w, "\t\tdefault:")
-	writeLine(w, "\t\t\tio.ReadAll(r)")
+	writeLine(w, "\t\t\tr.Drain()")
 	writeLine(w, "\t\t\treturn r.Err")
 	writeLine(w, "\t\t}")
 	writeLine(w, "\t}")
 	writeCloseBlock(w)
 }
 
-func (u Union) generateSize(w io.Writer, settings GenerateSettings, fields []fieldWithNumber) {
+func (u Union) generateSize(w *iohelp.ErrorWriter, settings GenerateSettings, fields []fieldWithNumber) {
 	exposedName := exposeName(u.Name, settings)
 	if settings.AlwaysUsePointerReceivers {
 		writeLine(w, "func (bbp *%s) Size() int {", exposedName)
@@ -156,6 +158,7 @@ func (u Union) generateSize(w io.Writer, settings GenerateSettings, fields []fie
 
 // Generate writes a .go union definition out to w.
 func (u Union) Generate(w io.Writer, settings GenerateSettings) {
+	ew := iohelp.NewErrorWriter(w)
 	fields := make([]fieldWithNumber, 0, len(u.Fields))
 	for i, ufd := range u.Fields {
 		var fd Field
@@ -178,21 +181,21 @@ func (u Union) Generate(w io.Writer, settings GenerateSettings) {
 	})
 	for _, field := range fields {
 		if field.UnionField.Struct != nil {
-			field.UnionField.Struct.Generate(w, settings)
+			field.UnionField.Struct.Generate(ew, settings)
 		}
 		if field.UnionField.Message != nil {
-			field.UnionField.Message.Generate(w, settings)
+			field.UnionField.Message.Generate(ew, settings)
 		}
 	}
-	writeRecordTypeDefinition(w, u.Name, u.OpCode, u.Comment, settings, fields)
-	u.generateMarshalBebopTo(w, settings, fields)
-	u.generateUnmarshalBebop(w, settings, fields)
+	writeRecordTypeDefinition(ew, u.Name, u.OpCode, u.Comment, settings, fields)
+	u.generateMarshalBebopTo(ew, settings, fields)
+	u.generateUnmarshalBebop(ew, settings, fields)
 	if settings.GenerateUnsafeMethods {
-		u.generateMustUnmarshalBebop(w, settings, fields)
+		u.generateMustUnmarshalBebop(ew, settings, fields)
 	}
-	u.generateEncodeBebop(w, settings, fields)
-	u.generateDecodeBebop(w, settings, fields)
-	u.generateSize(w, settings, fields)
+	u.generateEncodeBebop(ew, settings, fields)
+	u.generateDecodeBebop(ew, settings, fields)
+	u.generateSize(ew, settings, fields)
 	isEmpty := len(u.Fields) == 0
-	writeWrappers(w, u.Name, isEmpty, settings)
+	writeWrappers(ew, u.Name, isEmpty, settings)
 }

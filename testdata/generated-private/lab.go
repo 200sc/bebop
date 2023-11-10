@@ -90,7 +90,7 @@ func (bbp int32s) MarshalBebop() []byte {
 	return buf
 }
 
-func makeint32s(r iohelp.ErrorReader) (int32s, error) {
+func makeint32s(r *iohelp.ErrorReader) (int32s, error) {
 	v := int32s{}
 	err := v.DecodeBebop(r)
 	return v, err
@@ -183,7 +183,7 @@ func (bbp uint32s) MarshalBebop() []byte {
 	return buf
 }
 
-func makeuint32s(r iohelp.ErrorReader) (uint32s, error) {
+func makeuint32s(r *iohelp.ErrorReader) (uint32s, error) {
 	v := uint32s{}
 	err := v.DecodeBebop(r)
 	return v, err
@@ -276,7 +276,7 @@ func (bbp float32s) MarshalBebop() []byte {
 	return buf
 }
 
-func makefloat32s(r iohelp.ErrorReader) (float32s, error) {
+func makefloat32s(r *iohelp.ErrorReader) (float32s, error) {
 	v := float32s{}
 	err := v.DecodeBebop(r)
 	return v, err
@@ -369,7 +369,7 @@ func (bbp int64s) MarshalBebop() []byte {
 	return buf
 }
 
-func makeint64s(r iohelp.ErrorReader) (int64s, error) {
+func makeint64s(r *iohelp.ErrorReader) (int64s, error) {
 	v := int64s{}
 	err := v.DecodeBebop(r)
 	return v, err
@@ -462,7 +462,7 @@ func (bbp uint64s) MarshalBebop() []byte {
 	return buf
 }
 
-func makeuint64s(r iohelp.ErrorReader) (uint64s, error) {
+func makeuint64s(r *iohelp.ErrorReader) (uint64s, error) {
 	v := uint64s{}
 	err := v.DecodeBebop(r)
 	return v, err
@@ -555,7 +555,7 @@ func (bbp float64s) MarshalBebop() []byte {
 	return buf
 }
 
-func makefloat64s(r iohelp.ErrorReader) (float64s, error) {
+func makefloat64s(r *iohelp.ErrorReader) (float64s, error) {
 	v := float64s{}
 	err := v.DecodeBebop(r)
 	return v, err
@@ -677,7 +677,7 @@ func (bbp videoData) MarshalBebop() []byte {
 	return buf
 }
 
-func makevideoData(r iohelp.ErrorReader) (videoData, error) {
+func makevideoData(r *iohelp.ErrorReader) (videoData, error) {
 	v := videoData{}
 	err := v.DecodeBebop(r)
 	return v, err
@@ -716,7 +716,8 @@ func (bbp mediaMessage) MarshalBebopTo(buf []byte) int {
 		buf[at] = 2
 		at++
 		(*bbp.data).MarshalBebopTo(buf[at:])
-		tmp8193 := (*bbp.data); at += tmp8193.Size()
+		tmp := (*bbp.data)
+		at += tmp.Size()
 	}
 	return at
 }
@@ -739,7 +740,8 @@ func (bbp *mediaMessage) UnmarshalBebop(buf []byte) (err error) {
 			if err != nil {
 				return err
 			}
-			tmp8204 := ((*bbp.data)); at += tmp8204.Size()
+			tmp := ((*bbp.data))
+			at += tmp.Size()
 		default:
 			return nil
 		}
@@ -761,7 +763,8 @@ func (bbp *mediaMessage) MustUnmarshalBebop(buf []byte) {
 			at += 1
 			bbp.data = new(videoData)
 			(*bbp.data) = mustMakevideoDataFromBytes(buf[at:])
-			tmp8706 := ((*bbp.data)); at += tmp8706.Size()
+			tmp := ((*bbp.data))
+			at += tmp.Size()
 		default:
 			return
 		}
@@ -802,7 +805,7 @@ func (bbp *mediaMessage) DecodeBebop(ior io.Reader) (err error) {
 				return err
 			}
 		default:
-			io.ReadAll(r)
+			r.Drain()
 			return r.Err
 		}
 	}
@@ -816,7 +819,8 @@ func (bbp mediaMessage) Size() int {
 	}
 	if bbp.data != nil {
 		bodyLen += 1
-		tmp8723 := (*bbp.data); bodyLen += tmp8723.Size()
+		tmp := (*bbp.data)
+		bodyLen += tmp.Size()
 	}
 	return bodyLen
 }
@@ -827,7 +831,7 @@ func (bbp mediaMessage) MarshalBebop() []byte {
 	return buf
 }
 
-func makemediaMessage(r iohelp.ErrorReader) (mediaMessage, error) {
+func makemediaMessage(r *iohelp.ErrorReader) (mediaMessage, error) {
 	v := mediaMessage{}
 	err := v.DecodeBebop(r)
 	return v, err
@@ -950,7 +954,7 @@ func (bbp *skipTestOld) DecodeBebop(ior io.Reader) (err error) {
 			bbp.y = new(int32)
 			*bbp.y = iohelp.ReadInt32(r)
 		default:
-			io.ReadAll(r)
+			r.Drain()
 			return r.Err
 		}
 	}
@@ -975,7 +979,7 @@ func (bbp skipTestOld) MarshalBebop() []byte {
 	return buf
 }
 
-func makeskipTestOld(r iohelp.ErrorReader) (skipTestOld, error) {
+func makeskipTestOld(r *iohelp.ErrorReader) (skipTestOld, error) {
 	v := skipTestOld{}
 	err := v.DecodeBebop(r)
 	return v, err
@@ -1124,7 +1128,7 @@ func (bbp *skipTestNew) DecodeBebop(ior io.Reader) (err error) {
 			bbp.z = new(int32)
 			*bbp.z = iohelp.ReadInt32(r)
 		default:
-			io.ReadAll(r)
+			r.Drain()
 			return r.Err
 		}
 	}
@@ -1153,7 +1157,7 @@ func (bbp skipTestNew) MarshalBebop() []byte {
 	return buf
 }
 
-func makeskipTestNew(r iohelp.ErrorReader) (skipTestNew, error) {
+func makeskipTestNew(r *iohelp.ErrorReader) (skipTestNew, error) {
 	v := skipTestNew{}
 	err := v.DecodeBebop(r)
 	return v, err
@@ -1186,7 +1190,8 @@ func (bbp skipTestOldContainer) MarshalBebopTo(buf []byte) int {
 		buf[at] = 1
 		at++
 		(*bbp.s).MarshalBebopTo(buf[at:])
-		tmp8823 := (*bbp.s); at += tmp8823.Size()
+		tmp := (*bbp.s)
+		at += tmp.Size()
 	}
 	if bbp.after != nil {
 		buf[at] = 2
@@ -1210,7 +1215,8 @@ func (bbp *skipTestOldContainer) UnmarshalBebop(buf []byte) (err error) {
 			if err != nil {
 				return err
 			}
-			tmp8830 := ((*bbp.s)); at += tmp8830.Size()
+			tmp := ((*bbp.s))
+			at += tmp.Size()
 		case 2:
 			at += 1
 			bbp.after = new(int32)
@@ -1235,7 +1241,8 @@ func (bbp *skipTestOldContainer) MustUnmarshalBebop(buf []byte) {
 			at += 1
 			bbp.s = new(skipTestOld)
 			(*bbp.s) = mustMakeskipTestOldFromBytes(buf[at:])
-			tmp8835 := ((*bbp.s)); at += tmp8835.Size()
+			tmp := ((*bbp.s))
+			at += tmp.Size()
 		case 2:
 			at += 1
 			bbp.after = new(int32)
@@ -1281,7 +1288,7 @@ func (bbp *skipTestOldContainer) DecodeBebop(ior io.Reader) (err error) {
 			bbp.after = new(int32)
 			*bbp.after = iohelp.ReadInt32(r)
 		default:
-			io.ReadAll(r)
+			r.Drain()
 			return r.Err
 		}
 	}
@@ -1291,7 +1298,8 @@ func (bbp skipTestOldContainer) Size() int {
 	bodyLen := 5
 	if bbp.s != nil {
 		bodyLen += 1
-		tmp8849 := (*bbp.s); bodyLen += tmp8849.Size()
+		tmp := (*bbp.s)
+		bodyLen += tmp.Size()
 	}
 	if bbp.after != nil {
 		bodyLen += 1
@@ -1306,7 +1314,7 @@ func (bbp skipTestOldContainer) MarshalBebop() []byte {
 	return buf
 }
 
-func makeskipTestOldContainer(r iohelp.ErrorReader) (skipTestOldContainer, error) {
+func makeskipTestOldContainer(r *iohelp.ErrorReader) (skipTestOldContainer, error) {
 	v := skipTestOldContainer{}
 	err := v.DecodeBebop(r)
 	return v, err
@@ -1339,7 +1347,8 @@ func (bbp skipTestNewContainer) MarshalBebopTo(buf []byte) int {
 		buf[at] = 1
 		at++
 		(*bbp.s).MarshalBebopTo(buf[at:])
-		tmp8858 := (*bbp.s); at += tmp8858.Size()
+		tmp := (*bbp.s)
+		at += tmp.Size()
 	}
 	if bbp.after != nil {
 		buf[at] = 2
@@ -1363,7 +1372,8 @@ func (bbp *skipTestNewContainer) UnmarshalBebop(buf []byte) (err error) {
 			if err != nil {
 				return err
 			}
-			tmp8865 := ((*bbp.s)); at += tmp8865.Size()
+			tmp := ((*bbp.s))
+			at += tmp.Size()
 		case 2:
 			at += 1
 			bbp.after = new(int32)
@@ -1388,7 +1398,8 @@ func (bbp *skipTestNewContainer) MustUnmarshalBebop(buf []byte) {
 			at += 1
 			bbp.s = new(skipTestNew)
 			(*bbp.s) = mustMakeskipTestNewFromBytes(buf[at:])
-			tmp8870 := ((*bbp.s)); at += tmp8870.Size()
+			tmp := ((*bbp.s))
+			at += tmp.Size()
 		case 2:
 			at += 1
 			bbp.after = new(int32)
@@ -1434,7 +1445,7 @@ func (bbp *skipTestNewContainer) DecodeBebop(ior io.Reader) (err error) {
 			bbp.after = new(int32)
 			*bbp.after = iohelp.ReadInt32(r)
 		default:
-			io.ReadAll(r)
+			r.Drain()
 			return r.Err
 		}
 	}
@@ -1444,7 +1455,8 @@ func (bbp skipTestNewContainer) Size() int {
 	bodyLen := 5
 	if bbp.s != nil {
 		bodyLen += 1
-		tmp8884 := (*bbp.s); bodyLen += tmp8884.Size()
+		tmp := (*bbp.s)
+		bodyLen += tmp.Size()
 	}
 	if bbp.after != nil {
 		bodyLen += 1
@@ -1459,7 +1471,7 @@ func (bbp skipTestNewContainer) MarshalBebop() []byte {
 	return buf
 }
 
-func makeskipTestNewContainer(r iohelp.ErrorReader) (skipTestNewContainer, error) {
+func makeskipTestNewContainer(r *iohelp.ErrorReader) (skipTestNewContainer, error) {
 	v := skipTestNewContainer{}
 	err := v.DecodeBebop(r)
 	return v, err

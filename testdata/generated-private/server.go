@@ -63,7 +63,7 @@ func (bbp print) MarshalBebop() []byte {
 	return buf
 }
 
-func makeprint(r iohelp.ErrorReader) (print, error) {
+func makeprint(r *iohelp.ErrorReader) (print, error) {
 	v := print{}
 	err := v.DecodeBebop(r)
 	return v, err
@@ -147,7 +147,7 @@ func (bbp add) MarshalBebop() []byte {
 	return buf
 }
 
-func makeadd(r iohelp.ErrorReader) (add, error) {
+func makeadd(r *iohelp.ErrorReader) (add, error) {
 	v := add{}
 	err := v.DecodeBebop(r)
 	return v, err
@@ -218,7 +218,7 @@ func (bbp addResponse) MarshalBebop() []byte {
 	return buf
 }
 
-func makeaddResponse(r iohelp.ErrorReader) (addResponse, error) {
+func makeaddResponse(r *iohelp.ErrorReader) (addResponse, error) {
 	v := addResponse{}
 	err := v.DecodeBebop(r)
 	return v, err
@@ -252,7 +252,8 @@ func (bbp printRequest) MarshalBebopTo(buf []byte) int {
 		buf[at] = 1
 		at++
 		(*bbp.print).MarshalBebopTo(buf[at:])
-		tmp8239 := (*bbp.print); at += tmp8239.Size()
+		tmp := (*bbp.print)
+		at += tmp.Size()
 	}
 	return at
 }
@@ -270,7 +271,8 @@ func (bbp *printRequest) UnmarshalBebop(buf []byte) (err error) {
 			if err != nil {
 				return err
 			}
-			tmp8241 := ((*bbp.print)); at += tmp8241.Size()
+			tmp := ((*bbp.print))
+			at += tmp.Size()
 		default:
 			return nil
 		}
@@ -287,7 +289,8 @@ func (bbp *printRequest) MustUnmarshalBebop(buf []byte) {
 			at += 1
 			bbp.print = new(print)
 			(*bbp.print) = mustMakeprintFromBytes(buf[at:])
-			tmp8252 := ((*bbp.print)); at += tmp8252.Size()
+			tmp := ((*bbp.print))
+			at += tmp.Size()
 		default:
 			return
 		}
@@ -321,7 +324,7 @@ func (bbp *printRequest) DecodeBebop(ior io.Reader) (err error) {
 				return err
 			}
 		default:
-			io.ReadAll(r)
+			r.Drain()
 			return r.Err
 		}
 	}
@@ -331,7 +334,8 @@ func (bbp printRequest) Size() int {
 	bodyLen := 5
 	if bbp.print != nil {
 		bodyLen += 1
-		tmp8286 := (*bbp.print); bodyLen += tmp8286.Size()
+		tmp := (*bbp.print)
+		bodyLen += tmp.Size()
 	}
 	return bodyLen
 }
@@ -342,7 +346,7 @@ func (bbp printRequest) MarshalBebop() []byte {
 	return buf
 }
 
-func makeprintRequest(r iohelp.ErrorReader) (printRequest, error) {
+func makeprintRequest(r *iohelp.ErrorReader) (printRequest, error) {
 	v := printRequest{}
 	err := v.DecodeBebop(r)
 	return v, err
@@ -376,7 +380,8 @@ func (bbp addRequest) MarshalBebopTo(buf []byte) int {
 		buf[at] = 1
 		at++
 		(*bbp.add).MarshalBebopTo(buf[at:])
-		tmp8350 := (*bbp.add); at += tmp8350.Size()
+		tmp := (*bbp.add)
+		at += tmp.Size()
 	}
 	return at
 }
@@ -394,7 +399,8 @@ func (bbp *addRequest) UnmarshalBebop(buf []byte) (err error) {
 			if err != nil {
 				return err
 			}
-			tmp8384 := ((*bbp.add)); at += tmp8384.Size()
+			tmp := ((*bbp.add))
+			at += tmp.Size()
 		default:
 			return nil
 		}
@@ -411,7 +417,8 @@ func (bbp *addRequest) MustUnmarshalBebop(buf []byte) {
 			at += 1
 			bbp.add = new(add)
 			(*bbp.add) = mustMakeaddFromBytes(buf[at:])
-			tmp8410 := ((*bbp.add)); at += tmp8410.Size()
+			tmp := ((*bbp.add))
+			at += tmp.Size()
 		default:
 			return
 		}
@@ -445,7 +452,7 @@ func (bbp *addRequest) DecodeBebop(ior io.Reader) (err error) {
 				return err
 			}
 		default:
-			io.ReadAll(r)
+			r.Drain()
 			return r.Err
 		}
 	}
@@ -455,7 +462,8 @@ func (bbp addRequest) Size() int {
 	bodyLen := 5
 	if bbp.add != nil {
 		bodyLen += 1
-		tmp8527 := (*bbp.add); bodyLen += tmp8527.Size()
+		tmp := (*bbp.add)
+		bodyLen += tmp.Size()
 	}
 	return bodyLen
 }
@@ -466,7 +474,7 @@ func (bbp addRequest) MarshalBebop() []byte {
 	return buf
 }
 
-func makeaddRequest(r iohelp.ErrorReader) (addRequest, error) {
+func makeaddRequest(r *iohelp.ErrorReader) (addRequest, error) {
 	v := addRequest{}
 	err := v.DecodeBebop(r)
 	return v, err

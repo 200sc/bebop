@@ -83,7 +83,7 @@ func (bbp *DocS) MarshalBebop() []byte {
 	return buf
 }
 
-func MakeDocS(r iohelp.ErrorReader) (DocS, error) {
+func MakeDocS(r *iohelp.ErrorReader) (DocS, error) {
 	v := DocS{}
 	err := v.DecodeBebop(r)
 	return v, err
@@ -169,7 +169,7 @@ func (bbp *DepM) DecodeBebop(ior io.Reader) (err error) {
 			bbp.X = new(int32)
 			*bbp.X = iohelp.ReadInt32(r)
 		default:
-			io.ReadAll(r)
+			r.Drain()
 			return r.Err
 		}
 	}
@@ -186,7 +186,7 @@ func (bbp *DepM) MarshalBebop() []byte {
 	return buf
 }
 
-func MakeDepM(r iohelp.ErrorReader) (DepM, error) {
+func MakeDepM(r *iohelp.ErrorReader) (DepM, error) {
 	v := DepM{}
 	err := v.DecodeBebop(r)
 	return v, err
@@ -320,7 +320,7 @@ func (bbp *DocM) DecodeBebop(ior io.Reader) (err error) {
 			bbp.Z = new(int32)
 			*bbp.Z = iohelp.ReadInt32(r)
 		default:
-			io.ReadAll(r)
+			r.Drain()
 			return r.Err
 		}
 	}
@@ -341,7 +341,7 @@ func (bbp *DocM) MarshalBebop() []byte {
 	return buf
 }
 
-func MakeDocM(r iohelp.ErrorReader) (DocM, error) {
+func MakeDocM(r *iohelp.ErrorReader) (DocM, error) {
 	v := DocM{}
 	err := v.DecodeBebop(r)
 	return v, err

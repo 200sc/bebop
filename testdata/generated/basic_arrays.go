@@ -462,7 +462,7 @@ func (bbp BasicArrays) MarshalBebop() []byte {
 	return buf
 }
 
-func MakeBasicArrays(r iohelp.ErrorReader) (BasicArrays, error) {
+func MakeBasicArrays(r *iohelp.ErrorReader) (BasicArrays, error) {
 	v := BasicArrays{}
 	err := v.DecodeBebop(r)
 	return v, err
@@ -555,7 +555,7 @@ func (bbp TestInt32Array) MarshalBebop() []byte {
 	return buf
 }
 
-func MakeTestInt32Array(r iohelp.ErrorReader) (TestInt32Array, error) {
+func MakeTestInt32Array(r *iohelp.ErrorReader) (TestInt32Array, error) {
 	v := TestInt32Array{}
 	err := v.DecodeBebop(r)
 	return v, err

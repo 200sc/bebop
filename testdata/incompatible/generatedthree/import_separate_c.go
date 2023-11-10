@@ -44,7 +44,7 @@ func (bbp NotImported) MarshalBebop() []byte {
 	return []byte{}
 }
 
-func MakeNotImported(r iohelp.ErrorReader) (NotImported, error) {
+func MakeNotImported(r *iohelp.ErrorReader) (NotImported, error) {
 	return NotImported{}, nil
 }
 

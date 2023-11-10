@@ -5,6 +5,8 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+
+	"github.com/200sc/bebop/iohelp"
 )
 
 type fieldWithNumber struct {
@@ -13,7 +15,7 @@ type fieldWithNumber struct {
 	num uint8
 }
 
-func (msg Message) generateMarshalBebopTo(w io.Writer, settings GenerateSettings, fields []fieldWithNumber) {
+func (msg Message) generateMarshalBebopTo(w *iohelp.ErrorWriter, settings GenerateSettings, fields []fieldWithNumber) {
 	exposedName := exposeName(msg.Name, settings)
 	if settings.AlwaysUsePointerReceivers {
 		writeLine(w, "func (bbp *%s) MarshalBebopTo(buf []byte) int {", exposedName)
@@ -40,7 +42,7 @@ func (msg Message) generateMarshalBebopTo(w io.Writer, settings GenerateSettings
 	writeCloseBlock(w)
 }
 
-func (msg Message) generateUnmarshalBebop(w io.Writer, settings GenerateSettings, fields []fieldWithNumber) {
+func (msg Message) generateUnmarshalBebop(w *iohelp.ErrorWriter, settings GenerateSettings, fields []fieldWithNumber) {
 	exposedName := exposeName(msg.Name, settings)
 	writeLine(w, "func (bbp *%s) UnmarshalBebop(buf []byte) (err error) {", exposedName)
 	writeLine(w, "\tat := 0")
@@ -62,7 +64,7 @@ func (msg Message) generateUnmarshalBebop(w io.Writer, settings GenerateSettings
 	writeCloseBlock(w)
 }
 
-func (msg Message) generateMustUnmarshalBebop(w io.Writer, settings GenerateSettings, fields []fieldWithNumber) {
+func (msg Message) generateMustUnmarshalBebop(w *iohelp.ErrorWriter, settings GenerateSettings, fields []fieldWithNumber) {
 	exposedName := exposeName(msg.Name, settings)
 	writeLine(w, "func (bbp *%s) MustUnmarshalBebop(buf []byte) {", exposedName)
 	writeLine(w, "\tat := 0")
@@ -84,7 +86,7 @@ func (msg Message) generateMustUnmarshalBebop(w io.Writer, settings GenerateSett
 	writeCloseBlock(w)
 }
 
-func (msg Message) generateEncodeBebop(w io.Writer, settings GenerateSettings, fields []fieldWithNumber) {
+func (msg Message) generateEncodeBebop(w *iohelp.ErrorWriter, settings GenerateSettings, fields []fieldWithNumber) {
 	exposedName := exposeName(msg.Name, settings)
 	*settings.isFirstTopLength = true
 	if settings.AlwaysUsePointerReceivers {
@@ -111,7 +113,7 @@ func (msg Message) generateEncodeBebop(w io.Writer, settings GenerateSettings, f
 	writeCloseBlock(w)
 }
 
-func (msg Message) generateDecodeBebop(w io.Writer, settings GenerateSettings, fields []fieldWithNumber) {
+func (msg Message) generateDecodeBebop(w *iohelp.ErrorWriter, settings GenerateSettings, fields []fieldWithNumber) {
 	exposedName := exposeName(msg.Name, settings)
 	*settings.isFirstTopLength = true
 	writeLine(w, "func (bbp *%s) DecodeBebop(ior io.Reader) (err error) {", exposedName)
@@ -129,14 +131,14 @@ func (msg Message) generateDecodeBebop(w io.Writer, settings GenerateSettings, f
 	// ref: https://github.com/RainwayApp/bebop/wiki/Wire-format#messages, final paragraph
 	// we're allowed to skip parsing all remaining fields if we see one that we don't know about.
 	writeLine(w, "\t\tdefault:")
-	writeLine(w, "\t\t\tio.ReadAll(r)")
+	writeLine(w, "\t\t\tr.Drain()")
 	writeLine(w, "\t\t\treturn r.Err")
 	writeLine(w, "\t\t}")
 	writeLine(w, "\t}")
 	writeCloseBlock(w)
 }
 
-func (msg Message) generateSize(w io.Writer, settings GenerateSettings, fields []fieldWithNumber) {
+func (msg Message) generateSize(w *iohelp.ErrorWriter, settings GenerateSettings, fields []fieldWithNumber) {
 	exposedName := exposeName(msg.Name, settings)
 	if settings.AlwaysUsePointerReceivers {
 		writeLine(w, "func (bbp *%s) Size() int {", exposedName)
@@ -165,6 +167,7 @@ func (msg Message) generateSize(w io.Writer, settings GenerateSettings, fields [
 
 // Generate writes a .go message definition out to w.
 func (msg Message) Generate(w io.Writer, settings GenerateSettings) {
+	ew := iohelp.NewErrorWriter(w)
 	fields := make([]fieldWithNumber, 0, len(msg.Fields))
 	for i, fd := range msg.Fields {
 		fields = append(fields, fieldWithNumber{
@@ -175,20 +178,20 @@ func (msg Message) Generate(w io.Writer, settings GenerateSettings) {
 	sort.Slice(fields, func(i, j int) bool {
 		return fields[i].num < fields[j].num
 	})
-	writeRecordTypeDefinition(w, msg.Name, msg.OpCode, msg.Comment, settings, fields)
-	msg.generateMarshalBebopTo(w, settings, fields)
-	msg.generateUnmarshalBebop(w, settings, fields)
+	writeRecordTypeDefinition(ew, msg.Name, msg.OpCode, msg.Comment, settings, fields)
+	msg.generateMarshalBebopTo(ew, settings, fields)
+	msg.generateUnmarshalBebop(ew, settings, fields)
 	if settings.GenerateUnsafeMethods {
-		msg.generateMustUnmarshalBebop(w, settings, fields)
+		msg.generateMustUnmarshalBebop(ew, settings, fields)
 	}
-	msg.generateEncodeBebop(w, settings, fields)
-	msg.generateDecodeBebop(w, settings, fields)
-	msg.generateSize(w, settings, fields)
+	msg.generateEncodeBebop(ew, settings, fields)
+	msg.generateDecodeBebop(ew, settings, fields)
+	msg.generateSize(ew, settings, fields)
 	isEmpty := len(msg.Fields) == 0
-	writeWrappers(w, msg.Name, isEmpty, settings)
+	writeWrappers(ew, msg.Name, isEmpty, settings)
 }
 
-func writeMessageFieldUnmarshaller(name string, typ FieldType, w io.Writer, settings GenerateSettings, depth int) {
+func writeMessageFieldUnmarshaller(name string, typ FieldType, w *iohelp.ErrorWriter, settings GenerateSettings, depth int) {
 	if typ.Array != nil {
 		writeLineWithTabs(w, "%RECV = make([]%TYPE, iohelp.ReadUint32(r))", depth, name, typ.Array.goString(settings))
 		if typ.Array.Simple == typeByte {
@@ -204,7 +207,7 @@ func writeMessageFieldUnmarshaller(name string, typ FieldType, w io.Writer, sett
 		writeLineWithTabs(w, "%RECV = make("+typ.Map.goString(settings)+")", depth, name)
 		writeLineWithTabs(w, "for i := uint32(0); i < "+lnName+"; i++ {", depth, name)
 		ln := getLineWithTabs(settings.typeUnmarshallers[typ.Map.Key], depth+1, "&"+depthName("k", depth))
-		w.Write([]byte(strings.Replace(ln, "=", ":=", 1)))
+		w.SafeWrite([]byte(strings.Replace(ln, "=", ":=", 1)))
 		writeMessageFieldUnmarshaller("("+name+")["+depthName("k", depth)+"]", typ.Map.Value, w, settings, depth+1)
 		writeLineWithTabs(w, "}", depth)
 	} else {

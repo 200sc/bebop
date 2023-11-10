@@ -102,7 +102,7 @@ func TestIncompatibilityExpectations_200sc(t *testing.T) {
 			continue
 		}
 		filename := f.Name()
-		if !strings.HasSuffix(filename, ".bop") {
+		if !strings.HasSuffix(filename, fileExt) {
 			continue
 		}
 		t.Run(filename, func(t *testing.T) {
@@ -158,7 +158,7 @@ func TestIncompatibilityExpectations_Rainway(t *testing.T) {
 			continue
 		}
 		filename := f.Name()
-		if !strings.HasSuffix(filename, ".bop") {
+		if !strings.HasSuffix(filename, fileExt) {
 			continue
 		}
 		t.Run(filename, func(t *testing.T) {

@@ -228,7 +228,7 @@ func (bbp basicTypes) MarshalBebop() []byte {
 	return buf
 }
 
-func makebasicTypes(r iohelp.ErrorReader) (basicTypes, error) {
+func makebasicTypes(r *iohelp.ErrorReader) (basicTypes, error) {
 	v := basicTypes{}
 	err := v.DecodeBebop(r)
 	return v, err

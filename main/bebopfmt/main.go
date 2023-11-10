@@ -98,8 +98,10 @@ func formatFile(path string) error {
 	}
 
 	out := bytes.NewBuffer([]byte{})
-	bebop.Format(f, out)
-
+	err = bebop.Format(f, out)
+	if err != nil {
+		return fmt.Errorf("Failed to produce formatted file: %w", err)
+	}
 	f.Close()
 
 	if *writeInPlace {

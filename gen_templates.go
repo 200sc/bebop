@@ -5,10 +5,7 @@ import (
 	"io"
 	"strconv"
 	"strings"
-	"sync/atomic"
 )
-
-var nextTmp atomic.Int64
 
 func writeLineWithTabs(w io.Writer, format string, depth int, args ...string) {
 	var assigner string
@@ -50,8 +47,6 @@ func writeLineWithTabs(w io.Writer, format string, depth int, args ...string) {
 	format = strings.Replace(format, fillNamespace, namespace, -1)
 	format = strings.Replace(format, fillKey, depthName("k", depth), -1)
 	format = strings.Replace(format, fillValue, depthName("v", depth), -1)
-	tmp := nextTmp.Add(1)
-	format = strings.Replace(format, fillTmpVar, "tmp"+strconv.FormatInt(tmp, 10), -1)
 
 	fmt.Fprint(w, format+"\n")
 }
@@ -65,12 +60,13 @@ const (
 	fillNamespace = "%NAMESPACE"
 	fillKey       = "%KNAME"
 	fillValue     = "%VNAME"
-	fillTmpVar    = "%TMP"
+
+	hintSafeKey = "&safe"
 
 	fmtErrReturn            = "if err != nil {\n\treturn err\n}"
-	fmtAddSizeToAt          = "%TMP := (%ASGN); at += %TMP.Size()"
+	fmtAddSizeToAt          = "tmp := (%ASGN)\nat += tmp.Size()"
 	fmtAdd4PlusLenToAt      = "at += 4 + len(%ASGN)"
-	fmtAddSizeToBodyLen     = "%TMP := (%ASGN); bodyLen += %TMP.Size()"
+	fmtAddSizeToBodyLen     = "tmp := (%ASGN)\nbodyLen += tmp.Size()"
 	fmtAdd4PlusLenToBodyLen = "bodyLen += 4 + len(%ASGN)"
 
 	fmtMakeType           = "(%RECV), err = Make%TYPE(r)\n" + fmtErrReturn
@@ -109,7 +105,11 @@ func fixedTitleString(typ string) string {
 	if typ == typeGUID {
 		return "GUID"
 	}
-	return strings.Title(typ)
+	if len(typ) == 0 {
+		return typ
+	}
+	prefix := strings.ToUpper(typ[0:1])
+	return prefix + typ[1:]
 }
 
 func makeFormatType(namespace string, settings GenerateSettings) string {
@@ -335,11 +335,11 @@ func (f File) typeByteReaders(gs GenerateSettings) map[string]string {
 
 	for _, st := range f.Structs {
 		out[st.Name] = mustMakeFormat(st.Namespace, gs) + fmtAddSizeToAt
-		out[st.Name+"&safe"] = makeFormat(st.Namespace, gs) + fmtErrReturn + "\n" + fmtAddSizeToAt
+		out[st.Name+hintSafeKey] = makeFormat(st.Namespace, gs) + fmtErrReturn + "\n" + fmtAddSizeToAt
 	}
 	for _, msg := range f.Messages {
 		out[msg.Name] = mustMakeFormat(msg.Namespace, gs) + fmtAddSizeToAt
-		out[msg.Name+"&safe"] = makeFormat(msg.Namespace, gs) + fmtErrReturn + "\n" + fmtAddSizeToAt
+		out[msg.Name+hintSafeKey] = makeFormat(msg.Namespace, gs) + fmtErrReturn + "\n" + fmtAddSizeToAt
 	}
 	for _, union := range f.Unions {
 		uout := union.typeByteReaders(gs)
@@ -353,17 +353,17 @@ func (f File) typeByteReaders(gs GenerateSettings) map[string]string {
 func (u Union) typeByteReaders(settings GenerateSettings) map[string]string {
 	out := map[string]string{}
 	out[u.Name] = mustMakeFormat(u.Namespace, settings) + fmtAddSizeToAt
-	out[u.Name+"&safe"] = makeFormat(u.Namespace, settings) + fmtErrReturn + "\n" + fmtAddSizeToAt
+	out[u.Name+hintSafeKey] = makeFormat(u.Namespace, settings) + fmtErrReturn + "\n" + fmtAddSizeToAt
 	for _, ufd := range u.Fields {
 		if ufd.Struct != nil {
 			st := ufd.Struct
 			out[st.Name] = mustMakeFormat(st.Namespace, settings) + fmtAddSizeToAt
-			out[st.Name+"&safe"] = makeFormat(st.Namespace, settings) + fmtErrReturn + "\n" + fmtAddSizeToAt
+			out[st.Name+hintSafeKey] = makeFormat(st.Namespace, settings) + fmtErrReturn + "\n" + fmtAddSizeToAt
 		}
 		if ufd.Message != nil {
 			msg := ufd.Message
 			out[msg.Name] = mustMakeFormat(msg.Namespace, settings) + fmtAddSizeToAt
-			out[msg.Name+"&safe"] = makeFormat(msg.Namespace, settings) + fmtErrReturn + "\n" + fmtAddSizeToAt
+			out[msg.Name+hintSafeKey] = makeFormat(msg.Namespace, settings) + fmtErrReturn + "\n" + fmtAddSizeToAt
 		}
 	}
 	return out

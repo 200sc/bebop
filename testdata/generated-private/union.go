@@ -85,7 +85,7 @@ func (bbp *a) DecodeBebop(ior io.Reader) (err error) {
 			bbp.b = new(uint32)
 			*bbp.b = iohelp.ReadUint32(r)
 		default:
-			io.ReadAll(r)
+			r.Drain()
 			return r.Err
 		}
 	}
@@ -106,7 +106,7 @@ func (bbp a) MarshalBebop() []byte {
 	return buf
 }
 
-func makea(r iohelp.ErrorReader) (a, error) {
+func makea(r *iohelp.ErrorReader) (a, error) {
 	v := a{}
 	err := v.DecodeBebop(r)
 	return v, err
@@ -180,7 +180,7 @@ func (bbp b) MarshalBebop() []byte {
 	return buf
 }
 
-func makeb(r iohelp.ErrorReader) (b, error) {
+func makeb(r *iohelp.ErrorReader) (b, error) {
 	v := b{}
 	err := v.DecodeBebop(r)
 	return v, err
@@ -230,7 +230,7 @@ func (bbp c) MarshalBebop() []byte {
 	return []byte{}
 }
 
-func makec(r iohelp.ErrorReader) (c, error) {
+func makec(r *iohelp.ErrorReader) (c, error) {
 	return c{}, nil
 }
 
@@ -263,21 +263,24 @@ func (bbp u) MarshalBebopTo(buf []byte) int {
 		buf[at] = 1
 		at++
 		(*bbp.a).MarshalBebopTo(buf[at:])
-		tmp7083 := (*bbp.a); at += tmp7083.Size()
+		tmp := (*bbp.a)
+		at += tmp.Size()
 		return at
 	}
 	if bbp.b != nil {
 		buf[at] = 2
 		at++
 		(*bbp.b).MarshalBebopTo(buf[at:])
-		tmp7100 := (*bbp.b); at += tmp7100.Size()
+		tmp := (*bbp.b)
+		at += tmp.Size()
 		return at
 	}
 	if bbp.c != nil {
 		buf[at] = 3
 		at++
 		(*bbp.c).MarshalBebopTo(buf[at:])
-		tmp7109 := (*bbp.c); at += tmp7109.Size()
+		tmp := (*bbp.c)
+		at += tmp.Size()
 		return at
 	}
 	return at
@@ -299,7 +302,8 @@ func (bbp *u) UnmarshalBebop(buf []byte) (err error) {
 			if err != nil {
 				return err
 			}
-			tmp7127 := ((*bbp.a)); at += tmp7127.Size()
+			tmp := ((*bbp.a))
+			at += tmp.Size()
 			return nil
 		case 2:
 			at += 1
@@ -308,7 +312,8 @@ func (bbp *u) UnmarshalBebop(buf []byte) (err error) {
 			if err != nil {
 				return err
 			}
-			tmp7134 := ((*bbp.b)); at += tmp7134.Size()
+			tmp := ((*bbp.b))
+			at += tmp.Size()
 			return nil
 		case 3:
 			at += 1
@@ -317,7 +322,8 @@ func (bbp *u) UnmarshalBebop(buf []byte) (err error) {
 			if err != nil {
 				return err
 			}
-			tmp7140 := ((*bbp.c)); at += tmp7140.Size()
+			tmp := ((*bbp.c))
+			at += tmp.Size()
 			return nil
 		default:
 			return nil
@@ -335,19 +341,22 @@ func (bbp *u) MustUnmarshalBebop(buf []byte) {
 			at += 1
 			bbp.a = new(a)
 			(*bbp.a) = mustMakeaFromBytes(buf[at:])
-			tmp7147 := ((*bbp.a)); at += tmp7147.Size()
+			tmp := ((*bbp.a))
+			at += tmp.Size()
 			return
 		case 2:
 			at += 1
 			bbp.b = new(b)
 			(*bbp.b) = mustMakebFromBytes(buf[at:])
-			tmp7151 := ((*bbp.b)); at += tmp7151.Size()
+			tmp := ((*bbp.b))
+			at += tmp.Size()
 			return
 		case 3:
 			at += 1
 			bbp.c = new(c)
 			(*bbp.c) = mustMakecFromBytes(buf[at:])
-			tmp7154 := ((*bbp.c)); at += tmp7154.Size()
+			tmp := ((*bbp.c))
+			at += tmp.Size()
 			return
 		default:
 			return
@@ -397,7 +406,7 @@ func (bbp *u) DecodeBebop(ior io.Reader) (err error) {
 			if err != nil {
 				return err
 			}
-			io.ReadAll(r)
+			r.Drain()
 			return r.Err
 		case 2:
 			bbp.b = new(b)
@@ -405,7 +414,7 @@ func (bbp *u) DecodeBebop(ior io.Reader) (err error) {
 			if err != nil {
 				return err
 			}
-			io.ReadAll(r)
+			r.Drain()
 			return r.Err
 		case 3:
 			bbp.c = new(c)
@@ -413,10 +422,10 @@ func (bbp *u) DecodeBebop(ior io.Reader) (err error) {
 			if err != nil {
 				return err
 			}
-			io.ReadAll(r)
+			r.Drain()
 			return r.Err
 		default:
-			io.ReadAll(r)
+			r.Drain()
 			return r.Err
 		}
 	}
@@ -426,17 +435,20 @@ func (bbp u) Size() int {
 	bodyLen := 4
 	if bbp.a != nil {
 		bodyLen += 1
-		tmp7218 := (*bbp.a); bodyLen += tmp7218.Size()
+		tmp := (*bbp.a)
+		bodyLen += tmp.Size()
 		return bodyLen
 	}
 	if bbp.b != nil {
 		bodyLen += 1
-		tmp7228 := (*bbp.b); bodyLen += tmp7228.Size()
+		tmp := (*bbp.b)
+		bodyLen += tmp.Size()
 		return bodyLen
 	}
 	if bbp.c != nil {
 		bodyLen += 1
-		tmp7238 := (*bbp.c); bodyLen += tmp7238.Size()
+		tmp := (*bbp.c)
+		bodyLen += tmp.Size()
 		return bodyLen
 	}
 	return bodyLen
@@ -448,7 +460,7 @@ func (bbp u) MarshalBebop() []byte {
 	return buf
 }
 
-func makeu(r iohelp.ErrorReader) (u, error) {
+func makeu(r *iohelp.ErrorReader) (u, error) {
 	v := u{}
 	err := v.DecodeBebop(r)
 	return v, err
@@ -478,7 +490,8 @@ func (bbp cons) MarshalBebopTo(buf []byte) int {
 	iohelp.WriteUint32Bytes(buf[at:], bbp.head)
 	at += 4
 	(bbp.tail).MarshalBebopTo(buf[at:])
-	tmp7271 := (bbp.tail); at += tmp7271.Size()
+	tmp := (bbp.tail)
+	at += tmp.Size()
 	return at
 }
 
@@ -493,7 +506,8 @@ func (bbp *cons) UnmarshalBebop(buf []byte) (err error) {
 	if err != nil {
 		return err
 	}
-	tmp7284 := (bbp.tail); at += tmp7284.Size()
+	tmp := (bbp.tail)
+	at += tmp.Size()
 	return nil
 }
 
@@ -502,7 +516,8 @@ func (bbp *cons) MustUnmarshalBebop(buf []byte) {
 	bbp.head = iohelp.ReadUint32Bytes(buf[at:])
 	at += 4
 	bbp.tail = mustMakelistFromBytes(buf[at:])
-	tmp7291 := (bbp.tail); at += tmp7291.Size()
+	tmp := (bbp.tail)
+	at += tmp.Size()
 }
 
 func (bbp cons) EncodeBebop(iow io.Writer) (err error) {
@@ -528,7 +543,8 @@ func (bbp *cons) DecodeBebop(ior io.Reader) (err error) {
 func (bbp cons) Size() int {
 	bodyLen := 0
 	bodyLen += 4
-	tmp7314 := (bbp.tail); bodyLen += tmp7314.Size()
+	tmp := (bbp.tail)
+	bodyLen += tmp.Size()
 	return bodyLen
 }
 
@@ -538,7 +554,7 @@ func (bbp cons) MarshalBebop() []byte {
 	return buf
 }
 
-func makecons(r iohelp.ErrorReader) (cons, error) {
+func makecons(r *iohelp.ErrorReader) (cons, error) {
 	v := cons{}
 	err := v.DecodeBebop(r)
 	return v, err
@@ -589,7 +605,7 @@ func (bbp null) MarshalBebop() []byte {
 	return []byte{}
 }
 
-func makenull(r iohelp.ErrorReader) (null, error) {
+func makenull(r *iohelp.ErrorReader) (null, error) {
 	return null{}, nil
 }
 
@@ -616,14 +632,16 @@ func (bbp list) MarshalBebopTo(buf []byte) int {
 		buf[at] = 1
 		at++
 		(*bbp.cons).MarshalBebopTo(buf[at:])
-		tmp7347 := (*bbp.cons); at += tmp7347.Size()
+		tmp := (*bbp.cons)
+		at += tmp.Size()
 		return at
 	}
 	if bbp.null != nil {
 		buf[at] = 2
 		at++
 		(*bbp.null).MarshalBebopTo(buf[at:])
-		tmp7354 := (*bbp.null); at += tmp7354.Size()
+		tmp := (*bbp.null)
+		at += tmp.Size()
 		return at
 	}
 	return at
@@ -645,7 +663,8 @@ func (bbp *list) UnmarshalBebop(buf []byte) (err error) {
 			if err != nil {
 				return err
 			}
-			tmp7358 := ((*bbp.cons)); at += tmp7358.Size()
+			tmp := ((*bbp.cons))
+			at += tmp.Size()
 			return nil
 		case 2:
 			at += 1
@@ -654,7 +673,8 @@ func (bbp *list) UnmarshalBebop(buf []byte) (err error) {
 			if err != nil {
 				return err
 			}
-			tmp7359 := ((*bbp.null)); at += tmp7359.Size()
+			tmp := ((*bbp.null))
+			at += tmp.Size()
 			return nil
 		default:
 			return nil
@@ -672,13 +692,15 @@ func (bbp *list) MustUnmarshalBebop(buf []byte) {
 			at += 1
 			bbp.cons = new(cons)
 			(*bbp.cons) = mustMakeconsFromBytes(buf[at:])
-			tmp7362 := ((*bbp.cons)); at += tmp7362.Size()
+			tmp := ((*bbp.cons))
+			at += tmp.Size()
 			return
 		case 2:
 			at += 1
 			bbp.null = new(null)
 			(*bbp.null) = mustMakenullFromBytes(buf[at:])
-			tmp7367 := ((*bbp.null)); at += tmp7367.Size()
+			tmp := ((*bbp.null))
+			at += tmp.Size()
 			return
 		default:
 			return
@@ -720,7 +742,7 @@ func (bbp *list) DecodeBebop(ior io.Reader) (err error) {
 			if err != nil {
 				return err
 			}
-			io.ReadAll(r)
+			r.Drain()
 			return r.Err
 		case 2:
 			bbp.null = new(null)
@@ -728,10 +750,10 @@ func (bbp *list) DecodeBebop(ior io.Reader) (err error) {
 			if err != nil {
 				return err
 			}
-			io.ReadAll(r)
+			r.Drain()
 			return r.Err
 		default:
-			io.ReadAll(r)
+			r.Drain()
 			return r.Err
 		}
 	}
@@ -741,12 +763,14 @@ func (bbp list) Size() int {
 	bodyLen := 4
 	if bbp.cons != nil {
 		bodyLen += 1
-		tmp7394 := (*bbp.cons); bodyLen += tmp7394.Size()
+		tmp := (*bbp.cons)
+		bodyLen += tmp.Size()
 		return bodyLen
 	}
 	if bbp.null != nil {
 		bodyLen += 1
-		tmp7399 := (*bbp.null); bodyLen += tmp7399.Size()
+		tmp := (*bbp.null)
+		bodyLen += tmp.Size()
 		return bodyLen
 	}
 	return bodyLen
@@ -758,7 +782,7 @@ func (bbp list) MarshalBebop() []byte {
 	return buf
 }
 
-func makelist(r iohelp.ErrorReader) (list, error) {
+func makelist(r *iohelp.ErrorReader) (list, error) {
 	v := list{}
 	err := v.DecodeBebop(r)
 	return v, err

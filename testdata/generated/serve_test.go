@@ -37,15 +37,26 @@ func TestServe(t *testing.T) {
 
 	lhs, rhs := net.Pipe()
 
-	go s.Serve(rhs)
+	go func() {
+		err := s.Serve(rhs)
+		if err != nil {
+			panic(err)
+		}
+	}()
 
 	printBytes := PrintRequest{
 		Print: &Print{
 			Printout: "Hello World",
 		},
 	}.MarshalBebop()
-	binary.Write(lhs, binary.LittleEndian, int32(PrintRequestOpCode))
-	lhs.Write(printBytes)
+	err := binary.Write(lhs, binary.LittleEndian, int32(PrintRequestOpCode))
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = lhs.Write(printBytes)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	addBytes := AddRequest{
 		Add: &Add{
@@ -53,8 +64,11 @@ func TestServe(t *testing.T) {
 			B: 42,
 		},
 	}.MarshalBebop()
-	binary.Write(lhs, binary.LittleEndian, int32(AddRequestOpCode))
-	_, err := lhs.Write(addBytes)
+	err = binary.Write(lhs, binary.LittleEndian, int32(AddRequestOpCode))
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = lhs.Write(addBytes)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -70,7 +84,10 @@ func TestServe(t *testing.T) {
 	resp := AddResponse{}
 	ln := resp.Size()
 	respBytes := make([]byte, ln)
-	io.ReadFull(lhs, respBytes)
+	_, err = io.ReadFull(lhs, respBytes)
+	if err != nil {
+		t.Fatal(err)
+	}
 	err = resp.UnmarshalBebop(respBytes)
 	if err != nil {
 		t.Fatal(err)

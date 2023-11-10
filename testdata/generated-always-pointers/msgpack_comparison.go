@@ -404,7 +404,7 @@ func (bbp *MsgpackComparison) MarshalBebop() []byte {
 	return buf
 }
 
-func MakeMsgpackComparison(r iohelp.ErrorReader) (MsgpackComparison, error) {
+func MakeMsgpackComparison(r *iohelp.ErrorReader) (MsgpackComparison, error) {
 	v := MsgpackComparison{}
 	err := v.DecodeBebop(r)
 	return v, err

@@ -35,7 +35,7 @@ func TestTokenize(t *testing.T) {
 		filename := filename
 		t.Run(filename, func(t *testing.T) {
 			t.Parallel()
-			filename += ".bop"
+			filename += fileExt
 			f, err := os.Open(filepath.Join("testdata", "base", filename))
 			if err != nil {
 				t.Fatalf("failed to open test file %s: %v", filename, err)
@@ -56,7 +56,7 @@ func TestTokenizeIncompatible(t *testing.T) {
 		filename := filename
 		t.Run(filename, func(t *testing.T) {
 			t.Parallel()
-			filename += ".bop"
+			filename += fileExt
 			f, err := os.Open(filepath.Join("testdata", "incompatible", filename))
 			if err != nil {
 				t.Fatalf("failed to open test file %s: %v", filename, err)
@@ -83,7 +83,7 @@ func TestTokenizeInvalidNoError(t *testing.T) {
 		filename := filename
 		t.Run(filename, func(t *testing.T) {
 			t.Parallel()
-			filename += ".bop"
+			filename += fileExt
 			f, err := os.Open(filepath.Join("testdata", "invalid", filename))
 			if err != nil {
 				t.Fatalf("failed to open test file %s: %v", filename, err)
@@ -118,7 +118,7 @@ func TestTokenizeNoSemis(t *testing.T) {
 			if reason, ok := failingCases[filename]; ok {
 				t.Skip(reason)
 			}
-			origfilename := filename + ".bop"
+			origfilename := filename + fileExt
 			f, err := os.Open(filepath.Join("testdata", "base", origfilename))
 			if err != nil {
 				t.Fatalf("failed to open test file %s: %v", origfilename, err)
@@ -197,7 +197,7 @@ func TestTokenizeError(t *testing.T) {
 		tc := tc
 		t.Run(tc.file, func(t *testing.T) {
 			t.Parallel()
-			origfilename := tc.file + ".bop"
+			origfilename := tc.file + fileExt
 			f, err := os.Open(filepath.Join("testdata", "invalid", origfilename))
 			if err != nil {
 				t.Fatalf("failed to open test file %s: %v", origfilename, err)

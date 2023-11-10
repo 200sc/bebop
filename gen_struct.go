@@ -4,9 +4,11 @@ import (
 	"io"
 	"strconv"
 	"strings"
+
+	"github.com/200sc/bebop/iohelp"
 )
 
-func (st Struct) generateTypeDefinition(w io.Writer, settings GenerateSettings) {
+func (st Struct) generateTypeDefinition(w *iohelp.ErrorWriter, settings GenerateSettings) {
 	writeOpCode(w, st.Name, st.OpCode, settings)
 	writeRecordAssertion(w, st.Name, settings)
 	writeComment(w, 0, st.Comment, settings)
@@ -17,7 +19,7 @@ func (st Struct) generateTypeDefinition(w io.Writer, settings GenerateSettings) 
 	writeCloseBlock(w)
 }
 
-func (st Struct) generateMarshalBebopTo(w io.Writer, settings GenerateSettings) {
+func (st Struct) generateMarshalBebopTo(w *iohelp.ErrorWriter, settings GenerateSettings) {
 	exposedName := exposeName(st.Name, settings)
 	if settings.AlwaysUsePointerReceivers {
 		writeLine(w, "func (bbp *%s) MarshalBebopTo(buf []byte) int {", exposedName)
@@ -42,7 +44,7 @@ func (st Struct) generateMarshalBebopTo(w io.Writer, settings GenerateSettings) 
 	writeCloseBlock(w)
 }
 
-func (st Struct) generateUnmarshalBebop(w io.Writer, settings GenerateSettings) {
+func (st Struct) generateUnmarshalBebop(w *iohelp.ErrorWriter, settings GenerateSettings) {
 	exposedName := exposeName(st.Name, settings)
 	writeLine(w, "func (bbp *%s) UnmarshalBebop(buf []byte) (err error) {", exposedName)
 	if len(st.Fields) > 0 {
@@ -59,7 +61,7 @@ func (st Struct) generateUnmarshalBebop(w io.Writer, settings GenerateSettings) 
 	writeCloseBlock(w)
 }
 
-func (st Struct) generateMustUnmarshalBebop(w io.Writer, settings GenerateSettings) {
+func (st Struct) generateMustUnmarshalBebop(w *iohelp.ErrorWriter, settings GenerateSettings) {
 	exposedName := exposeName(st.Name, settings)
 	writeLine(w, "func (bbp *%s) MustUnmarshalBebop(buf []byte) {", exposedName)
 	if len(st.Fields) > 0 {
@@ -75,7 +77,7 @@ func (st Struct) generateMustUnmarshalBebop(w io.Writer, settings GenerateSettin
 	writeCloseBlock(w)
 }
 
-func (st Struct) generateEncodeBebop(w io.Writer, settings GenerateSettings) {
+func (st Struct) generateEncodeBebop(w *iohelp.ErrorWriter, settings GenerateSettings) {
 	exposedName := exposeName(st.Name, settings)
 	*settings.isFirstTopLength = true
 	if settings.AlwaysUsePointerReceivers {
@@ -99,7 +101,7 @@ func (st Struct) generateEncodeBebop(w io.Writer, settings GenerateSettings) {
 	writeCloseBlock(w)
 }
 
-func (st Struct) generateDecodeBebop(w io.Writer, settings GenerateSettings) {
+func (st Struct) generateDecodeBebop(w *iohelp.ErrorWriter, settings GenerateSettings) {
 	exposedName := exposeName(st.Name, settings)
 	*settings.isFirstTopLength = true
 	writeLine(w, "func (bbp *%s) DecodeBebop(ior io.Reader) (err error) {", exposedName)
@@ -119,7 +121,7 @@ func (st Struct) generateDecodeBebop(w io.Writer, settings GenerateSettings) {
 	writeCloseBlock(w)
 }
 
-func (st Struct) generateSize(w io.Writer, settings GenerateSettings) {
+func (st Struct) generateSize(w *iohelp.ErrorWriter, settings GenerateSettings) {
 	exposedName := exposeName(st.Name, settings)
 	if settings.AlwaysUsePointerReceivers {
 		writeLine(w, "func (bbp *%s) Size() int {", exposedName)
@@ -143,7 +145,7 @@ func (st Struct) generateSize(w io.Writer, settings GenerateSettings) {
 	writeCloseBlock(w)
 }
 
-func (st Struct) generateReadOnlyGetters(w io.Writer, settings GenerateSettings) {
+func (st Struct) generateReadOnlyGetters(w *iohelp.ErrorWriter, settings GenerateSettings) {
 	// TODO: slices are not read only, we need to return a copy.
 	exposedName := exposeName(st.Name, settings)
 	for _, fd := range st.Fields {
@@ -171,24 +173,25 @@ func (st Struct) generateReadOnlyGetters(w io.Writer, settings GenerateSettings)
 
 // Generate writes a .go struct definition out to w.
 func (st Struct) Generate(w io.Writer, settings GenerateSettings) {
-	st.generateTypeDefinition(w, settings)
-	st.generateMarshalBebopTo(w, settings)
-	st.generateUnmarshalBebop(w, settings)
+	ew := iohelp.NewErrorWriter(w)
+	st.generateTypeDefinition(ew, settings)
+	st.generateMarshalBebopTo(ew, settings)
+	st.generateUnmarshalBebop(ew, settings)
 	if settings.GenerateUnsafeMethods {
-		st.generateMustUnmarshalBebop(w, settings)
+		st.generateMustUnmarshalBebop(ew, settings)
 	}
-	st.generateEncodeBebop(w, settings)
-	st.generateDecodeBebop(w, settings)
-	st.generateSize(w, settings)
+	st.generateEncodeBebop(ew, settings)
+	st.generateDecodeBebop(ew, settings)
+	st.generateSize(ew, settings)
 
 	isEmpty := len(st.Fields) == 0
-	writeWrappers(w, st.Name, isEmpty, settings)
+	writeWrappers(ew, st.Name, isEmpty, settings)
 	if st.ReadOnly {
-		st.generateReadOnlyGetters(w, settings)
+		st.generateReadOnlyGetters(ew, settings)
 	}
 }
 
-func writeStructFieldUnmarshaller(name string, typ FieldType, w io.Writer, settings GenerateSettings, depth int) {
+func writeStructFieldUnmarshaller(name string, typ FieldType, w *iohelp.ErrorWriter, settings GenerateSettings, depth int) {
 	iName := "i" + strconv.Itoa(depth)
 	if typ.Array != nil {
 		writeLineWithTabs(w, "%RECV = make([]%TYPE, iohelp.ReadUint32(r))", depth, name, typ.Array.goString(settings))
@@ -213,7 +216,7 @@ func writeStructFieldUnmarshaller(name string, typ FieldType, w io.Writer, setti
 		writeLineWithTabs(w, "%RECV = make(%TYPE, "+lnName+")", depth, name, typ.Map.goString(settings))
 		writeLineWithTabs(w, "for "+iName+" := uint32(0); "+iName+" < "+lnName+"; "+iName+"++ {", depth, name)
 		ln := getLineWithTabs(settings.typeUnmarshallers[typ.Map.Key], depth+1, "&"+depthName("k", depth))
-		w.Write([]byte(strings.Replace(ln, "=", ":=", 1)))
+		w.SafeWrite([]byte(strings.Replace(ln, "=", ":=", 1)))
 		name = "&(" + name[1:] + "[" + depthName("k", depth) + "])"
 		writeStructFieldUnmarshaller(name, typ.Map.Value, w, settings, depth+1)
 		writeLineWithTabs(w, "}", depth)

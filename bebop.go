@@ -2,7 +2,7 @@
 package bebop
 
 // Version is the library version. Should be used by CLI tools when passed a '--version' flag.
-const Version = "v0.4.0"
+const Version = "v0.5.0"
 
 // A File is a structured representation of a .bop file.
 type File struct {

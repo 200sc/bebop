@@ -119,7 +119,7 @@ func (bbp *ReadOnlyMap) DecodeBebop(ior io.Reader) (err error) {
 				(*bbp.Vals)[k3] = iohelp.ReadUint8(r)
 			}
 		default:
-			io.ReadAll(r)
+			r.Drain()
 			return r.Err
 		}
 	}
@@ -144,7 +144,7 @@ func (bbp ReadOnlyMap) MarshalBebop() []byte {
 	return buf
 }
 
-func MakeReadOnlyMap(r iohelp.ErrorReader) (ReadOnlyMap, error) {
+func MakeReadOnlyMap(r *iohelp.ErrorReader) (ReadOnlyMap, error) {
 	v := ReadOnlyMap{}
 	err := v.DecodeBebop(r)
 	return v, err

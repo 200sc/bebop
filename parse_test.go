@@ -1687,9 +1687,9 @@ func TestReadFile(t *testing.T) {
 		tc := tc
 		t.Run(tc.file, func(t *testing.T) {
 			t.Parallel()
-			f, err := os.Open(filepath.Join("testdata", "base", tc.file+".bop"))
+			f, err := os.Open(filepath.Join("testdata", "base", tc.file+fileExt))
 			if err != nil {
-				t.Fatalf("failed to open test file %s: %v", tc.file+".bop", err)
+				t.Fatalf("failed to open test file %s: %v", tc.file+fileExt, err)
 			}
 			defer f.Close()
 			bf, _, err := ReadFile(f)
@@ -1719,9 +1719,9 @@ func TestReadFileErrorWarnings(t *testing.T) {
 		tc := tc
 		t.Run(tc.file, func(t *testing.T) {
 			t.Parallel()
-			f, err := os.Open(filepath.Join("testdata", "warning", tc.file+".bop"))
+			f, err := os.Open(filepath.Join("testdata", "warning", tc.file+fileExt))
 			if err != nil {
-				t.Fatalf("failed to open test file %s: %v", tc.file+".bop", err)
+				t.Fatalf("failed to open test file %s: %v", tc.file+fileExt, err)
 			}
 			defer f.Close()
 			_, warnings, err := ReadFile(f)
@@ -1843,9 +1843,9 @@ func TestReadFileError(t *testing.T) {
 		tc := tc
 		t.Run(tc.file, func(t *testing.T) {
 			t.Parallel()
-			f, err := os.Open(filepath.Join("testdata", "invalid", tc.file+".bop"))
+			f, err := os.Open(filepath.Join("testdata", "invalid", tc.file+fileExt))
 			if err != nil {
-				t.Fatalf("failed to open test file %s: %v", tc.file+".bop", err)
+				t.Fatalf("failed to open test file %s: %v", tc.file+fileExt, err)
 			}
 			defer f.Close()
 			_, _, err = ReadFile(f)

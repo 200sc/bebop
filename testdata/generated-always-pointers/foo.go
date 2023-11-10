@@ -17,7 +17,8 @@ type Foo struct {
 func (bbp *Foo) MarshalBebopTo(buf []byte) int {
 	at := 0
 	(bbp.Bar).MarshalBebopTo(buf[at:])
-	tmp3300 := (bbp.Bar); at += tmp3300.Size()
+	tmp := (bbp.Bar)
+	at += tmp.Size()
 	return at
 }
 
@@ -27,14 +28,16 @@ func (bbp *Foo) UnmarshalBebop(buf []byte) (err error) {
 	if err != nil {
 		return err
 	}
-	tmp3313 := (bbp.Bar); at += tmp3313.Size()
+	tmp := (bbp.Bar)
+	at += tmp.Size()
 	return nil
 }
 
 func (bbp *Foo) MustUnmarshalBebop(buf []byte) {
 	at := 0
 	bbp.Bar = MustMakeBarFromBytes(buf[at:])
-	tmp3321 := (bbp.Bar); at += tmp3321.Size()
+	tmp := (bbp.Bar)
+	at += tmp.Size()
 }
 
 func (bbp *Foo) EncodeBebop(iow io.Writer) (err error) {
@@ -57,7 +60,8 @@ func (bbp *Foo) DecodeBebop(ior io.Reader) (err error) {
 
 func (bbp *Foo) Size() int {
 	bodyLen := 0
-	tmp3355 := (bbp.Bar); bodyLen += tmp3355.Size()
+	tmp := (bbp.Bar)
+	bodyLen += tmp.Size()
 	return bodyLen
 }
 
@@ -67,7 +71,7 @@ func (bbp *Foo) MarshalBebop() []byte {
 	return buf
 }
 
-func MakeFoo(r iohelp.ErrorReader) (Foo, error) {
+func MakeFoo(r *iohelp.ErrorReader) (Foo, error) {
 	v := Foo{}
 	err := v.DecodeBebop(r)
 	return v, err
@@ -216,7 +220,7 @@ func (bbp *Bar) DecodeBebop(ior io.Reader) (err error) {
 			bbp.Z = new(float64)
 			*bbp.Z = iohelp.ReadFloat64(r)
 		default:
-			io.ReadAll(r)
+			r.Drain()
 			return r.Err
 		}
 	}
@@ -245,7 +249,7 @@ func (bbp *Bar) MarshalBebop() []byte {
 	return buf
 }
 
-func MakeBar(r iohelp.ErrorReader) (Bar, error) {
+func MakeBar(r *iohelp.ErrorReader) (Bar, error) {
 	v := Bar{}
 	err := v.DecodeBebop(r)
 	return v, err

@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/200sc/bebop/internal/importgraph"
+	"github.com/200sc/bebop/iohelp"
 )
 
 // GenerateSettings holds customization options for what Generate should do.
@@ -274,7 +275,8 @@ func typeDefined(ft FieldType, allTypes map[string]struct{}) error {
 // Generate writes a .go file out to w. If f has imports, it will
 // parse the files at those imports and generate them according to
 // settings.
-func (f File) Generate(w io.Writer, settings GenerateSettings) error {
+func (f File) Generate(inputWriter io.Writer, settings GenerateSettings) error {
+	w := iohelp.NewErrorWriter(inputWriter)
 	if err := settings.Validate(); err != nil {
 		return fmt.Errorf("invalid generation settings: %w", err)
 	}
@@ -499,11 +501,11 @@ func (f File) Generate(w io.Writer, settings GenerateSettings) error {
 		}
 		union.Generate(w, settings)
 	}
-	return nil
+	return w.Err
 }
 
 // Generate writes a .go enum definition out to w.
-func (en Enum) Generate(w io.Writer, settings GenerateSettings) {
+func (en Enum) Generate(w *iohelp.ErrorWriter, settings GenerateSettings) {
 	exposedName := exposeName(en.Name, settings)
 	writeComment(w, 0, en.Comment, settings)
 	writeLine(w, "type %s %s", exposedName, en.SimpleType)
@@ -545,11 +547,12 @@ func (con Const) impossibleGoConst() bool {
 }
 
 func (con Const) Generate(w io.Writer, settings GenerateSettings) {
-	writeComment(w, 0, con.Comment, settings)
-	writeLine(w, "\t%s = %v", exposeName(con.Name, settings), con.Value)
+	ew := iohelp.NewErrorWriter(w)
+	writeComment(ew, 0, con.Comment, settings)
+	writeLine(ew, "\t%s = %v", exposeName(con.Name, settings), con.Value)
 }
 
-func writeFieldDefinition(fd Field, w io.Writer, readOnly bool, message bool, settings GenerateSettings) {
+func writeFieldDefinition(fd Field, w *iohelp.ErrorWriter, readOnly bool, message bool, settings GenerateSettings) {
 	writeComment(w, 1, fd.Comment, settings)
 	if fd.Deprecated {
 		writeLine(w, "\t// Deprecated: %s", fd.DeprecatedMessage)
@@ -621,7 +624,7 @@ func writeLengthCheck(w io.Writer, ln string, depth int, args ...string) {
 	writeLineWithTabs(w, "}", depth, args...)
 }
 
-func writeFieldReadByter(name string, typ FieldType, w io.Writer, settings GenerateSettings, depth int, safe bool) {
+func writeFieldReadByter(name string, typ FieldType, w *iohelp.ErrorWriter, settings GenerateSettings, depth int, safe bool) {
 	if typ.Array != nil {
 		if safe {
 			writeLengthCheck(w, "4", depth)
@@ -651,7 +654,7 @@ func writeFieldReadByter(name string, typ FieldType, w io.Writer, settings Gener
 		writeLineWithTabs(w, "%ASGN = make(%TYPE,"+lnName+")", depth, name, typ.Map.goString(settings))
 		writeLineWithTabs(w, "for i := uint32(0); i < "+lnName+"; i++ {", depth, name)
 		var ln string
-		if format, ok := settings.typeByteReaders[typ.Map.Key+"&safe"]; ok && safe {
+		if format, ok := settings.typeByteReaders[typ.Map.Key+hintSafeKey]; ok && safe {
 			ln = getLineWithTabs(format, depth+1, depthName("k", depth), simpleGoString(typ.Map.Key, settings))
 		} else {
 			if sz, ok := fixedSizeTypes[typ.Map.Key]; ok && safe {
@@ -659,7 +662,7 @@ func writeFieldReadByter(name string, typ FieldType, w io.Writer, settings Gener
 			}
 			ln = getLineWithTabs(settings.typeByteReaders[typ.Map.Key], depth+1, depthName("k", depth), typ.goString(settings))
 		}
-		w.Write([]byte(strings.Replace(ln, "=", ":=", 1)))
+		w.SafeWrite([]byte(strings.Replace(ln, "=", ":=", 1)))
 		writeFieldReadByter("("+name+")["+depthName("k", depth)+"]", typ.Map.Value, w, settings, depth+1, safe)
 		writeLineWithTabs(w, "}", depth)
 	} else {
@@ -667,7 +670,7 @@ func writeFieldReadByter(name string, typ FieldType, w io.Writer, settings Gener
 		if alias, ok := settings.importTypeAliases[simpleTyp]; ok {
 			simpleTyp = alias
 		}
-		if format, ok := settings.typeByteReaders[simpleTyp+"&safe"]; ok && safe {
+		if format, ok := settings.typeByteReaders[simpleTyp+hintSafeKey]; ok && safe {
 			writeLineWithTabs(w, format, depth, name, typ.goString(settings))
 		} else {
 			if sz, ok := fixedSizeTypes[simpleTyp]; ok && safe {
@@ -770,7 +773,7 @@ func unexposeName(name string) string {
 	return strings.ToLower(string(name[0])) + name[1:]
 }
 
-func writeWrappers(w io.Writer, name string, isEmpty bool, settings GenerateSettings) {
+func writeWrappers(w *iohelp.ErrorWriter, name string, isEmpty bool, settings GenerateSettings) {
 	writeMarshalBebop(w, name, isEmpty, settings)
 	writeMake(w, name, isEmpty, settings)
 	writeMakeFromBytes(w, name, isEmpty, settings)
@@ -779,7 +782,7 @@ func writeWrappers(w io.Writer, name string, isEmpty bool, settings GenerateSett
 	}
 }
 
-func writeMarshalBebop(w io.Writer, name string, isEmpty bool, settings GenerateSettings) {
+func writeMarshalBebop(w *iohelp.ErrorWriter, name string, isEmpty bool, settings GenerateSettings) {
 	exposedName := exposeName(name, settings)
 	if settings.AlwaysUsePointerReceivers {
 		writeLine(w, "func (bbp *%s) MarshalBebop() []byte {", exposedName)
@@ -796,10 +799,10 @@ func writeMarshalBebop(w io.Writer, name string, isEmpty bool, settings Generate
 	writeCloseBlock(w)
 }
 
-func writeMake(w io.Writer, name string, isEmpty bool, settings GenerateSettings) {
+func writeMake(w *iohelp.ErrorWriter, name string, isEmpty bool, settings GenerateSettings) {
 	exposedName := exposeName(name, settings)
 	makeName := exposeName("Make", settings)
-	writeLine(w, "func %[2]s%[1]s(r iohelp.ErrorReader) (%[1]s, error) {", exposedName, makeName)
+	writeLine(w, "func %[2]s%[1]s(r *iohelp.ErrorReader) (%[1]s, error) {", exposedName, makeName)
 	if isEmpty {
 		writeLine(w, "\treturn %s{}, nil", exposedName)
 	} else {
@@ -810,7 +813,7 @@ func writeMake(w io.Writer, name string, isEmpty bool, settings GenerateSettings
 	writeCloseBlock(w)
 }
 
-func writeMakeFromBytes(w io.Writer, name string, isEmpty bool, settings GenerateSettings) {
+func writeMakeFromBytes(w *iohelp.ErrorWriter, name string, isEmpty bool, settings GenerateSettings) {
 	exposedName := exposeName(name, settings)
 	makeName := exposeName("Make", settings)
 	writeLine(w, "func %[2]s%[1]sFromBytes(buf []byte) (%[1]s, error) {", exposedName, makeName)
@@ -824,7 +827,7 @@ func writeMakeFromBytes(w io.Writer, name string, isEmpty bool, settings Generat
 	writeCloseBlock(w)
 }
 
-func writeMustMakeFromBytes(w io.Writer, name string, isEmpty bool, settings GenerateSettings) {
+func writeMustMakeFromBytes(w *iohelp.ErrorWriter, name string, isEmpty bool, settings GenerateSettings) {
 	exposedName := exposeName(name, settings)
 	makeName := exposeName("MustMake", settings)
 	writeLine(w, "func %[2]s%[1]sFromBytes(buf []byte) %[1]s {", exposedName, makeName)
@@ -838,7 +841,7 @@ func writeMustMakeFromBytes(w io.Writer, name string, isEmpty bool, settings Gen
 	writeCloseBlock(w)
 }
 
-func writeLine(w io.Writer, format string, args ...interface{}) {
+func writeLine(w *iohelp.ErrorWriter, format string, args ...interface{}) {
 	fmt.Fprintf(w, format+"\n", args...)
 }
 
@@ -848,7 +851,7 @@ func getLineWithTabs(format string, depth int, args ...string) string {
 	return b.String()
 }
 
-func writeComment(w io.Writer, depth int, comment string, settings GenerateSettings) {
+func writeComment(w *iohelp.ErrorWriter, depth int, comment string, settings GenerateSettings) {
 	if comment == "" {
 		return
 	}
@@ -867,28 +870,28 @@ func writeComment(w io.Writer, depth int, comment string, settings GenerateSetti
 	}
 }
 
-func writeCloseBlock(w io.Writer) {
+func writeCloseBlock(w *iohelp.ErrorWriter) {
 	writeLine(w, "}")
 	writeLine(w, "")
 }
 
-func writeOpCode(w io.Writer, name string, opCode uint32, settings GenerateSettings) {
+func writeOpCode(w *iohelp.ErrorWriter, name string, opCode uint32, settings GenerateSettings) {
 	if opCode != 0 {
 		writeLine(w, "const %sOpCode = 0x%x", exposeName(name, settings), opCode)
 		writeLine(w, "")
 	}
 }
 
-func writeRecordAssertion(w io.Writer, name string, settings GenerateSettings) {
+func writeRecordAssertion(w *iohelp.ErrorWriter, name string, settings GenerateSettings) {
 	writeLine(w, "var _ bebop.Record = &%s{}", exposeName(name, settings))
 	writeLine(w, "")
 }
 
-func writeGoStructDef(w io.Writer, name string, settings GenerateSettings) {
+func writeGoStructDef(w *iohelp.ErrorWriter, name string, settings GenerateSettings) {
 	writeLine(w, "type %s struct {", exposeName(name, settings))
 }
 
-func writeRecordTypeDefinition(w io.Writer, name string, opCode uint32, comment string, settings GenerateSettings, fields []fieldWithNumber) {
+func writeRecordTypeDefinition(w *iohelp.ErrorWriter, name string, opCode uint32, comment string, settings GenerateSettings, fields []fieldWithNumber) {
 	writeOpCode(w, name, opCode, settings)
 	writeRecordAssertion(w, name, settings)
 	writeComment(w, 0, comment, settings)

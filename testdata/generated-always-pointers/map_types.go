@@ -74,7 +74,7 @@ func (bbp *S) MarshalBebop() []byte {
 	return buf
 }
 
-func MakeS(r iohelp.ErrorReader) (S, error) {
+func MakeS(r *iohelp.ErrorReader) (S, error) {
 	v := S{}
 	err := v.DecodeBebop(r)
 	return v, err
@@ -164,7 +164,8 @@ func (bbp *SomeMaps) MarshalBebopTo(buf []byte) int {
 					iohelp.WriteBoolBytes(buf[at:], k4)
 					at += 1
 					(v4).MarshalBebopTo(buf[at:])
-					tmp3575 := (v4); at += tmp3575.Size()
+					tmp := (v4)
+					at += tmp.Size()
 				}
 			}
 		}
@@ -192,7 +193,8 @@ func (bbp *SomeMaps) MarshalBebopTo(buf []byte) int {
 		iohelp.WriteGUIDBytes(buf[at:], k1)
 		at += 16
 		(v1).MarshalBebopTo(buf[at:])
-		tmp3624 := (v1); at += tmp3624.Size()
+		tmp := (v1)
+		at += tmp.Size()
 	}
 	return at
 }
@@ -273,7 +275,8 @@ func (bbp *SomeMaps) UnmarshalBebop(buf []byte) (err error) {
 					if err != nil {
 						return err
 					}
-					tmp3719 := (((((bbp.M3)[i1])[k2])[i3])[k4]); at += tmp3719.Size()
+					tmp := (((((bbp.M3)[i1])[k2])[i3])[k4])
+					at += tmp.Size()
 				}
 			}
 		}
@@ -320,7 +323,8 @@ func (bbp *SomeMaps) UnmarshalBebop(buf []byte) (err error) {
 		if err != nil {
 			return err
 		}
-		tmp3806 := ((bbp.M5)[k1]); at += tmp3806.Size()
+		tmp := ((bbp.M5)[k1])
+		at += tmp.Size()
 	}
 	return nil
 }
@@ -371,7 +375,8 @@ func (bbp *SomeMaps) MustUnmarshalBebop(buf []byte) {
 					k4 := iohelp.ReadBoolBytes(buf[at:])
 					at += 1
 					((((bbp.M3)[i1])[k2])[i3])[k4] = MustMakeSFromBytes(buf[at:])
-					tmp3861 := (((((bbp.M3)[i1])[k2])[i3])[k4]); at += tmp3861.Size()
+					tmp := (((((bbp.M3)[i1])[k2])[i3])[k4])
+					at += tmp.Size()
 				}
 			}
 		}
@@ -400,7 +405,8 @@ func (bbp *SomeMaps) MustUnmarshalBebop(buf []byte) {
 		k1 := iohelp.ReadGUIDBytes(buf[at:])
 		at += 16
 		(bbp.M5)[k1] = MustMakeMFromBytes(buf[at:])
-		tmp4145 := ((bbp.M5)[k1]); at += tmp4145.Size()
+		tmp := ((bbp.M5)[k1])
+		at += tmp.Size()
 	}
 }
 
@@ -553,7 +559,8 @@ func (bbp *SomeMaps) Size() int {
 				bodyLen += 4
 				for _, v4 := range elem {
 					bodyLen += 1
-					tmp4580 := (v4); bodyLen += tmp4580.Size()
+					tmp := (v4)
+					bodyLen += tmp.Size()
 				}
 			}
 		}
@@ -570,7 +577,8 @@ func (bbp *SomeMaps) Size() int {
 	bodyLen += 4
 	for _, v1 := range bbp.M5 {
 		bodyLen += 16
-		tmp4646 := (v1); bodyLen += tmp4646.Size()
+		tmp := (v1)
+		bodyLen += tmp.Size()
 	}
 	return bodyLen
 }
@@ -581,7 +589,7 @@ func (bbp *SomeMaps) MarshalBebop() []byte {
 	return buf
 }
 
-func MakeSomeMaps(r iohelp.ErrorReader) (SomeMaps, error) {
+func MakeSomeMaps(r *iohelp.ErrorReader) (SomeMaps, error) {
 	v := SomeMaps{}
 	err := v.DecodeBebop(r)
 	return v, err
@@ -703,7 +711,7 @@ func (bbp *M) DecodeBebop(ior io.Reader) (err error) {
 			bbp.B = new(float64)
 			*bbp.B = iohelp.ReadFloat64(r)
 		default:
-			io.ReadAll(r)
+			r.Drain()
 			return r.Err
 		}
 	}
@@ -728,7 +736,7 @@ func (bbp *M) MarshalBebop() []byte {
 	return buf
 }
 
-func MakeM(r iohelp.ErrorReader) (M, error) {
+func MakeM(r *iohelp.ErrorReader) (M, error) {
 	v := M{}
 	err := v.DecodeBebop(r)
 	return v, err

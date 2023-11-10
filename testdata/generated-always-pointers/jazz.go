@@ -81,7 +81,7 @@ func (bbp *Musician) MarshalBebop() []byte {
 	return buf
 }
 
-func MakeMusician(r iohelp.ErrorReader) (Musician, error) {
+func MakeMusician(r *iohelp.ErrorReader) (Musician, error) {
 	v := Musician{}
 	err := v.DecodeBebop(r)
 	return v, err
@@ -131,7 +131,8 @@ func (bbp *Library) MarshalBebopTo(buf []byte) int {
 		iohelp.WriteGUIDBytes(buf[at:], k1)
 		at += 16
 		(v1).MarshalBebopTo(buf[at:])
-		tmp3357 := (v1); at += tmp3357.Size()
+		tmp := (v1)
+		at += tmp.Size()
 	}
 	return at
 }
@@ -151,7 +152,8 @@ func (bbp *Library) UnmarshalBebop(buf []byte) (err error) {
 		if err != nil {
 			return err
 		}
-		tmp3380 := ((bbp.Songs)[k1]); at += tmp3380.Size()
+		tmp := ((bbp.Songs)[k1])
+		at += tmp.Size()
 	}
 	return nil
 }
@@ -165,7 +167,8 @@ func (bbp *Library) MustUnmarshalBebop(buf []byte) {
 		k1 := iohelp.ReadGUIDBytes(buf[at:])
 		at += 16
 		(bbp.Songs)[k1] = MustMakeSongFromBytes(buf[at:])
-		tmp3391 := ((bbp.Songs)[k1]); at += tmp3391.Size()
+		tmp := ((bbp.Songs)[k1])
+		at += tmp.Size()
 	}
 }
 
@@ -201,7 +204,8 @@ func (bbp *Library) Size() int {
 	bodyLen += 4
 	for _, v1 := range bbp.Songs {
 		bodyLen += 16
-		tmp3446 := (v1); bodyLen += tmp3446.Size()
+		tmp := (v1)
+		bodyLen += tmp.Size()
 	}
 	return bodyLen
 }
@@ -212,7 +216,7 @@ func (bbp *Library) MarshalBebop() []byte {
 	return buf
 }
 
-func MakeLibrary(r iohelp.ErrorReader) (Library, error) {
+func MakeLibrary(r *iohelp.ErrorReader) (Library, error) {
 	v := Library{}
 	err := v.DecodeBebop(r)
 	return v, err
@@ -262,7 +266,8 @@ func (bbp *Song) MarshalBebopTo(buf []byte) int {
 		at += 4
 		for _, v2 := range *bbp.Performers {
 			(v2).MarshalBebopTo(buf[at:])
-			tmp3530 := (v2); at += tmp3530.Size()
+			tmp := (v2)
+			at += tmp.Size()
 		}
 	}
 	return at
@@ -303,7 +308,8 @@ func (bbp *Song) UnmarshalBebop(buf []byte) (err error) {
 				if err != nil {
 					return err
 				}
-				tmp3564 := (((*bbp.Performers))[i3]); at += tmp3564.Size()
+				tmp := (((*bbp.Performers))[i3])
+				at += tmp.Size()
 			}
 		default:
 			return nil
@@ -334,7 +340,8 @@ func (bbp *Song) MustUnmarshalBebop(buf []byte) {
 			at += 4
 			for i3 := range (*bbp.Performers) {
 				((*bbp.Performers))[i3] = MustMakeMusicianFromBytes(buf[at:])
-				tmp3611 := (((*bbp.Performers))[i3]); at += tmp3611.Size()
+				tmp := (((*bbp.Performers))[i3])
+				at += tmp.Size()
 			}
 		default:
 			return
@@ -390,7 +397,7 @@ func (bbp *Song) DecodeBebop(ior io.Reader) (err error) {
 				}
 			}
 		default:
-			io.ReadAll(r)
+			r.Drain()
 			return r.Err
 		}
 	}
@@ -410,7 +417,8 @@ func (bbp *Song) Size() int {
 		bodyLen += 1
 		bodyLen += 4
 		for _, elem := range *bbp.Performers {
-			tmp3759 := (elem); bodyLen += tmp3759.Size()
+			tmp := (elem)
+			bodyLen += tmp.Size()
 		}
 	}
 	return bodyLen
@@ -422,7 +430,7 @@ func (bbp *Song) MarshalBebop() []byte {
 	return buf
 }
 
-func MakeSong(r iohelp.ErrorReader) (Song, error) {
+func MakeSong(r *iohelp.ErrorReader) (Song, error) {
 	v := Song{}
 	err := v.DecodeBebop(r)
 	return v, err

@@ -87,7 +87,7 @@ func (bbp *ArrayOfStrings) MarshalBebop() []byte {
 	return buf
 }
 
-func MakeArrayOfStrings(r iohelp.ErrorReader) (ArrayOfStrings, error) {
+func MakeArrayOfStrings(r *iohelp.ErrorReader) (ArrayOfStrings, error) {
 	v := ArrayOfStrings{}
 	err := v.DecodeBebop(r)
 	return v, err

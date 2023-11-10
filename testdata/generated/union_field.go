@@ -22,7 +22,8 @@ func (bbp WithUnionField) MarshalBebopTo(buf []byte) int {
 		buf[at] = 1
 		at++
 		(*bbp.Test).MarshalBebopTo(buf[at:])
-		tmp683 := (*bbp.Test); at += tmp683.Size()
+		tmp := (*bbp.Test)
+		at += tmp.Size()
 	}
 	return at
 }
@@ -40,7 +41,8 @@ func (bbp *WithUnionField) UnmarshalBebop(buf []byte) (err error) {
 			if err != nil {
 				return err
 			}
-			tmp686 := ((*bbp.Test)); at += tmp686.Size()
+			tmp := ((*bbp.Test))
+			at += tmp.Size()
 		default:
 			return nil
 		}
@@ -57,7 +59,8 @@ func (bbp *WithUnionField) MustUnmarshalBebop(buf []byte) {
 			at += 1
 			bbp.Test = new(List2)
 			(*bbp.Test) = MustMakeList2FromBytes(buf[at:])
-			tmp691 := ((*bbp.Test)); at += tmp691.Size()
+			tmp := ((*bbp.Test))
+			at += tmp.Size()
 		default:
 			return
 		}
@@ -91,7 +94,7 @@ func (bbp *WithUnionField) DecodeBebop(ior io.Reader) (err error) {
 				return err
 			}
 		default:
-			io.ReadAll(r)
+			r.Drain()
 			return r.Err
 		}
 	}
@@ -101,7 +104,8 @@ func (bbp WithUnionField) Size() int {
 	bodyLen := 5
 	if bbp.Test != nil {
 		bodyLen += 1
-		tmp718 := (*bbp.Test); bodyLen += tmp718.Size()
+		tmp := (*bbp.Test)
+		bodyLen += tmp.Size()
 	}
 	return bodyLen
 }
@@ -112,7 +116,7 @@ func (bbp WithUnionField) MarshalBebop() []byte {
 	return buf
 }
 
-func MakeWithUnionField(r iohelp.ErrorReader) (WithUnionField, error) {
+func MakeWithUnionField(r *iohelp.ErrorReader) (WithUnionField, error) {
 	v := WithUnionField{}
 	err := v.DecodeBebop(r)
 	return v, err
@@ -190,7 +194,7 @@ func (bbp Cons2) MarshalBebop() []byte {
 	return buf
 }
 
-func MakeCons2(r iohelp.ErrorReader) (Cons2, error) {
+func MakeCons2(r *iohelp.ErrorReader) (Cons2, error) {
 	v := Cons2{}
 	err := v.DecodeBebop(r)
 	return v, err
@@ -241,7 +245,7 @@ func (bbp Nil2) MarshalBebop() []byte {
 	return []byte{}
 }
 
-func MakeNil2(r iohelp.ErrorReader) (Nil2, error) {
+func MakeNil2(r *iohelp.ErrorReader) (Nil2, error) {
 	return Nil2{}, nil
 }
 
@@ -268,14 +272,16 @@ func (bbp List2) MarshalBebopTo(buf []byte) int {
 		buf[at] = 1
 		at++
 		(*bbp.Cons2).MarshalBebopTo(buf[at:])
-		tmp938 := (*bbp.Cons2); at += tmp938.Size()
+		tmp := (*bbp.Cons2)
+		at += tmp.Size()
 		return at
 	}
 	if bbp.Nil2 != nil {
 		buf[at] = 2
 		at++
 		(*bbp.Nil2).MarshalBebopTo(buf[at:])
-		tmp957 := (*bbp.Nil2); at += tmp957.Size()
+		tmp := (*bbp.Nil2)
+		at += tmp.Size()
 		return at
 	}
 	return at
@@ -297,7 +303,8 @@ func (bbp *List2) UnmarshalBebop(buf []byte) (err error) {
 			if err != nil {
 				return err
 			}
-			tmp978 := ((*bbp.Cons2)); at += tmp978.Size()
+			tmp := ((*bbp.Cons2))
+			at += tmp.Size()
 			return nil
 		case 2:
 			at += 1
@@ -306,7 +313,8 @@ func (bbp *List2) UnmarshalBebop(buf []byte) (err error) {
 			if err != nil {
 				return err
 			}
-			tmp983 := ((*bbp.Nil2)); at += tmp983.Size()
+			tmp := ((*bbp.Nil2))
+			at += tmp.Size()
 			return nil
 		default:
 			return nil
@@ -324,13 +332,15 @@ func (bbp *List2) MustUnmarshalBebop(buf []byte) {
 			at += 1
 			bbp.Cons2 = new(Cons2)
 			(*bbp.Cons2) = MustMakeCons2FromBytes(buf[at:])
-			tmp1001 := ((*bbp.Cons2)); at += tmp1001.Size()
+			tmp := ((*bbp.Cons2))
+			at += tmp.Size()
 			return
 		case 2:
 			at += 1
 			bbp.Nil2 = new(Nil2)
 			(*bbp.Nil2) = MustMakeNil2FromBytes(buf[at:])
-			tmp1009 := ((*bbp.Nil2)); at += tmp1009.Size()
+			tmp := ((*bbp.Nil2))
+			at += tmp.Size()
 			return
 		default:
 			return
@@ -372,7 +382,7 @@ func (bbp *List2) DecodeBebop(ior io.Reader) (err error) {
 			if err != nil {
 				return err
 			}
-			io.ReadAll(r)
+			r.Drain()
 			return r.Err
 		case 2:
 			bbp.Nil2 = new(Nil2)
@@ -380,10 +390,10 @@ func (bbp *List2) DecodeBebop(ior io.Reader) (err error) {
 			if err != nil {
 				return err
 			}
-			io.ReadAll(r)
+			r.Drain()
 			return r.Err
 		default:
-			io.ReadAll(r)
+			r.Drain()
 			return r.Err
 		}
 	}
@@ -393,12 +403,14 @@ func (bbp List2) Size() int {
 	bodyLen := 4
 	if bbp.Cons2 != nil {
 		bodyLen += 1
-		tmp1082 := (*bbp.Cons2); bodyLen += tmp1082.Size()
+		tmp := (*bbp.Cons2)
+		bodyLen += tmp.Size()
 		return bodyLen
 	}
 	if bbp.Nil2 != nil {
 		bodyLen += 1
-		tmp1095 := (*bbp.Nil2); bodyLen += tmp1095.Size()
+		tmp := (*bbp.Nil2)
+		bodyLen += tmp.Size()
 		return bodyLen
 	}
 	return bodyLen
@@ -410,7 +422,7 @@ func (bbp List2) MarshalBebop() []byte {
 	return buf
 }
 
-func MakeList2(r iohelp.ErrorReader) (List2, error) {
+func MakeList2(r *iohelp.ErrorReader) (List2, error) {
 	v := List2{}
 	err := v.DecodeBebop(r)
 	return v, err

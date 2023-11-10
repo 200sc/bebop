@@ -605,8 +605,3 @@ func uint16p(i uint16) *uint16 {
 func uint32p(i uint32) *uint32 {
 	return &i
 }
-
-func nowP() *time.Time {
-	t := time.Now()
-	return &t
-}
