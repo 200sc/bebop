@@ -131,7 +131,7 @@ func (bbp library) MarshalBebopTo(buf []byte) int {
 		iohelp.WriteGUIDBytes(buf[at:], k1)
 		at += 16
 		(v1).MarshalBebopTo(buf[at:])
-		at += (v1).Size()
+		tmp7050 := (v1); at += tmp7050.Size()
 	}
 	return at
 }
@@ -151,7 +151,7 @@ func (bbp *library) UnmarshalBebop(buf []byte) (err error) {
 		if err != nil {
 			return err
 		}
-		at += ((bbp.songs)[k1]).Size()
+		tmp7078 := ((bbp.songs)[k1]); at += tmp7078.Size()
 	}
 	return nil
 }
@@ -165,7 +165,7 @@ func (bbp *library) MustUnmarshalBebop(buf []byte) {
 		k1 := iohelp.ReadGUIDBytes(buf[at:])
 		at += 16
 		(bbp.songs)[k1] = mustMakesongFromBytes(buf[at:])
-		at += ((bbp.songs)[k1]).Size()
+		tmp7105 := ((bbp.songs)[k1]); at += tmp7105.Size()
 	}
 }
 
@@ -201,7 +201,7 @@ func (bbp library) Size() int {
 	bodyLen += 4
 	for _, v1 := range bbp.songs {
 		bodyLen += 16
-		bodyLen += (v1).Size()
+		tmp8261 := (v1); bodyLen += tmp8261.Size()
 	}
 	return bodyLen
 }
@@ -262,7 +262,7 @@ func (bbp song) MarshalBebopTo(buf []byte) int {
 		at += 4
 		for _, v2 := range *bbp.performers {
 			(v2).MarshalBebopTo(buf[at:])
-			at += (v2).Size()
+			tmp8333 := (v2); at += tmp8333.Size()
 		}
 	}
 	return at
@@ -303,7 +303,7 @@ func (bbp *song) UnmarshalBebop(buf []byte) (err error) {
 				if err != nil {
 					return err
 				}
-				at += (((*bbp.performers))[i3]).Size()
+				tmp8383 := (((*bbp.performers))[i3]); at += tmp8383.Size()
 			}
 		default:
 			return nil
@@ -334,7 +334,7 @@ func (bbp *song) MustUnmarshalBebop(buf []byte) {
 			at += 4
 			for i3 := range (*bbp.performers) {
 				((*bbp.performers))[i3] = mustMakemusicianFromBytes(buf[at:])
-				at += (((*bbp.performers))[i3]).Size()
+				tmp8442 := (((*bbp.performers))[i3]); at += tmp8442.Size()
 			}
 		default:
 			return
@@ -410,7 +410,7 @@ func (bbp song) Size() int {
 		bodyLen += 1
 		bodyLen += 4
 		for _, elem := range *bbp.performers {
-			bodyLen += (elem).Size()
+			tmp8591 := (elem); bodyLen += tmp8591.Size()
 		}
 	}
 	return bodyLen

@@ -113,13 +113,13 @@ func (bbp ImportedMessage) MarshalBebopTo(buf []byte) int {
 		buf[at] = 2
 		at++
 		(*bbp.Bar).MarshalBebopTo(buf[at:])
-		at += (*bbp.Bar).Size()
+		tmp5512 := (*bbp.Bar); at += tmp5512.Size()
 	}
 	if bbp.Unin != nil {
 		buf[at] = 3
 		at++
 		(*bbp.Unin).MarshalBebopTo(buf[at:])
-		at += (*bbp.Unin).Size()
+		tmp5520 := (*bbp.Unin); at += tmp5520.Size()
 	}
 	return at
 }
@@ -142,7 +142,7 @@ func (bbp *ImportedMessage) UnmarshalBebop(buf []byte) (err error) {
 			if err != nil {
 				return err
 			}
-			at += ((*bbp.Bar)).Size()
+			tmp5607 := ((*bbp.Bar)); at += tmp5607.Size()
 		case 3:
 			at += 1
 			bbp.Unin = new(ImportedUnion)
@@ -150,7 +150,7 @@ func (bbp *ImportedMessage) UnmarshalBebop(buf []byte) (err error) {
 			if err != nil {
 				return err
 			}
-			at += ((*bbp.Unin)).Size()
+			tmp5609 := ((*bbp.Unin)); at += tmp5609.Size()
 		default:
 			return nil
 		}
@@ -172,12 +172,12 @@ func (bbp *ImportedMessage) MustUnmarshalBebop(buf []byte) {
 			at += 1
 			bbp.Bar = new(ImportedType)
 			(*bbp.Bar) = MustMakeImportedTypeFromBytes(buf[at:])
-			at += ((*bbp.Bar)).Size()
+			tmp5635 := ((*bbp.Bar)); at += tmp5635.Size()
 		case 3:
 			at += 1
 			bbp.Unin = new(ImportedUnion)
 			(*bbp.Unin) = MustMakeImportedUnionFromBytes(buf[at:])
-			at += ((*bbp.Unin)).Size()
+			tmp5636 := ((*bbp.Unin)); at += tmp5636.Size()
 		default:
 			return
 		}
@@ -245,11 +245,11 @@ func (bbp ImportedMessage) Size() int {
 	}
 	if bbp.Bar != nil {
 		bodyLen += 1
-		bodyLen += (*bbp.Bar).Size()
+		tmp5690 := (*bbp.Bar); bodyLen += tmp5690.Size()
 	}
 	if bbp.Unin != nil {
 		bodyLen += 1
-		bodyLen += (*bbp.Unin).Size()
+		tmp5694 := (*bbp.Unin); bodyLen += tmp5694.Size()
 	}
 	return bodyLen
 }
@@ -414,14 +414,14 @@ func (bbp ImportedUnion) MarshalBebopTo(buf []byte) int {
 		buf[at] = 1
 		at++
 		(*bbp.WhyAreTheseInline).MarshalBebopTo(buf[at:])
-		at += (*bbp.WhyAreTheseInline).Size()
+		tmp5721 := (*bbp.WhyAreTheseInline); at += tmp5721.Size()
 		return at
 	}
 	if bbp.Really != nil {
 		buf[at] = 2
 		at++
 		(*bbp.Really).MarshalBebopTo(buf[at:])
-		at += (*bbp.Really).Size()
+		tmp5727 := (*bbp.Really); at += tmp5727.Size()
 		return at
 	}
 	return at
@@ -443,7 +443,7 @@ func (bbp *ImportedUnion) UnmarshalBebop(buf []byte) (err error) {
 			if err != nil {
 				return err
 			}
-			at += ((*bbp.WhyAreTheseInline)).Size()
+			tmp5730 := ((*bbp.WhyAreTheseInline)); at += tmp5730.Size()
 			return nil
 		case 2:
 			at += 1
@@ -452,7 +452,7 @@ func (bbp *ImportedUnion) UnmarshalBebop(buf []byte) (err error) {
 			if err != nil {
 				return err
 			}
-			at += ((*bbp.Really)).Size()
+			tmp5735 := ((*bbp.Really)); at += tmp5735.Size()
 			return nil
 		default:
 			return nil
@@ -470,13 +470,13 @@ func (bbp *ImportedUnion) MustUnmarshalBebop(buf []byte) {
 			at += 1
 			bbp.WhyAreTheseInline = new(WhyAreTheseInline)
 			(*bbp.WhyAreTheseInline) = MustMakeWhyAreTheseInlineFromBytes(buf[at:])
-			at += ((*bbp.WhyAreTheseInline)).Size()
+			tmp5745 := ((*bbp.WhyAreTheseInline)); at += tmp5745.Size()
 			return
 		case 2:
 			at += 1
 			bbp.Really = new(Really)
 			(*bbp.Really) = MustMakeReallyFromBytes(buf[at:])
-			at += ((*bbp.Really)).Size()
+			tmp5753 := ((*bbp.Really)); at += tmp5753.Size()
 			return
 		default:
 			return
@@ -539,12 +539,12 @@ func (bbp ImportedUnion) Size() int {
 	bodyLen := 4
 	if bbp.WhyAreTheseInline != nil {
 		bodyLen += 1
-		bodyLen += (*bbp.WhyAreTheseInline).Size()
+		tmp5820 := (*bbp.WhyAreTheseInline); bodyLen += tmp5820.Size()
 		return bodyLen
 	}
 	if bbp.Really != nil {
 		bodyLen += 1
-		bodyLen += (*bbp.Really).Size()
+		tmp5829 := (*bbp.Really); bodyLen += tmp5829.Size()
 		return bodyLen
 	}
 	return bodyLen

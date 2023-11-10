@@ -8,14 +8,14 @@ import (
 	"io"
 )
 
-var _ bebop.Record = &s{}
+var _ bebop.Record = &S{}
 
-type s struct {
+type S struct {
 	x int32
 	y int32
 }
 
-func (bbp s) MarshalBebopTo(buf []byte) int {
+func (bbp *S) MarshalBebopTo(buf []byte) int {
 	at := 0
 	iohelp.WriteInt32Bytes(buf[at:], bbp.x)
 	at += 4
@@ -24,7 +24,7 @@ func (bbp s) MarshalBebopTo(buf []byte) int {
 	return at
 }
 
-func (bbp *s) UnmarshalBebop(buf []byte) (err error) {
+func (bbp *S) UnmarshalBebop(buf []byte) (err error) {
 	at := 0
 	if len(buf[at:]) < 4 {
 		return io.ErrUnexpectedEOF
@@ -39,7 +39,7 @@ func (bbp *s) UnmarshalBebop(buf []byte) (err error) {
 	return nil
 }
 
-func (bbp *s) MustUnmarshalBebop(buf []byte) {
+func (bbp *S) MustUnmarshalBebop(buf []byte) {
 	at := 0
 	bbp.x = iohelp.ReadInt32Bytes(buf[at:])
 	at += 4
@@ -47,92 +47,92 @@ func (bbp *s) MustUnmarshalBebop(buf []byte) {
 	at += 4
 }
 
-func (bbp s) EncodeBebop(iow io.Writer) (err error) {
+func (bbp *S) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
 	iohelp.WriteInt32(w, bbp.x)
 	iohelp.WriteInt32(w, bbp.y)
 	return w.Err
 }
 
-func (bbp *s) DecodeBebop(ior io.Reader) (err error) {
+func (bbp *S) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
 	bbp.x = iohelp.ReadInt32(r)
 	bbp.y = iohelp.ReadInt32(r)
 	return r.Err
 }
 
-func (bbp s) Size() int {
+func (bbp *S) Size() int {
 	bodyLen := 0
 	bodyLen += 4
 	bodyLen += 4
 	return bodyLen
 }
 
-func (bbp s) MarshalBebop() []byte {
+func (bbp *S) MarshalBebop() []byte {
 	buf := make([]byte, bbp.Size())
 	bbp.MarshalBebopTo(buf)
 	return buf
 }
 
-func makes(r iohelp.ErrorReader) (s, error) {
-	v := s{}
+func MakeS(r iohelp.ErrorReader) (S, error) {
+	v := S{}
 	err := v.DecodeBebop(r)
 	return v, err
 }
 
-func makesFromBytes(buf []byte) (s, error) {
-	v := s{}
+func MakeSFromBytes(buf []byte) (S, error) {
+	v := S{}
 	err := v.UnmarshalBebop(buf)
 	return v, err
 }
 
-func mustMakesFromBytes(buf []byte) s {
-	v := s{}
+func MustMakeSFromBytes(buf []byte) S {
+	v := S{}
 	v.MustUnmarshalBebop(buf)
 	return v
 }
 
-func (bbp s) Getx() int32 {
+func (bbp *S) GetX() int32 {
 	return bbp.x
 }
 
-func (bbp s) Gety() int32 {
+func (bbp *S) GetY() int32 {
 	return bbp.y
 }
 
-func news(
+func NewS(
 		x int32,
 		y int32,
-) s {
-	return s{
+) S {
+	return S{
 		x: x,
 		y: y,
 	}
 }
 
-var _ bebop.Record = &someMaps{}
+var _ bebop.Record = &SomeMaps{}
 
-type someMaps struct {
-	m1 map[bool]bool
-	m2 map[string]map[string]string
-	m3 []map[int32][]map[bool]s
-	m4 []map[string][]float32
-	m5 map[[16]byte]m
+type SomeMaps struct {
+	M1 map[bool]bool
+	M2 map[string]map[string]string
+	M3 []map[int32][]map[bool]S
+	M4 []map[string][]float32
+	M5 map[[16]byte]M
 }
 
-func (bbp someMaps) MarshalBebopTo(buf []byte) int {
+func (bbp *SomeMaps) MarshalBebopTo(buf []byte) int {
 	at := 0
-	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.m1)))
+	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.M1)))
 	at += 4
-	for k1, v1 := range bbp.m1 {
+	for k1, v1 := range bbp.M1 {
 		iohelp.WriteBoolBytes(buf[at:], k1)
 		at += 1
 		iohelp.WriteBoolBytes(buf[at:], v1)
 		at += 1
 	}
-	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.m2)))
+	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.M2)))
 	at += 4
-	for k1, v1 := range bbp.m2 {
+	for k1, v1 := range bbp.M2 {
 		iohelp.WriteUint32Bytes(buf[at:], uint32(len(k1)))
 		copy(buf[at+4:at+4+len(k1)], []byte(k1))
 		at += 4 + len(k1)
@@ -147,9 +147,9 @@ func (bbp someMaps) MarshalBebopTo(buf []byte) int {
 			at += 4 + len(v2)
 		}
 	}
-	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.m3)))
+	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.M3)))
 	at += 4
-	for _, v1 := range bbp.m3 {
+	for _, v1 := range bbp.M3 {
 		iohelp.WriteUint32Bytes(buf[at:], uint32(len(v1)))
 		at += 4
 		for k2, v2 := range v1 {
@@ -164,14 +164,14 @@ func (bbp someMaps) MarshalBebopTo(buf []byte) int {
 					iohelp.WriteBoolBytes(buf[at:], k4)
 					at += 1
 					(v4).MarshalBebopTo(buf[at:])
-					tmp7051 := (v4); at += tmp7051.Size()
+					tmp3575 := (v4); at += tmp3575.Size()
 				}
 			}
 		}
 	}
-	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.m4)))
+	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.M4)))
 	at += 4
-	for _, v1 := range bbp.m4 {
+	for _, v1 := range bbp.M4 {
 		iohelp.WriteUint32Bytes(buf[at:], uint32(len(v1)))
 		at += 4
 		for k2, v2 := range v1 {
@@ -186,22 +186,22 @@ func (bbp someMaps) MarshalBebopTo(buf []byte) int {
 			}
 		}
 	}
-	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.m5)))
+	iohelp.WriteUint32Bytes(buf[at:], uint32(len(bbp.M5)))
 	at += 4
-	for k1, v1 := range bbp.m5 {
+	for k1, v1 := range bbp.M5 {
 		iohelp.WriteGUIDBytes(buf[at:], k1)
 		at += 16
 		(v1).MarshalBebopTo(buf[at:])
-		tmp7097 := (v1); at += tmp7097.Size()
+		tmp3624 := (v1); at += tmp3624.Size()
 	}
 	return at
 }
 
-func (bbp *someMaps) UnmarshalBebop(buf []byte) (err error) {
+func (bbp *SomeMaps) UnmarshalBebop(buf []byte) (err error) {
 	at := 0
 	ln1 := iohelp.ReadUint32Bytes(buf[at:])
 	at += 4
-	bbp.m1 = make(map[bool]bool,ln1)
+	bbp.M1 = make(map[bool]bool,ln1)
 	for i := uint32(0); i < ln1; i++ {
 		if len(buf[at:]) < 1 {
 			return io.ErrUnexpectedEOF
@@ -211,12 +211,12 @@ func (bbp *someMaps) UnmarshalBebop(buf []byte) (err error) {
 		if len(buf[at:]) < 1 {
 			return io.ErrUnexpectedEOF
 		}
-		(bbp.m1)[k1] = iohelp.ReadBoolBytes(buf[at:])
+		(bbp.M1)[k1] = iohelp.ReadBoolBytes(buf[at:])
 		at += 1
 	}
 	ln2 := iohelp.ReadUint32Bytes(buf[at:])
 	at += 4
-	bbp.m2 = make(map[string]map[string]string,ln2)
+	bbp.M2 = make(map[string]map[string]string,ln2)
 	for i := uint32(0); i < ln2; i++ {
 		k1, err := iohelp.ReadStringBytes(buf[at:])
 		if err != nil {
@@ -225,29 +225,29 @@ func (bbp *someMaps) UnmarshalBebop(buf []byte) (err error) {
 		at += 4 + len(k1)
 		ln3 := iohelp.ReadUint32Bytes(buf[at:])
 		at += 4
-		(bbp.m2)[k1] = make(map[string]string,ln3)
+		(bbp.M2)[k1] = make(map[string]string,ln3)
 		for i := uint32(0); i < ln3; i++ {
 			k2, err := iohelp.ReadStringBytes(buf[at:])
 			if err != nil {
 				return err
 			}
 			at += 4 + len(k2)
-			((bbp.m2)[k1])[k2], err = iohelp.ReadStringBytes(buf[at:])
+			((bbp.M2)[k1])[k2], err = iohelp.ReadStringBytes(buf[at:])
 			if err != nil {
 				return err
 			}
-			at += 4 + len(((bbp.m2)[k1])[k2])
+			at += 4 + len(((bbp.M2)[k1])[k2])
 		}
 	}
 	if len(buf[at:]) < 4 {
 		return io.ErrUnexpectedEOF
 	}
-	bbp.m3 = make([]map[int32][]map[bool]s, iohelp.ReadUint32Bytes(buf[at:]))
+	bbp.M3 = make([]map[int32][]map[bool]S, iohelp.ReadUint32Bytes(buf[at:]))
 	at += 4
-	for i1 := range bbp.m3 {
+	for i1 := range bbp.M3 {
 		ln4 := iohelp.ReadUint32Bytes(buf[at:])
 		at += 4
-		(bbp.m3)[i1] = make(map[int32][]map[bool]s,ln4)
+		(bbp.M3)[i1] = make(map[int32][]map[bool]S,ln4)
 		for i := uint32(0); i < ln4; i++ {
 			if len(buf[at:]) < 4 {
 				return io.ErrUnexpectedEOF
@@ -257,23 +257,23 @@ func (bbp *someMaps) UnmarshalBebop(buf []byte) (err error) {
 			if len(buf[at:]) < 4 {
 				return io.ErrUnexpectedEOF
 			}
-			((bbp.m3)[i1])[k2] = make([]map[bool]s, iohelp.ReadUint32Bytes(buf[at:]))
+			((bbp.M3)[i1])[k2] = make([]map[bool]S, iohelp.ReadUint32Bytes(buf[at:]))
 			at += 4
-			for i3 := range ((bbp.m3)[i1])[k2] {
+			for i3 := range ((bbp.M3)[i1])[k2] {
 				ln5 := iohelp.ReadUint32Bytes(buf[at:])
 				at += 4
-				(((bbp.m3)[i1])[k2])[i3] = make(map[bool]s,ln5)
+				(((bbp.M3)[i1])[k2])[i3] = make(map[bool]S,ln5)
 				for i := uint32(0); i < ln5; i++ {
 					if len(buf[at:]) < 1 {
 						return io.ErrUnexpectedEOF
 					}
 					k4 := iohelp.ReadBoolBytes(buf[at:])
 					at += 1
-					((((bbp.m3)[i1])[k2])[i3])[k4], err = makesFromBytes(buf[at:])
+					((((bbp.M3)[i1])[k2])[i3])[k4], err = MakeSFromBytes(buf[at:])
 					if err != nil {
 						return err
 					}
-					tmp7194 := (((((bbp.m3)[i1])[k2])[i3])[k4]); at += tmp7194.Size()
+					tmp3719 := (((((bbp.M3)[i1])[k2])[i3])[k4]); at += tmp3719.Size()
 				}
 			}
 		}
@@ -281,12 +281,12 @@ func (bbp *someMaps) UnmarshalBebop(buf []byte) (err error) {
 	if len(buf[at:]) < 4 {
 		return io.ErrUnexpectedEOF
 	}
-	bbp.m4 = make([]map[string][]float32, iohelp.ReadUint32Bytes(buf[at:]))
+	bbp.M4 = make([]map[string][]float32, iohelp.ReadUint32Bytes(buf[at:]))
 	at += 4
-	for i1 := range bbp.m4 {
+	for i1 := range bbp.M4 {
 		ln6 := iohelp.ReadUint32Bytes(buf[at:])
 		at += 4
-		(bbp.m4)[i1] = make(map[string][]float32,ln6)
+		(bbp.M4)[i1] = make(map[string][]float32,ln6)
 		for i := uint32(0); i < ln6; i++ {
 			k2, err := iohelp.ReadStringBytes(buf[at:])
 			if err != nil {
@@ -296,123 +296,123 @@ func (bbp *someMaps) UnmarshalBebop(buf []byte) (err error) {
 			if len(buf[at:]) < 4 {
 				return io.ErrUnexpectedEOF
 			}
-			((bbp.m4)[i1])[k2] = make([]float32, iohelp.ReadUint32Bytes(buf[at:]))
+			((bbp.M4)[i1])[k2] = make([]float32, iohelp.ReadUint32Bytes(buf[at:]))
 			at += 4
-			if len(buf[at:]) < len(((bbp.m4)[i1])[k2])*4 {
+			if len(buf[at:]) < len(((bbp.M4)[i1])[k2])*4 {
 				return io.ErrUnexpectedEOF
 			}
-			for i3 := range ((bbp.m4)[i1])[k2] {
-				(((bbp.m4)[i1])[k2])[i3] = iohelp.ReadFloat32Bytes(buf[at:])
+			for i3 := range ((bbp.M4)[i1])[k2] {
+				(((bbp.M4)[i1])[k2])[i3] = iohelp.ReadFloat32Bytes(buf[at:])
 				at += 4
 			}
 		}
 	}
 	ln7 := iohelp.ReadUint32Bytes(buf[at:])
 	at += 4
-	bbp.m5 = make(map[[16]byte]m,ln7)
+	bbp.M5 = make(map[[16]byte]M,ln7)
 	for i := uint32(0); i < ln7; i++ {
 		if len(buf[at:]) < 16 {
 			return io.ErrUnexpectedEOF
 		}
 		k1 := iohelp.ReadGUIDBytes(buf[at:])
 		at += 16
-		(bbp.m5)[k1], err = makemFromBytes(buf[at:])
+		(bbp.M5)[k1], err = MakeMFromBytes(buf[at:])
 		if err != nil {
 			return err
 		}
-		tmp7248 := ((bbp.m5)[k1]); at += tmp7248.Size()
+		tmp3806 := ((bbp.M5)[k1]); at += tmp3806.Size()
 	}
 	return nil
 }
 
-func (bbp *someMaps) MustUnmarshalBebop(buf []byte) {
+func (bbp *SomeMaps) MustUnmarshalBebop(buf []byte) {
 	at := 0
 	ln8 := iohelp.ReadUint32Bytes(buf[at:])
 	at += 4
-	bbp.m1 = make(map[bool]bool,ln8)
+	bbp.M1 = make(map[bool]bool,ln8)
 	for i := uint32(0); i < ln8; i++ {
 		k1 := iohelp.ReadBoolBytes(buf[at:])
 		at += 1
-		(bbp.m1)[k1] = iohelp.ReadBoolBytes(buf[at:])
+		(bbp.M1)[k1] = iohelp.ReadBoolBytes(buf[at:])
 		at += 1
 	}
 	ln9 := iohelp.ReadUint32Bytes(buf[at:])
 	at += 4
-	bbp.m2 = make(map[string]map[string]string,ln9)
+	bbp.M2 = make(map[string]map[string]string,ln9)
 	for i := uint32(0); i < ln9; i++ {
 		k1 := iohelp.MustReadStringBytes(buf[at:])
 		at += 4 + len(k1)
 		ln10 := iohelp.ReadUint32Bytes(buf[at:])
 		at += 4
-		(bbp.m2)[k1] = make(map[string]string,ln10)
+		(bbp.M2)[k1] = make(map[string]string,ln10)
 		for i := uint32(0); i < ln10; i++ {
 			k2 := iohelp.MustReadStringBytes(buf[at:])
 			at += 4 + len(k2)
-			((bbp.m2)[k1])[k2] = iohelp.MustReadStringBytes(buf[at:])
-			at += 4 + len(((bbp.m2)[k1])[k2])
+			((bbp.M2)[k1])[k2] = iohelp.MustReadStringBytes(buf[at:])
+			at += 4 + len(((bbp.M2)[k1])[k2])
 		}
 	}
-	bbp.m3 = make([]map[int32][]map[bool]s, iohelp.ReadUint32Bytes(buf[at:]))
+	bbp.M3 = make([]map[int32][]map[bool]S, iohelp.ReadUint32Bytes(buf[at:]))
 	at += 4
-	for i1 := range bbp.m3 {
+	for i1 := range bbp.M3 {
 		ln11 := iohelp.ReadUint32Bytes(buf[at:])
 		at += 4
-		(bbp.m3)[i1] = make(map[int32][]map[bool]s,ln11)
+		(bbp.M3)[i1] = make(map[int32][]map[bool]S,ln11)
 		for i := uint32(0); i < ln11; i++ {
 			k2 := iohelp.ReadInt32Bytes(buf[at:])
 			at += 4
-			((bbp.m3)[i1])[k2] = make([]map[bool]s, iohelp.ReadUint32Bytes(buf[at:]))
+			((bbp.M3)[i1])[k2] = make([]map[bool]S, iohelp.ReadUint32Bytes(buf[at:]))
 			at += 4
-			for i3 := range ((bbp.m3)[i1])[k2] {
+			for i3 := range ((bbp.M3)[i1])[k2] {
 				ln12 := iohelp.ReadUint32Bytes(buf[at:])
 				at += 4
-				(((bbp.m3)[i1])[k2])[i3] = make(map[bool]s,ln12)
+				(((bbp.M3)[i1])[k2])[i3] = make(map[bool]S,ln12)
 				for i := uint32(0); i < ln12; i++ {
 					k4 := iohelp.ReadBoolBytes(buf[at:])
 					at += 1
-					((((bbp.m3)[i1])[k2])[i3])[k4] = mustMakesFromBytes(buf[at:])
-					tmp7295 := (((((bbp.m3)[i1])[k2])[i3])[k4]); at += tmp7295.Size()
+					((((bbp.M3)[i1])[k2])[i3])[k4] = MustMakeSFromBytes(buf[at:])
+					tmp3861 := (((((bbp.M3)[i1])[k2])[i3])[k4]); at += tmp3861.Size()
 				}
 			}
 		}
 	}
-	bbp.m4 = make([]map[string][]float32, iohelp.ReadUint32Bytes(buf[at:]))
+	bbp.M4 = make([]map[string][]float32, iohelp.ReadUint32Bytes(buf[at:]))
 	at += 4
-	for i1 := range bbp.m4 {
+	for i1 := range bbp.M4 {
 		ln13 := iohelp.ReadUint32Bytes(buf[at:])
 		at += 4
-		(bbp.m4)[i1] = make(map[string][]float32,ln13)
+		(bbp.M4)[i1] = make(map[string][]float32,ln13)
 		for i := uint32(0); i < ln13; i++ {
 			k2 := iohelp.MustReadStringBytes(buf[at:])
 			at += 4 + len(k2)
-			((bbp.m4)[i1])[k2] = make([]float32, iohelp.ReadUint32Bytes(buf[at:]))
+			((bbp.M4)[i1])[k2] = make([]float32, iohelp.ReadUint32Bytes(buf[at:]))
 			at += 4
-			for i3 := range ((bbp.m4)[i1])[k2] {
-				(((bbp.m4)[i1])[k2])[i3] = iohelp.ReadFloat32Bytes(buf[at:])
+			for i3 := range ((bbp.M4)[i1])[k2] {
+				(((bbp.M4)[i1])[k2])[i3] = iohelp.ReadFloat32Bytes(buf[at:])
 				at += 4
 			}
 		}
 	}
 	ln14 := iohelp.ReadUint32Bytes(buf[at:])
 	at += 4
-	bbp.m5 = make(map[[16]byte]m,ln14)
+	bbp.M5 = make(map[[16]byte]M,ln14)
 	for i := uint32(0); i < ln14; i++ {
 		k1 := iohelp.ReadGUIDBytes(buf[at:])
 		at += 16
-		(bbp.m5)[k1] = mustMakemFromBytes(buf[at:])
-		tmp7326 := ((bbp.m5)[k1]); at += tmp7326.Size()
+		(bbp.M5)[k1] = MustMakeMFromBytes(buf[at:])
+		tmp4145 := ((bbp.M5)[k1]); at += tmp4145.Size()
 	}
 }
 
-func (bbp someMaps) EncodeBebop(iow io.Writer) (err error) {
+func (bbp *SomeMaps) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
-	iohelp.WriteUint32(w, uint32(len(bbp.m1)))
-	for k1, v1 := range bbp.m1 {
+	iohelp.WriteUint32(w, uint32(len(bbp.M1)))
+	for k1, v1 := range bbp.M1 {
 		iohelp.WriteBool(w, k1)
 		iohelp.WriteBool(w, v1)
 	}
-	iohelp.WriteUint32(w, uint32(len(bbp.m2)))
-	for k1, v1 := range bbp.m2 {
+	iohelp.WriteUint32(w, uint32(len(bbp.M2)))
+	for k1, v1 := range bbp.M2 {
 		iohelp.WriteUint32(w, uint32(len(k1)))
 		w.Write([]byte(k1))
 		iohelp.WriteUint32(w, uint32(len(v1)))
@@ -423,8 +423,8 @@ func (bbp someMaps) EncodeBebop(iow io.Writer) (err error) {
 			w.Write([]byte(v2))
 		}
 	}
-	iohelp.WriteUint32(w, uint32(len(bbp.m3)))
-	for _, elem := range bbp.m3 {
+	iohelp.WriteUint32(w, uint32(len(bbp.M3)))
+	for _, elem := range bbp.M3 {
 		iohelp.WriteUint32(w, uint32(len(elem)))
 		for k2, v2 := range elem {
 			iohelp.WriteInt32(w, k2)
@@ -441,8 +441,8 @@ func (bbp someMaps) EncodeBebop(iow io.Writer) (err error) {
 			}
 		}
 	}
-	iohelp.WriteUint32(w, uint32(len(bbp.m4)))
-	for _, elem := range bbp.m4 {
+	iohelp.WriteUint32(w, uint32(len(bbp.M4)))
+	for _, elem := range bbp.M4 {
 		iohelp.WriteUint32(w, uint32(len(elem)))
 		for k2, v2 := range elem {
 			iohelp.WriteUint32(w, uint32(len(k2)))
@@ -453,8 +453,8 @@ func (bbp someMaps) EncodeBebop(iow io.Writer) (err error) {
 			}
 		}
 	}
-	iohelp.WriteUint32(w, uint32(len(bbp.m5)))
-	for k1, v1 := range bbp.m5 {
+	iohelp.WriteUint32(w, uint32(len(bbp.M5)))
+	for k1, v1 := range bbp.M5 {
 		iohelp.WriteGUID(w, k1)
 		err = (v1).EncodeBebop(w)
 		if err != nil {
@@ -464,38 +464,38 @@ func (bbp someMaps) EncodeBebop(iow io.Writer) (err error) {
 	return w.Err
 }
 
-func (bbp *someMaps) DecodeBebop(ior io.Reader) (err error) {
+func (bbp *SomeMaps) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
 	ln1 := iohelp.ReadUint32(r)
-	bbp.m1 = make(map[bool]bool, ln1)
+	bbp.M1 = make(map[bool]bool, ln1)
 	for i1 := uint32(0); i1 < ln1; i1++ {
 		k1 := iohelp.ReadBool(r)
-		(bbp.m1[k1]) = iohelp.ReadBool(r)
+		(bbp.M1[k1]) = iohelp.ReadBool(r)
 	}
 	ln1 = iohelp.ReadUint32(r)
-	bbp.m2 = make(map[string]map[string]string, ln1)
+	bbp.M2 = make(map[string]map[string]string, ln1)
 	for i1 := uint32(0); i1 < ln1; i1++ {
 		k1 := iohelp.ReadString(r)
 		ln2 := iohelp.ReadUint32(r)
-		(bbp.m2[k1]) = make(map[string]string, ln2)
+		(bbp.M2[k1]) = make(map[string]string, ln2)
 		for i2 := uint32(0); i2 < ln2; i2++ {
 			k2 := iohelp.ReadString(r)
-			((bbp.m2[k1])[k2]) = iohelp.ReadString(r)
+			((bbp.M2[k1])[k2]) = iohelp.ReadString(r)
 		}
 	}
-	bbp.m3 = make([]map[int32][]map[bool]s, iohelp.ReadUint32(r))
-	for i1 := range bbp.m3 {
+	bbp.M3 = make([]map[int32][]map[bool]S, iohelp.ReadUint32(r))
+	for i1 := range bbp.M3 {
 		ln2 := iohelp.ReadUint32(r)
-		(bbp.m3[i1]) = make(map[int32][]map[bool]s, ln2)
+		(bbp.M3[i1]) = make(map[int32][]map[bool]S, ln2)
 		for i2 := uint32(0); i2 < ln2; i2++ {
 			k2 := iohelp.ReadInt32(r)
-			((bbp.m3[i1])[k2]) = make([]map[bool]s, iohelp.ReadUint32(r))
-			for i3 := range ((bbp.m3[i1])[k2]) {
+			((bbp.M3[i1])[k2]) = make([]map[bool]S, iohelp.ReadUint32(r))
+			for i3 := range ((bbp.M3[i1])[k2]) {
 				ln4 := iohelp.ReadUint32(r)
-				(((bbp.m3[i1])[k2])[i3]) = make(map[bool]s, ln4)
+				(((bbp.M3[i1])[k2])[i3]) = make(map[bool]S, ln4)
 				for i4 := uint32(0); i4 < ln4; i4++ {
 					k4 := iohelp.ReadBool(r)
-					(((((bbp.m3[i1])[k2])[i3])[k4])), err = makes(r)
+					(((((bbp.M3[i1])[k2])[i3])[k4])), err = MakeS(r)
 					if err != nil {
 						return err
 					}
@@ -503,23 +503,23 @@ func (bbp *someMaps) DecodeBebop(ior io.Reader) (err error) {
 			}
 		}
 	}
-	bbp.m4 = make([]map[string][]float32, iohelp.ReadUint32(r))
-	for i1 := range bbp.m4 {
+	bbp.M4 = make([]map[string][]float32, iohelp.ReadUint32(r))
+	for i1 := range bbp.M4 {
 		ln2 := iohelp.ReadUint32(r)
-		(bbp.m4[i1]) = make(map[string][]float32, ln2)
+		(bbp.M4[i1]) = make(map[string][]float32, ln2)
 		for i2 := uint32(0); i2 < ln2; i2++ {
 			k2 := iohelp.ReadString(r)
-			((bbp.m4[i1])[k2]) = make([]float32, iohelp.ReadUint32(r))
-			for i3 := range ((bbp.m4[i1])[k2]) {
-				(((bbp.m4[i1])[k2])[i3]) = iohelp.ReadFloat32(r)
+			((bbp.M4[i1])[k2]) = make([]float32, iohelp.ReadUint32(r))
+			for i3 := range ((bbp.M4[i1])[k2]) {
+				(((bbp.M4[i1])[k2])[i3]) = iohelp.ReadFloat32(r)
 			}
 		}
 	}
 	ln1 = iohelp.ReadUint32(r)
-	bbp.m5 = make(map[[16]byte]m, ln1)
+	bbp.M5 = make(map[[16]byte]M, ln1)
 	for i1 := uint32(0); i1 < ln1; i1++ {
 		k1 := iohelp.ReadGUID(r)
-		((bbp.m5[k1])), err = makem(r)
+		((bbp.M5[k1])), err = MakeM(r)
 		if err != nil {
 			return err
 		}
@@ -527,15 +527,15 @@ func (bbp *someMaps) DecodeBebop(ior io.Reader) (err error) {
 	return r.Err
 }
 
-func (bbp someMaps) Size() int {
+func (bbp *SomeMaps) Size() int {
 	bodyLen := 0
 	bodyLen += 4
-	for range bbp.m1 {
+	for range bbp.M1 {
 		bodyLen += 1
 		bodyLen += 1
 	}
 	bodyLen += 4
-	for k1, v1 := range bbp.m2 {
+	for k1, v1 := range bbp.M2 {
 		bodyLen += 4 + len(k1)
 		bodyLen += 4
 		for k2, v2 := range v1 {
@@ -544,7 +544,7 @@ func (bbp someMaps) Size() int {
 		}
 	}
 	bodyLen += 4
-	for _, elem := range bbp.m3 {
+	for _, elem := range bbp.M3 {
 		bodyLen += 4
 		for _, v2 := range elem {
 			bodyLen += 4
@@ -553,13 +553,13 @@ func (bbp someMaps) Size() int {
 				bodyLen += 4
 				for _, v4 := range elem {
 					bodyLen += 1
-					tmp8614 := (v4); bodyLen += tmp8614.Size()
+					tmp4580 := (v4); bodyLen += tmp4580.Size()
 				}
 			}
 		}
 	}
 	bodyLen += 4
-	for _, elem := range bbp.m4 {
+	for _, elem := range bbp.M4 {
 		bodyLen += 4
 		for k2, v2 := range elem {
 			bodyLen += 4 + len(k2)
@@ -568,64 +568,64 @@ func (bbp someMaps) Size() int {
 		}
 	}
 	bodyLen += 4
-	for _, v1 := range bbp.m5 {
+	for _, v1 := range bbp.M5 {
 		bodyLen += 16
-		tmp8644 := (v1); bodyLen += tmp8644.Size()
+		tmp4646 := (v1); bodyLen += tmp4646.Size()
 	}
 	return bodyLen
 }
 
-func (bbp someMaps) MarshalBebop() []byte {
+func (bbp *SomeMaps) MarshalBebop() []byte {
 	buf := make([]byte, bbp.Size())
 	bbp.MarshalBebopTo(buf)
 	return buf
 }
 
-func makesomeMaps(r iohelp.ErrorReader) (someMaps, error) {
-	v := someMaps{}
+func MakeSomeMaps(r iohelp.ErrorReader) (SomeMaps, error) {
+	v := SomeMaps{}
 	err := v.DecodeBebop(r)
 	return v, err
 }
 
-func makesomeMapsFromBytes(buf []byte) (someMaps, error) {
-	v := someMaps{}
+func MakeSomeMapsFromBytes(buf []byte) (SomeMaps, error) {
+	v := SomeMaps{}
 	err := v.UnmarshalBebop(buf)
 	return v, err
 }
 
-func mustMakesomeMapsFromBytes(buf []byte) someMaps {
-	v := someMaps{}
+func MustMakeSomeMapsFromBytes(buf []byte) SomeMaps {
+	v := SomeMaps{}
 	v.MustUnmarshalBebop(buf)
 	return v
 }
 
-var _ bebop.Record = &m{}
+var _ bebop.Record = &M{}
 
-type m struct {
-	a *float32
-	b *float64
+type M struct {
+	A *float32
+	B *float64
 }
 
-func (bbp m) MarshalBebopTo(buf []byte) int {
+func (bbp *M) MarshalBebopTo(buf []byte) int {
 	at := 0
 	iohelp.WriteUint32Bytes(buf[at:], uint32(bbp.Size()-4))
 	at += 4
-	if bbp.a != nil {
+	if bbp.A != nil {
 		buf[at] = 1
 		at++
-		iohelp.WriteFloat32Bytes(buf[at:], *bbp.a)
+		iohelp.WriteFloat32Bytes(buf[at:], *bbp.A)
 		at += 4
 	}
-	if bbp.b != nil {
+	if bbp.B != nil {
 		buf[at] = 2
 		at++
-		iohelp.WriteFloat64Bytes(buf[at:], *bbp.b)
+		iohelp.WriteFloat64Bytes(buf[at:], *bbp.B)
 		at += 8
 	}
 	return at
 }
 
-func (bbp *m) UnmarshalBebop(buf []byte) (err error) {
+func (bbp *M) UnmarshalBebop(buf []byte) (err error) {
 	at := 0
 	_ = iohelp.ReadUint32Bytes(buf[at:])
 	buf = buf[4:]
@@ -633,19 +633,19 @@ func (bbp *m) UnmarshalBebop(buf []byte) (err error) {
 		switch buf[at] {
 		case 1:
 			at += 1
-			bbp.a = new(float32)
+			bbp.A = new(float32)
 			if len(buf[at:]) < 4 {
 				return io.ErrUnexpectedEOF
 			}
-			(*bbp.a) = iohelp.ReadFloat32Bytes(buf[at:])
+			(*bbp.A) = iohelp.ReadFloat32Bytes(buf[at:])
 			at += 4
 		case 2:
 			at += 1
-			bbp.b = new(float64)
+			bbp.B = new(float64)
 			if len(buf[at:]) < 8 {
 				return io.ErrUnexpectedEOF
 			}
-			(*bbp.b) = iohelp.ReadFloat64Bytes(buf[at:])
+			(*bbp.B) = iohelp.ReadFloat64Bytes(buf[at:])
 			at += 8
 		default:
 			return nil
@@ -653,7 +653,7 @@ func (bbp *m) UnmarshalBebop(buf []byte) (err error) {
 	}
 }
 
-func (bbp *m) MustUnmarshalBebop(buf []byte) {
+func (bbp *M) MustUnmarshalBebop(buf []byte) {
 	at := 0
 	_ = iohelp.ReadUint32Bytes(buf[at:])
 	buf = buf[4:]
@@ -661,13 +661,13 @@ func (bbp *m) MustUnmarshalBebop(buf []byte) {
 		switch buf[at] {
 		case 1:
 			at += 1
-			bbp.a = new(float32)
-			(*bbp.a) = iohelp.ReadFloat32Bytes(buf[at:])
+			bbp.A = new(float32)
+			(*bbp.A) = iohelp.ReadFloat32Bytes(buf[at:])
 			at += 4
 		case 2:
 			at += 1
-			bbp.b = new(float64)
-			(*bbp.b) = iohelp.ReadFloat64Bytes(buf[at:])
+			bbp.B = new(float64)
+			(*bbp.B) = iohelp.ReadFloat64Bytes(buf[at:])
 			at += 8
 		default:
 			return
@@ -675,33 +675,33 @@ func (bbp *m) MustUnmarshalBebop(buf []byte) {
 	}
 }
 
-func (bbp m) EncodeBebop(iow io.Writer) (err error) {
+func (bbp *M) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
 	iohelp.WriteUint32(w, uint32(bbp.Size()-4))
-	if bbp.a != nil {
+	if bbp.A != nil {
 		w.Write([]byte{1})
-		iohelp.WriteFloat32(w, *bbp.a)
+		iohelp.WriteFloat32(w, *bbp.A)
 	}
-	if bbp.b != nil {
+	if bbp.B != nil {
 		w.Write([]byte{2})
-		iohelp.WriteFloat64(w, *bbp.b)
+		iohelp.WriteFloat64(w, *bbp.B)
 	}
 	w.Write([]byte{0})
 	return w.Err
 }
 
-func (bbp *m) DecodeBebop(ior io.Reader) (err error) {
+func (bbp *M) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
 	bodyLen := iohelp.ReadUint32(r)
 	r.Reader = &io.LimitedReader{R:r.Reader, N:int64(bodyLen)}
 	for {
 		switch iohelp.ReadByte(r) {
 		case 1:
-			bbp.a = new(float32)
-			*bbp.a = iohelp.ReadFloat32(r)
+			bbp.A = new(float32)
+			*bbp.A = iohelp.ReadFloat32(r)
 		case 2:
-			bbp.b = new(float64)
-			*bbp.b = iohelp.ReadFloat64(r)
+			bbp.B = new(float64)
+			*bbp.B = iohelp.ReadFloat64(r)
 		default:
 			io.ReadAll(r)
 			return r.Err
@@ -709,39 +709,39 @@ func (bbp *m) DecodeBebop(ior io.Reader) (err error) {
 	}
 }
 
-func (bbp m) Size() int {
+func (bbp *M) Size() int {
 	bodyLen := 5
-	if bbp.a != nil {
+	if bbp.A != nil {
 		bodyLen += 1
 		bodyLen += 4
 	}
-	if bbp.b != nil {
+	if bbp.B != nil {
 		bodyLen += 1
 		bodyLen += 8
 	}
 	return bodyLen
 }
 
-func (bbp m) MarshalBebop() []byte {
+func (bbp *M) MarshalBebop() []byte {
 	buf := make([]byte, bbp.Size())
 	bbp.MarshalBebopTo(buf)
 	return buf
 }
 
-func makem(r iohelp.ErrorReader) (m, error) {
-	v := m{}
+func MakeM(r iohelp.ErrorReader) (M, error) {
+	v := M{}
 	err := v.DecodeBebop(r)
 	return v, err
 }
 
-func makemFromBytes(buf []byte) (m, error) {
-	v := m{}
+func MakeMFromBytes(buf []byte) (M, error) {
+	v := M{}
 	err := v.UnmarshalBebop(buf)
 	return v, err
 }
 
-func mustMakemFromBytes(buf []byte) m {
-	v := m{}
+func MustMakeMFromBytes(buf []byte) M {
+	v := M{}
 	v.MustUnmarshalBebop(buf)
 	return v
 }

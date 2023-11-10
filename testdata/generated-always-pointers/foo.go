@@ -14,10 +14,10 @@ type Foo struct {
 	Bar Bar
 }
 
-func (bbp Foo) MarshalBebopTo(buf []byte) int {
+func (bbp *Foo) MarshalBebopTo(buf []byte) int {
 	at := 0
 	(bbp.Bar).MarshalBebopTo(buf[at:])
-	tmp1277 := (bbp.Bar); at += tmp1277.Size()
+	tmp3300 := (bbp.Bar); at += tmp3300.Size()
 	return at
 }
 
@@ -27,17 +27,17 @@ func (bbp *Foo) UnmarshalBebop(buf []byte) (err error) {
 	if err != nil {
 		return err
 	}
-	tmp1278 := (bbp.Bar); at += tmp1278.Size()
+	tmp3313 := (bbp.Bar); at += tmp3313.Size()
 	return nil
 }
 
 func (bbp *Foo) MustUnmarshalBebop(buf []byte) {
 	at := 0
 	bbp.Bar = MustMakeBarFromBytes(buf[at:])
-	tmp1279 := (bbp.Bar); at += tmp1279.Size()
+	tmp3321 := (bbp.Bar); at += tmp3321.Size()
 }
 
-func (bbp Foo) EncodeBebop(iow io.Writer) (err error) {
+func (bbp *Foo) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
 	err = (bbp.Bar).EncodeBebop(w)
 	if err != nil {
@@ -55,13 +55,13 @@ func (bbp *Foo) DecodeBebop(ior io.Reader) (err error) {
 	return r.Err
 }
 
-func (bbp Foo) Size() int {
+func (bbp *Foo) Size() int {
 	bodyLen := 0
-	tmp1292 := (bbp.Bar); bodyLen += tmp1292.Size()
+	tmp3355 := (bbp.Bar); bodyLen += tmp3355.Size()
 	return bodyLen
 }
 
-func (bbp Foo) MarshalBebop() []byte {
+func (bbp *Foo) MarshalBebop() []byte {
 	buf := make([]byte, bbp.Size())
 	bbp.MarshalBebopTo(buf)
 	return buf
@@ -93,7 +93,7 @@ type Bar struct {
 	Z *float64
 }
 
-func (bbp Bar) MarshalBebopTo(buf []byte) int {
+func (bbp *Bar) MarshalBebopTo(buf []byte) int {
 	at := 0
 	iohelp.WriteUint32Bytes(buf[at:], uint32(bbp.Size()-4))
 	at += 4
@@ -181,7 +181,7 @@ func (bbp *Bar) MustUnmarshalBebop(buf []byte) {
 	}
 }
 
-func (bbp Bar) EncodeBebop(iow io.Writer) (err error) {
+func (bbp *Bar) EncodeBebop(iow io.Writer) (err error) {
 	w := iohelp.NewErrorWriter(iow)
 	iohelp.WriteUint32(w, uint32(bbp.Size()-4))
 	if bbp.X != nil {
@@ -222,7 +222,7 @@ func (bbp *Bar) DecodeBebop(ior io.Reader) (err error) {
 	}
 }
 
-func (bbp Bar) Size() int {
+func (bbp *Bar) Size() int {
 	bodyLen := 5
 	if bbp.X != nil {
 		bodyLen += 1
@@ -239,7 +239,7 @@ func (bbp Bar) Size() int {
 	return bodyLen
 }
 
-func (bbp Bar) MarshalBebop() []byte {
+func (bbp *Bar) MarshalBebop() []byte {
 	buf := make([]byte, bbp.Size())
 	bbp.MarshalBebopTo(buf)
 	return buf
