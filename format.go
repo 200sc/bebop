@@ -2,22 +2,28 @@ package bebop
 
 import (
 	"io"
+
+	"github.com/200sc/bebop/iohelp"
 )
 
 // Format reads a .bop file from r and writes out a formatted version of that file to out.
-func Format(r io.Reader, out io.Writer) {
-	format(newTokenReader(r), out)
+func Format(r io.Reader, out io.Writer) error {
+	return format(newTokenReader(r), out)
 }
 
-func format(tr *tokenReader, w io.Writer) {
+func format(tr *tokenReader, w io.Writer) error {
+	ew := iohelp.NewErrorWriter(w)
 	var readOnly bool
 	var newlineBeforeNextRecord bool
 	for tr.Next() {
+		if ew.Err != nil {
+			return ew.Err
+		}
 		t := tr.Token()
 		switch t.kind {
 		case tokenKindOpenSquare:
 			if newlineBeforeNextRecord {
-				w.Write([]byte{'\n'})
+				ew.SafeWrite([]byte{'\n'})
 			}
 			// opcode, next tokens are 'opcode', '(', hex or string lit, ')', ']'
 			opCodeBytes := t.concrete
@@ -27,53 +33,54 @@ func format(tr *tokenReader, w io.Writer) {
 			}
 			// inject newline after opcodes
 			opCodeBytes = append(opCodeBytes, '\n')
-			w.Write(opCodeBytes)
+			ew.SafeWrite(opCodeBytes)
 			newlineBeforeNextRecord = false
 		case tokenKindLineComment:
 			cmtBytes := t.concrete
-			w.Write(cmtBytes)
+			ew.SafeWrite(cmtBytes)
 			newlineBeforeNextRecord = false
 		case tokenKindBlockComment:
 			cmtBytes := t.concrete
 			cmtBytes = append(cmtBytes, []byte("\n")...)
-			w.Write(cmtBytes)
+			ew.SafeWrite(cmtBytes)
 			newlineBeforeNextRecord = false
 		case tokenKindReadOnly:
 			readOnly = true
 			continue
 		case tokenKindEnum:
 			if newlineBeforeNextRecord {
-				w.Write([]byte{'\n'})
+				ew.SafeWrite([]byte{'\n'})
 			}
-			w.Write(formatEnum(tr))
+			ew.SafeWrite(formatEnum(tr))
 			newlineBeforeNextRecord = true
 		case tokenKindConst:
 			if newlineBeforeNextRecord {
-				w.Write([]byte{'\n'})
+				ew.SafeWrite([]byte{'\n'})
 			}
-			w.Write(formatConst(tr))
+			ew.SafeWrite(formatConst(tr))
 			newlineBeforeNextRecord = true
 		case tokenKindStruct:
 			if newlineBeforeNextRecord {
-				w.Write([]byte{'\n'})
+				ew.SafeWrite([]byte{'\n'})
 			}
-			w.Write(formatStruct(tr, readOnly, "\t"))
+			ew.SafeWrite(formatStruct(tr, readOnly, "\t"))
 			newlineBeforeNextRecord = true
 		case tokenKindMessage:
 			if newlineBeforeNextRecord {
-				w.Write([]byte{'\n'})
+				ew.SafeWrite([]byte{'\n'})
 			}
-			w.Write(formatMessage(tr, "\t"))
+			ew.SafeWrite(formatMessage(tr, "\t"))
 			newlineBeforeNextRecord = true
 		case tokenKindUnion:
 			if newlineBeforeNextRecord {
-				w.Write([]byte{'\n'})
+				ew.SafeWrite([]byte{'\n'})
 			}
-			w.Write(formatUnion(tr, "\t"))
+			ew.SafeWrite(formatUnion(tr, "\t"))
 			newlineBeforeNextRecord = true
 		}
 		readOnly = false
 	}
+	return nil
 }
 
 func formatEnum(tr *tokenReader) []byte {

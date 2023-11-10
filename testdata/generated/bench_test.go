@@ -78,7 +78,10 @@ func BenchmarkArraySamplesEncodeBebop(b *testing.B) {
 	b.ReportAllocs()
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
-		v.EncodeBebop(w)
+		err := v.EncodeBebop(w)
+		if err != nil {
+			b.Fatal(err)
+		}
 	}
 	benchOut = w.Bytes()
 }

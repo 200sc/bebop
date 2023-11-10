@@ -44,8 +44,8 @@ func (er *ErrorReader) Read(b []byte) (n int, err error) {
 	return n, err
 }
 
-func (er ErrorReader) Drain() {
-	io.ReadAll(er.Reader)
+func (er *ErrorReader) Drain() {
+	_, _ = io.ReadAll(er.Reader)
 }
 
 // An ErrorWriter wraps an io.Writer with a reusable buffer for small allocations
@@ -68,7 +68,7 @@ func NewErrorWriter(w io.Writer) *ErrorWriter {
 	}
 }
 
-func (ew ErrorWriter) Write(b []byte) (n int, err error) {
+func (ew *ErrorWriter) Write(b []byte) (n int, err error) {
 	n, err = ew.Writer.Write(b)
 	if err != nil {
 		ew.Err = err
@@ -76,9 +76,19 @@ func (ew ErrorWriter) Write(b []byte) (n int, err error) {
 	return n, err
 }
 
+// SafeWrite will only write if ew.Err is not set, and will set it if
+// a write fails.
+func (ew *ErrorWriter) SafeWrite(b []byte) int {
+	if ew.Err != nil {
+		return 0
+	}
+	n, _ := ew.Write(b)
+	return n
+}
+
 func ReadString(r *ErrorReader) string {
 	data := make([]byte, ReadUint32(r))
-	r.Read(data)
+	_, _ = r.Read(data)
 	return string(data)
 }
 
@@ -117,7 +127,7 @@ func ReadStringBytesSharedMemory(buf []byte) (string, error) {
 }
 
 func ReadDate(r *ErrorReader) time.Time {
-	io.ReadFull(r, r.buffer)
+	_, _ = io.ReadFull(r, r.buffer)
 	return ReadDateBytes(r.buffer)
 }
 
@@ -133,7 +143,7 @@ func ReadDateBytes(buf []byte) time.Time {
 
 func ReadGUID(r *ErrorReader) [16]byte {
 	data := make([]byte, 16)
-	r.Read(data)
+	_, _ = r.Read(data)
 	return ReadGUIDBytes(data)
 }
 
@@ -147,7 +157,7 @@ func ReadGUIDBytes(buf []byte) [16]byte {
 }
 
 func ReadBool(r *ErrorReader) bool {
-	io.ReadFull(r, r.buffer[:1])
+	_, _ = io.ReadFull(r, r.buffer[:1])
 	return r.buffer[0] == 1
 }
 
@@ -182,7 +192,7 @@ func ReadUint8Bytes(buf []byte) uint8 {
 }
 
 func ReadUint16(r *ErrorReader) uint16 {
-	io.ReadFull(r, r.buffer[:2])
+	_, _ = io.ReadFull(r, r.buffer[:2])
 	return ReadUint16Bytes(r.buffer)
 }
 
@@ -192,7 +202,7 @@ func ReadUint16Bytes(buf []byte) uint16 {
 }
 
 func ReadInt16(r *ErrorReader) int16 {
-	io.ReadFull(r, r.buffer[:2])
+	_, _ = io.ReadFull(r, r.buffer[:2])
 	return ReadInt16Bytes(r.buffer)
 }
 
@@ -202,7 +212,7 @@ func ReadInt16Bytes(buf []byte) int16 {
 }
 
 func ReadUint32(r *ErrorReader) uint32 {
-	io.ReadFull(r, r.buffer[:4])
+	_, _ = io.ReadFull(r, r.buffer[:4])
 	return ReadUint32Bytes(r.buffer)
 }
 
@@ -212,7 +222,7 @@ func ReadUint32Bytes(buf []byte) uint32 {
 }
 
 func ReadInt32(r *ErrorReader) int32 {
-	io.ReadFull(r, r.buffer[:4])
+	_, _ = io.ReadFull(r, r.buffer[:4])
 	return ReadInt32Bytes(r.buffer)
 }
 
@@ -222,7 +232,7 @@ func ReadInt32Bytes(buf []byte) int32 {
 }
 
 func ReadUint64(r *ErrorReader) uint64 {
-	io.ReadFull(r, r.buffer)
+	_, _ = io.ReadFull(r, r.buffer)
 	return ReadUint64Bytes(r.buffer)
 }
 
@@ -233,7 +243,7 @@ func ReadUint64Bytes(buf []byte) uint64 {
 }
 
 func ReadInt64(r *ErrorReader) int64 {
-	io.ReadFull(r, r.buffer)
+	_, _ = io.ReadFull(r, r.buffer)
 	return ReadInt64Bytes(r.buffer)
 }
 
@@ -270,7 +280,7 @@ func WriteGUID(w *ErrorWriter, guid [16]byte) {
 		guid[7], guid[6],
 		guid[8], guid[9], guid[10], guid[11], guid[12], guid[13], guid[14], guid[15],
 	}
-	w.Write(flipped[:])
+	_, _ = w.Write(flipped[:])
 }
 
 func WriteGUIDBytes(b []byte, guid [16]byte) {
@@ -295,7 +305,7 @@ func WriteGUIDBytes(b []byte, guid [16]byte) {
 
 func WriteInt64(w *ErrorWriter, i int64) {
 	WriteInt64Bytes(w.buffer, i)
-	w.Write(w.buffer)
+	_, _ = w.Write(w.buffer)
 }
 
 func WriteInt64Bytes(b []byte, i int64) {
@@ -312,7 +322,7 @@ func WriteInt64Bytes(b []byte, i int64) {
 
 func WriteUint64(w *ErrorWriter, i uint64) {
 	WriteUint64Bytes(w.buffer, i)
-	w.Write(w.buffer)
+	_, _ = w.Write(w.buffer)
 }
 
 func WriteUint64Bytes(b []byte, i uint64) {
@@ -329,7 +339,7 @@ func WriteUint64Bytes(b []byte, i uint64) {
 
 func WriteInt32(w *ErrorWriter, i int32) {
 	WriteInt32Bytes(w.buffer, i)
-	w.Write(w.buffer[:4])
+	_, _ = w.Write(w.buffer[:4])
 }
 
 func WriteInt32Bytes(b []byte, i int32) {
@@ -342,7 +352,7 @@ func WriteInt32Bytes(b []byte, i int32) {
 
 func WriteUint32(w *ErrorWriter, i uint32) {
 	WriteUint32Bytes(w.buffer, i)
-	w.Write(w.buffer[:4])
+	_, _ = w.Write(w.buffer[:4])
 }
 
 func WriteUint32Bytes(b []byte, i uint32) {
@@ -355,7 +365,7 @@ func WriteUint32Bytes(b []byte, i uint32) {
 
 func WriteInt16(w *ErrorWriter, i int16) {
 	WriteInt16Bytes(w.buffer, i)
-	w.Write(w.buffer[:2])
+	_, _ = w.Write(w.buffer[:2])
 }
 
 func WriteInt16Bytes(b []byte, i int16) {
@@ -366,7 +376,7 @@ func WriteInt16Bytes(b []byte, i int16) {
 
 func WriteUint16(w *ErrorWriter, i uint16) {
 	WriteUint16Bytes(w.buffer, i)
-	w.Write(w.buffer[:2])
+	_, _ = w.Write(w.buffer[:2])
 }
 
 func WriteUint16Bytes(b []byte, i uint16) {
@@ -376,7 +386,7 @@ func WriteUint16Bytes(b []byte, i uint16) {
 }
 
 func WriteByte(w *ErrorWriter, b byte) {
-	w.Write([]byte{b})
+	_, _ = w.Write([]byte{b})
 }
 
 func WriteByteBytes(b []byte, by byte) {
@@ -384,7 +394,7 @@ func WriteByteBytes(b []byte, by byte) {
 }
 
 func WriteUint8(w *ErrorWriter, b uint8) {
-	w.Write([]byte{b})
+	_, _ = w.Write([]byte{b})
 }
 
 func WriteUint8Bytes(b []byte, by uint8) {
@@ -393,9 +403,9 @@ func WriteUint8Bytes(b []byte, by uint8) {
 
 func WriteBool(w *ErrorWriter, b bool) {
 	if b {
-		w.Write([]byte{1})
+		_, _ = w.Write([]byte{1})
 	} else {
-		w.Write([]byte{0})
+		_, _ = w.Write([]byte{0})
 	}
 }
 

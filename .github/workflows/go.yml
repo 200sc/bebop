@@ -28,4 +28,4 @@ jobs:
     - name: Lint
       uses: golangci/golangci-lint-action@v3
       with:
-        args: "--disable-all -E misspell -E deadcode -E govet"
+        args: "-E misspell -E thelper -E errname -E goimports"

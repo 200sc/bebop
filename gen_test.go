@@ -32,14 +32,14 @@ func TestValidateIncompatibleError(t *testing.T) {
 		tc := tc
 		t.Run(tc.file, func(t *testing.T) {
 			t.Parallel()
-			f, err := os.Open(filepath.Join("testdata", "incompatible", tc.file+".bop"))
+			f, err := os.Open(filepath.Join("testdata", "incompatible", tc.file+fileExt))
 			if err != nil {
-				t.Fatalf("failed to open test file %s: %v", tc.file+".bop", err)
+				t.Fatalf("failed to open test file %s: %v", tc.file+fileExt, err)
 			}
 			defer f.Close()
 			bopf, _, err := ReadFile(f)
 			if err != nil {
-				t.Fatalf("failed to read file %s: %v", tc.file+".bop", err)
+				t.Fatalf("failed to read file %s: %v", tc.file+fileExt, err)
 			}
 			err = bopf.Validate()
 			if err == nil {
@@ -111,14 +111,14 @@ func TestValidateError(t *testing.T) {
 		tc := tc
 		t.Run(tc.file, func(t *testing.T) {
 			t.Parallel()
-			f, err := os.Open(filepath.Join("testdata", "invalid", tc.file+".bop"))
+			f, err := os.Open(filepath.Join("testdata", "invalid", tc.file+fileExt))
 			if err != nil {
-				t.Fatalf("failed to open test file %s: %v", tc.file+".bop", err)
+				t.Fatalf("failed to open test file %s: %v", tc.file+fileExt, err)
 			}
 			defer f.Close()
 			bopf, _, err := ReadFile(f)
 			if err != nil {
-				t.Fatalf("failed to read file %s: %v", tc.file+".bop", err)
+				t.Fatalf("failed to read file %s: %v", tc.file+fileExt, err)
 			}
 			err = bopf.Validate()
 			if err == nil {
@@ -148,14 +148,14 @@ func TestGenerate_Error(t *testing.T) {
 		tc := tc
 		t.Run(tc.file, func(t *testing.T) {
 			t.Parallel()
-			f, err := os.Open(filepath.Join("testdata", "invalid", tc.file+".bop"))
+			f, err := os.Open(filepath.Join("testdata", "invalid", tc.file+fileExt))
 			if err != nil {
-				t.Fatalf("failed to open test file %s: %v", tc.file+".bop", err)
+				t.Fatalf("failed to open test file %s: %v", tc.file+fileExt, err)
 			}
 			defer f.Close()
 			bopf, _, err := ReadFile(f)
 			if err != nil {
-				t.Fatalf("failed to read file %s: %v", tc.file+".bop", err)
+				t.Fatalf("failed to read file %s: %v", tc.file+fileExt, err)
 			}
 			err = bopf.Generate(bytes.NewBuffer([]byte{}), GenerateSettings{})
 			if err == nil {
@@ -190,14 +190,14 @@ func TestGenerateToFile_SeperateImports(t *testing.T) {
 		filedef := filedef
 		t.Run(filedef.filename, func(t *testing.T) {
 			t.Parallel()
-			f, err := os.Open(filepath.Join("testdata", "incompatible", filedef.filename+".bop"))
+			f, err := os.Open(filepath.Join("testdata", "incompatible", filedef.filename+fileExt))
 			if err != nil {
-				t.Fatalf("failed to open test file %s: %v", filedef.filename+".bop", err)
+				t.Fatalf("failed to open test file %s: %v", filedef.filename+fileExt, err)
 			}
 			defer f.Close()
 			bopf, _, err := ReadFile(f)
 			if err != nil {
-				t.Fatalf("failed to read file %s: %v", filedef.filename+".bop", err)
+				t.Fatalf("failed to read file %s: %v", filedef.filename+fileExt, err)
 			}
 			// use a separate directory to ensure duplicate definitions in combined mode
 			// do not cause compilation failures
@@ -239,14 +239,14 @@ func TestGenerateToFile_SeperateImports_ImportCycle(t *testing.T) {
 		filedef := filedef
 		t.Run(filedef.filename, func(t *testing.T) {
 			t.Parallel()
-			f, err := os.Open(filepath.Join("testdata", "incompatible", filedef.filename+".bop"))
+			f, err := os.Open(filepath.Join("testdata", "incompatible", filedef.filename+fileExt))
 			if err != nil {
-				t.Fatalf("failed to open test file %s: %v", filedef.filename+".bop", err)
+				t.Fatalf("failed to open test file %s: %v", filedef.filename+fileExt, err)
 			}
 			defer f.Close()
 			bopf, _, err := ReadFile(f)
 			if err != nil {
-				t.Fatalf("failed to read file %s: %v", filedef.filename+".bop", err)
+				t.Fatalf("failed to read file %s: %v", filedef.filename+fileExt, err)
 			}
 			err = bopf.Generate(io.Discard, GenerateSettings{
 				GenerateUnsafeMethods: true,
@@ -329,14 +329,14 @@ func TestGenerateToFile_Error(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 			if tc.filename != "" {
-				f, err := os.Open(filepath.Join("testdata", "incompatible", tc.filename+".bop"))
+				f, err := os.Open(filepath.Join("testdata", "incompatible", tc.filename+fileExt))
 				if err != nil {
-					t.Fatalf("failed to open test file %s: %v", tc.filename+".bop", err)
+					t.Fatalf("failed to open test file %s: %v", tc.filename+fileExt, err)
 				}
 				defer f.Close()
 				tc.File, _, err = ReadFile(f)
 				if err != nil {
-					t.Fatalf("failed to read file %s: %v", tc.filename+".bop", err)
+					t.Fatalf("failed to read file %s: %v", tc.filename+fileExt, err)
 				}
 			}
 			err := tc.File.Generate(io.Discard, tc.GenerateSettings)
@@ -360,14 +360,14 @@ func TestGenerateToFile_Imports(t *testing.T) {
 		filename := filename
 		t.Run(filename, func(t *testing.T) {
 			t.Parallel()
-			f, err := os.Open(filepath.Join("testdata", "base", filename+".bop"))
+			f, err := os.Open(filepath.Join("testdata", "base", filename+fileExt))
 			if err != nil {
-				t.Fatalf("failed to open test file %s: %v", filename+".bop", err)
+				t.Fatalf("failed to open test file %s: %v", filename+fileExt, err)
 			}
 			defer f.Close()
 			bopf, _, err := ReadFile(f)
 			if err != nil {
-				t.Fatalf("failed to read file %s: %v", filename+".bop", err)
+				t.Fatalf("failed to read file %s: %v", filename+fileExt, err)
 			}
 			// use a separate directory to ensure duplicate definitions in combined mode
 			// do not cause compilation failures
@@ -425,14 +425,14 @@ func TestGenerateToFile(t *testing.T) {
 		filename := filename
 		t.Run(filename, func(t *testing.T) {
 			t.Parallel()
-			f, err := os.Open(filepath.Join("testdata", "base", filename+".bop"))
+			f, err := os.Open(filepath.Join("testdata", "base", filename+fileExt))
 			if err != nil {
-				t.Fatalf("failed to open test file %s: %v", filename+".bop", err)
+				t.Fatalf("failed to open test file %s: %v", filename+fileExt, err)
 			}
 			defer f.Close()
 			bopf, _, err := ReadFile(f)
 			if err != nil {
-				t.Fatalf("failed to read file %s: %v", filename+".bop", err)
+				t.Fatalf("failed to read file %s: %v", filename+fileExt, err)
 			}
 			outFile := filepath.Join("testdata", "generated", filename+".go")
 			out, err := os.Create(outFile)
@@ -455,19 +455,22 @@ func TestGenerateToFile(t *testing.T) {
 
 func TestGenerateToFile_Private(t *testing.T) {
 	t.Parallel()
-	os.MkdirAll(filepath.Join("testdata", "generated-private"), 0666)
+	err := os.MkdirAll(filepath.Join("testdata", "generated-private"), 0666)
+	if err != nil {
+		t.Fatal(err)
+	}
 	for _, filename := range genTestFiles {
 		filename := filename
 		t.Run(filename, func(t *testing.T) {
 			t.Parallel()
-			f, err := os.Open(filepath.Join("testdata", "base", filename+".bop"))
+			f, err := os.Open(filepath.Join("testdata", "base", filename+fileExt))
 			if err != nil {
-				t.Fatalf("failed to open test file %s: %v", filename+".bop", err)
+				t.Fatalf("failed to open test file %s: %v", filename+fileExt, err)
 			}
 			defer f.Close()
 			bopf, _, err := ReadFile(f)
 			if err != nil {
-				t.Fatalf("failed to read file %s: %v", filename+".bop", err)
+				t.Fatalf("failed to read file %s: %v", filename+fileExt, err)
 			}
 			outFile := filepath.Join("testdata", "generated-private", filename+".go")
 			out, err := os.Create(outFile)
@@ -491,19 +494,22 @@ func TestGenerateToFile_Private(t *testing.T) {
 
 func TestGenerateToFile_AlwaysPointers(t *testing.T) {
 	t.Parallel()
-	os.MkdirAll(filepath.Join("testdata", "generated-always-pointers"), 0666)
+	err := os.MkdirAll(filepath.Join("testdata", "generated-always-pointers"), 0666)
+	if err != nil {
+		t.Fatal(err)
+	}
 	for _, filename := range genTestFiles {
 		filename := filename
 		t.Run(filename, func(t *testing.T) {
 			t.Parallel()
-			f, err := os.Open(filepath.Join("testdata", "base", filename+".bop"))
+			f, err := os.Open(filepath.Join("testdata", "base", filename+fileExt))
 			if err != nil {
-				t.Fatalf("failed to open test file %s: %v", filename+".bop", err)
+				t.Fatalf("failed to open test file %s: %v", filename+fileExt, err)
 			}
 			defer f.Close()
 			bopf, _, err := ReadFile(f)
 			if err != nil {
-				t.Fatalf("failed to read file %s: %v", filename+".bop", err)
+				t.Fatalf("failed to read file %s: %v", filename+fileExt, err)
 			}
 			outFile := filepath.Join("testdata", "generated-always-pointers", filename+".go")
 			out, err := os.Create(outFile)
@@ -531,14 +537,14 @@ func TestGenerateToFileIncompatible(t *testing.T) {
 		filename := filename
 		t.Run(filename, func(t *testing.T) {
 			t.Parallel()
-			f, err := os.Open(filepath.Join("testdata", "incompatible", filename+".bop"))
+			f, err := os.Open(filepath.Join("testdata", "incompatible", filename+fileExt))
 			if err != nil {
-				t.Fatalf("failed to open test file %s: %v", filename+".bop", err)
+				t.Fatalf("failed to open test file %s: %v", filename+fileExt, err)
 			}
 			defer f.Close()
 			bopf, _, err := ReadFile(f)
 			if err != nil {
-				t.Fatalf("failed to read file %s: %v", filename+".bop", err)
+				t.Fatalf("failed to read file %s: %v", filename+fileExt, err)
 			}
 			outFile := filepath.Join("testdata", "generated", filename+".go")
 			out, err := os.Create(outFile)
