@@ -50,8 +50,6 @@ func writeLineWithTabs(w io.Writer, format string, depth int, args ...string) {
 	format = strings.Replace(format, fillNamespace, namespace, -1)
 	format = strings.Replace(format, fillKey, depthName("k", depth), -1)
 	format = strings.Replace(format, fillValue, depthName("v", depth), -1)
-	tmp := nextTmp.Add(1)
-	format = strings.Replace(format, fillTmpVar, "tmp"+strconv.FormatInt(tmp, 10), -1)
 
 	fmt.Fprint(w, format+"\n")
 }
@@ -65,12 +63,11 @@ const (
 	fillNamespace = "%NAMESPACE"
 	fillKey       = "%KNAME"
 	fillValue     = "%VNAME"
-	fillTmpVar    = "%TMP"
 
 	fmtErrReturn            = "if err != nil {\n\treturn err\n}"
-	fmtAddSizeToAt          = "%TMP := (%ASGN); at += %TMP.Size()"
+	fmtAddSizeToAt          = "tmp := (%ASGN)\nat += tmp.Size()"
 	fmtAdd4PlusLenToAt      = "at += 4 + len(%ASGN)"
-	fmtAddSizeToBodyLen     = "%TMP := (%ASGN); bodyLen += %TMP.Size()"
+	fmtAddSizeToBodyLen     = "tmp := (%ASGN)\nbodyLen += tmp.Size()"
 	fmtAdd4PlusLenToBodyLen = "bodyLen += 4 + len(%ASGN)"
 
 	fmtMakeType           = "(%RECV), err = Make%TYPE(r)\n" + fmtErrReturn
