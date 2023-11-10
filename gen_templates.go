@@ -5,10 +5,7 @@ import (
 	"io"
 	"strconv"
 	"strings"
-	"sync/atomic"
 )
-
-var nextTmp atomic.Int64
 
 func writeLineWithTabs(w io.Writer, format string, depth int, args ...string) {
 	var assigner string
