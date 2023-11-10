@@ -20,6 +20,7 @@ var (
 	combinedImports       = flag.Bool("combined-imports", false, "whether imported files should be combined and generated as one, or to separate files")
 	generateTags          = flag.Bool("generate-tags", false, "whether field tags found in comments should be parsed and generated")
 	privateDefinitions    = flag.Bool("private-definitions", false, "whether generated code should be private to the generated package")
+	pointerReceivers      = flag.Bool("force-pointer-receivers", false, "whether generated method receivers must be pointers")
 )
 
 const version = "bebopc-go " + bebop.Version
@@ -75,12 +76,13 @@ func run() error {
 		importMode = bebop.ImportGenerationModeCombined
 	}
 	settings := bebop.GenerateSettings{
-		PackageName:           *packageName,
-		GenerateUnsafeMethods: *generateUnsafeMethods,
-		SharedMemoryStrings:   *shareStringMemory,
-		ImportGenerationMode:  importMode,
-		GenerateFieldTags:     *generateTags,
-		PrivateDefinitions:    *privateDefinitions,
+		PackageName:               *packageName,
+		GenerateUnsafeMethods:     *generateUnsafeMethods,
+		SharedMemoryStrings:       *shareStringMemory,
+		ImportGenerationMode:      importMode,
+		GenerateFieldTags:         *generateTags,
+		PrivateDefinitions:        *privateDefinitions,
+		AlwaysUsePointerReceivers: *pointerReceivers,
 	}
 	if err := bopf.Generate(out, settings); err != nil {
 		return fmt.Errorf("failed to generate file: %w", err)
