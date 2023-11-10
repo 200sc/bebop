@@ -198,7 +198,7 @@ func ReadUint16(r *ErrorReader) uint16 {
 
 func ReadUint16Bytes(buf []byte) uint16 {
 	_ = buf[1]
-	return uint16(buf[0]) | uint16(buf[1])<<8
+	return *(*uint16)(unsafe.Pointer(&buf[0]))
 }
 
 func ReadInt16(r *ErrorReader) int16 {
@@ -208,7 +208,7 @@ func ReadInt16(r *ErrorReader) int16 {
 
 func ReadInt16Bytes(buf []byte) int16 {
 	_ = buf[1]
-	return int16(buf[0]) | int16(buf[1])<<8
+	return *(*int16)(unsafe.Pointer(&buf[0]))
 }
 
 func ReadUint32(r *ErrorReader) uint32 {
@@ -218,7 +218,7 @@ func ReadUint32(r *ErrorReader) uint32 {
 
 func ReadUint32Bytes(buf []byte) uint32 {
 	_ = buf[3]
-	return uint32(buf[0]) | uint32(buf[1])<<8 | uint32(buf[2])<<16 | uint32(buf[3])<<24
+	return *(*uint32)(unsafe.Pointer(&buf[0]))
 }
 
 func ReadInt32(r *ErrorReader) int32 {
@@ -228,7 +228,7 @@ func ReadInt32(r *ErrorReader) int32 {
 
 func ReadInt32Bytes(buf []byte) int32 {
 	_ = buf[3]
-	return int32(buf[0]) | int32(buf[1])<<8 | int32(buf[2])<<16 | int32(buf[3])<<24
+	return *(*int32)(unsafe.Pointer(&buf[0]))
 }
 
 func ReadUint64(r *ErrorReader) uint64 {
@@ -238,8 +238,7 @@ func ReadUint64(r *ErrorReader) uint64 {
 
 func ReadUint64Bytes(buf []byte) uint64 {
 	_ = buf[7]
-	return uint64(buf[0]) | uint64(buf[1])<<8 | uint64(buf[2])<<16 | uint64(buf[3])<<24 |
-		uint64(buf[4])<<32 | uint64(buf[5])<<40 | uint64(buf[6])<<48 | uint64(buf[7])<<56
+	return *(*uint64)(unsafe.Pointer(&buf[0]))
 }
 
 func ReadInt64(r *ErrorReader) int64 {
@@ -249,8 +248,7 @@ func ReadInt64(r *ErrorReader) int64 {
 
 func ReadInt64Bytes(buf []byte) int64 {
 	_ = buf[7]
-	return int64(buf[0]) | int64(buf[1])<<8 | int64(buf[2])<<16 | int64(buf[3])<<24 |
-		int64(buf[4])<<32 | int64(buf[5])<<40 | int64(buf[6])<<48 | int64(buf[7])<<56
+	return *(*int64)(unsafe.Pointer(&buf[0]))
 }
 
 func ReadFloat32(r *ErrorReader) float32 {
@@ -310,14 +308,7 @@ func WriteInt64(w *ErrorWriter, i int64) {
 
 func WriteInt64Bytes(b []byte, i int64) {
 	_ = b[7]
-	b[0] = byte(i)
-	b[1] = byte(i >> 8)
-	b[2] = byte(i >> 16)
-	b[3] = byte(i >> 24)
-	b[4] = byte(i >> 32)
-	b[5] = byte(i >> 40)
-	b[6] = byte(i >> 48)
-	b[7] = byte(i >> 56)
+	*(*int64)(unsafe.Pointer(&b[0])) = i
 }
 
 func WriteUint64(w *ErrorWriter, i uint64) {
@@ -326,15 +317,9 @@ func WriteUint64(w *ErrorWriter, i uint64) {
 }
 
 func WriteUint64Bytes(b []byte, i uint64) {
+	// See bench_test.go
 	_ = b[7]
-	b[0] = byte(i)
-	b[1] = byte(i >> 8)
-	b[2] = byte(i >> 16)
-	b[3] = byte(i >> 24)
-	b[4] = byte(i >> 32)
-	b[5] = byte(i >> 40)
-	b[6] = byte(i >> 48)
-	b[7] = byte(i >> 56)
+	*(*uint64)(unsafe.Pointer(&b[0])) = i
 }
 
 func WriteInt32(w *ErrorWriter, i int32) {
@@ -344,10 +329,7 @@ func WriteInt32(w *ErrorWriter, i int32) {
 
 func WriteInt32Bytes(b []byte, i int32) {
 	_ = b[3]
-	b[0] = byte(i)
-	b[1] = byte(i >> 8)
-	b[2] = byte(i >> 16)
-	b[3] = byte(i >> 24)
+	*(*int32)(unsafe.Pointer(&b[0])) = i
 }
 
 func WriteUint32(w *ErrorWriter, i uint32) {
@@ -357,10 +339,7 @@ func WriteUint32(w *ErrorWriter, i uint32) {
 
 func WriteUint32Bytes(b []byte, i uint32) {
 	_ = b[3]
-	b[0] = byte(i)
-	b[1] = byte(i >> 8)
-	b[2] = byte(i >> 16)
-	b[3] = byte(i >> 24)
+	*(*uint32)(unsafe.Pointer(&b[0])) = i
 }
 
 func WriteInt16(w *ErrorWriter, i int16) {
@@ -370,8 +349,7 @@ func WriteInt16(w *ErrorWriter, i int16) {
 
 func WriteInt16Bytes(b []byte, i int16) {
 	_ = b[1]
-	b[0] = byte(i)
-	b[1] = byte(i >> 8)
+	*(*int16)(unsafe.Pointer(&b[0])) = i
 }
 
 func WriteUint16(w *ErrorWriter, i uint16) {
@@ -381,8 +359,7 @@ func WriteUint16(w *ErrorWriter, i uint16) {
 
 func WriteUint16Bytes(b []byte, i uint16) {
 	_ = b[1]
-	b[0] = byte(i)
-	b[1] = byte(i >> 8)
+	*(*uint16)(unsafe.Pointer(&b[0])) = i
 }
 
 func WriteByte(w *ErrorWriter, b byte) {
