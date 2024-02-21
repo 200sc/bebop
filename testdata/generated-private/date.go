@@ -23,20 +23,20 @@ func (bbp myObj) MarshalBebopTo(buf []byte) int {
 	if bbp.start != nil {
 		buf[at] = 1
 		at++
-		if *bbp.start != (time.Time{}) {
-			iohelp.WriteInt64Bytes(buf[at:], ((*bbp.start).UnixNano() / 100))
-		} else {
+		if (*bbp.start).IsZero() {
 			iohelp.WriteInt64Bytes(buf[at:], 0)
+		} else {
+			iohelp.WriteInt64Bytes(buf[at:], ((*bbp.start).UnixNano() / 100))
 		}
 		at += 8
 	}
 	if bbp.end != nil {
 		buf[at] = 2
 		at++
-		if *bbp.end != (time.Time{}) {
-			iohelp.WriteInt64Bytes(buf[at:], ((*bbp.end).UnixNano() / 100))
-		} else {
+		if (*bbp.end).IsZero() {
 			iohelp.WriteInt64Bytes(buf[at:], 0)
+		} else {
+			iohelp.WriteInt64Bytes(buf[at:], ((*bbp.end).UnixNano() / 100))
 		}
 		at += 8
 	}
@@ -98,18 +98,18 @@ func (bbp myObj) EncodeBebop(iow io.Writer) (err error) {
 	iohelp.WriteUint32(w, uint32(bbp.Size()-4))
 	if bbp.start != nil {
 		w.Write([]byte{1})
-		if *bbp.start != (time.Time{}) {
-			iohelp.WriteInt64(w, ((*bbp.start).UnixNano() / 100))
-		} else {
+		if (*bbp.start).IsZero() {
 			iohelp.WriteInt64(w, 0)
+		} else {
+			iohelp.WriteInt64(w, ((*bbp.start).UnixNano() / 100))
 		}
 	}
 	if bbp.end != nil {
 		w.Write([]byte{2})
-		if *bbp.end != (time.Time{}) {
-			iohelp.WriteInt64(w, ((*bbp.end).UnixNano() / 100))
-		} else {
+		if (*bbp.end).IsZero() {
 			iohelp.WriteInt64(w, 0)
+		} else {
+			iohelp.WriteInt64(w, ((*bbp.end).UnixNano() / 100))
 		}
 	}
 	w.Write([]byte{0})

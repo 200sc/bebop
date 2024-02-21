@@ -192,10 +192,10 @@ func (f File) typeMarshallers() map[string]string {
 	}
 	out[typeString] = "iohelp.WriteUint32(w, uint32(len(%ASGN)))\n" +
 		"w.Write([]byte(%ASGN))"
-	out[typeDate] = "if %ASGN != (time.Time{}) {\n" +
-		"\tiohelp.WriteInt64(w, ((%ASGN).UnixNano() / 100))\n" +
-		"} else {\n" +
+	out[typeDate] = "if (%ASGN).IsZero() {\n" +
 		"\tiohelp.WriteInt64(w, 0)\n" +
+		"} else {\n" +
+		"\tiohelp.WriteInt64(w, ((%ASGN).UnixNano() / 100))\n" +
 		"}"
 	for _, st := range f.Structs {
 		out[st.Name] = fmtEncode + fmtErrReturn
@@ -279,10 +279,10 @@ func (f File) typeByters() map[string]string {
 	out[typeString] = "iohelp.WriteUint32Bytes(buf[at:], uint32(len(%ASGN)))\n" +
 		"copy(buf[at+4:at+4+len(%ASGN)], []byte(%ASGN))\n" + fmtAdd4PlusLenToAt
 
-	out[typeDate] = "if %ASGN != (time.Time{}) {\n" +
-		"\tiohelp.WriteInt64Bytes(buf[at:], ((%ASGN).UnixNano() / 100))\n" +
-		"} else {\n" +
+	out[typeDate] = "if (%ASGN).IsZero() {\n" +
 		"\tiohelp.WriteInt64Bytes(buf[at:], 0)\n" +
+		"} else {\n" +
+		"\tiohelp.WriteInt64Bytes(buf[at:], ((%ASGN).UnixNano() / 100))\n" +
 		"}\n" +
 		"at += 8"
 	for _, st := range f.Structs {
