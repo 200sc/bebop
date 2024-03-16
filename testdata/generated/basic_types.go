@@ -54,10 +54,10 @@ func (bbp BasicTypes) MarshalBebopTo(buf []byte) int {
 	at += 4 + len(bbp.A_string)
 	iohelp.WriteGUIDBytes(buf[at:], bbp.A_guid)
 	at += 16
-	if bbp.A_date != (time.Time{}) {
-		iohelp.WriteInt64Bytes(buf[at:], ((bbp.A_date).UnixNano() / 100))
-	} else {
+	if (bbp.A_date).IsZero() {
 		iohelp.WriteInt64Bytes(buf[at:], 0)
+	} else {
+		iohelp.WriteInt64Bytes(buf[at:], ((bbp.A_date).UnixNano() / 100))
 	}
 	at += 8
 	return at
@@ -178,10 +178,10 @@ func (bbp BasicTypes) EncodeBebop(iow io.Writer) (err error) {
 	iohelp.WriteUint32(w, uint32(len(bbp.A_string)))
 	w.Write([]byte(bbp.A_string))
 	iohelp.WriteGUID(w, bbp.A_guid)
-	if bbp.A_date != (time.Time{}) {
-		iohelp.WriteInt64(w, ((bbp.A_date).UnixNano() / 100))
-	} else {
+	if (bbp.A_date).IsZero() {
 		iohelp.WriteInt64(w, 0)
+	} else {
+		iohelp.WriteInt64(w, ((bbp.A_date).UnixNano() / 100))
 	}
 	return w.Err
 }
