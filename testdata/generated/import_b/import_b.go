@@ -292,8 +292,11 @@ func (bbp Library) MarshalBebopTo(buf []byte) int {
 		iohelp.WriteGUIDBytes(buf[at:], k1)
 		at += 16
 		(v1).MarshalBebopTo(buf[at:])
-		tmp := (v1)
-		at += tmp.Size()
+		{
+			tmp := (v1)
+			at += tmp.Size()
+		}
+		
 	}
 	return at
 }
@@ -313,8 +316,11 @@ func (bbp *Library) UnmarshalBebop(buf []byte) (err error) {
 		if err != nil {
 			return err
 		}
-		tmp := ((bbp.Songs)[k1])
-		at += tmp.Size()
+		{
+			tmp := ((bbp.Songs)[k1])
+			at += tmp.Size()
+		}
+		
 	}
 	return nil
 }
@@ -328,8 +334,11 @@ func (bbp *Library) MustUnmarshalBebop(buf []byte) {
 		k1 := iohelp.ReadGUIDBytes(buf[at:])
 		at += 16
 		(bbp.Songs)[k1] = MustMakeSongFromBytes(buf[at:])
-		tmp := ((bbp.Songs)[k1])
-		at += tmp.Size()
+		{
+			tmp := ((bbp.Songs)[k1])
+			at += tmp.Size()
+		}
+		
 	}
 }
 
@@ -365,8 +374,11 @@ func (bbp Library) Size() int {
 	bodyLen += 4
 	for _, v1 := range bbp.Songs {
 		bodyLen += 16
-		tmp := (v1)
-		bodyLen += tmp.Size()
+		{
+			tmp := (v1)
+			bodyLen += tmp.Size()
+		}
+		
 	}
 	return bodyLen
 }
@@ -1107,8 +1119,11 @@ func (bbp Song) MarshalBebopTo(buf []byte) int {
 		at += 4
 		for _, v2 := range *bbp.Performers {
 			(v2).MarshalBebopTo(buf[at:])
-			tmp := (v2)
-			at += tmp.Size()
+			{
+				tmp := (v2)
+				at += tmp.Size()
+			}
+			
 		}
 	}
 	return at
@@ -1149,8 +1164,11 @@ func (bbp *Song) UnmarshalBebop(buf []byte) (err error) {
 				if err != nil {
 					return err
 				}
-				tmp := (((*bbp.Performers))[i3])
-				at += tmp.Size()
+				{
+					tmp := (((*bbp.Performers))[i3])
+					at += tmp.Size()
+				}
+				
 			}
 		default:
 			return nil
@@ -1181,8 +1199,11 @@ func (bbp *Song) MustUnmarshalBebop(buf []byte) {
 			at += 4
 			for i3 := range (*bbp.Performers) {
 				((*bbp.Performers))[i3] = MustMakeMusicianFromBytes(buf[at:])
-				tmp := (((*bbp.Performers))[i3])
-				at += tmp.Size()
+				{
+					tmp := (((*bbp.Performers))[i3])
+					at += tmp.Size()
+				}
+				
 			}
 		default:
 			return
@@ -1258,8 +1279,11 @@ func (bbp Song) Size() int {
 		bodyLen += 1
 		bodyLen += 4
 		for _, elem := range *bbp.Performers {
-			tmp := (elem)
-			bodyLen += tmp.Size()
+			{
+				tmp := (elem)
+				bodyLen += tmp.Size()
+			}
+			
 		}
 	}
 	return bodyLen
@@ -1310,8 +1334,11 @@ func (bbp MediaMessage) MarshalBebopTo(buf []byte) int {
 		buf[at] = 2
 		at++
 		(*bbp.Data).MarshalBebopTo(buf[at:])
-		tmp := (*bbp.Data)
-		at += tmp.Size()
+		{
+			tmp := (*bbp.Data)
+			at += tmp.Size()
+		}
+		
 	}
 	return at
 }
@@ -1334,8 +1361,11 @@ func (bbp *MediaMessage) UnmarshalBebop(buf []byte) (err error) {
 			if err != nil {
 				return err
 			}
-			tmp := ((*bbp.Data))
-			at += tmp.Size()
+			{
+				tmp := ((*bbp.Data))
+				at += tmp.Size()
+			}
+			
 		default:
 			return nil
 		}
@@ -1357,8 +1387,11 @@ func (bbp *MediaMessage) MustUnmarshalBebop(buf []byte) {
 			at += 1
 			bbp.Data = new(VideoData)
 			(*bbp.Data) = MustMakeVideoDataFromBytes(buf[at:])
-			tmp := ((*bbp.Data))
-			at += tmp.Size()
+			{
+				tmp := ((*bbp.Data))
+				at += tmp.Size()
+			}
+			
 		default:
 			return
 		}
@@ -1413,8 +1446,11 @@ func (bbp MediaMessage) Size() int {
 	}
 	if bbp.Data != nil {
 		bodyLen += 1
-		tmp := (*bbp.Data)
-		bodyLen += tmp.Size()
+		{
+			tmp := (*bbp.Data)
+			bodyLen += tmp.Size()
+		}
+		
 	}
 	return bodyLen
 }
@@ -1784,8 +1820,11 @@ func (bbp SkipTestOldContainer) MarshalBebopTo(buf []byte) int {
 		buf[at] = 1
 		at++
 		(*bbp.S).MarshalBebopTo(buf[at:])
-		tmp := (*bbp.S)
-		at += tmp.Size()
+		{
+			tmp := (*bbp.S)
+			at += tmp.Size()
+		}
+		
 	}
 	if bbp.After != nil {
 		buf[at] = 2
@@ -1809,8 +1848,11 @@ func (bbp *SkipTestOldContainer) UnmarshalBebop(buf []byte) (err error) {
 			if err != nil {
 				return err
 			}
-			tmp := ((*bbp.S))
-			at += tmp.Size()
+			{
+				tmp := ((*bbp.S))
+				at += tmp.Size()
+			}
+			
 		case 2:
 			at += 1
 			bbp.After = new(int32)
@@ -1835,8 +1877,11 @@ func (bbp *SkipTestOldContainer) MustUnmarshalBebop(buf []byte) {
 			at += 1
 			bbp.S = new(SkipTestOld)
 			(*bbp.S) = MustMakeSkipTestOldFromBytes(buf[at:])
-			tmp := ((*bbp.S))
-			at += tmp.Size()
+			{
+				tmp := ((*bbp.S))
+				at += tmp.Size()
+			}
+			
 		case 2:
 			at += 1
 			bbp.After = new(int32)
@@ -1892,8 +1937,11 @@ func (bbp SkipTestOldContainer) Size() int {
 	bodyLen := 5
 	if bbp.S != nil {
 		bodyLen += 1
-		tmp := (*bbp.S)
-		bodyLen += tmp.Size()
+		{
+			tmp := (*bbp.S)
+			bodyLen += tmp.Size()
+		}
+		
 	}
 	if bbp.After != nil {
 		bodyLen += 1
@@ -1941,8 +1989,11 @@ func (bbp SkipTestNewContainer) MarshalBebopTo(buf []byte) int {
 		buf[at] = 1
 		at++
 		(*bbp.S).MarshalBebopTo(buf[at:])
-		tmp := (*bbp.S)
-		at += tmp.Size()
+		{
+			tmp := (*bbp.S)
+			at += tmp.Size()
+		}
+		
 	}
 	if bbp.After != nil {
 		buf[at] = 2
@@ -1966,8 +2017,11 @@ func (bbp *SkipTestNewContainer) UnmarshalBebop(buf []byte) (err error) {
 			if err != nil {
 				return err
 			}
-			tmp := ((*bbp.S))
-			at += tmp.Size()
+			{
+				tmp := ((*bbp.S))
+				at += tmp.Size()
+			}
+			
 		case 2:
 			at += 1
 			bbp.After = new(int32)
@@ -1992,8 +2046,11 @@ func (bbp *SkipTestNewContainer) MustUnmarshalBebop(buf []byte) {
 			at += 1
 			bbp.S = new(SkipTestNew)
 			(*bbp.S) = MustMakeSkipTestNewFromBytes(buf[at:])
-			tmp := ((*bbp.S))
-			at += tmp.Size()
+			{
+				tmp := ((*bbp.S))
+				at += tmp.Size()
+			}
+			
 		case 2:
 			at += 1
 			bbp.After = new(int32)
@@ -2049,8 +2106,11 @@ func (bbp SkipTestNewContainer) Size() int {
 	bodyLen := 5
 	if bbp.S != nil {
 		bodyLen += 1
-		tmp := (*bbp.S)
-		bodyLen += tmp.Size()
+		{
+			tmp := (*bbp.S)
+			bodyLen += tmp.Size()
+		}
+		
 	}
 	if bbp.After != nil {
 		bodyLen += 1

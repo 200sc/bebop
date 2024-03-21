@@ -113,15 +113,21 @@ func (bbp ImportedMessage) MarshalBebopTo(buf []byte) int {
 		buf[at] = 2
 		at++
 		(*bbp.Bar).MarshalBebopTo(buf[at:])
-		tmp := (*bbp.Bar)
-		at += tmp.Size()
+		{
+			tmp := (*bbp.Bar)
+			at += tmp.Size()
+		}
+		
 	}
 	if bbp.Unin != nil {
 		buf[at] = 3
 		at++
 		(*bbp.Unin).MarshalBebopTo(buf[at:])
-		tmp := (*bbp.Unin)
-		at += tmp.Size()
+		{
+			tmp := (*bbp.Unin)
+			at += tmp.Size()
+		}
+		
 	}
 	return at
 }
@@ -144,8 +150,11 @@ func (bbp *ImportedMessage) UnmarshalBebop(buf []byte) (err error) {
 			if err != nil {
 				return err
 			}
-			tmp := ((*bbp.Bar))
-			at += tmp.Size()
+			{
+				tmp := ((*bbp.Bar))
+				at += tmp.Size()
+			}
+			
 		case 3:
 			at += 1
 			bbp.Unin = new(ImportedUnion)
@@ -153,8 +162,11 @@ func (bbp *ImportedMessage) UnmarshalBebop(buf []byte) (err error) {
 			if err != nil {
 				return err
 			}
-			tmp := ((*bbp.Unin))
-			at += tmp.Size()
+			{
+				tmp := ((*bbp.Unin))
+				at += tmp.Size()
+			}
+			
 		default:
 			return nil
 		}
@@ -176,14 +188,20 @@ func (bbp *ImportedMessage) MustUnmarshalBebop(buf []byte) {
 			at += 1
 			bbp.Bar = new(ImportedType)
 			(*bbp.Bar) = MustMakeImportedTypeFromBytes(buf[at:])
-			tmp := ((*bbp.Bar))
-			at += tmp.Size()
+			{
+				tmp := ((*bbp.Bar))
+				at += tmp.Size()
+			}
+			
 		case 3:
 			at += 1
 			bbp.Unin = new(ImportedUnion)
 			(*bbp.Unin) = MustMakeImportedUnionFromBytes(buf[at:])
-			tmp := ((*bbp.Unin))
-			at += tmp.Size()
+			{
+				tmp := ((*bbp.Unin))
+				at += tmp.Size()
+			}
+			
 		default:
 			return
 		}
@@ -251,13 +269,19 @@ func (bbp ImportedMessage) Size() int {
 	}
 	if bbp.Bar != nil {
 		bodyLen += 1
-		tmp := (*bbp.Bar)
-		bodyLen += tmp.Size()
+		{
+			tmp := (*bbp.Bar)
+			bodyLen += tmp.Size()
+		}
+		
 	}
 	if bbp.Unin != nil {
 		bodyLen += 1
-		tmp := (*bbp.Unin)
-		bodyLen += tmp.Size()
+		{
+			tmp := (*bbp.Unin)
+			bodyLen += tmp.Size()
+		}
+		
 	}
 	return bodyLen
 }
@@ -422,16 +446,22 @@ func (bbp ImportedUnion) MarshalBebopTo(buf []byte) int {
 		buf[at] = 1
 		at++
 		(*bbp.WhyAreTheseInline).MarshalBebopTo(buf[at:])
-		tmp := (*bbp.WhyAreTheseInline)
-		at += tmp.Size()
+		{
+			tmp := (*bbp.WhyAreTheseInline)
+			at += tmp.Size()
+		}
+		
 		return at
 	}
 	if bbp.Really != nil {
 		buf[at] = 2
 		at++
 		(*bbp.Really).MarshalBebopTo(buf[at:])
-		tmp := (*bbp.Really)
-		at += tmp.Size()
+		{
+			tmp := (*bbp.Really)
+			at += tmp.Size()
+		}
+		
 		return at
 	}
 	return at
@@ -453,8 +483,11 @@ func (bbp *ImportedUnion) UnmarshalBebop(buf []byte) (err error) {
 			if err != nil {
 				return err
 			}
-			tmp := ((*bbp.WhyAreTheseInline))
-			at += tmp.Size()
+			{
+				tmp := ((*bbp.WhyAreTheseInline))
+				at += tmp.Size()
+			}
+			
 			return nil
 		case 2:
 			at += 1
@@ -463,8 +496,11 @@ func (bbp *ImportedUnion) UnmarshalBebop(buf []byte) (err error) {
 			if err != nil {
 				return err
 			}
-			tmp := ((*bbp.Really))
-			at += tmp.Size()
+			{
+				tmp := ((*bbp.Really))
+				at += tmp.Size()
+			}
+			
 			return nil
 		default:
 			return nil
@@ -482,15 +518,21 @@ func (bbp *ImportedUnion) MustUnmarshalBebop(buf []byte) {
 			at += 1
 			bbp.WhyAreTheseInline = new(WhyAreTheseInline)
 			(*bbp.WhyAreTheseInline) = MustMakeWhyAreTheseInlineFromBytes(buf[at:])
-			tmp := ((*bbp.WhyAreTheseInline))
-			at += tmp.Size()
+			{
+				tmp := ((*bbp.WhyAreTheseInline))
+				at += tmp.Size()
+			}
+			
 			return
 		case 2:
 			at += 1
 			bbp.Really = new(Really)
 			(*bbp.Really) = MustMakeReallyFromBytes(buf[at:])
-			tmp := ((*bbp.Really))
-			at += tmp.Size()
+			{
+				tmp := ((*bbp.Really))
+				at += tmp.Size()
+			}
+			
 			return
 		default:
 			return
@@ -553,14 +595,20 @@ func (bbp ImportedUnion) Size() int {
 	bodyLen := 4
 	if bbp.WhyAreTheseInline != nil {
 		bodyLen += 1
-		tmp := (*bbp.WhyAreTheseInline)
-		bodyLen += tmp.Size()
+		{
+			tmp := (*bbp.WhyAreTheseInline)
+			bodyLen += tmp.Size()
+		}
+		
 		return bodyLen
 	}
 	if bbp.Really != nil {
 		bodyLen += 1
-		tmp := (*bbp.Really)
-		bodyLen += tmp.Size()
+		{
+			tmp := (*bbp.Really)
+			bodyLen += tmp.Size()
+		}
+		
 		return bodyLen
 	}
 	return bodyLen

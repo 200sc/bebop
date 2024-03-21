@@ -1,0 +1,10 @@
+struct Fruit {
+        uint64 ID;
+        string Name;
+}
+
+struct Basket {
+        Fruit Apples;
+        Fruit Oranges;
+        Fruit Mangos;
+}

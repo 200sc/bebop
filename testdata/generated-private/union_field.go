@@ -22,8 +22,11 @@ func (bbp withUnionField) MarshalBebopTo(buf []byte) int {
 		buf[at] = 1
 		at++
 		(*bbp.test).MarshalBebopTo(buf[at:])
-		tmp := (*bbp.test)
-		at += tmp.Size()
+		{
+			tmp := (*bbp.test)
+			at += tmp.Size()
+		}
+		
 	}
 	return at
 }
@@ -41,8 +44,11 @@ func (bbp *withUnionField) UnmarshalBebop(buf []byte) (err error) {
 			if err != nil {
 				return err
 			}
-			tmp := ((*bbp.test))
-			at += tmp.Size()
+			{
+				tmp := ((*bbp.test))
+				at += tmp.Size()
+			}
+			
 		default:
 			return nil
 		}
@@ -59,8 +65,11 @@ func (bbp *withUnionField) MustUnmarshalBebop(buf []byte) {
 			at += 1
 			bbp.test = new(list2)
 			(*bbp.test) = mustMakelist2FromBytes(buf[at:])
-			tmp := ((*bbp.test))
-			at += tmp.Size()
+			{
+				tmp := ((*bbp.test))
+				at += tmp.Size()
+			}
+			
 		default:
 			return
 		}
@@ -104,8 +113,11 @@ func (bbp withUnionField) Size() int {
 	bodyLen := 5
 	if bbp.test != nil {
 		bodyLen += 1
-		tmp := (*bbp.test)
-		bodyLen += tmp.Size()
+		{
+			tmp := (*bbp.test)
+			bodyLen += tmp.Size()
+		}
+		
 	}
 	return bodyLen
 }
@@ -272,16 +284,22 @@ func (bbp list2) MarshalBebopTo(buf []byte) int {
 		buf[at] = 1
 		at++
 		(*bbp.cons2).MarshalBebopTo(buf[at:])
-		tmp := (*bbp.cons2)
-		at += tmp.Size()
+		{
+			tmp := (*bbp.cons2)
+			at += tmp.Size()
+		}
+		
 		return at
 	}
 	if bbp.nil2 != nil {
 		buf[at] = 2
 		at++
 		(*bbp.nil2).MarshalBebopTo(buf[at:])
-		tmp := (*bbp.nil2)
-		at += tmp.Size()
+		{
+			tmp := (*bbp.nil2)
+			at += tmp.Size()
+		}
+		
 		return at
 	}
 	return at
@@ -303,8 +321,11 @@ func (bbp *list2) UnmarshalBebop(buf []byte) (err error) {
 			if err != nil {
 				return err
 			}
-			tmp := ((*bbp.cons2))
-			at += tmp.Size()
+			{
+				tmp := ((*bbp.cons2))
+				at += tmp.Size()
+			}
+			
 			return nil
 		case 2:
 			at += 1
@@ -313,8 +334,11 @@ func (bbp *list2) UnmarshalBebop(buf []byte) (err error) {
 			if err != nil {
 				return err
 			}
-			tmp := ((*bbp.nil2))
-			at += tmp.Size()
+			{
+				tmp := ((*bbp.nil2))
+				at += tmp.Size()
+			}
+			
 			return nil
 		default:
 			return nil
@@ -332,15 +356,21 @@ func (bbp *list2) MustUnmarshalBebop(buf []byte) {
 			at += 1
 			bbp.cons2 = new(cons2)
 			(*bbp.cons2) = mustMakecons2FromBytes(buf[at:])
-			tmp := ((*bbp.cons2))
-			at += tmp.Size()
+			{
+				tmp := ((*bbp.cons2))
+				at += tmp.Size()
+			}
+			
 			return
 		case 2:
 			at += 1
 			bbp.nil2 = new(nil2)
 			(*bbp.nil2) = mustMakenil2FromBytes(buf[at:])
-			tmp := ((*bbp.nil2))
-			at += tmp.Size()
+			{
+				tmp := ((*bbp.nil2))
+				at += tmp.Size()
+			}
+			
 			return
 		default:
 			return
@@ -403,14 +433,20 @@ func (bbp list2) Size() int {
 	bodyLen := 4
 	if bbp.cons2 != nil {
 		bodyLen += 1
-		tmp := (*bbp.cons2)
-		bodyLen += tmp.Size()
+		{
+			tmp := (*bbp.cons2)
+			bodyLen += tmp.Size()
+		}
+		
 		return bodyLen
 	}
 	if bbp.nil2 != nil {
 		bodyLen += 1
-		tmp := (*bbp.nil2)
-		bodyLen += tmp.Size()
+		{
+			tmp := (*bbp.nil2)
+			bodyLen += tmp.Size()
+		}
+		
 		return bodyLen
 	}
 	return bodyLen

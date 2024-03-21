@@ -131,8 +131,11 @@ func (bbp library) MarshalBebopTo(buf []byte) int {
 		iohelp.WriteGUIDBytes(buf[at:], k1)
 		at += 16
 		(v1).MarshalBebopTo(buf[at:])
-		tmp := (v1)
-		at += tmp.Size()
+		{
+			tmp := (v1)
+			at += tmp.Size()
+		}
+		
 	}
 	return at
 }
@@ -152,8 +155,11 @@ func (bbp *library) UnmarshalBebop(buf []byte) (err error) {
 		if err != nil {
 			return err
 		}
-		tmp := ((bbp.songs)[k1])
-		at += tmp.Size()
+		{
+			tmp := ((bbp.songs)[k1])
+			at += tmp.Size()
+		}
+		
 	}
 	return nil
 }
@@ -167,8 +173,11 @@ func (bbp *library) MustUnmarshalBebop(buf []byte) {
 		k1 := iohelp.ReadGUIDBytes(buf[at:])
 		at += 16
 		(bbp.songs)[k1] = mustMakesongFromBytes(buf[at:])
-		tmp := ((bbp.songs)[k1])
-		at += tmp.Size()
+		{
+			tmp := ((bbp.songs)[k1])
+			at += tmp.Size()
+		}
+		
 	}
 }
 
@@ -204,8 +213,11 @@ func (bbp library) Size() int {
 	bodyLen += 4
 	for _, v1 := range bbp.songs {
 		bodyLen += 16
-		tmp := (v1)
-		bodyLen += tmp.Size()
+		{
+			tmp := (v1)
+			bodyLen += tmp.Size()
+		}
+		
 	}
 	return bodyLen
 }
@@ -266,8 +278,11 @@ func (bbp song) MarshalBebopTo(buf []byte) int {
 		at += 4
 		for _, v2 := range *bbp.performers {
 			(v2).MarshalBebopTo(buf[at:])
-			tmp := (v2)
-			at += tmp.Size()
+			{
+				tmp := (v2)
+				at += tmp.Size()
+			}
+			
 		}
 	}
 	return at
@@ -308,8 +323,11 @@ func (bbp *song) UnmarshalBebop(buf []byte) (err error) {
 				if err != nil {
 					return err
 				}
-				tmp := (((*bbp.performers))[i3])
-				at += tmp.Size()
+				{
+					tmp := (((*bbp.performers))[i3])
+					at += tmp.Size()
+				}
+				
 			}
 		default:
 			return nil
@@ -340,8 +358,11 @@ func (bbp *song) MustUnmarshalBebop(buf []byte) {
 			at += 4
 			for i3 := range (*bbp.performers) {
 				((*bbp.performers))[i3] = mustMakemusicianFromBytes(buf[at:])
-				tmp := (((*bbp.performers))[i3])
-				at += tmp.Size()
+				{
+					tmp := (((*bbp.performers))[i3])
+					at += tmp.Size()
+				}
+				
 			}
 		default:
 			return
@@ -417,8 +438,11 @@ func (bbp song) Size() int {
 		bodyLen += 1
 		bodyLen += 4
 		for _, elem := range *bbp.performers {
-			tmp := (elem)
-			bodyLen += tmp.Size()
+			{
+				tmp := (elem)
+				bodyLen += tmp.Size()
+			}
+			
 		}
 	}
 	return bodyLen

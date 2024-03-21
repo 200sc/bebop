@@ -252,8 +252,11 @@ func (bbp printRequest) MarshalBebopTo(buf []byte) int {
 		buf[at] = 1
 		at++
 		(*bbp.print).MarshalBebopTo(buf[at:])
-		tmp := (*bbp.print)
-		at += tmp.Size()
+		{
+			tmp := (*bbp.print)
+			at += tmp.Size()
+		}
+		
 	}
 	return at
 }
@@ -271,8 +274,11 @@ func (bbp *printRequest) UnmarshalBebop(buf []byte) (err error) {
 			if err != nil {
 				return err
 			}
-			tmp := ((*bbp.print))
-			at += tmp.Size()
+			{
+				tmp := ((*bbp.print))
+				at += tmp.Size()
+			}
+			
 		default:
 			return nil
 		}
@@ -289,8 +295,11 @@ func (bbp *printRequest) MustUnmarshalBebop(buf []byte) {
 			at += 1
 			bbp.print = new(print)
 			(*bbp.print) = mustMakeprintFromBytes(buf[at:])
-			tmp := ((*bbp.print))
-			at += tmp.Size()
+			{
+				tmp := ((*bbp.print))
+				at += tmp.Size()
+			}
+			
 		default:
 			return
 		}
@@ -334,8 +343,11 @@ func (bbp printRequest) Size() int {
 	bodyLen := 5
 	if bbp.print != nil {
 		bodyLen += 1
-		tmp := (*bbp.print)
-		bodyLen += tmp.Size()
+		{
+			tmp := (*bbp.print)
+			bodyLen += tmp.Size()
+		}
+		
 	}
 	return bodyLen
 }
@@ -380,8 +392,11 @@ func (bbp addRequest) MarshalBebopTo(buf []byte) int {
 		buf[at] = 1
 		at++
 		(*bbp.add).MarshalBebopTo(buf[at:])
-		tmp := (*bbp.add)
-		at += tmp.Size()
+		{
+			tmp := (*bbp.add)
+			at += tmp.Size()
+		}
+		
 	}
 	return at
 }
@@ -399,8 +414,11 @@ func (bbp *addRequest) UnmarshalBebop(buf []byte) (err error) {
 			if err != nil {
 				return err
 			}
-			tmp := ((*bbp.add))
-			at += tmp.Size()
+			{
+				tmp := ((*bbp.add))
+				at += tmp.Size()
+			}
+			
 		default:
 			return nil
 		}
@@ -417,8 +435,11 @@ func (bbp *addRequest) MustUnmarshalBebop(buf []byte) {
 			at += 1
 			bbp.add = new(add)
 			(*bbp.add) = mustMakeaddFromBytes(buf[at:])
-			tmp := ((*bbp.add))
-			at += tmp.Size()
+			{
+				tmp := ((*bbp.add))
+				at += tmp.Size()
+			}
+			
 		default:
 			return
 		}
@@ -462,8 +483,11 @@ func (bbp addRequest) Size() int {
 	bodyLen := 5
 	if bbp.add != nil {
 		bodyLen += 1
-		tmp := (*bbp.add)
-		bodyLen += tmp.Size()
+		{
+			tmp := (*bbp.add)
+			bodyLen += tmp.Size()
+		}
+		
 	}
 	return bodyLen
 }
