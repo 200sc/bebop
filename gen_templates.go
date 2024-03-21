@@ -64,9 +64,9 @@ const (
 	hintSafeKey = "&safe"
 
 	fmtErrReturn            = "if err != nil {\n\treturn err\n}"
-	fmtAddSizeToAt          = "tmp := (%ASGN)\nat += tmp.Size()"
+	fmtAddSizeToAt          = "{\n\ttmp := (%ASGN)\n\tat += tmp.Size()\n}\n"
 	fmtAdd4PlusLenToAt      = "at += 4 + len(%ASGN)"
-	fmtAddSizeToBodyLen     = "tmp := (%ASGN)\nbodyLen += tmp.Size()"
+	fmtAddSizeToBodyLen     = "{\n\ttmp := (%ASGN)\n\tbodyLen += tmp.Size()\n}\n"
 	fmtAdd4PlusLenToBodyLen = "bodyLen += 4 + len(%ASGN)"
 
 	fmtMakeType           = "(%RECV), err = Make%TYPE(r)\n" + fmtErrReturn

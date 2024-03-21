@@ -22,8 +22,11 @@ type UsesImport struct {
 func (bbp UsesImport) MarshalBebopTo(buf []byte) int {
 	at := 0
 	(bbp.Imported).MarshalBebopTo(buf[at:])
-	tmp := (bbp.Imported)
-	at += tmp.Size()
+	{
+		tmp := (bbp.Imported)
+		at += tmp.Size()
+	}
+	
 	return at
 }
 
@@ -33,16 +36,22 @@ func (bbp *UsesImport) UnmarshalBebop(buf []byte) (err error) {
 	if err != nil {
 		return err
 	}
-	tmp := (bbp.Imported)
-	at += tmp.Size()
+	{
+		tmp := (bbp.Imported)
+		at += tmp.Size()
+	}
+	
 	return nil
 }
 
 func (bbp *UsesImport) MustUnmarshalBebop(buf []byte) {
 	at := 0
 	bbp.Imported = generatedtwo.MustMakeImportedTypeFromBytes(buf[at:])
-	tmp := (bbp.Imported)
-	at += tmp.Size()
+	{
+		tmp := (bbp.Imported)
+		at += tmp.Size()
+	}
+	
 }
 
 func (bbp UsesImport) EncodeBebop(iow io.Writer) (err error) {
@@ -65,8 +74,11 @@ func (bbp *UsesImport) DecodeBebop(ior io.Reader) (err error) {
 
 func (bbp UsesImport) Size() int {
 	bodyLen := 0
-	tmp := (bbp.Imported)
-	bodyLen += tmp.Size()
+	{
+		tmp := (bbp.Imported)
+		bodyLen += tmp.Size()
+	}
+	
 	return bodyLen
 }
 
@@ -108,8 +120,11 @@ func (bbp UsesImportMsg) MarshalBebopTo(buf []byte) int {
 		buf[at] = 1
 		at++
 		(*bbp.Imported).MarshalBebopTo(buf[at:])
-		tmp := (*bbp.Imported)
-		at += tmp.Size()
+		{
+			tmp := (*bbp.Imported)
+			at += tmp.Size()
+		}
+		
 	}
 	return at
 }
@@ -127,8 +142,11 @@ func (bbp *UsesImportMsg) UnmarshalBebop(buf []byte) (err error) {
 			if err != nil {
 				return err
 			}
-			tmp := ((*bbp.Imported))
-			at += tmp.Size()
+			{
+				tmp := ((*bbp.Imported))
+				at += tmp.Size()
+			}
+			
 		default:
 			return nil
 		}
@@ -145,8 +163,11 @@ func (bbp *UsesImportMsg) MustUnmarshalBebop(buf []byte) {
 			at += 1
 			bbp.Imported = new(generatedtwo.ImportedType)
 			(*bbp.Imported) = generatedtwo.MustMakeImportedTypeFromBytes(buf[at:])
-			tmp := ((*bbp.Imported))
-			at += tmp.Size()
+			{
+				tmp := ((*bbp.Imported))
+				at += tmp.Size()
+			}
+			
 		default:
 			return
 		}
@@ -190,8 +211,11 @@ func (bbp UsesImportMsg) Size() int {
 	bodyLen := 5
 	if bbp.Imported != nil {
 		bodyLen += 1
-		tmp := (*bbp.Imported)
-		bodyLen += tmp.Size()
+		{
+			tmp := (*bbp.Imported)
+			bodyLen += tmp.Size()
+		}
+		
 	}
 	return bodyLen
 }
@@ -416,16 +440,22 @@ func (bbp UsesImportUnion) MarshalBebopTo(buf []byte) int {
 		buf[at] = 1
 		at++
 		(*bbp.UnionStruct).MarshalBebopTo(buf[at:])
-		tmp := (*bbp.UnionStruct)
-		at += tmp.Size()
+		{
+			tmp := (*bbp.UnionStruct)
+			at += tmp.Size()
+		}
+		
 		return at
 	}
 	if bbp.UnionMessage != nil {
 		buf[at] = 2
 		at++
 		(*bbp.UnionMessage).MarshalBebopTo(buf[at:])
-		tmp := (*bbp.UnionMessage)
-		at += tmp.Size()
+		{
+			tmp := (*bbp.UnionMessage)
+			at += tmp.Size()
+		}
+		
 		return at
 	}
 	return at
@@ -447,8 +477,11 @@ func (bbp *UsesImportUnion) UnmarshalBebop(buf []byte) (err error) {
 			if err != nil {
 				return err
 			}
-			tmp := ((*bbp.UnionStruct))
-			at += tmp.Size()
+			{
+				tmp := ((*bbp.UnionStruct))
+				at += tmp.Size()
+			}
+			
 			return nil
 		case 2:
 			at += 1
@@ -457,8 +490,11 @@ func (bbp *UsesImportUnion) UnmarshalBebop(buf []byte) (err error) {
 			if err != nil {
 				return err
 			}
-			tmp := ((*bbp.UnionMessage))
-			at += tmp.Size()
+			{
+				tmp := ((*bbp.UnionMessage))
+				at += tmp.Size()
+			}
+			
 			return nil
 		default:
 			return nil
@@ -476,15 +512,21 @@ func (bbp *UsesImportUnion) MustUnmarshalBebop(buf []byte) {
 			at += 1
 			bbp.UnionStruct = new(UnionStruct)
 			(*bbp.UnionStruct) = MustMakeUnionStructFromBytes(buf[at:])
-			tmp := ((*bbp.UnionStruct))
-			at += tmp.Size()
+			{
+				tmp := ((*bbp.UnionStruct))
+				at += tmp.Size()
+			}
+			
 			return
 		case 2:
 			at += 1
 			bbp.UnionMessage = new(UnionMessage)
 			(*bbp.UnionMessage) = MustMakeUnionMessageFromBytes(buf[at:])
-			tmp := ((*bbp.UnionMessage))
-			at += tmp.Size()
+			{
+				tmp := ((*bbp.UnionMessage))
+				at += tmp.Size()
+			}
+			
 			return
 		default:
 			return
@@ -547,14 +589,20 @@ func (bbp UsesImportUnion) Size() int {
 	bodyLen := 4
 	if bbp.UnionStruct != nil {
 		bodyLen += 1
-		tmp := (*bbp.UnionStruct)
-		bodyLen += tmp.Size()
+		{
+			tmp := (*bbp.UnionStruct)
+			bodyLen += tmp.Size()
+		}
+		
 		return bodyLen
 	}
 	if bbp.UnionMessage != nil {
 		bodyLen += 1
-		tmp := (*bbp.UnionMessage)
-		bodyLen += tmp.Size()
+		{
+			tmp := (*bbp.UnionMessage)
+			bodyLen += tmp.Size()
+		}
+		
 		return bodyLen
 	}
 	return bodyLen

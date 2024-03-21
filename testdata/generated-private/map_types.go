@@ -164,8 +164,11 @@ func (bbp someMaps) MarshalBebopTo(buf []byte) int {
 					iohelp.WriteBoolBytes(buf[at:], k4)
 					at += 1
 					(v4).MarshalBebopTo(buf[at:])
-					tmp := (v4)
-					at += tmp.Size()
+					{
+						tmp := (v4)
+						at += tmp.Size()
+					}
+					
 				}
 			}
 		}
@@ -193,8 +196,11 @@ func (bbp someMaps) MarshalBebopTo(buf []byte) int {
 		iohelp.WriteGUIDBytes(buf[at:], k1)
 		at += 16
 		(v1).MarshalBebopTo(buf[at:])
-		tmp := (v1)
-		at += tmp.Size()
+		{
+			tmp := (v1)
+			at += tmp.Size()
+		}
+		
 	}
 	return at
 }
@@ -275,8 +281,11 @@ func (bbp *someMaps) UnmarshalBebop(buf []byte) (err error) {
 					if err != nil {
 						return err
 					}
-					tmp := (((((bbp.m3)[i1])[k2])[i3])[k4])
-					at += tmp.Size()
+					{
+						tmp := (((((bbp.m3)[i1])[k2])[i3])[k4])
+						at += tmp.Size()
+					}
+					
 				}
 			}
 		}
@@ -323,8 +332,11 @@ func (bbp *someMaps) UnmarshalBebop(buf []byte) (err error) {
 		if err != nil {
 			return err
 		}
-		tmp := ((bbp.m5)[k1])
-		at += tmp.Size()
+		{
+			tmp := ((bbp.m5)[k1])
+			at += tmp.Size()
+		}
+		
 	}
 	return nil
 }
@@ -375,8 +387,11 @@ func (bbp *someMaps) MustUnmarshalBebop(buf []byte) {
 					k4 := iohelp.ReadBoolBytes(buf[at:])
 					at += 1
 					((((bbp.m3)[i1])[k2])[i3])[k4] = mustMakesFromBytes(buf[at:])
-					tmp := (((((bbp.m3)[i1])[k2])[i3])[k4])
-					at += tmp.Size()
+					{
+						tmp := (((((bbp.m3)[i1])[k2])[i3])[k4])
+						at += tmp.Size()
+					}
+					
 				}
 			}
 		}
@@ -405,8 +420,11 @@ func (bbp *someMaps) MustUnmarshalBebop(buf []byte) {
 		k1 := iohelp.ReadGUIDBytes(buf[at:])
 		at += 16
 		(bbp.m5)[k1] = mustMakemFromBytes(buf[at:])
-		tmp := ((bbp.m5)[k1])
-		at += tmp.Size()
+		{
+			tmp := ((bbp.m5)[k1])
+			at += tmp.Size()
+		}
+		
 	}
 }
 
@@ -559,8 +577,11 @@ func (bbp someMaps) Size() int {
 				bodyLen += 4
 				for _, v4 := range elem {
 					bodyLen += 1
-					tmp := (v4)
-					bodyLen += tmp.Size()
+					{
+						tmp := (v4)
+						bodyLen += tmp.Size()
+					}
+					
 				}
 			}
 		}
@@ -577,8 +598,11 @@ func (bbp someMaps) Size() int {
 	bodyLen += 4
 	for _, v1 := range bbp.m5 {
 		bodyLen += 16
-		tmp := (v1)
-		bodyLen += tmp.Size()
+		{
+			tmp := (v1)
+			bodyLen += tmp.Size()
+		}
+		
 	}
 	return bodyLen
 }

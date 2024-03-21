@@ -282,8 +282,11 @@ func (bbp TaggedUnion) MarshalBebopTo(buf []byte) int {
 		buf[at] = 1
 		at++
 		(*bbp.TaggedSubStruct).MarshalBebopTo(buf[at:])
-		tmp := (*bbp.TaggedSubStruct)
-		at += tmp.Size()
+		{
+			tmp := (*bbp.TaggedSubStruct)
+			at += tmp.Size()
+		}
+		
 		return at
 	}
 	return at
@@ -305,8 +308,11 @@ func (bbp *TaggedUnion) UnmarshalBebop(buf []byte) (err error) {
 			if err != nil {
 				return err
 			}
-			tmp := ((*bbp.TaggedSubStruct))
-			at += tmp.Size()
+			{
+				tmp := ((*bbp.TaggedSubStruct))
+				at += tmp.Size()
+			}
+			
 			return nil
 		default:
 			return nil
@@ -324,8 +330,11 @@ func (bbp *TaggedUnion) MustUnmarshalBebop(buf []byte) {
 			at += 1
 			bbp.TaggedSubStruct = new(TaggedSubStruct)
 			(*bbp.TaggedSubStruct) = MustMakeTaggedSubStructFromBytes(buf[at:])
-			tmp := ((*bbp.TaggedSubStruct))
-			at += tmp.Size()
+			{
+				tmp := ((*bbp.TaggedSubStruct))
+				at += tmp.Size()
+			}
+			
 			return
 		default:
 			return
@@ -372,8 +381,11 @@ func (bbp TaggedUnion) Size() int {
 	bodyLen := 4
 	if bbp.TaggedSubStruct != nil {
 		bodyLen += 1
-		tmp := (*bbp.TaggedSubStruct)
-		bodyLen += tmp.Size()
+		{
+			tmp := (*bbp.TaggedSubStruct)
+			bodyLen += tmp.Size()
+		}
+		
 		return bodyLen
 	}
 	return bodyLen

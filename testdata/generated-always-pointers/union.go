@@ -263,24 +263,33 @@ func (bbp *U) MarshalBebopTo(buf []byte) int {
 		buf[at] = 1
 		at++
 		(*bbp.A).MarshalBebopTo(buf[at:])
-		tmp := (*bbp.A)
-		at += tmp.Size()
+		{
+			tmp := (*bbp.A)
+			at += tmp.Size()
+		}
+		
 		return at
 	}
 	if bbp.B != nil {
 		buf[at] = 2
 		at++
 		(*bbp.B).MarshalBebopTo(buf[at:])
-		tmp := (*bbp.B)
-		at += tmp.Size()
+		{
+			tmp := (*bbp.B)
+			at += tmp.Size()
+		}
+		
 		return at
 	}
 	if bbp.C != nil {
 		buf[at] = 3
 		at++
 		(*bbp.C).MarshalBebopTo(buf[at:])
-		tmp := (*bbp.C)
-		at += tmp.Size()
+		{
+			tmp := (*bbp.C)
+			at += tmp.Size()
+		}
+		
 		return at
 	}
 	return at
@@ -302,8 +311,11 @@ func (bbp *U) UnmarshalBebop(buf []byte) (err error) {
 			if err != nil {
 				return err
 			}
-			tmp := ((*bbp.A))
-			at += tmp.Size()
+			{
+				tmp := ((*bbp.A))
+				at += tmp.Size()
+			}
+			
 			return nil
 		case 2:
 			at += 1
@@ -312,8 +324,11 @@ func (bbp *U) UnmarshalBebop(buf []byte) (err error) {
 			if err != nil {
 				return err
 			}
-			tmp := ((*bbp.B))
-			at += tmp.Size()
+			{
+				tmp := ((*bbp.B))
+				at += tmp.Size()
+			}
+			
 			return nil
 		case 3:
 			at += 1
@@ -322,8 +337,11 @@ func (bbp *U) UnmarshalBebop(buf []byte) (err error) {
 			if err != nil {
 				return err
 			}
-			tmp := ((*bbp.C))
-			at += tmp.Size()
+			{
+				tmp := ((*bbp.C))
+				at += tmp.Size()
+			}
+			
 			return nil
 		default:
 			return nil
@@ -341,22 +359,31 @@ func (bbp *U) MustUnmarshalBebop(buf []byte) {
 			at += 1
 			bbp.A = new(A)
 			(*bbp.A) = MustMakeAFromBytes(buf[at:])
-			tmp := ((*bbp.A))
-			at += tmp.Size()
+			{
+				tmp := ((*bbp.A))
+				at += tmp.Size()
+			}
+			
 			return
 		case 2:
 			at += 1
 			bbp.B = new(B)
 			(*bbp.B) = MustMakeBFromBytes(buf[at:])
-			tmp := ((*bbp.B))
-			at += tmp.Size()
+			{
+				tmp := ((*bbp.B))
+				at += tmp.Size()
+			}
+			
 			return
 		case 3:
 			at += 1
 			bbp.C = new(C)
 			(*bbp.C) = MustMakeCFromBytes(buf[at:])
-			tmp := ((*bbp.C))
-			at += tmp.Size()
+			{
+				tmp := ((*bbp.C))
+				at += tmp.Size()
+			}
+			
 			return
 		default:
 			return
@@ -435,20 +462,29 @@ func (bbp *U) Size() int {
 	bodyLen := 4
 	if bbp.A != nil {
 		bodyLen += 1
-		tmp := (*bbp.A)
-		bodyLen += tmp.Size()
+		{
+			tmp := (*bbp.A)
+			bodyLen += tmp.Size()
+		}
+		
 		return bodyLen
 	}
 	if bbp.B != nil {
 		bodyLen += 1
-		tmp := (*bbp.B)
-		bodyLen += tmp.Size()
+		{
+			tmp := (*bbp.B)
+			bodyLen += tmp.Size()
+		}
+		
 		return bodyLen
 	}
 	if bbp.C != nil {
 		bodyLen += 1
-		tmp := (*bbp.C)
-		bodyLen += tmp.Size()
+		{
+			tmp := (*bbp.C)
+			bodyLen += tmp.Size()
+		}
+		
 		return bodyLen
 	}
 	return bodyLen
@@ -490,8 +526,11 @@ func (bbp *Cons) MarshalBebopTo(buf []byte) int {
 	iohelp.WriteUint32Bytes(buf[at:], bbp.Head)
 	at += 4
 	(bbp.Tail).MarshalBebopTo(buf[at:])
-	tmp := (bbp.Tail)
-	at += tmp.Size()
+	{
+		tmp := (bbp.Tail)
+		at += tmp.Size()
+	}
+	
 	return at
 }
 
@@ -506,8 +545,11 @@ func (bbp *Cons) UnmarshalBebop(buf []byte) (err error) {
 	if err != nil {
 		return err
 	}
-	tmp := (bbp.Tail)
-	at += tmp.Size()
+	{
+		tmp := (bbp.Tail)
+		at += tmp.Size()
+	}
+	
 	return nil
 }
 
@@ -516,8 +558,11 @@ func (bbp *Cons) MustUnmarshalBebop(buf []byte) {
 	bbp.Head = iohelp.ReadUint32Bytes(buf[at:])
 	at += 4
 	bbp.Tail = MustMakeListFromBytes(buf[at:])
-	tmp := (bbp.Tail)
-	at += tmp.Size()
+	{
+		tmp := (bbp.Tail)
+		at += tmp.Size()
+	}
+	
 }
 
 func (bbp *Cons) EncodeBebop(iow io.Writer) (err error) {
@@ -543,8 +588,11 @@ func (bbp *Cons) DecodeBebop(ior io.Reader) (err error) {
 func (bbp *Cons) Size() int {
 	bodyLen := 0
 	bodyLen += 4
-	tmp := (bbp.Tail)
-	bodyLen += tmp.Size()
+	{
+		tmp := (bbp.Tail)
+		bodyLen += tmp.Size()
+	}
+	
 	return bodyLen
 }
 
@@ -632,16 +680,22 @@ func (bbp *List) MarshalBebopTo(buf []byte) int {
 		buf[at] = 1
 		at++
 		(*bbp.Cons).MarshalBebopTo(buf[at:])
-		tmp := (*bbp.Cons)
-		at += tmp.Size()
+		{
+			tmp := (*bbp.Cons)
+			at += tmp.Size()
+		}
+		
 		return at
 	}
 	if bbp.Null != nil {
 		buf[at] = 2
 		at++
 		(*bbp.Null).MarshalBebopTo(buf[at:])
-		tmp := (*bbp.Null)
-		at += tmp.Size()
+		{
+			tmp := (*bbp.Null)
+			at += tmp.Size()
+		}
+		
 		return at
 	}
 	return at
@@ -663,8 +717,11 @@ func (bbp *List) UnmarshalBebop(buf []byte) (err error) {
 			if err != nil {
 				return err
 			}
-			tmp := ((*bbp.Cons))
-			at += tmp.Size()
+			{
+				tmp := ((*bbp.Cons))
+				at += tmp.Size()
+			}
+			
 			return nil
 		case 2:
 			at += 1
@@ -673,8 +730,11 @@ func (bbp *List) UnmarshalBebop(buf []byte) (err error) {
 			if err != nil {
 				return err
 			}
-			tmp := ((*bbp.Null))
-			at += tmp.Size()
+			{
+				tmp := ((*bbp.Null))
+				at += tmp.Size()
+			}
+			
 			return nil
 		default:
 			return nil
@@ -692,15 +752,21 @@ func (bbp *List) MustUnmarshalBebop(buf []byte) {
 			at += 1
 			bbp.Cons = new(Cons)
 			(*bbp.Cons) = MustMakeConsFromBytes(buf[at:])
-			tmp := ((*bbp.Cons))
-			at += tmp.Size()
+			{
+				tmp := ((*bbp.Cons))
+				at += tmp.Size()
+			}
+			
 			return
 		case 2:
 			at += 1
 			bbp.Null = new(Null)
 			(*bbp.Null) = MustMakeNullFromBytes(buf[at:])
-			tmp := ((*bbp.Null))
-			at += tmp.Size()
+			{
+				tmp := ((*bbp.Null))
+				at += tmp.Size()
+			}
+			
 			return
 		default:
 			return
@@ -763,14 +829,20 @@ func (bbp *List) Size() int {
 	bodyLen := 4
 	if bbp.Cons != nil {
 		bodyLen += 1
-		tmp := (*bbp.Cons)
-		bodyLen += tmp.Size()
+		{
+			tmp := (*bbp.Cons)
+			bodyLen += tmp.Size()
+		}
+		
 		return bodyLen
 	}
 	if bbp.Null != nil {
 		bodyLen += 1
-		tmp := (*bbp.Null)
-		bodyLen += tmp.Size()
+		{
+			tmp := (*bbp.Null)
+			bodyLen += tmp.Size()
+		}
+		
 		return bodyLen
 	}
 	return bodyLen

@@ -150,8 +150,11 @@ func (bbp requestResponse) MarshalBebopTo(buf []byte) int {
 	at += 4
 	for _, v1 := range bbp.availableFurniture {
 		(v1).MarshalBebopTo(buf[at:])
-		tmp := (v1)
-		at += tmp.Size()
+		{
+			tmp := (v1)
+			at += tmp.Size()
+		}
+		
 	}
 	return at
 }
@@ -168,8 +171,11 @@ func (bbp *requestResponse) UnmarshalBebop(buf []byte) (err error) {
 		if err != nil {
 			return err
 		}
-		tmp := ((bbp.availableFurniture)[i1])
-		at += tmp.Size()
+		{
+			tmp := ((bbp.availableFurniture)[i1])
+			at += tmp.Size()
+		}
+		
 	}
 	return nil
 }
@@ -180,8 +186,11 @@ func (bbp *requestResponse) MustUnmarshalBebop(buf []byte) {
 	at += 4
 	for i1 := range bbp.availableFurniture {
 		(bbp.availableFurniture)[i1] = mustMakefurnitureFromBytes(buf[at:])
-		tmp := ((bbp.availableFurniture)[i1])
-		at += tmp.Size()
+		{
+			tmp := ((bbp.availableFurniture)[i1])
+			at += tmp.Size()
+		}
+		
 	}
 }
 
@@ -213,8 +222,11 @@ func (bbp requestResponse) Size() int {
 	bodyLen := 0
 	bodyLen += 4
 	for _, elem := range bbp.availableFurniture {
-		tmp := (elem)
-		bodyLen += tmp.Size()
+		{
+			tmp := (elem)
+			bodyLen += tmp.Size()
+		}
+		
 	}
 	return bodyLen
 }
