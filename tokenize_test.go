@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-var testFiles = []string{
+var testTokenizeFiles = []string{
 	"array_of_strings",
 	"all_consts",
 	"basic_arrays",
@@ -31,7 +31,7 @@ var testFiles = []string{
 
 func TestTokenize(t *testing.T) {
 	t.Parallel()
-	for _, filename := range testFiles {
+	for _, filename := range testTokenizeFiles {
 		filename := filename
 		t.Run(filename, func(t *testing.T) {
 			t.Parallel()
@@ -111,7 +111,7 @@ func TestTokenizeNoSemis(t *testing.T) {
 		"import":             "import semis cannot be added",
 		"msgpack_comparison": "we are naively removing semis from within comments",
 	}
-	for _, filename := range testFiles {
+	for _, filename := range testTokenizeFiles {
 		filename := filename
 		t.Run(filename, func(t *testing.T) {
 			t.Parallel()
