@@ -404,6 +404,7 @@ var genTestFiles = []string{
 	"documentation",
 	"enums",
 	"foo",
+	"fruit",
 	"jazz",
 	"lab",
 	"map_types",
