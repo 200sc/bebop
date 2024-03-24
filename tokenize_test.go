@@ -27,6 +27,7 @@ var testTokenizeFiles = []string{
 	"union",
 	"bitflags",
 	"typed_enums",
+	"decorations",
 }
 
 func TestTokenize(t *testing.T) {
@@ -110,6 +111,7 @@ func TestTokenizeNoSemis(t *testing.T) {
 		"import_b":           "import semis cannot be added",
 		"import":             "import semis cannot be added",
 		"msgpack_comparison": "we are naively removing semis from within comments",
+		"decorations":        "TODO",
 	}
 	for _, filename := range testTokenizeFiles {
 		filename := filename

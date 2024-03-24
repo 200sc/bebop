@@ -14,6 +14,106 @@ func TestReadFile(t *testing.T) {
 	}
 	tcs := []testCase{
 		{
+			file: "decorations",
+			expected: File{
+				Structs: []Struct{
+					{
+						Name:   "TaggedStruct2",
+						OpCode: 1111573057,
+						Fields: []Field{
+							{
+								Name: "foo",
+								FieldType: FieldType{
+									Simple: "string",
+								},
+								Decorations: Decorations{
+									Custom: map[string]string{
+										"json": "foo,omitempty",
+									},
+								},
+							},
+						},
+						Decorations: Decorations{
+							DeprecatedMessage: "yes",
+							Deprecated:        true,
+						},
+					},
+				},
+				Messages: []Message{
+					{
+						Name:   "TaggedMessage2",
+						OpCode: 32,
+						Fields: map[uint8]Field{
+							1: {
+								Name: "bar",
+								FieldType: FieldType{
+									Simple: "uint8",
+								},
+								Decorations: Decorations{
+									Deprecated:        true,
+									DeprecatedMessage: "bar",
+									Custom: map[string]string{
+										"db":    "bar",
+										"hello": "world",
+									},
+								},
+							},
+						},
+						Decorations: Decorations{
+							Deprecated: true,
+						},
+					},
+				},
+				Unions: []Union{
+					{
+						Name: "TaggedUnion2",
+						Fields: map[uint8]UnionField{
+							1: {
+								Struct: &Struct{
+									Name: "TaggedSubStruct",
+									Fields: []Field{
+										{
+											Name: "biz",
+											FieldType: FieldType{
+												Simple: "guid",
+											},
+											Decorations: Decorations{
+												Custom: map[string]string{
+													"four": "four",
+												},
+											},
+										},
+									},
+								},
+								Decorations: Decorations{
+									Deprecated: true,
+									Custom: map[string]string{
+										"one":     "one",
+										"two":     "two",
+										"boolean": "",
+										"other":   "",
+									},
+								},
+							},
+						},
+					},
+				},
+				Enums: []Enum{
+					{
+						Name:       "TestFlags3",
+						SimpleType: "int64",
+						Options: []EnumOption{
+							{Name: "None", Value: 0},
+							{Name: "Read", Value: 1},
+							{Name: "Write", Value: 2},
+							{Name: "ReadWrite", Value: 3},
+							{Name: "Complex", Value: 19},
+						},
+					},
+				},
+			},
+		},
+		{
 			file: "typed_enums",
 			expected: File{
 				Structs: []Struct{
@@ -318,93 +418,6 @@ func TestReadFile(t *testing.T) {
 											Name: "hello",
 											FieldType: FieldType{
 												Simple: "uint32",
-											},
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-		},
-		{
-			file: "tags",
-			expected: File{
-				Structs: []Struct{
-					{
-						Name: "TaggedStruct",
-						Fields: []Field{
-							{
-								Name: "foo",
-								FieldType: FieldType{
-									Simple: "string",
-								},
-								Comment: "[tag(json:\"foo,omitempty\")]",
-								Tags: []Tag{
-									{
-										Key:   "json",
-										Value: "foo,omitempty",
-									},
-								},
-							},
-						},
-					},
-				},
-				Messages: []Message{
-					{
-						Name: "TaggedMessage",
-						Fields: map[uint8]Field{
-							1: {
-								Name:    "bar",
-								Comment: "[tag(db:\"bar\")]",
-								FieldType: FieldType{
-									Simple: "uint8",
-								},
-								Tags: []Tag{
-									{
-										Key:   "db",
-										Value: "bar",
-									},
-								},
-							},
-						},
-					},
-				},
-				Unions: []Union{
-					{
-						Name: "TaggedUnion",
-						Fields: map[uint8]UnionField{
-							1: {
-								Tags: []Tag{
-									{
-										Key:   "one",
-										Value: "one",
-									},
-									{
-										Key:   "two",
-										Value: "two",
-									},
-									{
-										Key:     "boolean",
-										Boolean: true,
-									},
-								},
-								Struct: &Struct{
-									Name:    "TaggedSubStruct",
-									Comment: "[tag(one:\"one\")]\n[tag(two:\"two\")]\n[tag(boolean)]",
-									Fields: []Field{
-										{
-											Name: "biz",
-											FieldType: FieldType{
-												Simple: "guid",
-											},
-											Comment: "[tag(four:\"four\")]",
-											Tags: []Tag{
-												{
-													Key:   "four",
-													Value: "four",
-												},
 											},
 										},
 									},
@@ -737,9 +750,11 @@ func TestReadFile(t *testing.T) {
 						Name: "DepM",
 						Fields: map[uint8]Field{
 							1: {
-								Name:              "x",
-								Deprecated:        true,
-								DeprecatedMessage: "x in DepM",
+								Name: "x",
+								Decorations: Decorations{
+									Deprecated:        true,
+									DeprecatedMessage: "x in DepM",
+								},
 								FieldType: FieldType{
 									Simple: typeInt32,
 								},
@@ -757,18 +772,22 @@ func TestReadFile(t *testing.T) {
 								},
 							},
 							2: {
-								Name:              "y",
-								Deprecated:        true,
-								DeprecatedMessage: "y in DocM",
+								Name: "y",
+								Decorations: Decorations{
+									Deprecated:        true,
+									DeprecatedMessage: "y in DocM",
+								},
 								FieldType: FieldType{
 									Simple: typeInt32,
 								},
 							},
 							3: {
-								Name:              "z",
-								Comment:           " Deprecated, documented field ",
-								Deprecated:        true,
-								DeprecatedMessage: "z in DocM",
+								Name:    "z",
+								Comment: " Deprecated, documented field ",
+								Decorations: Decorations{
+									Deprecated:        true,
+									DeprecatedMessage: "z in DocM",
+								},
 								FieldType: FieldType{
 									Simple: typeInt32,
 								},
@@ -798,10 +817,12 @@ func TestReadFile(t *testing.T) {
 						Unsigned:   true,
 						Options: []EnumOption{
 							{
-								Name:              "X",
-								UintValue:         1,
-								Deprecated:        true,
-								DeprecatedMessage: "X in DepE",
+								Name:      "X",
+								UintValue: 1,
+								Decorations: Decorations{
+									Deprecated:        true,
+									DeprecatedMessage: "X in DepE",
+								},
 							},
 						},
 					}, {
@@ -815,16 +836,20 @@ func TestReadFile(t *testing.T) {
 								UintValue: 1,
 								Comment:   " Documented constant ",
 							}, {
-								Name:              "Y",
-								UintValue:         2,
-								Deprecated:        true,
-								DeprecatedMessage: "Y in DocE",
+								Name:      "Y",
+								UintValue: 2,
+								Decorations: Decorations{
+									Deprecated:        true,
+									DeprecatedMessage: "Y in DocE",
+								},
 							}, {
-								Name:              "Z",
-								UintValue:         3,
-								Comment:           " Deprecated, documented constant ",
-								Deprecated:        true,
-								DeprecatedMessage: "Z in DocE",
+								Name:      "Z",
+								UintValue: 3,
+								Comment:   " Deprecated, documented constant ",
+								Decorations: Decorations{
+									Deprecated:        true,
+									DeprecatedMessage: "Z in DocE",
+								},
 							},
 						},
 					},
@@ -850,10 +875,12 @@ func TestReadFile(t *testing.T) {
 								Name:      "Middle",
 								UintValue: 3,
 							}, {
-								Name:              "Beginning",
-								UintValue:         4,
-								DeprecatedMessage: "who knows",
-								Deprecated:        true,
+								Name:      "Beginning",
+								UintValue: 4,
+								Decorations: Decorations{
+									DeprecatedMessage: "who knows",
+									Deprecated:        true,
+								},
 							},
 						},
 					},
@@ -881,10 +908,12 @@ func TestReadFile(t *testing.T) {
 								Name:      "Middle",
 								UintValue: 3,
 							}, {
-								Name:              "Beginning",
-								UintValue:         4,
-								DeprecatedMessage: "who knows",
-								Deprecated:        true,
+								Name:      "Beginning",
+								UintValue: 4,
+								Decorations: Decorations{
+									DeprecatedMessage: "who knows",
+									Deprecated:        true,
+								},
 							},
 						},
 					},
@@ -1596,9 +1625,11 @@ func TestReadFile(t *testing.T) {
 								},
 							},
 							2: {
-								Name:              "secretTunnel",
-								Deprecated:        true,
-								DeprecatedMessage: "Nobody react to what I'm about to say...",
+								Name: "secretTunnel",
+								Decorations: Decorations{
+									Deprecated:        true,
+									DeprecatedMessage: "Nobody react to what I'm about to say...",
+								},
 								FieldType: FieldType{
 									Simple: typeString,
 								},
@@ -1746,8 +1777,8 @@ func TestReadFileError(t *testing.T) {
 		{file: "invalid_const_no_semi", errMessage: "[0:34] expected (Semicolon), got no token"},
 		{file: "invalid_const_float_no_semi", errMessage: "[0:36] expected (Semicolon), got no token"},
 		{file: "invalid_enum_with_op_code", errMessage: "[1:4] enums may not have attached op codes"},
-		{file: "invalid_op_code_1", errMessage: "[0:2] expected (OpCode, Flags) got Close Square"},
-		{file: "invalid_op_code_2", errMessage: "[0:6] expected (OpCode, Flags) got Ident"},
+		{file: "invalid_op_code_1", errMessage: "[0:2] expected (OpCode, Deprecated, Flags, Ident) got Close Square"},
+		{file: "invalid_op_code_2", errMessage: "[0:15] file ended with unattached decoration"},
 		{file: "invalid_op_code_3", errMessage: "[0:15] opcode string \"12345\" not 4 ascii characters"},
 		{file: "invalid_op_code_4", errMessage: "[0:8] expected (Open Paren) got Open Square"},
 		{file: "invalid_op_code_5", errMessage: "[0:81] strconv.ParseUint: parsing \"1111111111111111111111111111111111111111111111111111111111111111111111111\": value out of range"},
@@ -1756,7 +1787,7 @@ func TestReadFileError(t *testing.T) {
 		{file: "invalid_op_code_8", errMessage: "[0:13] expected (Integer Literal, String Literal) got Ident"},
 		{file: "invalid_op_code_9", errMessage: "[0:13] opcode string \"123\" not 4 ascii characters"},
 		{file: "invalid_enum_bad_deprecated", errMessage: "[1:17] expected (String Literal) got Equals"},
-		{file: "invalid_enum_double_deprecated", errMessage: "[2:5] expected enum option following deprecated annotation"},
+		{file: "invalid_enum_double_deprecated", errMessage: "[2:5] deprecated cannot be applied to the same target twice"},
 		{file: "invalid_enum_no_close", errMessage: "[2:0] enum definition ended early"},
 		{file: "invalid_enum_no_curly", errMessage: "[1:0] expected (Colon, Open Curly) got Newline"},
 		{file: "invalid_enum_no_eq", errMessage: "[1:9] expected (Equals) got Integer Literal"},
@@ -1765,7 +1796,7 @@ func TestReadFileError(t *testing.T) {
 		{file: "invalid_enum_no_semi", errMessage: "[2:0] expected (Semicolon) got Newline"},
 		{file: "invalid_struct_bad_deprecated", errMessage: "[1:20] expected (String Literal) got Ident"},
 		{file: "invalid_struct_bad_type", errMessage: "[1:9] expected (Ident, Array, Map) got Open Square"},
-		{file: "invalid_struct_double_deprecated", errMessage: "[2:5] expected field following deprecated annotation"},
+		{file: "invalid_struct_double_deprecated", errMessage: "[2:5] deprecated cannot be applied to the same target twice"},
 		{file: "invalid_struct_no_close", errMessage: "[1:14] struct definition ended early"},
 		{file: "invalid_struct_no_curly", errMessage: "[1:0] expected (Open Curly) got Newline"},
 		{file: "invalid_struct_no_field_name", errMessage: "[1:10] expected (Ident) got Semicolon"},
@@ -1773,10 +1804,10 @@ func TestReadFileError(t *testing.T) {
 		{file: "invalid_struct_no_semi", errMessage: "[2:0] expected (Semicolon) got Newline"},
 		{file: "invalid_message_bad_deprecated", errMessage: "[1:18] expected (String Literal) got Arrow"},
 		{file: "invalid_message_bad_type", errMessage: "[1:14] expected (Ident, Array, Map) got Open Square"},
-		{file: "invalid_message_double_deprecated", errMessage: "[2:5] expected field following deprecated annotation"},
+		{file: "invalid_message_double_deprecated", errMessage: "[2:5] deprecated cannot be applied to the same target twice"},
 		{file: "invalid_message_hex_int", errMessage: "[1:7] strconv.ParseUint: parsing \"0x1\": invalid syntax"},
 		{file: "invalid_message_no_arrow", errMessage: "[1:11] expected (Arrow) got Ident"},
-		{file: "invalid_message_no_close", errMessage: "[1:19] expected (Newline, Integer Literal, Open Square, Block Comment, Line Comment, Close Curly), got no token"},
+		{file: "invalid_message_no_close", errMessage: "[1:19] expected (Newline, Integer Literal, Open Square, Block Comment, Line Comment, At Sign, Close Curly), got no token"},
 		{file: "invalid_message_no_curly", errMessage: "[1:0] expected (Open Curly) got Newline"},
 		{file: "invalid_message_no_field_name", errMessage: "[1:15] expected (Ident) got Semicolon"},
 		{file: "invalid_message_no_name", errMessage: "[0:9] expected (Ident) got Open Curly"},
@@ -1789,7 +1820,7 @@ func TestReadFileError(t *testing.T) {
 		{file: "invalid_readonly_message", errMessage: "[0:16] expected (Struct) got (Message)"},
 		{file: "invalid_readonly_comment", errMessage: "[0:19] expected (Struct) got (Block Comment)"},
 		{file: "invalid_nested_union", errMessage: "[1:14] union fields must be messages or structs"},
-		{file: "invalid_union_double_deprecated", errMessage: "[2:5] expected field following deprecated annotation"},
+		{file: "invalid_union_double_deprecated", errMessage: "[2:5] deprecated cannot be applied to the same target twice"},
 		{file: "invalid_union_invalid_deprecated", errMessage: "[1:17] unexpected token '!', expected number, letter, or control sequence"},
 		{file: "invalid_union_invalid_message", errMessage: "[2:10] strconv.ParseUint: parsing \"-1\": invalid syntax"},
 		{file: "invalid_union_invalid_struct", errMessage: "[2:19] expected (Ident) got Semicolon"},
@@ -1820,7 +1851,7 @@ func TestReadFileError(t *testing.T) {
 		{file: "invalid_array_bad_key", errMessage: "[1:15] expected (Ident, Array, Map) got Close Square"},
 		{file: "invalid_array_no_close_square", errMessage: "[1:19] expected (Close Square) got Ident"},
 		{file: "invalid_array_suffix__no_close_square", errMessage: "[1:13] expected (Close Square) got Ident"},
-		{file: "invalid_union_no_message_int", errMessage: "[5:14] expected (Newline, Integer Literal, Open Square, Block Comment, Line Comment, Close Curly) got Ident"},
+		{file: "invalid_union_no_message_int", errMessage: "[5:14] expected (Newline, Integer Literal, Open Square, Block Comment, Line Comment, At Sign, Close Curly) got Ident"},
 		{file: "invalid_bitflags_unknown_name_uint", errMessage: "[2:9] enum option B undefined"},
 		{file: "invalid_bitflags_unknown_name", errMessage: "[2:9] enum option B undefined"},
 		{file: "invalid_bitflags_unparseable_int", errMessage: "strconv.ParseInt: parsing \"1111111111111111111111111111111111111111111111111111111111111111111111\": value out of range"},
@@ -1857,16 +1888,4 @@ func TestReadFileError(t *testing.T) {
 			}
 		})
 	}
-}
-
-func Test_parseCommentTag(t *testing.T) {
-	t.Parallel()
-	t.Run("un-unquoteable", func(t *testing.T) {
-		t.Parallel()
-		s := "[tag(k:\"foo)]"
-		_, ok := parseCommentTag(s)
-		if ok {
-			t.Fatalf("parseCommentTag should have failed")
-		}
-	})
 }

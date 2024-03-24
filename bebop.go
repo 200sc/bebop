@@ -47,6 +47,7 @@ type Struct struct {
 	// If ReadOnly is true, generated code for the struct will
 	// provide field getters instead of exporting fields.
 	ReadOnly bool
+	Decorations
 }
 
 // A Field is an individual, typed data component making up
@@ -55,11 +56,7 @@ type Field struct {
 	FieldType
 	Name    string
 	Comment string
-	// Tags are not written by default, and must be enabled via a compiler flag.
-	Tags []Tag
-	// DeprecatedMessage is only provided if Deprecated is true.
-	DeprecatedMessage string
-	Deprecated        bool
+	Decorations
 }
 
 // A Message is a record type where all fields are optional and keyed to indices.
@@ -71,6 +68,7 @@ type Message struct {
 	// Namespace is only provided for imported types, and only
 	// used in code generation.
 	Namespace string
+	Decorations
 }
 
 // A Union is like a message where explicitly one field will be provided.
@@ -82,17 +80,14 @@ type Union struct {
 	// Namespace is only provided for imported types, and only
 	// used in code generation.
 	Namespace string
+	Decorations
 }
 
 // A UnionField is either a Message, Struct, or Union, defined inline.
 type UnionField struct {
 	Message *Message
 	Struct  *Struct
-	// Tags are not written by default, ard must be enabled via a compiler flag.
-	Tags []Tag
-	// DeprecatedMessage is only provided if Deprecated is true.
-	DeprecatedMessage string
-	Deprecated        bool
+	Decorations
 }
 
 // An Enum is a definition that will generate typed enumerable options.
@@ -107,19 +102,18 @@ type Enum struct {
 	// otherwise specified, it defaults to uint32
 	SimpleType string
 	Unsigned   bool
+	Decorations
 }
 
 // An EnumOption is one possible value for a field typed as a specific Enum.
 type EnumOption struct {
 	Name    string
 	Comment string
-	// DeprecatedMessage is only provided if Deprecated is true.
-	DeprecatedMessage string
 	// Only one of Value or UintValue should e populated, dependant on
 	// if the enum this option applies to is unsigned.
-	Value      int64
-	UintValue  uint64
-	Deprecated bool
+	Value     int64
+	UintValue uint64
+	Decorations
 }
 
 // A FieldType is a union of three choices: Simple types, array types, and map types.
@@ -146,12 +140,25 @@ type Const struct {
 	Comment    string
 	Name       string
 	Value      string
+	Decorations
 }
 
-// A Tag is a Go struct field tag, e.g. `json:"userId,omitempty"`
-type Tag struct {
-	Key   string
-	Value string
-	// Boolean is set if Value is empty, in the form `key`, not `key:""`.
-	Boolean bool
+type Decorations struct {
+	// A DeprecatedMessage is only provided if Deprecated is true.
+	DeprecatedMessage string
+	// The Deprecated boolean implies the field or top level structure
+	// this is associated with should not be used. Deprecated message
+	// fields will not be written to the wire format even if they are
+	// provided.
+	Deprecated bool
+	// Custom annotations are any not recognized by the parser.
+	// Recognized annotations are deprecated, opcode, flags;
+	// @decorator will result in an empty value for the key
+	// 'decorator', and is equivalent to @decorator("").
+	// In Go, Custom decorations on fields will result in struct
+	// tags; empty values for custom decorations in this case
+	// correspond to boolean struct fields i.e.
+	// @boolean + @json("abc") =
+	// 'field Type `boolean json:"abc"`'
+	Custom map[string]string
 }

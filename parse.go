@@ -25,10 +25,12 @@ func ReadFile(r io.Reader) (File, []string, error) {
 	nextRecordOpCode := uint32(0)
 	nextRecordReadOnly := false
 	nextRecordBitFlags := false
+	nextDecorations := Decorations{Custom: map[string]string{}}
 	warnings := []string{}
 	for tr.Next() {
 		tk := tr.Token()
 		switch tk.kind {
+		// file headers
 		case tokenKindImport:
 			toks, err := expectNext(tr, tokenKindStringLiteral)
 			if err != nil {
@@ -38,6 +40,7 @@ func ReadFile(r io.Reader) (File, []string, error) {
 			imported, _ := strconv.Unquote(string(toks[0].concrete))
 			f.Imports = append(f.Imports, imported)
 			continue
+			// comments and whitespace
 		case tokenKindNewline:
 			nextCommentLines = []string{}
 			continue
@@ -47,25 +50,32 @@ func ReadFile(r io.Reader) (File, []string, error) {
 		case tokenKindLineComment:
 			nextCommentLines = append(nextCommentLines, sanitizeComment(tk))
 			continue
-		case tokenKindOpenSquare:
-			if err := expectAnyOfNext(tr, tokenKindOpCode, tokenKindFlags); err != nil {
+			// annotations
+		case tokenKindOpenSquare, tokenKindAtSign:
+			k, v, opcodeV, err := readDecoration(tr, tk.kind == tokenKindOpenSquare)
+			if err != nil {
 				return f, warnings, err
 			}
-			switch tr.Token().kind {
-			case tokenKindOpCode:
-				tr.UnNext()
-				var err error
-				nextRecordOpCode, err = readOpCode(tr)
-				if err != nil {
-					return f, warnings, err
-				}
-			case tokenKindFlags:
+			// TODO: are decorator keys case sensitive
+			// TODO: can you put multiple decorators in a row
+			// TODO: are semicolons required, allowed, disallowed after decorators
+			// TODO: if you put the same decorator twice, what errors
+			switch k {
+			case "opcode":
+				nextRecordOpCode = opcodeV
+			case "flags":
 				nextRecordBitFlags = true
-				if err := expectAnyOfNext(tr, tokenKindCloseSquare); err != nil {
-					return f, warnings, err
+			case "deprecated":
+				if nextDecorations.Deprecated {
+					return f, warnings, readError(tk, "deprecated cannot be applied to the same target twice")
 				}
+				nextDecorations.Deprecated = true
+				nextDecorations.DeprecatedMessage = v
+			default:
+				nextDecorations.Custom[k] = v
 			}
 			continue
+			// top level declarations / statements
 		case tokenKindEnum:
 			if nextRecordOpCode != 0 {
 				return f, warnings, readError(tk, "enums may not have attached op codes")
@@ -75,6 +85,9 @@ func ReadFile(r io.Reader) (File, []string, error) {
 				return f, warnings, err
 			}
 			en.Comment = strings.Join(nextCommentLines, "\n")
+			en.Decorations = nextDecorations
+			nextDecorations = Decorations{Custom: map[string]string{}}
+
 			f.Enums = append(f.Enums, en)
 		case tokenKindReadOnly:
 			nextRecordReadOnly = true
@@ -97,8 +110,12 @@ func ReadFile(r io.Reader) (File, []string, error) {
 			st.Comment = strings.Join(nextCommentLines, "\n")
 			st.OpCode = nextRecordOpCode
 			st.ReadOnly = nextRecordReadOnly
-			f.Structs = append(f.Structs, st)
 			nextRecordReadOnly = false
+
+			st.Decorations = nextDecorations
+			nextDecorations = Decorations{Custom: map[string]string{}}
+
+			f.Structs = append(f.Structs, st)
 		case tokenKindMessage:
 			if nextRecordBitFlags {
 				return f, warnings, readError(tk, "messages may not use bitflags")
@@ -109,6 +126,10 @@ func ReadFile(r io.Reader) (File, []string, error) {
 			}
 			msg.Comment = strings.Join(nextCommentLines, "\n")
 			msg.OpCode = nextRecordOpCode
+
+			msg.Decorations = nextDecorations
+			nextDecorations = Decorations{Custom: map[string]string{}}
+
 			f.Messages = append(f.Messages, msg)
 		case tokenKindUnion:
 			if nextRecordBitFlags {
@@ -120,6 +141,10 @@ func ReadFile(r io.Reader) (File, []string, error) {
 			}
 			union.Comment = strings.Join(nextCommentLines, "\n")
 			union.OpCode = nextRecordOpCode
+
+			union.Decorations = nextDecorations
+			nextDecorations = Decorations{Custom: map[string]string{}}
+
 			f.Unions = append(f.Unions, union)
 		case tokenKindConst:
 			if nextRecordBitFlags {
@@ -137,10 +162,17 @@ func ReadFile(r io.Reader) (File, []string, error) {
 			if cons.Name == goPackage && cons.SimpleType == typeString {
 				f.GoPackage, _ = strconv.Unquote(cons.Value)
 			}
+
+			cons.Decorations = nextDecorations
+			nextDecorations = Decorations{Custom: map[string]string{}}
+
 			f.Consts = append(f.Consts, cons)
 		}
 		nextCommentLines = []string{}
 		nextRecordOpCode = 0
+	}
+	if nextDecorations.Deprecated || len(nextDecorations.Custom) != 0 || nextRecordOpCode != 0 {
+		return f, warnings, readError(tr.Token(), "file ended with unattached decoration")
 	}
 	return f, warnings, nil
 }
@@ -200,6 +232,18 @@ func optNewline(tr *tokenReader) {
 	}
 }
 
+func readUntil(tr *tokenReader, kind tokenKind) ([]token, error) {
+	toks := []token{}
+	for tr.Next() {
+		tk := tr.Token()
+		if tk.kind == kind {
+			return toks, nil
+		}
+		toks = append(toks, tk)
+	}
+	return nil, readError(tr.lastToken, "eof reading until %v", kind)
+}
+
 func readEnumOptionValue(tr *tokenReader, previousOptions []EnumOption, bitflags, uinttype bool, bitsize int) (int64, uint64, error) {
 	if _, err := expectNext(tr, tokenKindEquals); err != nil {
 		return 0, 0, err
@@ -224,18 +268,6 @@ func readEnumOptionValue(tr *tokenReader, previousOptions []EnumOption, bitflags
 		}
 	}
 	return readBitflagExpr(tr, previousOptions, uinttype, bitsize)
-}
-
-func readUntil(tr *tokenReader, kind tokenKind) ([]token, error) {
-	toks := []token{}
-	for tr.Next() {
-		tk := tr.Token()
-		if tk.kind == kind {
-			return toks, nil
-		}
-		toks = append(toks, tk)
-	}
-	return nil, readError(tr.lastToken, "eof reading until %v", kind)
 }
 
 func readEnum(tr *tokenReader, bitflags bool) (Enum, error) {
@@ -272,8 +304,8 @@ func readEnum(tr *tokenReader, bitflags bool) (Enum, error) {
 	bitsize, uinttype := decodeIntegerType(en.SimpleType)
 	en.Unsigned = uinttype
 	nextCommentLines := []string{}
-	nextDeprecatedMessage := ""
-	nextIsDeprecated := false
+	nextDecorations := Decorations{Custom: map[string]string{}}
+
 	for tr.Token().kind != tokenKindCloseCurly {
 		if !tr.Next() {
 			return en, readError(tr.nextToken, "enum definition ended early")
@@ -290,27 +322,34 @@ func readEnum(tr *tokenReader, bitflags bool) (Enum, error) {
 				return en, err
 			}
 			en.Options = append(en.Options, EnumOption{
-				Name:              optName,
-				Value:             signedValue,
-				UintValue:         unsignedValue,
-				DeprecatedMessage: nextDeprecatedMessage,
-				Deprecated:        nextIsDeprecated,
-				Comment:           strings.Join(nextCommentLines, "\n"),
+				Name:        optName,
+				Value:       signedValue,
+				UintValue:   unsignedValue,
+				Decorations: nextDecorations,
+				Comment:     strings.Join(nextCommentLines, "\n"),
 			})
-			nextDeprecatedMessage = ""
-			nextIsDeprecated = false
-			nextCommentLines = []string{}
+			nextDecorations = Decorations{Custom: map[string]string{}}
 
-		case tokenKindOpenSquare:
-			if nextIsDeprecated {
-				return en, readError(tk, "expected enum option following deprecated annotation")
-			}
-			msg, err := readDeprecated(tr)
+			nextCommentLines = []string{}
+		case tokenKindOpenSquare, tokenKindAtSign:
+			k, v, _, err := readDecoration(tr, tk.kind == tokenKindOpenSquare)
 			if err != nil {
 				return en, err
 			}
-			nextIsDeprecated = true
-			nextDeprecatedMessage = msg
+			switch k {
+			case "opcode":
+				return en, readError(tr.nextToken, "opcode annotation not allowed within enum")
+			case "flags":
+				return en, readError(tr.nextToken, "flags annotation not allowed within enum")
+			case "deprecated":
+				if nextDecorations.Deprecated {
+					return en, readError(tk, "deprecated cannot be applied to the same target twice")
+				}
+				nextDecorations.Deprecated = true
+				nextDecorations.DeprecatedMessage = v
+			default:
+				nextDecorations.Custom[k] = v
+			}
 		case tokenKindBlockComment:
 			nextCommentLines = append(nextCommentLines, readBlockComment(tr, tk))
 		case tokenKindLineComment:
@@ -319,20 +358,6 @@ func readEnum(tr *tokenReader, bitflags bool) (Enum, error) {
 	}
 
 	return en, nil
-}
-
-func readDeprecated(tr *tokenReader) (string, error) {
-	// TODO: can deprecated / op code be followed by a semicolon?
-	toks, err := expectNext(tr, tokenKindDeprecated, tokenKindOpenParen, tokenKindStringLiteral,
-		tokenKindCloseParen, tokenKindCloseSquare)
-	if err != nil {
-		return "", err
-	}
-	// this cannot errors; token readers cannot parse strings
-	// with missing terminal quotes.
-	msg, _ := strconv.Unquote(string(toks[2].concrete))
-	optNewline(tr)
-	return msg, nil
 }
 
 func skipEndOfLineComments(tr *tokenReader) {
@@ -361,9 +386,8 @@ func readStruct(tr *tokenReader) (Struct, error) {
 	optNewline(tr)
 
 	nextCommentLines := []string{}
-	nextCommentTags := []Tag{}
-	nextDeprecatedMessage := ""
-	nextIsDeprecated := false
+	nextDecorations := Decorations{Custom: map[string]string{}}
+
 	for tr.Token().kind != tokenKindCloseCurly {
 		if !tr.Next() {
 			return st, readError(tr.nextToken, "struct definition ended early")
@@ -384,37 +408,39 @@ func readStruct(tr *tokenReader) (Struct, error) {
 			}
 			fdName := string(toks[0].concrete)
 			st.Fields = append(st.Fields, Field{
-				Name:              fdName,
-				FieldType:         fdType,
-				DeprecatedMessage: nextDeprecatedMessage,
-				Deprecated:        nextIsDeprecated,
-				Comment:           strings.Join(nextCommentLines, "\n"),
-				Tags:              nextCommentTags,
+				Name:        fdName,
+				FieldType:   fdType,
+				Decorations: nextDecorations,
+				Comment:     strings.Join(nextCommentLines, "\n"),
 			})
-			nextDeprecatedMessage = ""
-			nextIsDeprecated = false
+			nextDecorations = Decorations{Custom: map[string]string{}}
+
 			nextCommentLines = []string{}
-			nextCommentTags = []Tag{}
 
 			skipEndOfLineComments(tr)
-		case tokenKindOpenSquare:
-			if nextIsDeprecated {
-				return st, readError(tk, "expected field following deprecated annotation")
-			}
-			msg, err := readDeprecated(tr)
+		case tokenKindOpenSquare, tokenKindAtSign:
+			k, v, _, err := readDecoration(tr, tk.kind == tokenKindOpenSquare)
 			if err != nil {
 				return st, err
 			}
-			nextIsDeprecated = true
-			nextDeprecatedMessage = msg
+			switch k {
+			case "opcode":
+				return st, readError(tr.nextToken, "opcode annotation not allowed within struct")
+			case "flags":
+				return st, readError(tr.nextToken, "flags annotation not allowed within struct")
+			case "deprecated":
+				if nextDecorations.Deprecated {
+					return st, readError(tk, "deprecated cannot be applied to the same target twice")
+				}
+				nextDecorations.Deprecated = true
+				nextDecorations.DeprecatedMessage = v
+			default:
+				nextDecorations.Custom[k] = v
+			}
 		case tokenKindBlockComment:
 			nextCommentLines = append(nextCommentLines, readBlockComment(tr, tk))
 		case tokenKindLineComment:
-			cmt := sanitizeComment(tk)
-			if tag, ok := parseCommentTag(cmt); ok {
-				nextCommentTags = append(nextCommentTags, tag)
-			}
-			nextCommentLines = append(nextCommentLines, cmt)
+			nextCommentLines = append(nextCommentLines, sanitizeComment(tk))
 		}
 	}
 
@@ -506,9 +532,8 @@ func readMessage(tr *tokenReader) (Message, error) {
 	optNewline(tr)
 
 	nextCommentLines := []string{}
-	nextCommentTags := []Tag{}
-	nextDeprecatedMessage := ""
-	nextIsDeprecated := false
+	nextDecorations := Decorations{Custom: map[string]string{}}
+
 	for tr.Token().kind != tokenKindCloseCurly {
 		if err := expectAnyOfNext(tr,
 			tokenKindNewline,
@@ -516,6 +541,7 @@ func readMessage(tr *tokenReader) (Message, error) {
 			tokenKindOpenSquare,
 			tokenKindBlockComment,
 			tokenKindLineComment,
+			tokenKindAtSign,
 			tokenKindCloseCurly); err != nil {
 			return msg, err
 		}
@@ -547,37 +573,39 @@ func readMessage(tr *tokenReader) (Message, error) {
 			fdName := string(toks[0].concrete)
 
 			msg.Fields[uint8(fdInteger)] = Field{
-				Name:              fdName,
-				FieldType:         fdType,
-				DeprecatedMessage: nextDeprecatedMessage,
-				Deprecated:        nextIsDeprecated,
-				Comment:           strings.Join(nextCommentLines, "\n"),
-				Tags:              nextCommentTags,
+				Name:        fdName,
+				FieldType:   fdType,
+				Decorations: nextDecorations,
+				Comment:     strings.Join(nextCommentLines, "\n"),
 			}
-			nextDeprecatedMessage = ""
-			nextIsDeprecated = false
+			nextDecorations = Decorations{Custom: map[string]string{}}
+
 			nextCommentLines = []string{}
-			nextCommentTags = []Tag{}
 
 			skipEndOfLineComments(tr)
-		case tokenKindOpenSquare:
-			if nextIsDeprecated {
-				return msg, readError(tk, "expected field following deprecated annotation")
-			}
-			dpMsg, err := readDeprecated(tr)
+		case tokenKindOpenSquare, tokenKindAtSign:
+			k, v, _, err := readDecoration(tr, tk.kind == tokenKindOpenSquare)
 			if err != nil {
 				return msg, err
 			}
-			nextIsDeprecated = true
-			nextDeprecatedMessage = dpMsg
+			switch k {
+			case "opcode":
+				return msg, readError(tr.nextToken, "opcode annotation not allowed within message")
+			case "flags":
+				return msg, readError(tr.nextToken, "flags annotation not allowed within message")
+			case "deprecated":
+				if nextDecorations.Deprecated {
+					return msg, readError(tk, "deprecated cannot be applied to the same target twice")
+				}
+				nextDecorations.Deprecated = true
+				nextDecorations.DeprecatedMessage = v
+			default:
+				nextDecorations.Custom[k] = v
+			}
 		case tokenKindBlockComment:
 			nextCommentLines = append(nextCommentLines, readBlockComment(tr, tk))
 		case tokenKindLineComment:
-			cmt := sanitizeComment(tk)
-			if tag, ok := parseCommentTag(cmt); ok {
-				nextCommentTags = append(nextCommentTags, tag)
-			}
-			nextCommentLines = append(nextCommentLines, cmt)
+			nextCommentLines = append(nextCommentLines, sanitizeComment(tk))
 		}
 	}
 
@@ -597,9 +625,8 @@ func readUnion(tr *tokenReader) (Union, error) {
 	optNewline(tr)
 
 	nextCommentLines := []string{}
-	nextCommentTags := []Tag{}
-	nextDeprecatedMessage := ""
-	nextIsDeprecated := false
+	nextDecorations := Decorations{Custom: map[string]string{}}
+
 	for tr.Token().kind != tokenKindCloseCurly {
 		if !tr.Next() {
 			return union, readError(tr.nextToken, "union definition ended early")
@@ -641,43 +668,43 @@ func readUnion(tr *tokenReader) (Union, error) {
 				unionFd.Struct = &st
 			}
 
-			unionFd.Tags = nextCommentTags
-			unionFd.Deprecated = nextIsDeprecated
-			unionFd.DeprecatedMessage = nextDeprecatedMessage
+			unionFd.Decorations = nextDecorations
 
 			union.Fields[uint8(fdInteger)] = unionFd
-			nextDeprecatedMessage = ""
-			nextIsDeprecated = false
+			nextDecorations = Decorations{Custom: map[string]string{}}
+
 			nextCommentLines = []string{}
-			nextCommentTags = []Tag{}
 
 			// This is a close curly-- we must advance past it or the union
 			// will read it and believe it is complete
 			tr.Next()
 			skipEndOfLineComments(tr)
 			optNewline(tr)
-
-		case tokenKindOpenSquare:
-			if nextIsDeprecated {
-				return union, readError(tk, "expected field following deprecated annotation")
-			}
-			dpMsg, err := readDeprecated(tr)
+		case tokenKindOpenSquare, tokenKindAtSign:
+			k, v, _, err := readDecoration(tr, tk.kind == tokenKindOpenSquare)
 			if err != nil {
 				return union, err
 			}
-			nextIsDeprecated = true
-			nextDeprecatedMessage = dpMsg
+			switch k {
+			case "opcode":
+				return union, readError(tr.nextToken, "opcode annotation not allowed within union")
+			case "flags":
+				return union, readError(tr.nextToken, "flags annotation not allowed within union")
+			case "deprecated":
+				if nextDecorations.Deprecated {
+					return union, readError(tk, "deprecated cannot be applied to the same target twice")
+				}
+				nextDecorations.Deprecated = true
+				nextDecorations.DeprecatedMessage = v
+			default:
+				nextDecorations.Custom[k] = v
+			}
 		case tokenKindBlockComment:
 			nextCommentLines = append(nextCommentLines, readBlockComment(tr, tk))
 		case tokenKindLineComment:
-			cmt := sanitizeComment(tk)
-			if tag, ok := parseCommentTag(cmt); ok {
-				nextCommentTags = append(nextCommentTags, tag)
-			}
-			nextCommentLines = append(nextCommentLines, cmt)
+			nextCommentLines = append(nextCommentLines, sanitizeComment(tk))
 		}
 	}
-
 	return union, nil
 }
 
@@ -767,36 +794,63 @@ func readConst(tr *tokenReader) (Const, []string, error) {
 	return cons, warnings, nil
 }
 
-func readOpCode(tr *tokenReader) (uint32, error) {
-	if _, err := expectNext(tr, tokenKindOpCode, tokenKindOpenParen); err != nil {
-		return 0, err
+func readDecoration(tr *tokenReader, leadingSquare bool) (k, v string, opcodeV uint32, err error) {
+	if err := expectAnyOfNext(tr, tokenKindOpCode, tokenKindDeprecated, tokenKindFlags, tokenKindIdent); err != nil {
+		return "", "", 0, err
 	}
-	if err := expectAnyOfNext(tr, tokenKindIntegerLiteral, tokenKindStringLiteral); err != nil {
-		return 0, err
-	}
-	var opCode uint32
 	tk := tr.Token()
-	if tk.kind == tokenKindIntegerLiteral {
-		content := string(tk.concrete)
-		opc, err := strconv.ParseUint(content, 0, 32)
-		if err != nil {
-			return 0, readError(tk, err.Error())
+	switch tk.kind {
+	case tokenKindOpCode:
+		if _, err := expectNext(tr, tokenKindOpenParen); err != nil {
+			return "", "", 0, err
 		}
-		opCode = uint32(opc)
-	} else if tk.kind == tokenKindStringLiteral {
-		tk.concrete = bytes.Trim(tk.concrete, "\"")
-		if len(tk.concrete) != 4 {
-			return 0, readError(tk, "opcode string %q not 4 ascii characters", string(tk.concrete))
+		if err := expectAnyOfNext(tr, tokenKindIntegerLiteral, tokenKindStringLiteral); err != nil {
+			return "", "", 0, err
 		}
-		opCode = bytesToOpCode(*(*[4]byte)(tk.concrete))
+		tk := tr.Token()
+		if tk.kind == tokenKindIntegerLiteral {
+			content := string(tk.concrete)
+			opc, err := strconv.ParseUint(content, 0, 32)
+			if err != nil {
+				return "", "", 0, readError(tk, err.Error())
+			}
+			opcodeV = uint32(opc)
+		} else if tk.kind == tokenKindStringLiteral {
+			tk.concrete = bytes.Trim(tk.concrete, "\"")
+			if len(tk.concrete) != 4 {
+				return "", "", 0, readError(tk, "opcode string %q not 4 ascii characters", string(tk.concrete))
+			}
+			opcodeV = bytesToOpCode(*(*[4]byte)(tk.concrete))
+		}
+		if _, err := expectNext(tr, tokenKindCloseParen); err != nil {
+			return "", "", 0, err
+		}
+		k = "opcode"
+	case tokenKindDeprecated:
+		fallthrough
+	case tokenKindIdent:
+		if _, err := expectNext(tr, tokenKindOpenParen); err == nil {
+			tks, err := expectNext(tr, tokenKindStringLiteral, tokenKindCloseParen)
+			if err != nil {
+				return "", "", 0, err
+			}
+			// this cannot error; token readers cannot parse strings
+			// with missing terminal quotes.
+			v, _ = strconv.Unquote(string(tks[0].concrete))
+		}
+		k = string(tk.concrete)
+	case tokenKindFlags:
+		k = "flags"
 	}
-	if _, err := expectNext(tr, tokenKindCloseParen, tokenKindCloseSquare); err != nil {
-		return 0, err
+	if leadingSquare {
+		if _, err := expectNext(tr, tokenKindCloseSquare); err != nil {
+			return "", "", 0, err
+		}
 	}
 
+	skipEndOfLineComments(tr)
 	optNewline(tr)
-
-	return opCode, nil
+	return
 }
 
 func readBlockComment(tr *tokenReader, tk token) string {
@@ -828,36 +882,4 @@ func kindsStr(ks []tokenKind) string {
 		kindsStrs[i] = k.String()
 	}
 	return strings.Join(kindsStrs, ", ")
-}
-
-func parseCommentTag(s string) (Tag, bool) {
-	// OK
-	//[tag(json:"example,omitempty")]
-	//[tag(json:"more colons::")]
-	//[tag(boolean)]
-	// Not OK
-	// [tag(db:unquotedstring)]
-	// [tag()]
-
-	if !strings.HasPrefix(s, "[tag(") || !strings.HasSuffix(s, ")]") {
-		return Tag{}, false
-	}
-	s = strings.TrimPrefix(s, "[tag(")
-	s = strings.TrimSuffix(s, ")]")
-	key, value, split := strings.Cut(s, ":")
-	if !split {
-		return Tag{
-			Key:     key,
-			Boolean: true,
-		}, true
-	}
-	var err error
-	value, err = strconv.Unquote(value)
-	if err != nil {
-		return Tag{}, false
-	}
-	return Tag{
-		Key:   key,
-		Value: value,
-	}, true
 }

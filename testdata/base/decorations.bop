@@ -1,0 +1,36 @@
+@deprecated("yes")
+@opcode("ABAB")
+struct TaggedStruct2 {
+    @json("foo,omitempty")
+    string foo;
+}
+
+@deprecated
+@opcode(32)
+message TaggedMessage2 {
+    @deprecated("bar")
+    @db("bar")
+    @hello("world")
+    1 -> uint8 bar;
+}
+
+union TaggedUnion2 {
+    @one("one")
+    @two("two")
+    @boolean
+    @deprecated
+    @other
+    1 -> struct TaggedSubStruct {
+        @four("four")
+        guid biz;
+    }   
+}
+
+@flags
+enum TestFlags3 : int64 {
+    None = 0;
+    Read = 0x0001;
+    Write = 1 << 1;
+    ReadWrite = Read | Write;
+    Complex = (Read | Write) | 0xF0 & 0x1F;
+}

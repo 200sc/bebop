@@ -169,7 +169,7 @@ func (u Union) Generate(w io.Writer, settings GenerateSettings) {
 			fd.FieldType.Simple = ufd.Message.Name
 		}
 		fd.Name = fd.FieldType.Simple
-		fd.Tags = ufd.Tags
+		fd.Decorations = ufd.Decorations
 		fields = append(fields, fieldWithNumber{
 			UnionField: ufd,
 			Field:      fd,

@@ -7,6 +7,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -36,7 +37,6 @@ type GenerateSettings struct {
 
 	GenerateUnsafeMethods     bool
 	SharedMemoryStrings       bool
-	GenerateFieldTags         bool
 	PrivateDefinitions        bool
 	AlwaysUsePointerReceivers bool
 }
@@ -566,13 +566,22 @@ func writeFieldDefinition(fd Field, w *iohelp.ErrorWriter, readOnly bool, messag
 	if message {
 		typ = "*" + typ
 	}
-	if settings.GenerateFieldTags && len(fd.Tags) != 0 {
+	if len(fd.Decorations.Custom) != 0 {
 		formattedTags := []string{}
-		for _, tag := range fd.Tags {
-			if tag.Boolean {
-				formattedTags = append(formattedTags, tag.Key)
+		orderedTags := make([][2]string, len(fd.Decorations.Custom))
+		i := 0
+		for key, value := range fd.Decorations.Custom {
+			orderedTags[i] = [2]string{key, value}
+			i++
+		}
+		sort.Slice(orderedTags, func(i, j int) bool {
+			return orderedTags[i][0] < orderedTags[j][0]
+		})
+		for _, tag := range orderedTags {
+			if tag[1] == "" {
+				formattedTags = append(formattedTags, tag[0])
 			} else {
-				formattedTags = append(formattedTags, fmt.Sprintf("%s:%q", tag.Key, tag.Value))
+				formattedTags = append(formattedTags, fmt.Sprintf("%s:%q", tag[0], tag[1]))
 			}
 		}
 		writeLine(w, "\t%s %s `%s`", name, typ, strings.Join(formattedTags, " "))
@@ -859,13 +868,6 @@ func writeComment(w *iohelp.ErrorWriter, depth int, comment string, settings Gen
 
 	commentLines := strings.Split(comment, "\n")
 	for _, cm := range commentLines {
-		// If you have tag comments and are generating them as tags,
-		// you probably don't want them showing up in your code as comments too.
-		if settings.GenerateFieldTags {
-			if _, ok := parseCommentTag(cm); ok {
-				continue
-			}
-		}
 		writeLine(w, tbs+"//%s", cm)
 	}
 }

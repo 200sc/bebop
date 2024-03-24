@@ -393,6 +393,7 @@ func newTokenTree() *tokenTree {
 	tt.add([]byte{'|'}, simpleToken(tokenKindVerticalBar))
 	tt.add([]byte{'&'}, simpleToken(tokenKindAmpersand))
 	tt.add([]byte{':'}, simpleToken(tokenKindColon))
+	tt.add([]byte{'@'}, simpleToken(tokenKindAtSign))
 	tt.add([]byte{'-', '>'}, simpleToken(tokenKindArrow))
 	tt.add([]byte{'>', '>'}, simpleToken(tokenKindDoubleCaretRight))
 	tt.add([]byte{'<', '<'}, simpleToken(tokenKindDoubleCaretLeft))

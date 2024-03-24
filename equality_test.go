@@ -42,7 +42,6 @@ func (f File) equals(f2 File) error {
 	}
 	for i, cons := range f.Consts {
 		if err := cons.equals(f2.Consts[i]); err != nil {
-			fmt.Println(cons, f2.Consts[i])
 			return fmt.Errorf("const %d mismatched: %w", i, err)
 		}
 	}
@@ -67,6 +66,34 @@ func (s Struct) equals(s2 Struct) (err error) {
 			return fmt.Errorf("field %d mismatched: %v", i, err)
 		}
 	}
+	if err := s.Decorations.equals(s2.Decorations); err != nil {
+		return fmt.Errorf("decorations mismatched: %v", err)
+	}
+	return nil
+}
+
+func (d Decorations) equals(d2 Decorations) (err error) {
+	if d.Deprecated != d2.Deprecated {
+		return fmt.Errorf("deprecation mismatch: %v vs %v", d.Deprecated, d2.Deprecated)
+	}
+	if d.DeprecatedMessage != d2.DeprecatedMessage {
+		return fmt.Errorf("deprecated message mismatch: %v vs %v", d.DeprecatedMessage, d2.DeprecatedMessage)
+	}
+	if len(d.Custom) != len(d2.Custom) {
+		return fmt.Errorf("custom decorations mismatch: %v vs %v", len(d.Custom), len(d2.Custom))
+	}
+	for k, v := range d.Custom {
+		v2 := d2.Custom[k]
+		if v != v2 {
+			return fmt.Errorf("decoration %v mismatch: %v vs %v", k, v, v2)
+		}
+	}
+	for k, v := range d2.Custom {
+		v2 := d.Custom[k]
+		if v != v2 {
+			return fmt.Errorf("decoration %v mismatch: %v vs %v", k, v, v2)
+		}
+	}
 	return nil
 }
 
@@ -77,20 +104,8 @@ func (f Field) equals(f2 Field) error {
 	if f.Comment != f2.Comment {
 		return fmt.Errorf("comment mismatch: %q vs %q", f.Comment, f2.Comment)
 	}
-	if f.DeprecatedMessage != f2.DeprecatedMessage {
-		return fmt.Errorf("deprecated message mismatch: %v vs %v", f.DeprecatedMessage, f2.DeprecatedMessage)
-	}
-	if f.Deprecated != f2.Deprecated {
-		return fmt.Errorf("deprecation mismatch: %v vs %v", f.Deprecated, f2.Deprecated)
-	}
-	if len(f.Tags) != len(f2.Tags) {
-		return fmt.Errorf("tag length mismatch: %v vs %v", len(f.Tags), len(f2.Tags))
-	}
-	for i, tag := range f.Tags {
-		tag2 := f2.Tags[i]
-		if tag != tag2 {
-			return fmt.Errorf("tag %d mismatch: %v vs %v", i, tag, tag2)
-		}
+	if err := f.Decorations.equals(f2.Decorations); err != nil {
+		return fmt.Errorf("decorations mismatched: %v", err)
 	}
 	return f.FieldType.equals(f2.FieldType)
 }
@@ -118,6 +133,9 @@ func (m Message) equals(m2 Message) error {
 			return fmt.Errorf("field %d mismatched: %v", key, err)
 		}
 	}
+	if err := m.Decorations.equals(m2.Decorations); err != nil {
+		return fmt.Errorf("decorations mismatched: %v", err)
+	}
 	return nil
 }
 
@@ -142,6 +160,9 @@ func (e Enum) equals(e2 Enum) error {
 	if e.Unsigned != e2.Unsigned {
 		return fmt.Errorf("unsigned mismatch: %v vs %v", e.Unsigned, e2.Unsigned)
 	}
+	if err := e.Decorations.equals(e2.Decorations); err != nil {
+		return fmt.Errorf("decorations mismatched: %v", err)
+	}
 	return nil
 }
 
@@ -152,14 +173,11 @@ func (eo EnumOption) equals(eo2 EnumOption) error {
 	if eo.Comment != eo2.Comment {
 		return fmt.Errorf("comment mismatch: %q vs %q", eo.Comment, eo2.Comment)
 	}
-	if eo.DeprecatedMessage != eo2.DeprecatedMessage {
-		return fmt.Errorf("deprecated message mismatch: %v vs %v", eo.DeprecatedMessage, eo2.DeprecatedMessage)
-	}
-	if eo.Deprecated != eo2.Deprecated {
-		return fmt.Errorf("deprecated mismatch: %v vs %v", eo.Deprecated, eo2.Deprecated)
-	}
 	if eo.Value != eo2.Value {
 		return fmt.Errorf("value mismatch: %v vs %v", eo.Value, eo2.Value)
+	}
+	if err := eo.Decorations.equals(eo2.Decorations); err != nil {
+		return fmt.Errorf("decorations mismatched: %v", err)
 	}
 	return nil
 }
@@ -220,15 +238,15 @@ func (u Union) equals(u2 Union) error {
 			return fmt.Errorf("field %d mismatch: %w", key, err)
 		}
 	}
+	if err := u.Decorations.equals(u2.Decorations); err != nil {
+		return fmt.Errorf("decorations mismatched: %v", err)
+	}
 	return nil
 }
 
 func (uf UnionField) equals(uf2 UnionField) error {
-	if uf.Deprecated != uf2.Deprecated {
-		return fmt.Errorf("deprecated mismatch: %v vs %v", uf.Deprecated, uf2.Deprecated)
-	}
-	if uf.DeprecatedMessage != uf2.DeprecatedMessage {
-		return fmt.Errorf("deprecated message mismatch: %v vs %v", uf.DeprecatedMessage, uf2.DeprecatedMessage)
+	if err := uf.Decorations.equals(uf2.Decorations); err != nil {
+		return fmt.Errorf("decorations mismatched: %v", err)
 	}
 	if (uf.Struct == nil) != (uf2.Struct == nil) {
 		return fmt.Errorf("field is struct type mismatch: %v vs %v", uf.Struct != nil, uf2.Struct != nil)
@@ -242,15 +260,6 @@ func (uf UnionField) equals(uf2 UnionField) error {
 	if uf.Message != nil && uf2.Message != nil {
 		return uf.Message.equals(*uf2.Message)
 	}
-	if len(uf.Tags) != len(uf2.Tags) {
-		return fmt.Errorf("tag length mismatch: %v vs %v", len(uf.Tags), len(uf2.Tags))
-	}
-	for i, tag := range uf.Tags {
-		tag2 := uf2.Tags[i]
-		if tag != tag2 {
-			return fmt.Errorf("tag %d mismatch: %v vs %v", i, tag, tag2)
-		}
-	}
 	return nil
 }
 
@@ -263,6 +272,9 @@ func (c Const) equals(c2 Const) error {
 	}
 	if c.Value != c2.Value {
 		return fmt.Errorf("value mismatch: %v vs %v", c.Value, c2.Value)
+	}
+	if err := c.Decorations.equals(c2.Decorations); err != nil {
+		return fmt.Errorf("decorations mismatched: %v", err)
 	}
 	return nil
 }

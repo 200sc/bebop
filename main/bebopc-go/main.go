@@ -18,7 +18,6 @@ var (
 	generateUnsafeMethods = flag.Bool("generate-unsafe", false, "whether unchecked additional methods should be generated")
 	shareStringMemory     = flag.Bool("share-string-memory", false, "whether strings read in unmarshalling should share memory with the original byte slice")
 	combinedImports       = flag.Bool("combined-imports", false, "whether imported files should be combined and generated as one, or to separate files")
-	generateTags          = flag.Bool("generate-tags", false, "whether field tags found in comments should be parsed and generated")
 	privateDefinitions    = flag.Bool("private-definitions", false, "whether generated code should be private to the generated package")
 	pointerReceivers      = flag.Bool("force-pointer-receivers", false, "whether generated method receivers must be pointers")
 )
@@ -80,7 +79,6 @@ func run() error {
 		GenerateUnsafeMethods:     *generateUnsafeMethods,
 		SharedMemoryStrings:       *shareStringMemory,
 		ImportGenerationMode:      importMode,
-		GenerateFieldTags:         *generateTags,
 		PrivateDefinitions:        *privateDefinitions,
 		AlwaysUsePointerReceivers: *pointerReceivers,
 	}

@@ -416,7 +416,6 @@ var genTestFiles = []string{
 	"union_field",
 	"date",
 	"message_1",
-	"tags",
 	"typed_enums",
 }
 
@@ -445,7 +444,6 @@ func TestGenerateToFile(t *testing.T) {
 				PackageName:           "generated",
 				GenerateUnsafeMethods: true,
 				SharedMemoryStrings:   false,
-				GenerateFieldTags:     true,
 			})
 			if err != nil {
 				t.Fatalf("generation failed: %v", err)
@@ -483,7 +481,6 @@ func TestGenerateToFile_Private(t *testing.T) {
 				PackageName:           "generated",
 				GenerateUnsafeMethods: true,
 				SharedMemoryStrings:   false,
-				GenerateFieldTags:     true,
 				PrivateDefinitions:    true,
 			})
 			if err != nil {
@@ -522,7 +519,6 @@ func TestGenerateToFile_AlwaysPointers(t *testing.T) {
 				PackageName:               "generated",
 				GenerateUnsafeMethods:     true,
 				SharedMemoryStrings:       false,
-				GenerateFieldTags:         true,
 				AlwaysUsePointerReceivers: true,
 			})
 			if err != nil {
