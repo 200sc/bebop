@@ -151,8 +151,9 @@ func (bbp *TaggedMessage) EncodeBebop(iow io.Writer) (err error) {
 func (bbp *TaggedMessage) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
 	bodyLen := iohelp.ReadUint32(r)
-	r.Reader = &io.LimitedReader{R:r.Reader, N:int64(bodyLen)}
+	limitReader := &io.LimitedReader{R: r.Reader, N: int64(bodyLen)}
 	for {
+		r.Reader = limitReader
 		switch iohelp.ReadByte(r) {
 		case 1:
 			bbp.Bar = new(uint8)
@@ -359,7 +360,8 @@ func (bbp *TaggedUnion) EncodeBebop(iow io.Writer) (err error) {
 func (bbp *TaggedUnion) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
 	bodyLen := iohelp.ReadUint32(r)
-	r.Reader = &io.LimitedReader{R: r.Reader, N: int64(bodyLen) + 1}
+	limitReader := &io.LimitedReader{R: r.Reader, N: int64(bodyLen)+1}
+	r.Reader = limitReader
 	for {
 		switch iohelp.ReadByte(r) {
 		case 1:
@@ -368,9 +370,11 @@ func (bbp *TaggedUnion) DecodeBebop(ior io.Reader) (err error) {
 			if err != nil {
 				return err
 			}
+			r.Reader = limitReader
 			r.Drain()
 			return r.Err
 		default:
+			r.Reader = limitReader
 			r.Drain()
 			return r.Err
 		}

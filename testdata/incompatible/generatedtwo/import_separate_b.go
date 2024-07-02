@@ -236,8 +236,9 @@ func (bbp ImportedMessage) EncodeBebop(iow io.Writer) (err error) {
 func (bbp *ImportedMessage) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
 	bodyLen := iohelp.ReadUint32(r)
-	r.Reader = &io.LimitedReader{R:r.Reader, N:int64(bodyLen)}
+	limitReader := &io.LimitedReader{R: r.Reader, N: int64(bodyLen)}
 	for {
+		r.Reader = limitReader
 		switch iohelp.ReadByte(r) {
 		case 1:
 			bbp.Foo = new(ImportedEnum)
@@ -356,8 +357,9 @@ func (bbp WhyAreTheseInline) EncodeBebop(iow io.Writer) (err error) {
 func (bbp *WhyAreTheseInline) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
 	bodyLen := iohelp.ReadUint32(r)
-	r.Reader = &io.LimitedReader{R:r.Reader, N:int64(bodyLen)}
+	limitReader := &io.LimitedReader{R: r.Reader, N: int64(bodyLen)}
 	for {
+		r.Reader = limitReader
 		switch iohelp.ReadByte(r) {
 		default:
 			r.Drain()
@@ -565,7 +567,8 @@ func (bbp ImportedUnion) EncodeBebop(iow io.Writer) (err error) {
 func (bbp *ImportedUnion) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
 	bodyLen := iohelp.ReadUint32(r)
-	r.Reader = &io.LimitedReader{R: r.Reader, N: int64(bodyLen) + 1}
+	limitReader := &io.LimitedReader{R: r.Reader, N: int64(bodyLen)+1}
+	r.Reader = limitReader
 	for {
 		switch iohelp.ReadByte(r) {
 		case 1:
@@ -574,6 +577,7 @@ func (bbp *ImportedUnion) DecodeBebop(ior io.Reader) (err error) {
 			if err != nil {
 				return err
 			}
+			r.Reader = limitReader
 			r.Drain()
 			return r.Err
 		case 2:
@@ -582,9 +586,11 @@ func (bbp *ImportedUnion) DecodeBebop(ior io.Reader) (err error) {
 			if err != nil {
 				return err
 			}
+			r.Reader = limitReader
 			r.Drain()
 			return r.Err
 		default:
+			r.Reader = limitReader
 			r.Drain()
 			return r.Err
 		}

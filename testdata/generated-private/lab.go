@@ -801,8 +801,9 @@ func (bbp mediaMessage) EncodeBebop(iow io.Writer) (err error) {
 func (bbp *mediaMessage) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
 	bodyLen := iohelp.ReadUint32(r)
-	r.Reader = &io.LimitedReader{R:r.Reader, N:int64(bodyLen)}
+	limitReader := &io.LimitedReader{R: r.Reader, N: int64(bodyLen)}
 	for {
+		r.Reader = limitReader
 		switch iohelp.ReadByte(r) {
 		case 1:
 			bbp.codec = new(videoCodec)
@@ -956,8 +957,9 @@ func (bbp skipTestOld) EncodeBebop(iow io.Writer) (err error) {
 func (bbp *skipTestOld) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
 	bodyLen := iohelp.ReadUint32(r)
-	r.Reader = &io.LimitedReader{R:r.Reader, N:int64(bodyLen)}
+	limitReader := &io.LimitedReader{R: r.Reader, N: int64(bodyLen)}
 	for {
+		r.Reader = limitReader
 		switch iohelp.ReadByte(r) {
 		case 1:
 			bbp.x = new(int32)
@@ -1127,8 +1129,9 @@ func (bbp skipTestNew) EncodeBebop(iow io.Writer) (err error) {
 func (bbp *skipTestNew) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
 	bodyLen := iohelp.ReadUint32(r)
-	r.Reader = &io.LimitedReader{R:r.Reader, N:int64(bodyLen)}
+	limitReader := &io.LimitedReader{R: r.Reader, N: int64(bodyLen)}
 	for {
+		r.Reader = limitReader
 		switch iohelp.ReadByte(r) {
 		case 1:
 			bbp.x = new(int32)
@@ -1296,8 +1299,9 @@ func (bbp skipTestOldContainer) EncodeBebop(iow io.Writer) (err error) {
 func (bbp *skipTestOldContainer) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
 	bodyLen := iohelp.ReadUint32(r)
-	r.Reader = &io.LimitedReader{R:r.Reader, N:int64(bodyLen)}
+	limitReader := &io.LimitedReader{R: r.Reader, N: int64(bodyLen)}
 	for {
+		r.Reader = limitReader
 		switch iohelp.ReadByte(r) {
 		case 1:
 			bbp.s = new(skipTestOld)
@@ -1465,8 +1469,9 @@ func (bbp skipTestNewContainer) EncodeBebop(iow io.Writer) (err error) {
 func (bbp *skipTestNewContainer) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
 	bodyLen := iohelp.ReadUint32(r)
-	r.Reader = &io.LimitedReader{R:r.Reader, N:int64(bodyLen)}
+	limitReader := &io.LimitedReader{R: r.Reader, N: int64(bodyLen)}
 	for {
+		r.Reader = limitReader
 		switch iohelp.ReadByte(r) {
 		case 1:
 			bbp.s = new(skipTestNew)

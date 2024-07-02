@@ -126,8 +126,9 @@ func (bbp ExampleMessage) EncodeBebop(iow io.Writer) (err error) {
 func (bbp *ExampleMessage) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
 	bodyLen := iohelp.ReadUint32(r)
-	r.Reader = &io.LimitedReader{R:r.Reader, N:int64(bodyLen)}
+	limitReader := &io.LimitedReader{R: r.Reader, N: int64(bodyLen)}
 	for {
+		r.Reader = limitReader
 		switch iohelp.ReadByte(r) {
 		case 1:
 			bbp.X = new(byte)
