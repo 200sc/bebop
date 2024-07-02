@@ -113,7 +113,8 @@ func (u Union) generateDecodeBebop(w *iohelp.ErrorWriter, settings GenerateSetti
 	writeLine(w, "func (bbp *%s) DecodeBebop(ior io.Reader) (err error) {", exposedName)
 	writeLine(w, "\tr := iohelp.NewErrorReader(ior)")
 	writeLine(w, "\tbodyLen := iohelp.ReadUint32(r)")
-	writeLine(w, "\tlimitReader := &io.LimitedReader{R: r.Reader, N: int64(bodyLen)+1}")
+	writeLine(w, "\tbaseReader := r.Reader")
+	writeLine(w, "\tlimitReader := &io.LimitedReader{R: baseReader, N: int64(bodyLen)+1}")
 	writeLine(w, "\tr.Reader = limitReader")
 	writeLine(w, "\tfor {")
 	writeLine(w, "\t\tswitch iohelp.ReadByte(r) {")
@@ -122,15 +123,15 @@ func (u Union) generateDecodeBebop(w *iohelp.ErrorWriter, settings GenerateSetti
 		name := exposeName(fd.Name, settings)
 		writeLine(w, "\t\t\tbbp.%[1]s = new(%[2]s)", name, fd.FieldType.goString(settings))
 		writeMessageFieldUnmarshaller("bbp."+name, fd.FieldType, w, settings, 3)
-		writeLine(w, "\t\t\tr.Reader = limitReader")
 		writeLine(w, "\t\t\tr.Drain()")
+		writeLine(w, "\t\t\tr.Reader = baseReader")
 		writeLine(w, "\t\t\treturn r.Err")
 	}
 	// ref: https://github.com/RainwayApp/bebop/wiki/Wire-format#messages, final paragraph
 	// we're allowed to skip parsing all remaining fields if we see one that we don't know about.
 	writeLine(w, "\t\tdefault:")
-	writeLine(w, "\t\t\tr.Reader = limitReader")
 	writeLine(w, "\t\t\tr.Drain()")
+	writeLine(w, "\t\t\tr.Reader = baseReader")
 	writeLine(w, "\t\t\treturn r.Err")
 	writeLine(w, "\t\t}")
 	writeLine(w, "\t}")
