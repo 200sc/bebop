@@ -119,8 +119,9 @@ func (msg Message) generateDecodeBebop(w *iohelp.ErrorWriter, settings GenerateS
 	writeLine(w, "func (bbp *%s) DecodeBebop(ior io.Reader) (err error) {", exposedName)
 	writeLine(w, "\tr := iohelp.NewErrorReader(ior)")
 	writeLine(w, "\tbodyLen := iohelp.ReadUint32(r)")
-	writeLine(w, "\tr.Reader = &io.LimitedReader{R:r.Reader, N:int64(bodyLen)}")
+	writeLine(w, "\tlimitReader := &io.LimitedReader{R: r.Reader, N: int64(bodyLen)}")
 	writeLine(w, "\tfor {")
+	writeLine(w, "\t\tr.Reader = limitReader")
 	writeLine(w, "\t\tswitch iohelp.ReadByte(r) {")
 	for _, fd := range fields {
 		writeLine(w, "\t\tcase %d:", fd.num)
