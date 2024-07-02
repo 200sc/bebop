@@ -1,0 +1,7 @@
+message MessageInline {
+    1 -> bool OnOff;
+}
+
+message MessageInlineWrapper {
+    1 -> MessageInline Bla;
+}

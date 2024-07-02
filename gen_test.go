@@ -408,6 +408,7 @@ var genTestFiles = []string{
 	"jazz",
 	"lab",
 	"map_types",
+	"message_inline",
 	"message_map",
 	"msgpack_comparison",
 	"request",
