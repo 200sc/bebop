@@ -78,8 +78,9 @@ func (bbp *A) EncodeBebop(iow io.Writer) (err error) {
 func (bbp *A) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
 	bodyLen := iohelp.ReadUint32(r)
-	r.Reader = &io.LimitedReader{R:r.Reader, N:int64(bodyLen)}
+	limitReader := &io.LimitedReader{R: r.Reader, N: int64(bodyLen)}
 	for {
+		r.Reader = limitReader
 		switch iohelp.ReadByte(r) {
 		case 1:
 			bbp.B = new(uint32)
@@ -424,7 +425,8 @@ func (bbp *U) EncodeBebop(iow io.Writer) (err error) {
 func (bbp *U) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
 	bodyLen := iohelp.ReadUint32(r)
-	r.Reader = &io.LimitedReader{R: r.Reader, N: int64(bodyLen) + 1}
+	limitReader := &io.LimitedReader{R: r.Reader, N: int64(bodyLen)+1}
+	r.Reader = limitReader
 	for {
 		switch iohelp.ReadByte(r) {
 		case 1:
@@ -433,6 +435,7 @@ func (bbp *U) DecodeBebop(ior io.Reader) (err error) {
 			if err != nil {
 				return err
 			}
+			r.Reader = limitReader
 			r.Drain()
 			return r.Err
 		case 2:
@@ -441,6 +444,7 @@ func (bbp *U) DecodeBebop(ior io.Reader) (err error) {
 			if err != nil {
 				return err
 			}
+			r.Reader = limitReader
 			r.Drain()
 			return r.Err
 		case 3:
@@ -449,9 +453,11 @@ func (bbp *U) DecodeBebop(ior io.Reader) (err error) {
 			if err != nil {
 				return err
 			}
+			r.Reader = limitReader
 			r.Drain()
 			return r.Err
 		default:
+			r.Reader = limitReader
 			r.Drain()
 			return r.Err
 		}
@@ -799,7 +805,8 @@ func (bbp *List) EncodeBebop(iow io.Writer) (err error) {
 func (bbp *List) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
 	bodyLen := iohelp.ReadUint32(r)
-	r.Reader = &io.LimitedReader{R: r.Reader, N: int64(bodyLen) + 1}
+	limitReader := &io.LimitedReader{R: r.Reader, N: int64(bodyLen)+1}
+	r.Reader = limitReader
 	for {
 		switch iohelp.ReadByte(r) {
 		case 1:
@@ -808,6 +815,7 @@ func (bbp *List) DecodeBebop(ior io.Reader) (err error) {
 			if err != nil {
 				return err
 			}
+			r.Reader = limitReader
 			r.Drain()
 			return r.Err
 		case 2:
@@ -816,9 +824,11 @@ func (bbp *List) DecodeBebop(ior io.Reader) (err error) {
 			if err != nil {
 				return err
 			}
+			r.Reader = limitReader
 			r.Drain()
 			return r.Err
 		default:
+			r.Reader = limitReader
 			r.Drain()
 			return r.Err
 		}
