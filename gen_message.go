@@ -119,9 +119,9 @@ func (msg Message) generateDecodeBebop(w *iohelp.ErrorWriter, settings GenerateS
 	writeLine(w, "func (bbp *%s) DecodeBebop(ior io.Reader) (err error) {", exposedName)
 	writeLine(w, "\tr := iohelp.NewErrorReader(ior)")
 	writeLine(w, "\tbodyLen := iohelp.ReadUint32(r)")
-	writeLine(w, "\tlimitReader := &io.LimitedReader{R: r.Reader, N: int64(bodyLen)}")
+	writeLine(w, "\tbaseReader := r.Reader")
+	writeLine(w, "\tr.Reader = &io.LimitedReader{R: baseReader, N: int64(bodyLen)}")
 	writeLine(w, "\tfor {")
-	writeLine(w, "\t\tr.Reader = limitReader")
 	writeLine(w, "\t\tswitch iohelp.ReadByte(r) {")
 	for _, fd := range fields {
 		writeLine(w, "\t\tcase %d:", fd.num)
@@ -133,6 +133,7 @@ func (msg Message) generateDecodeBebop(w *iohelp.ErrorWriter, settings GenerateS
 	// we're allowed to skip parsing all remaining fields if we see one that we don't know about.
 	writeLine(w, "\t\tdefault:")
 	writeLine(w, "\t\t\tr.Drain()")
+	writeLine(w, "\t\t\tr.Reader = baseReader")
 	writeLine(w, "\t\t\treturn r.Err")
 	writeLine(w, "\t\t}")
 	writeLine(w, "\t}")

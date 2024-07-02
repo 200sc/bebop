@@ -151,15 +151,16 @@ func (bbp taggedMessage) EncodeBebop(iow io.Writer) (err error) {
 func (bbp *taggedMessage) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
 	bodyLen := iohelp.ReadUint32(r)
-	limitReader := &io.LimitedReader{R: r.Reader, N: int64(bodyLen)}
+	baseReader := r.Reader
+	r.Reader = &io.LimitedReader{R: baseReader, N: int64(bodyLen)}
 	for {
-		r.Reader = limitReader
 		switch iohelp.ReadByte(r) {
 		case 1:
 			bbp.bar = new(uint8)
 			*bbp.bar = iohelp.ReadUint8(r)
 		default:
 			r.Drain()
+			r.Reader = baseReader
 			return r.Err
 		}
 	}
@@ -360,7 +361,8 @@ func (bbp taggedUnion) EncodeBebop(iow io.Writer) (err error) {
 func (bbp *taggedUnion) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
 	bodyLen := iohelp.ReadUint32(r)
-	limitReader := &io.LimitedReader{R: r.Reader, N: int64(bodyLen)+1}
+	baseReader := r.Reader
+	limitReader := &io.LimitedReader{R: baseReader, N: int64(bodyLen)+1}
 	r.Reader = limitReader
 	for {
 		switch iohelp.ReadByte(r) {
@@ -370,12 +372,12 @@ func (bbp *taggedUnion) DecodeBebop(ior io.Reader) (err error) {
 			if err != nil {
 				return err
 			}
-			r.Reader = limitReader
 			r.Drain()
+			r.Reader = baseReader
 			return r.Err
 		default:
-			r.Reader = limitReader
 			r.Drain()
+			r.Reader = baseReader
 			return r.Err
 		}
 	}

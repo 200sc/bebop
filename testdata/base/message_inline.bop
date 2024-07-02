@@ -5,3 +5,7 @@ message MessageInline {
 message MessageInlineWrapper {
     1 -> MessageInline Bla;
 }
+
+message MessageInlineWrapper2 {
+    1 -> array[MessageInline] Bla;
+}

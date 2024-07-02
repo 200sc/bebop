@@ -93,9 +93,9 @@ func (bbp withUnionField) EncodeBebop(iow io.Writer) (err error) {
 func (bbp *withUnionField) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
 	bodyLen := iohelp.ReadUint32(r)
-	limitReader := &io.LimitedReader{R: r.Reader, N: int64(bodyLen)}
+	baseReader := r.Reader
+	r.Reader = &io.LimitedReader{R: baseReader, N: int64(bodyLen)}
 	for {
-		r.Reader = limitReader
 		switch iohelp.ReadByte(r) {
 		case 1:
 			bbp.test = new(list2)
@@ -105,6 +105,7 @@ func (bbp *withUnionField) DecodeBebop(ior io.Reader) (err error) {
 			}
 		default:
 			r.Drain()
+			r.Reader = baseReader
 			return r.Err
 		}
 	}
@@ -404,7 +405,8 @@ func (bbp list2) EncodeBebop(iow io.Writer) (err error) {
 func (bbp *list2) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
 	bodyLen := iohelp.ReadUint32(r)
-	limitReader := &io.LimitedReader{R: r.Reader, N: int64(bodyLen)+1}
+	baseReader := r.Reader
+	limitReader := &io.LimitedReader{R: baseReader, N: int64(bodyLen)+1}
 	r.Reader = limitReader
 	for {
 		switch iohelp.ReadByte(r) {
@@ -414,8 +416,8 @@ func (bbp *list2) DecodeBebop(ior io.Reader) (err error) {
 			if err != nil {
 				return err
 			}
-			r.Reader = limitReader
 			r.Drain()
+			r.Reader = baseReader
 			return r.Err
 		case 2:
 			bbp.nil2 = new(nil2)
@@ -423,12 +425,12 @@ func (bbp *list2) DecodeBebop(ior io.Reader) (err error) {
 			if err != nil {
 				return err
 			}
-			r.Reader = limitReader
 			r.Drain()
+			r.Reader = baseReader
 			return r.Err
 		default:
-			r.Reader = limitReader
 			r.Drain()
+			r.Reader = baseReader
 			return r.Err
 		}
 	}
