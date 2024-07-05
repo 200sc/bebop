@@ -801,9 +801,9 @@ func (bbp mediaMessage) EncodeBebop(iow io.Writer) (err error) {
 func (bbp *mediaMessage) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
 	bodyLen := iohelp.ReadUint32(r)
-	limitReader := &io.LimitedReader{R: r.Reader, N: int64(bodyLen)}
+	baseReader := r.Reader
+	r.Reader = &io.LimitedReader{R: baseReader, N: int64(bodyLen)}
 	for {
-		r.Reader = limitReader
 		switch iohelp.ReadByte(r) {
 		case 1:
 			bbp.codec = new(videoCodec)
@@ -816,6 +816,7 @@ func (bbp *mediaMessage) DecodeBebop(ior io.Reader) (err error) {
 			}
 		default:
 			r.Drain()
+			r.Reader = baseReader
 			return r.Err
 		}
 	}
@@ -957,9 +958,9 @@ func (bbp skipTestOld) EncodeBebop(iow io.Writer) (err error) {
 func (bbp *skipTestOld) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
 	bodyLen := iohelp.ReadUint32(r)
-	limitReader := &io.LimitedReader{R: r.Reader, N: int64(bodyLen)}
+	baseReader := r.Reader
+	r.Reader = &io.LimitedReader{R: baseReader, N: int64(bodyLen)}
 	for {
-		r.Reader = limitReader
 		switch iohelp.ReadByte(r) {
 		case 1:
 			bbp.x = new(int32)
@@ -969,6 +970,7 @@ func (bbp *skipTestOld) DecodeBebop(ior io.Reader) (err error) {
 			*bbp.y = iohelp.ReadInt32(r)
 		default:
 			r.Drain()
+			r.Reader = baseReader
 			return r.Err
 		}
 	}
@@ -1129,9 +1131,9 @@ func (bbp skipTestNew) EncodeBebop(iow io.Writer) (err error) {
 func (bbp *skipTestNew) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
 	bodyLen := iohelp.ReadUint32(r)
-	limitReader := &io.LimitedReader{R: r.Reader, N: int64(bodyLen)}
+	baseReader := r.Reader
+	r.Reader = &io.LimitedReader{R: baseReader, N: int64(bodyLen)}
 	for {
-		r.Reader = limitReader
 		switch iohelp.ReadByte(r) {
 		case 1:
 			bbp.x = new(int32)
@@ -1144,6 +1146,7 @@ func (bbp *skipTestNew) DecodeBebop(ior io.Reader) (err error) {
 			*bbp.z = iohelp.ReadInt32(r)
 		default:
 			r.Drain()
+			r.Reader = baseReader
 			return r.Err
 		}
 	}
@@ -1299,9 +1302,9 @@ func (bbp skipTestOldContainer) EncodeBebop(iow io.Writer) (err error) {
 func (bbp *skipTestOldContainer) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
 	bodyLen := iohelp.ReadUint32(r)
-	limitReader := &io.LimitedReader{R: r.Reader, N: int64(bodyLen)}
+	baseReader := r.Reader
+	r.Reader = &io.LimitedReader{R: baseReader, N: int64(bodyLen)}
 	for {
-		r.Reader = limitReader
 		switch iohelp.ReadByte(r) {
 		case 1:
 			bbp.s = new(skipTestOld)
@@ -1314,6 +1317,7 @@ func (bbp *skipTestOldContainer) DecodeBebop(ior io.Reader) (err error) {
 			*bbp.after = iohelp.ReadInt32(r)
 		default:
 			r.Drain()
+			r.Reader = baseReader
 			return r.Err
 		}
 	}
@@ -1469,9 +1473,9 @@ func (bbp skipTestNewContainer) EncodeBebop(iow io.Writer) (err error) {
 func (bbp *skipTestNewContainer) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
 	bodyLen := iohelp.ReadUint32(r)
-	limitReader := &io.LimitedReader{R: r.Reader, N: int64(bodyLen)}
+	baseReader := r.Reader
+	r.Reader = &io.LimitedReader{R: baseReader, N: int64(bodyLen)}
 	for {
-		r.Reader = limitReader
 		switch iohelp.ReadByte(r) {
 		case 1:
 			bbp.s = new(skipTestNew)
@@ -1484,6 +1488,7 @@ func (bbp *skipTestNewContainer) DecodeBebop(ior io.Reader) (err error) {
 			*bbp.after = iohelp.ReadInt32(r)
 		default:
 			r.Drain()
+			r.Reader = baseReader
 			return r.Err
 		}
 	}

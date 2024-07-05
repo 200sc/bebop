@@ -78,15 +78,16 @@ func (bbp MessageInline) EncodeBebop(iow io.Writer) (err error) {
 func (bbp *MessageInline) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
 	bodyLen := iohelp.ReadUint32(r)
-	limitReader := &io.LimitedReader{R: r.Reader, N: int64(bodyLen)}
+	baseReader := r.Reader
+	r.Reader = &io.LimitedReader{R: baseReader, N: int64(bodyLen)}
 	for {
-		r.Reader = limitReader
 		switch iohelp.ReadByte(r) {
 		case 1:
 			bbp.OnOff = new(bool)
 			*bbp.OnOff = iohelp.ReadBool(r)
 		default:
 			r.Drain()
+			r.Reader = baseReader
 			return r.Err
 		}
 	}
@@ -210,9 +211,9 @@ func (bbp MessageInlineWrapper) EncodeBebop(iow io.Writer) (err error) {
 func (bbp *MessageInlineWrapper) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
 	bodyLen := iohelp.ReadUint32(r)
-	limitReader := &io.LimitedReader{R: r.Reader, N: int64(bodyLen)}
+	baseReader := r.Reader
+	r.Reader = &io.LimitedReader{R: baseReader, N: int64(bodyLen)}
 	for {
-		r.Reader = limitReader
 		switch iohelp.ReadByte(r) {
 		case 1:
 			bbp.Bla = new(MessageInline)
@@ -222,6 +223,7 @@ func (bbp *MessageInlineWrapper) DecodeBebop(ior io.Reader) (err error) {
 			}
 		default:
 			r.Drain()
+			r.Reader = baseReader
 			return r.Err
 		}
 	}
@@ -260,6 +262,170 @@ func MakeMessageInlineWrapperFromBytes(buf []byte) (MessageInlineWrapper, error)
 
 func MustMakeMessageInlineWrapperFromBytes(buf []byte) MessageInlineWrapper {
 	v := MessageInlineWrapper{}
+	v.MustUnmarshalBebop(buf)
+	return v
+}
+
+var _ bebop.Record = &MessageInlineWrapper2{}
+
+type MessageInlineWrapper2 struct {
+	Bla *[]MessageInline
+}
+
+func (bbp MessageInlineWrapper2) MarshalBebopTo(buf []byte) int {
+	at := 0
+	iohelp.WriteUint32Bytes(buf[at:], uint32(bbp.Size()-4))
+	at += 4
+	if bbp.Bla != nil {
+		buf[at] = 1
+		at++
+		iohelp.WriteUint32Bytes(buf[at:], uint32(len(*bbp.Bla)))
+		at += 4
+		for _, v2 := range *bbp.Bla {
+			(v2).MarshalBebopTo(buf[at:])
+			{
+				tmp := (v2)
+				at += tmp.Size()
+			}
+			
+		}
+	}
+	return at
+}
+
+func (bbp *MessageInlineWrapper2) UnmarshalBebop(buf []byte) (err error) {
+	at := 0
+	_ = iohelp.ReadUint32Bytes(buf[at:])
+	buf = buf[4:]
+	for {
+		switch buf[at] {
+		case 1:
+			at += 1
+			bbp.Bla = new([]MessageInline)
+			if len(buf[at:]) < 4 {
+				return io.ErrUnexpectedEOF
+			}
+			(*bbp.Bla) = make([]MessageInline, iohelp.ReadUint32Bytes(buf[at:]))
+			at += 4
+			for i3 := range (*bbp.Bla) {
+				((*bbp.Bla))[i3], err = MakeMessageInlineFromBytes(buf[at:])
+				if err != nil {
+					return err
+				}
+				{
+					tmp := (((*bbp.Bla))[i3])
+					at += tmp.Size()
+				}
+				
+			}
+		default:
+			return nil
+		}
+	}
+}
+
+func (bbp *MessageInlineWrapper2) MustUnmarshalBebop(buf []byte) {
+	at := 0
+	_ = iohelp.ReadUint32Bytes(buf[at:])
+	buf = buf[4:]
+	for {
+		switch buf[at] {
+		case 1:
+			at += 1
+			bbp.Bla = new([]MessageInline)
+			(*bbp.Bla) = make([]MessageInline, iohelp.ReadUint32Bytes(buf[at:]))
+			at += 4
+			for i3 := range (*bbp.Bla) {
+				((*bbp.Bla))[i3] = MustMakeMessageInlineFromBytes(buf[at:])
+				{
+					tmp := (((*bbp.Bla))[i3])
+					at += tmp.Size()
+				}
+				
+			}
+		default:
+			return
+		}
+	}
+}
+
+func (bbp MessageInlineWrapper2) EncodeBebop(iow io.Writer) (err error) {
+	w := iohelp.NewErrorWriter(iow)
+	iohelp.WriteUint32(w, uint32(bbp.Size()-4))
+	if bbp.Bla != nil {
+		w.Write([]byte{1})
+		iohelp.WriteUint32(w, uint32(len(*bbp.Bla)))
+		for _, elem := range *bbp.Bla {
+			err = (elem).EncodeBebop(w)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	w.Write([]byte{0})
+	return w.Err
+}
+
+func (bbp *MessageInlineWrapper2) DecodeBebop(ior io.Reader) (err error) {
+	r := iohelp.NewErrorReader(ior)
+	bodyLen := iohelp.ReadUint32(r)
+	baseReader := r.Reader
+	r.Reader = &io.LimitedReader{R: baseReader, N: int64(bodyLen)}
+	for {
+		switch iohelp.ReadByte(r) {
+		case 1:
+			bbp.Bla = new([]MessageInline)
+			*bbp.Bla = make([]MessageInline, iohelp.ReadUint32(r))
+			for i := range *bbp.Bla {
+				((*bbp.Bla)[i]), err = MakeMessageInline(r)
+				if err != nil {
+					return err
+				}
+			}
+		default:
+			r.Drain()
+			r.Reader = baseReader
+			return r.Err
+		}
+	}
+}
+
+func (bbp MessageInlineWrapper2) Size() int {
+	bodyLen := 5
+	if bbp.Bla != nil {
+		bodyLen += 1
+		bodyLen += 4
+		for _, elem := range *bbp.Bla {
+			{
+				tmp := (elem)
+				bodyLen += tmp.Size()
+			}
+			
+		}
+	}
+	return bodyLen
+}
+
+func (bbp MessageInlineWrapper2) MarshalBebop() []byte {
+	buf := make([]byte, bbp.Size())
+	bbp.MarshalBebopTo(buf)
+	return buf
+}
+
+func MakeMessageInlineWrapper2(r *iohelp.ErrorReader) (MessageInlineWrapper2, error) {
+	v := MessageInlineWrapper2{}
+	err := v.DecodeBebop(r)
+	return v, err
+}
+
+func MakeMessageInlineWrapper2FromBytes(buf []byte) (MessageInlineWrapper2, error) {
+	v := MessageInlineWrapper2{}
+	err := v.UnmarshalBebop(buf)
+	return v, err
+}
+
+func MustMakeMessageInlineWrapper2FromBytes(buf []byte) MessageInlineWrapper2 {
+	v := MessageInlineWrapper2{}
 	v.MustUnmarshalBebop(buf)
 	return v
 }

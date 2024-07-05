@@ -107,9 +107,9 @@ func (bbp ReadOnlyMap) EncodeBebop(iow io.Writer) (err error) {
 func (bbp *ReadOnlyMap) DecodeBebop(ior io.Reader) (err error) {
 	r := iohelp.NewErrorReader(ior)
 	bodyLen := iohelp.ReadUint32(r)
-	limitReader := &io.LimitedReader{R: r.Reader, N: int64(bodyLen)}
+	baseReader := r.Reader
+	r.Reader = &io.LimitedReader{R: baseReader, N: int64(bodyLen)}
 	for {
-		r.Reader = limitReader
 		switch iohelp.ReadByte(r) {
 		case 1:
 			bbp.Vals = new(map[string]uint8)
@@ -121,6 +121,7 @@ func (bbp *ReadOnlyMap) DecodeBebop(ior io.Reader) (err error) {
 			}
 		default:
 			r.Drain()
+			r.Reader = baseReader
 			return r.Err
 		}
 	}
