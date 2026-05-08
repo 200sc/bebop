@@ -86,6 +86,6 @@ The following is a list of known issues with the current version of the project,
 
 ## Credit
 
-Original bebop compiler (C#, Typescript, ...): https://github.com/RainwayApp/bebop
+Original bebop compiler (C#, Typescript, ...): https://github.com/6over3/bebop
 
 In addition to defining the spec this package follows, most initial testdata was taken from the above project.
